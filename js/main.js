@@ -33,10 +33,86 @@
             }, 1500);
         }
 
-        // Trigger sedini mungkin agar mobile tidak menunggu asset berat
-        document.addEventListener('DOMContentLoaded', () => {
-            initMobileSplash();
+        // ==================== DROPDOWN & MOBILE NAV CONTROLLERS ====================
+        function toggleDeskDropdown(id, event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const target = document.getElementById(id);
+            if (!target) return;
+            const isCurrentlyOpen = target.classList.contains('desk-dropdown-open');
+
+            // Tutup semua dropdown lain
+            closeAllDropdowns();
+
+            // Jika belum terbuka, buka target
+            if (!isCurrentlyOpen) {
+                target.classList.add('desk-dropdown-open', '!opacity-100', '!visible', '!pointer-events-auto');
+            }
+        }
+
+        function closeAllDropdowns() {
+            document.querySelectorAll('.desk-dropdown-panel').forEach(panel => {
+                panel.classList.remove('desk-dropdown-open', '!opacity-100', '!visible', '!pointer-events-auto');
+            });
+        }
+
+        function toggleMobileMenu() {
+            const drawer = document.getElementById('mobile-nav-drawer');
+            const icon = document.getElementById('mobile-hamburger-icon');
+            if (!drawer) return;
+            const isOpen = !drawer.classList.contains('hidden');
+            if (isOpen) {
+                drawer.classList.add('hidden');
+                if (icon) icon.className = 'fa-solid fa-bars';
+            } else {
+                drawer.classList.remove('hidden');
+                if (icon) icon.className = 'fa-solid fa-xmark';
+            }
+        }
+
+        function closeMobileDrawer() {
+            const drawer = document.getElementById('mobile-nav-drawer');
+            const icon = document.getElementById('mobile-hamburger-icon');
+            if (drawer) drawer.classList.add('hidden');
+            if (icon) icon.className = 'fa-solid fa-bars';
+        }
+
+        function closeMobileMenu() {
+            closeMobileDrawer();
+            closeAllDropdowns();
+        }
+
+        function toggleMobileSubmenu(id) {
+            const target = document.getElementById(id);
+            if (!target) return;
+            const isHidden = target.classList.contains('hidden');
+            const arrow = document.getElementById(id.replace('mob-sub-', 'mob-arrow-'));
+            if (isHidden) {
+                target.classList.remove('hidden');
+                if (arrow) arrow.style.transform = 'rotate(180deg)';
+            } else {
+                target.classList.add('hidden');
+                if (arrow) arrow.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // Listener global untuk menutup dropdown desktop saat klik di luar
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.group')) {
+                closeAllDropdowns();
+            }
         });
+
+        // Trigger sedini mungkin agar mobile tidak menunggu asset berat
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                initMobileSplash();
+            });
+        } else {
+            initMobileSplash();
+        }
 
         // ==================== INISIALISASI UTAMA (SINGLE ONLOAD) ====================
         window.onload = function () {
@@ -446,6 +522,8 @@
                 activeDeskBtn.classList.remove('text-teal-100', 'hover:bg-teal-800/80', 'hover:text-white');
                 activeDeskBtn.classList.add('bg-teal-800', 'text-white');
             }
+            closeAllDropdowns();
+            closeMobileDrawer();
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }

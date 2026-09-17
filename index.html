@@ -8,7 +8,7 @@
     
     <!-- PWA & Mobile Web App Setup -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#059669">
+    <meta name="theme-color" content="#0f766e">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕌</text></svg>">
     <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕌</text></svg>">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -73,6 +73,22 @@
             </div>
         </div>
     </div>
+    <script>
+        (function() {
+            var splash = document.getElementById('mobile-splash-screen');
+            if (!splash) return;
+            if (window.innerWidth >= 768) {
+                splash.style.display = 'none';
+                return;
+            }
+            setTimeout(function() {
+                splash.classList.add('opacity-0', 'pointer-events-none');
+            }, 1000);
+            setTimeout(function() {
+                splash.style.display = 'none';
+            }, 1700);
+        })();
+    </script>
 
     <!-- ==================== HEADER DESKTOP (2-TIER INSTITUTIONAL NAV) ==================== -->
     <div class="hidden md:block sticky top-0 z-50 shadow-md">
@@ -82,7 +98,7 @@
             <div class="max-w-7xl mx-auto px-8 py-2.5 flex justify-between items-center">
 
                 <!-- Logo Pesantren -->
-                <div class="flex items-center cursor-pointer group" onclick="switchTab('beranda')">
+                <div class="flex items-center cursor-pointer group" onclick="switchTab('beranda'); closeAllDropdowns();">
                     <img src="assets/img/header-logo.png" alt="PP. Roudlotul Mubarokah" class="h-11 md:h-12 w-auto object-contain transition-transform group-hover:scale-105 drop-shadow-sm">
                 </div>
 
@@ -90,34 +106,32 @@
                 <nav id="desk-nav-menu" class="flex items-center space-x-1 text-xs">
 
                     <!-- 1. Beranda -->
-                    <button onclick="switchTab('beranda')" id="desk-nav-beranda"
+                    <button onclick="switchTab('beranda'); closeAllDropdowns();" id="desk-nav-beranda"
                         class="nav-desk-btn px-3.5 py-2 rounded-xl font-bold transition bg-teal-800 dark:bg-teal-800 text-white">
                         Beranda
                     </button>
 
                     <!-- 2. Dropdown: Tentang Kami -->
                     <div class="relative group">
-                        <button onclick="switchTab('profil')" id="desk-nav-profil"
+                        <button onclick="toggleDeskDropdown('desk-menu-tentang', event)" id="desk-nav-profil"
                             class="nav-desk-btn px-3.5 py-2 rounded-xl font-bold text-teal-100 hover:text-white hover:bg-teal-800/80 dark:hover:bg-[#15202d] transition flex items-center space-x-1">
                             <span>Tentang Kami</span>
-                            <i
-                                class="fa-solid fa-chevron-down text-[9px] ml-1 transition-transform duration-200 group-hover:rotate-180"></i>
+                            <i class="fa-solid fa-chevron-down text-[9px] ml-1 transition-transform duration-200 group-hover:rotate-180"></i>
                         </button>
-                        <div
-                            class="absolute left-0 top-full pt-2 w-52 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                            <div
-                                class="bg-white dark:bg-[#15202d] rounded-2xl shadow-xl border border-slate-100 dark:border-[#253447] p-2 space-y-1 text-slate-700 dark:text-slate-200">
-                                <button onclick="switchTab('sejarah-berdirinya'); closeMobileMenu();"
+                        <div id="desk-menu-tentang"
+                            class="desk-dropdown-panel absolute left-0 top-full pt-2 w-52 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                            <div class="bg-white dark:bg-[#15202d] rounded-2xl shadow-xl border border-slate-100 dark:border-[#253447] p-2 space-y-1 text-slate-700 dark:text-slate-200">
+                                <button onclick="switchTab('sejarah-berdirinya'); closeAllDropdowns();"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-landmark text-teal-700 dark:text-teal-400 w-4"></i>
                                     <span>Profil & Sejarah</span>
                                 </button>
-                                <button onclick="switchTab('tujuan-visi-misi'); closeMobileMenu();"
+                                <button onclick="switchTab('tujuan-visi-misi'); closeAllDropdowns();"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-bullseye text-teal-700 dark:text-teal-400 w-4"></i>
                                     <span>Visi & Misi</span>
                                 </button>
-                                <button onclick="switchTab('struktur-kepengurusan'); closeMobileMenu();"
+                                <button onclick="switchTab('struktur-kepengurusan'); closeAllDropdowns();"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-sitemap text-teal-700 dark:text-teal-400 w-4"></i>
                                     <span>Struktur Pengurus</span>
@@ -128,38 +142,36 @@
 
                     <!-- 3. Dropdown: Pendidikan -->
                     <div class="relative group">
-                        <button onclick="switchTab('program-pilihan')" id="desk-nav-program-pilihan"
+                        <button onclick="toggleDeskDropdown('desk-menu-pendidikan', event)" id="desk-nav-program-pilihan"
                             class="nav-desk-btn px-3.5 py-2 rounded-xl font-bold text-teal-100 hover:text-white hover:bg-teal-800/80 dark:hover:bg-[#15202d] transition flex items-center space-x-1">
                             <span>Pendidikan</span>
-                            <i
-                                class="fa-solid fa-chevron-down text-[9px] ml-1 transition-transform duration-200 group-hover:rotate-180"></i>
+                            <i class="fa-solid fa-chevron-down text-[9px] ml-1 transition-transform duration-200 group-hover:rotate-180"></i>
                         </button>
-                        <div
-                            class="absolute left-0 top-full pt-2 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                            <div
-                                class="bg-white dark:bg-[#15202d] rounded-2xl shadow-xl border border-slate-100 dark:border-[#253447] p-2 space-y-1 text-slate-700 dark:text-slate-200">
-                                <button onclick="switchTab('program-pilihan')"
+                        <div id="desk-menu-pendidikan"
+                            class="desk-dropdown-panel absolute left-0 top-full pt-2 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                            <div class="bg-white dark:bg-[#15202d] rounded-2xl shadow-xl border border-slate-100 dark:border-[#253447] p-2 space-y-1 text-slate-700 dark:text-slate-200">
+                                <button onclick="switchTab('program-pilihan'); closeAllDropdowns();"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-amber-50 dark:hover:bg-[#1c2836] hover:text-amber-700 dark:hover:text-amber-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-layer-group text-amber-600 dark:text-amber-400 w-4"></i>
                                     <span>Semua Program Pilihan</span>
                                 </button>
                                 <div class="border-t border-slate-100 dark:border-[#253447] my-1"></div>
-                                <button onclick="switchTab('sd-islam')"
+                                <button onclick="switchTab('sd-islam'); closeAllDropdowns();"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-blue-50 dark:hover:bg-[#1c2836] hover:text-blue-700 dark:hover:text-blue-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-school text-blue-500 w-4"></i>
                                     <span>SD Islam Unggulan</span>
                                 </button>
-                                <button onclick="switchTab('tahfidz-anak')"
+                                <button onclick="switchTab('tahfidz-anak'); closeAllDropdowns();"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-child-reaching text-amber-500 w-4"></i>
                                     <span>Pesantren Tahfidz Anak</span>
                                 </button>
-                                <button onclick="switchTab('dewasa-putra')"
+                                <button onclick="switchTab('dewasa-putra'); closeAllDropdowns();"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-user-graduate text-teal-700 dark:text-teal-400 w-4"></i>
                                     <span>Pesantren Dewasa Putra</span>
                                 </button>
-                                <button onclick="switchTab('dewasa-putri')"
+                                <button onclick="switchTab('dewasa-putri'); closeAllDropdowns();"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-person-dress text-purple-600 dark:text-purple-400 w-4"></i>
                                     <span>Pesantren Dewasa Putri</span>
@@ -170,28 +182,25 @@
 
                     <!-- 4. Dropdown: Kehidupan Santri -->
                     <div class="relative group">
-                        <button onclick="switchTab('jadwal-kegiatan')" id="desk-nav-jadwal-kegiatan"
+                        <button onclick="toggleDeskDropdown('desk-menu-santri', event)" id="desk-nav-jadwal-kegiatan"
                             class="nav-desk-btn px-3.5 py-2 rounded-xl font-bold text-teal-100 hover:text-white hover:bg-teal-800/80 dark:hover:bg-[#15202d] transition flex items-center space-x-1">
                             <span>Kehidupan Santri</span>
-                            <i
-                                class="fa-solid fa-chevron-down text-[9px] ml-1 transition-transform duration-200 group-hover:rotate-180"></i>
+                            <i class="fa-solid fa-chevron-down text-[9px] ml-1 transition-transform duration-200 group-hover:rotate-180"></i>
                         </button>
-                        <div
-                            class="absolute left-0 top-full pt-2 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                            <div
-                                class="bg-white dark:bg-[#15202d] rounded-2xl shadow-xl border border-slate-100 dark:border-[#253447] p-2 space-y-1 text-slate-700 dark:text-slate-200">
-                                <button onclick="switchTab('jadwal-kegiatan')"
+                        <div id="desk-menu-santri"
+                            class="desk-dropdown-panel absolute left-0 top-full pt-2 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                            <div class="bg-white dark:bg-[#15202d] rounded-2xl shadow-xl border border-slate-100 dark:border-[#253447] p-2 space-y-1 text-slate-700 dark:text-slate-200">
+                                <button onclick="switchTab('jadwal-kegiatan'); closeAllDropdowns();"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-rose-50 dark:hover:bg-[#1c2836] hover:text-rose-700 dark:hover:text-rose-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-calendar-check text-rose-600 dark:text-rose-400 w-4"></i>
                                     <span>Jadwal Kegiatan Santri</span>
                                 </button>
-                                <button onclick="switchTab('unit-kegiatan')"
+                                <button onclick="switchTab('unit-kegiatan'); closeAllDropdowns();"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-blue-50 dark:hover:bg-[#1c2836] hover:text-blue-700 dark:hover:text-blue-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-people-group text-blue-600 dark:text-blue-400 w-4"></i>
                                     <span>Unit Kegiatan Santri (UKS)</span>
                                 </button>
-
-                                <button onclick="switchTab('alumni')"
+                                <button onclick="switchTab('alumni'); closeAllDropdowns();"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-orange-50 dark:hover:bg-[#1c2836] hover:text-orange-700 dark:hover:text-orange-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-graduation-cap text-orange-600 dark:text-orange-400 w-4"></i>
                                     <span>Ikatan Alumni Pesantren</span>
@@ -201,39 +210,37 @@
                     </div>
 
                     <!-- 5. Berita -->
-                    <button onclick="navigateToNews()"
+                    <button onclick="navigateToNews(); closeAllDropdowns();"
                         class="nav-desk-btn px-3.5 py-2 rounded-xl font-bold text-teal-100 hover:text-white hover:bg-teal-800/80 dark:hover:bg-[#15202d] transition">
                         Berita
                     </button>
 
                     <!-- 6. Dropdown: Layanan -->
                     <div class="relative group">
-                        <button onclick="switchTab('layanan-hub')" id="desk-nav-layanan-hub"
+                        <button onclick="toggleDeskDropdown('desk-menu-layanan', event)" id="desk-nav-layanan-hub"
                             class="nav-desk-btn px-3.5 py-2 rounded-xl font-bold text-teal-100 hover:text-white hover:bg-teal-800/80 dark:hover:bg-[#15202d] transition flex items-center space-x-1">
                             <span>Layanan</span>
-                            <i
-                                class="fa-solid fa-chevron-down text-[9px] ml-1 transition-transform duration-200 group-hover:rotate-180"></i>
+                            <i class="fa-solid fa-chevron-down text-[9px] ml-1 transition-transform duration-200 group-hover:rotate-180"></i>
                         </button>
-                        <div
-                            class="absolute left-0 top-full pt-2 w-52 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                            <div
-                                class="bg-white dark:bg-[#15202d] rounded-2xl shadow-xl border border-slate-100 dark:border-[#253447] p-2 space-y-1 text-slate-700 dark:text-slate-200">
-                                <button onclick="switchTab('layanan-hub')"
+                        <div id="desk-menu-layanan"
+                            class="desk-dropdown-panel absolute left-0 top-full pt-2 w-52 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                            <div class="bg-white dark:bg-[#15202d] rounded-2xl shadow-xl border border-slate-100 dark:border-[#253447] p-2 space-y-1 text-slate-700 dark:text-slate-200">
+                                <button onclick="switchTab('layanan-hub'); closeAllDropdowns();"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-layer-group text-teal-600 dark:text-teal-400 w-4"></i>
                                     <span>Pusat Layanan</span>
                                 </button>
-                                <button onclick="switchTab('galeri')"
+                                <button onclick="switchTab('galeri'); closeAllDropdowns();"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-sky-50 dark:hover:bg-[#1c2836] hover:text-sky-700 dark:hover:text-sky-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-photo-film text-sky-600 dark:text-sky-400 w-4"></i>
                                     <span>Galeri Dokumentasi</span>
                                 </button>
-                                <button onclick="switchTab('kalender')"
+                                <button onclick="switchTab('kalender'); closeAllDropdowns();"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-amber-50 dark:hover:bg-[#1c2836] hover:text-amber-700 dark:hover:text-amber-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-calendar-days text-amber-600 dark:text-amber-400 w-4"></i>
                                     <span>Kalender Masehi & Jawa</span>
                                 </button>
-                                <button onclick="switchTab('ibadah')"
+                                <button onclick="switchTab('ibadah'); closeAllDropdowns();"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-book-quran text-teal-600 dark:text-teal-400 w-4"></i>
                                     <span>Portal Ibadah & Yaumiyyah</span>
@@ -255,13 +262,13 @@
                     </button>
 
                     <!-- Tombol Notifikasi Desktop -->
-                    <button onclick="switchTab('notifikasi')"
+                    <button onclick="switchTab('notifikasi'); closeAllDropdowns();"
                         class="relative w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-amber-300 flex items-center justify-center text-sm border border-white/10 shadow-sm transition active:scale-95"
                         title="Pusat Notifikasi">
                         <i class="fa-solid fa-bell"></i>
                         <span id="desk-notif-badge" class="hidden absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[10px] font-extrabold rounded-full flex items-center justify-center shadow border-2 border-teal-900 leading-none">0</span>
                     </button>
-                    <button onclick="switchTab('ppdb')"
+                    <button onclick="switchTab('ppdb'); closeAllDropdowns();"
                         class="bg-amber-500 hover:bg-amber-400 text-brand-dark px-4 py-2 rounded-xl font-extrabold text-xs shadow-md transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 flex items-center space-x-1.5">
                         <i class="fa-solid fa-user-plus text-xs"></i>
                         <span>Daftar PPDB</span>
@@ -277,11 +284,11 @@
     <header
         class="md:hidden bg-teal-900 dark:bg-[#042020] dark:border-b dark:border-teal-500/20 text-white px-4 py-3 sticky top-0 z-50 flex justify-between items-center shadow-md">
         <!-- Logo & Nama Pesantren -->
-        <div class="flex items-center cursor-pointer" onclick="switchTab('beranda')">
+        <div class="flex items-center cursor-pointer" onclick="switchTab('beranda'); closeMobileMenu();">
             <img src="assets/img/header-logo.png" alt="PP. Roudlotul Mubarokah" class="h-9 w-auto object-contain drop-shadow-sm">
         </div>
 
-        <!-- Tombol Aksi Kanan: Install & Notifikasi -->
+        <!-- Tombol Aksi Kanan: Install, Notifikasi & Hamburger Menu -->
         <div class="flex items-center space-x-2">
             <!-- Tombol Install PWA Mobile (Otomatis tampil jika belum diinstal) -->
             <button id="mobile-btn-install-app" onclick="triggerInstallApp()"
@@ -292,14 +299,158 @@
             </button>
 
             <!-- Tombol Notifikasi Mobile -->
-            <button onclick="switchTab('notifikasi')"
+            <button onclick="switchTab('notifikasi'); closeMobileMenu();"
                 class="relative w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-amber-400 flex items-center justify-center text-sm border border-white/10 shadow-sm transition active:scale-95"
                 title="Pusat Notifikasi">
                 <i class="fa-solid fa-bell"></i>
                 <span id="mobile-notif-badge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[10px] font-extrabold rounded-full flex items-center justify-center shadow border-2 border-teal-900 leading-none">0</span>
             </button>
+
+            <!-- Tombol Hamburger Menu Mobile -->
+            <button id="mobile-hamburger-btn" onclick="toggleMobileMenu()"
+                class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-teal-100 hover:text-white flex items-center justify-center text-sm border border-white/10 shadow-sm transition active:scale-95"
+                title="Menu Navigasi">
+                <i id="mobile-hamburger-icon" class="fa-solid fa-bars"></i>
+            </button>
         </div>
     </header>
+
+    <!-- Slide-down / Dropdown Menu Mobile Komprehensif -->
+    <div id="mobile-nav-drawer" class="hidden md:hidden fixed inset-x-0 top-[57px] bottom-0 z-40 bg-black/60 backdrop-blur-sm transition-all duration-200">
+        <div class="bg-teal-950 text-white border-b border-teal-800/60 p-4 max-h-[80vh] overflow-y-auto space-y-2 shadow-2xl">
+            <!-- 1. Beranda -->
+            <button onclick="switchTab('beranda'); closeMobileMenu();" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold hover:bg-teal-800/60 text-white flex items-center space-x-2.5">
+                <i class="fa-solid fa-house text-teal-400 w-4"></i>
+                <span>Beranda</span>
+            </button>
+
+            <!-- 2. Accordion Tentang Kami -->
+            <div class="rounded-xl bg-teal-900/40 border border-teal-800/40 overflow-hidden">
+                <button onclick="toggleMobileSubmenu('mob-sub-tentang')" class="w-full text-left px-3 py-2.5 text-xs font-bold text-teal-100 hover:text-white flex justify-between items-center">
+                    <span class="flex items-center space-x-2.5">
+                        <i class="fa-solid fa-landmark text-teal-400 w-4"></i>
+                        <span>Tentang Kami</span>
+                    </span>
+                    <i id="mob-arrow-tentang" class="fa-solid fa-chevron-down text-[10px] transition-transform"></i>
+                </button>
+                <div id="mob-sub-tentang" class="hidden px-3 pb-2 pt-1 space-y-1 bg-teal-950/60">
+                    <button onclick="switchTab('sejarah-berdirinya'); closeMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/60 hover:text-white transition flex items-center space-x-2">
+                        <i class="fa-solid fa-book-open text-[11px] text-teal-400 w-4"></i>
+                        <span>Profil & Sejarah</span>
+                    </button>
+                    <button onclick="switchTab('tujuan-visi-misi'); closeMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/60 hover:text-white transition flex items-center space-x-2">
+                        <i class="fa-solid fa-bullseye text-[11px] text-teal-400 w-4"></i>
+                        <span>Visi & Misi</span>
+                    </button>
+                    <button onclick="switchTab('struktur-kepengurusan'); closeMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/60 hover:text-white transition flex items-center space-x-2">
+                        <i class="fa-solid fa-sitemap text-[11px] text-teal-400 w-4"></i>
+                        <span>Struktur Pengurus</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3. Accordion Pendidikan -->
+            <div class="rounded-xl bg-teal-900/40 border border-teal-800/40 overflow-hidden">
+                <button onclick="toggleMobileSubmenu('mob-sub-pendidikan')" class="w-full text-left px-3 py-2.5 text-xs font-bold text-teal-100 hover:text-white flex justify-between items-center">
+                    <span class="flex items-center space-x-2.5">
+                        <i class="fa-solid fa-graduation-cap text-teal-400 w-4"></i>
+                        <span>Pendidikan</span>
+                    </span>
+                    <i id="mob-arrow-pendidikan" class="fa-solid fa-chevron-down text-[10px] transition-transform"></i>
+                </button>
+                <div id="mob-sub-pendidikan" class="hidden px-3 pb-2 pt-1 space-y-1 bg-teal-950/60">
+                    <button onclick="switchTab('program-pilihan'); closeMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/60 hover:text-white transition flex items-center space-x-2">
+                        <i class="fa-solid fa-layer-group text-[11px] text-amber-400 w-4"></i>
+                        <span>Semua Program Pilihan</span>
+                    </button>
+                    <button onclick="switchTab('sd-islam'); closeMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/60 hover:text-white transition flex items-center space-x-2">
+                        <i class="fa-solid fa-school text-[11px] text-blue-400 w-4"></i>
+                        <span>SD Islam Unggulan</span>
+                    </button>
+                    <button onclick="switchTab('tahfidz-anak'); closeMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/60 hover:text-white transition flex items-center space-x-2">
+                        <i class="fa-solid fa-child-reaching text-[11px] text-teal-400 w-4"></i>
+                        <span>Pesantren Tahfidz Anak</span>
+                    </button>
+                    <button onclick="switchTab('dewasa-putra'); closeMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/60 hover:text-white transition flex items-center space-x-2">
+                        <i class="fa-solid fa-user-graduate text-[11px] text-teal-400 w-4"></i>
+                        <span>Pesantren Dewasa Putra</span>
+                    </button>
+                    <button onclick="switchTab('dewasa-putri'); closeMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/60 hover:text-white transition flex items-center space-x-2">
+                        <i class="fa-solid fa-person-dress text-[11px] text-purple-400 w-4"></i>
+                        <span>Pesantren Dewasa Putri</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 4. Accordion Kehidupan Santri -->
+            <div class="rounded-xl bg-teal-900/40 border border-teal-800/40 overflow-hidden">
+                <button onclick="toggleMobileSubmenu('mob-sub-santri')" class="w-full text-left px-3 py-2.5 text-xs font-bold text-teal-100 hover:text-white flex justify-between items-center">
+                    <span class="flex items-center space-x-2.5">
+                        <i class="fa-solid fa-users text-teal-400 w-4"></i>
+                        <span>Kehidupan Santri</span>
+                    </span>
+                    <i id="mob-arrow-santri" class="fa-solid fa-chevron-down text-[10px] transition-transform"></i>
+                </button>
+                <div id="mob-sub-santri" class="hidden px-3 pb-2 pt-1 space-y-1 bg-teal-950/60">
+                    <button onclick="switchTab('jadwal-kegiatan'); closeMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/60 hover:text-white transition flex items-center space-x-2">
+                        <i class="fa-solid fa-calendar-check text-[11px] text-rose-400 w-4"></i>
+                        <span>Jadwal Kegiatan Santri</span>
+                    </button>
+                    <button onclick="switchTab('unit-kegiatan'); closeMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/60 hover:text-white transition flex items-center space-x-2">
+                        <i class="fa-solid fa-people-group text-[11px] text-blue-400 w-4"></i>
+                        <span>Unit Kegiatan Santri (UKS)</span>
+                    </button>
+                    <button onclick="switchTab('alumni'); closeMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/60 hover:text-white transition flex items-center space-x-2">
+                        <i class="fa-solid fa-graduation-cap text-[11px] text-orange-400 w-4"></i>
+                        <span>Ikatan Alumni Pesantren</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 5. Berita -->
+            <button onclick="navigateToNews(); closeMobileMenu();" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold hover:bg-teal-800/60 text-white flex items-center space-x-2.5">
+                <i class="fa-solid fa-newspaper text-teal-400 w-4"></i>
+                <span>Berita & Kabar</span>
+            </button>
+
+            <!-- 6. Accordion Layanan -->
+            <div class="rounded-xl bg-teal-900/40 border border-teal-800/40 overflow-hidden">
+                <button onclick="toggleMobileSubmenu('mob-sub-layanan')" class="w-full text-left px-3 py-2.5 text-xs font-bold text-teal-100 hover:text-white flex justify-between items-center">
+                    <span class="flex items-center space-x-2.5">
+                        <i class="fa-solid fa-hand-holding-heart text-teal-400 w-4"></i>
+                        <span>Layanan</span>
+                    </span>
+                    <i id="mob-arrow-layanan" class="fa-solid fa-chevron-down text-[10px] transition-transform"></i>
+                </button>
+                <div id="mob-sub-layanan" class="hidden px-3 pb-2 pt-1 space-y-1 bg-teal-950/60">
+                    <button onclick="switchTab('layanan-hub'); closeMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/60 hover:text-white transition flex items-center space-x-2">
+                        <i class="fa-solid fa-layer-group text-[11px] text-teal-400 w-4"></i>
+                        <span>Pusat Layanan</span>
+                    </button>
+                    <button onclick="switchTab('galeri'); closeMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/60 hover:text-white transition flex items-center space-x-2">
+                        <i class="fa-solid fa-photo-film text-[11px] text-sky-400 w-4"></i>
+                        <span>Galeri Dokumentasi</span>
+                    </button>
+                    <button onclick="switchTab('kalender'); closeMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/60 hover:text-white transition flex items-center space-x-2">
+                        <i class="fa-solid fa-calendar-days text-[11px] text-amber-400 w-4"></i>
+                        <span>Kalender Masehi & Jawa</span>
+                    </button>
+                    <button onclick="switchTab('ibadah'); closeMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/60 hover:text-white transition flex items-center space-x-2">
+                        <i class="fa-solid fa-book-quran text-[11px] text-teal-400 w-4"></i>
+                        <span>Portal Ibadah & Yaumiyyah</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 7. PPDB CTA Button -->
+            <div class="pt-2">
+                <button onclick="switchTab('ppdb'); closeMobileMenu();" class="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-brand-dark font-extrabold text-xs shadow flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>Daftar PPDB Online</span>
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- ==================== AREA UTAMA (RESPONSIVE WRAPPER) ==================== -->
     <main class="flex-grow w-full mx-auto mb-16 md:mb-0">

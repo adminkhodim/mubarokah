@@ -1,3 +1,5 @@
+const colors = require('tailwindcss/colors');
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: 'class',
@@ -13,14 +15,10 @@ module.exports = {
       },
       colors: {
         brand: {
-          50: '#f0fdf4',
-          100: '#dcfce7',
-          600: '#16a34a',
-          700: '#15803d',
-          800: '#166534',
-          900: '#14532d',
-          dark: '#0f2d1a',
+          ...colors.teal,
+          dark: '#042f2e',
         },
+        emerald: colors.teal,
         accent: {
           500: '#d97706',
           600: '#b45309',
