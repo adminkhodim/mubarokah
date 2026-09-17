@@ -31,6 +31,15 @@
     <!-- Compiled & Minified Tailwind CSS -->
     <link rel="stylesheet" href="css/styles.min.css">
 
+    <style>
+        .desk-dropdown-open {
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+            transform: translateY(0) !important;
+        }
+    </style>
+
     <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
@@ -113,7 +122,7 @@
 
                     <!-- 2. Dropdown: Tentang Kami -->
                     <div class="relative group">
-                        <button onclick="switchTab('profil'); closeAllDropdowns();" id="desk-nav-profil"
+                        <button onclick="toggleDeskDropdown('desk-menu-tentang', event);" id="desk-nav-profil"
                             class="nav-desk-btn px-3.5 py-2 rounded-xl font-bold text-teal-100 hover:text-white hover:bg-teal-800/80 dark:hover:bg-[#15202d] transition flex items-center space-x-1">
                             <span>Tentang Kami</span>
                             <i class="fa-solid fa-chevron-down text-[9px] ml-1 transition-transform duration-200 group-hover:rotate-180"></i>
@@ -121,6 +130,11 @@
                         <div id="desk-menu-tentang"
                             class="desk-dropdown-panel absolute left-0 top-full pt-2 w-52 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                             <div class="bg-white dark:bg-[#15202d] rounded-2xl shadow-xl border border-slate-100 dark:border-[#253447] p-2 space-y-1 text-slate-700 dark:text-slate-200">
+                                <button onclick="switchTab('profil'); closeAllDropdowns();"
+                                    class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
+                                    <i class="fa-solid fa-id-card text-teal-700 dark:text-teal-400 w-4"></i>
+                                    <span>Profil Singkat</span>
+                                </button>
                                 <button onclick="switchTab('sejarah-berdirinya'); closeAllDropdowns();"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-landmark text-teal-700 dark:text-teal-400 w-4"></i>
@@ -142,7 +156,7 @@
 
                     <!-- 3. Dropdown: Pendidikan -->
                     <div class="relative group">
-                        <button onclick="switchTab('program-pilihan'); closeAllDropdowns();" id="desk-nav-program-pilihan"
+                        <button onclick="toggleDeskDropdown('desk-menu-pendidikan', event);" id="desk-nav-program-pilihan"
                             class="nav-desk-btn px-3.5 py-2 rounded-xl font-bold text-teal-100 hover:text-white hover:bg-teal-800/80 dark:hover:bg-[#15202d] transition flex items-center space-x-1">
                             <span>Pendidikan</span>
                             <i class="fa-solid fa-chevron-down text-[9px] ml-1 transition-transform duration-200 group-hover:rotate-180"></i>
@@ -182,7 +196,7 @@
 
                     <!-- 4. Dropdown: Kehidupan Santri -->
                     <div class="relative group">
-                        <button onclick="switchTab('jadwal-kegiatan'); closeAllDropdowns();" id="desk-nav-jadwal-kegiatan"
+                        <button onclick="toggleDeskDropdown('desk-menu-santri', event);" id="desk-nav-jadwal-kegiatan"
                             class="nav-desk-btn px-3.5 py-2 rounded-xl font-bold text-teal-100 hover:text-white hover:bg-teal-800/80 dark:hover:bg-[#15202d] transition flex items-center space-x-1">
                             <span>Kehidupan Santri</span>
                             <i class="fa-solid fa-chevron-down text-[9px] ml-1 transition-transform duration-200 group-hover:rotate-180"></i>
@@ -217,7 +231,7 @@
 
                     <!-- 6. Dropdown: Layanan -->
                     <div class="relative group">
-                        <button onclick="switchTab('layanan-hub'); closeAllDropdowns();" id="desk-nav-layanan-hub"
+                        <button onclick="toggleDeskDropdown('desk-menu-layanan', event);" id="desk-nav-layanan-hub"
                             class="nav-desk-btn px-3.5 py-2 rounded-xl font-bold text-teal-100 hover:text-white hover:bg-teal-800/80 dark:hover:bg-[#15202d] transition flex items-center space-x-1">
                             <span>Layanan</span>
                             <i class="fa-solid fa-chevron-down text-[9px] ml-1 transition-transform duration-200 group-hover:rotate-180"></i>
@@ -334,6 +348,10 @@
                     <i id="mob-arrow-tentang" class="fa-solid fa-chevron-down text-[10px] transition-transform"></i>
                 </button>
                 <div id="mob-sub-tentang" class="hidden px-3 pb-2 pt-1 space-y-1 bg-teal-950/60">
+                    <button onclick="switchTab('profil'); closeMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/60 hover:text-white transition flex items-center space-x-2">
+                        <i class="fa-solid fa-id-card text-[11px] text-teal-400 w-4"></i>
+                        <span>Profil Singkat</span>
+                    </button>
                     <button onclick="switchTab('sejarah-berdirinya'); closeMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/60 hover:text-white transition flex items-center space-x-2">
                         <i class="fa-solid fa-book-open text-[11px] text-teal-400 w-4"></i>
                         <span>Profil & Sejarah</span>
