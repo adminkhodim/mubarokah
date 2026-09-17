@@ -1,10 +1,11 @@
-const CACHE_NAME = 'mubarokah-cache-v2';
+const CACHE_NAME = 'mubarokah-cache-v3';
 
 const PRECACHE_URLS = [
   '/',
   '/index.html',
   '/manifest.json',
   '/css/styles.min.css',
+  '/js/app-config.js',
   '/data-maulid-dibai.js',
   '/data-qasidah-burdah.js',
   '/data-tahlil-yasin.js',
