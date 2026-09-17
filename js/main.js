@@ -34,29 +34,10 @@
         }
 
         // ==================== DROPDOWN & MOBILE NAV CONTROLLERS ====================
-        function toggleDeskDropdown(id, event) {
-            if (event) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            const target = document.getElementById(id);
-            if (!target) return;
-            const isCurrentlyOpen = target.classList.contains('desk-dropdown-open');
-
-            // Tutup semua dropdown lain
-            closeAllDropdowns();
-
-            // Jika belum terbuka, buka target
-            if (!isCurrentlyOpen) {
-                target.classList.add('desk-dropdown-open', '!opacity-100', '!visible', '!pointer-events-auto');
-            }
-        }
-
-        function closeAllDropdowns() {
-            document.querySelectorAll('.desk-dropdown-panel').forEach(panel => {
-                panel.classList.remove('desk-dropdown-open', '!opacity-100', '!visible', '!pointer-events-auto');
-            });
-        }
+        // Desktop dropdown menggunakan pure CSS group-hover & group-focus-within (seperti ASNawiyyah).
+        // Fungsi compatibility no-op dipertahankan untuk keamanan panggilan residual.
+        function toggleDeskDropdown() {}
+        function closeAllDropdowns() {}
 
         function toggleMobileMenu() {
             const drawer = document.getElementById('mobile-nav-drawer');
@@ -81,7 +62,6 @@
 
         function closeMobileMenu() {
             closeMobileDrawer();
-            closeAllDropdowns();
         }
 
         function toggleMobileSubmenu(id) {
@@ -98,12 +78,22 @@
             }
         }
 
-        // Listener global untuk menutup dropdown desktop saat klik di luar
-        document.addEventListener('click', function (e) {
-            if (!e.target.closest('.group')) {
-                closeAllDropdowns();
+        // Handler backdrop & Escape untuk Mobile Drawer
+        (function initMobileDrawerInteractions() {
+            const drawer = document.getElementById('mobile-nav-drawer');
+            if (drawer) {
+                drawer.addEventListener('click', function (e) {
+                    if (e.target === drawer) {
+                        closeMobileDrawer();
+                    }
+                });
             }
-        });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    closeMobileDrawer();
+                }
+            });
+        })();
 
         // Trigger sedini mungkin agar mobile tidak menunggu asset berat
         if (document.readyState === 'loading') {
@@ -506,7 +496,6 @@
                 'beranda': 'mobile-nav-beranda',
                 'kabar': 'mobile-nav-kabar',
                 'detail-berita': 'mobile-nav-kabar',
-                'ppdb': 'mobile-nav-ppdb',
                 'ibadah': 'mobile-nav-ibadah',
                 'quran-index': 'mobile-nav-ibadah',
                 'quran-detail': 'mobile-nav-ibadah',
@@ -517,6 +506,7 @@
                 'burdah-index': 'mobile-nav-ibadah',
                 'burdah-detail': 'mobile-nav-ibadah',
                 'tahlil-yasin': 'mobile-nav-ibadah',
+                'kalender': 'mobile-nav-kalender',
                 'pengaturan': 'mobile-nav-pengaturan',
                 'admin': 'mobile-nav-pengaturan'
             };
@@ -525,11 +515,13 @@
                 btn.classList.remove('text-emerald-300', 'font-bold');
                 btn.classList.add('text-white/80');
             });
-            const targetMobId = PARENT_MOB_MAP[tabId] || `mobile-nav-${tabId}`;
-            const activeMobBtn = document.getElementById(targetMobId);
-            if (activeMobBtn) {
-                activeMobBtn.classList.remove('text-white/80');
-                activeMobBtn.classList.add('text-emerald-300', 'font-bold');
+            const targetMobId = PARENT_MOB_MAP[tabId];
+            if (targetMobId) {
+                const activeMobBtn = document.getElementById(targetMobId);
+                if (activeMobBtn) {
+                    activeMobBtn.classList.remove('text-white/80');
+                    activeMobBtn.classList.add('text-emerald-300', 'font-bold');
+                }
             }
 
             // Nav Desktop Mapping (Hubungkan submenu ke tombol induk di header)
@@ -564,22 +556,21 @@
                 'tahlil-yasin': 'desk-nav-layanan-hub',
                 'quran-index': 'desk-nav-layanan-hub',
                 'quran-detail': 'desk-nav-layanan-hub',
-                'quran-page': 'desk-nav-layanan-hub',
-                'ppdb': 'desk-nav-ppdb',
-                'notifikasi': 'desk-nav-notifikasi'
+                'quran-page': 'desk-nav-layanan-hub'
             };
 
             document.querySelectorAll('.nav-desk-btn').forEach(btn => {
                 btn.classList.remove('bg-teal-800', 'bg-brand-800', 'text-white');
                 btn.classList.add('text-teal-100', 'hover:bg-teal-800/80', 'hover:text-white');
             });
-            const targetDeskId = PARENT_DESK_MAP[tabId] || `desk-nav-${tabId}`;
-            const activeDeskBtn = document.getElementById(targetDeskId);
-            if (activeDeskBtn) {
-                activeDeskBtn.classList.remove('text-teal-100', 'hover:bg-teal-800/80');
-                activeDeskBtn.classList.add('bg-teal-800', 'text-white');
+            const targetDeskId = PARENT_DESK_MAP[tabId];
+            if (targetDeskId) {
+                const activeDeskBtn = document.getElementById(targetDeskId);
+                if (activeDeskBtn) {
+                    activeDeskBtn.classList.remove('text-teal-100', 'hover:bg-teal-800/80');
+                    activeDeskBtn.classList.add('bg-teal-800', 'text-white');
+                }
             }
-            closeAllDropdowns();
             closeMobileDrawer();
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -796,7 +787,7 @@
         }
 
         // ==================== SLIDER BANNER BERANDA (OPTIMIZED SWR) ====================
-        const BANNER_CACHE_KEY = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.storage && APP_CONFIG.storage.keys)
+        const MAIN_BANNER_CACHE_KEY = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.storage && APP_CONFIG.storage.keys)
             ? APP_CONFIG.storage.keys.bannerCache
             : 'mubarokah_banner_cache';
 
@@ -826,7 +817,7 @@
         async function loadBanners() {
             // 1. STALE: Coba render secepat kilat dari cache lokal jika ada
             try {
-                const cached = localStorage.getItem(BANNER_CACHE_KEY);
+                const cached = localStorage.getItem(MAIN_BANNER_CACHE_KEY);
                 if (cached) {
                     const parsed = JSON.parse(cached);
                     if (Array.isArray(parsed) && parsed.length > 0) {
@@ -850,9 +841,9 @@
                 if (response && response.status === "success" &&
                     Array.isArray(response.data) && response.data.length > 0) {
                     const newDataStr = JSON.stringify(response.data);
-                    const oldDataStr = localStorage.getItem(BANNER_CACHE_KEY);
+                    const oldDataStr = localStorage.getItem(MAIN_BANNER_CACHE_KEY);
 
-                    localStorage.setItem(BANNER_CACHE_KEY, newDataStr);
+                    localStorage.setItem(MAIN_BANNER_CACHE_KEY, newDataStr);
                     mockBannerData = response.data;
 
                     // Update UI jika ada perubahan data dari cache sebelumnya

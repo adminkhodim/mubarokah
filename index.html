@@ -31,14 +31,7 @@
     <!-- Compiled & Minified Tailwind CSS -->
     <link rel="stylesheet" href="css/styles.min.css">
 
-    <style>
-        .desk-dropdown-open {
-            opacity: 1 !important;
-            visibility: visible !important;
-            pointer-events: auto !important;
-            transform: translateY(0) !important;
-        }
-    </style>
+
 
     <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
@@ -107,7 +100,7 @@
             <div class="max-w-7xl mx-auto px-8 py-2.5 flex justify-between items-center">
 
                 <!-- Logo Pesantren -->
-                <div class="flex items-center cursor-pointer group" onclick="switchTab('beranda'); closeAllDropdowns();">
+                <div class="flex items-center cursor-pointer group" onclick="switchTab('beranda');">
                     <img src="assets/img/header-logo.png" alt="PP. Roudlotul Mubarokah" class="h-11 md:h-12 w-auto object-contain transition-transform group-hover:scale-105 drop-shadow-sm">
                 </div>
 
@@ -115,37 +108,36 @@
                 <nav id="desk-nav-menu" class="flex items-center space-x-1 text-xs">
 
                     <!-- 1. Beranda -->
-                    <button onclick="switchTab('beranda'); closeAllDropdowns();" id="desk-nav-beranda"
+                    <button onclick="switchTab('beranda');" id="desk-nav-beranda"
                         class="nav-desk-btn px-3.5 py-2 rounded-xl font-bold transition bg-teal-800 dark:bg-teal-800 text-white">
                         Beranda
                     </button>
 
                     <!-- 2. Dropdown: Tentang Kami -->
                     <div class="relative group">
-                        <button onclick="toggleDeskDropdown('desk-menu-tentang', event);" id="desk-nav-profil"
+                        <button type="button" id="desk-nav-profil"
                             class="nav-desk-btn px-3.5 py-2 rounded-xl font-bold text-teal-100 hover:text-white hover:bg-teal-800/80 dark:hover:bg-[#15202d] transition flex items-center space-x-1">
                             <span>Tentang Kami</span>
                             <i class="fa-solid fa-chevron-down text-[9px] ml-1 transition-transform duration-200 group-hover:rotate-180"></i>
                         </button>
-                        <div id="desk-menu-tentang"
-                            class="desk-dropdown-panel absolute left-0 top-full pt-2 w-52 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        <div class="absolute left-0 top-full pt-2 w-52 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-200 z-50">
                             <div class="bg-white dark:bg-[#15202d] rounded-2xl shadow-xl border border-slate-100 dark:border-[#253447] p-2 space-y-1 text-slate-700 dark:text-slate-200">
-                                <button onclick="switchTab('profil'); closeAllDropdowns();"
+                                <button onclick="switchTab('profil');"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-id-card text-teal-700 dark:text-teal-400 w-4"></i>
                                     <span>Profil Singkat</span>
                                 </button>
-                                <button onclick="switchTab('sejarah-berdirinya'); closeAllDropdowns();"
+                                <button onclick="switchTab('sejarah-berdirinya');"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-landmark text-teal-700 dark:text-teal-400 w-4"></i>
                                     <span>Profil & Sejarah</span>
                                 </button>
-                                <button onclick="switchTab('tujuan-visi-misi'); closeAllDropdowns();"
+                                <button onclick="switchTab('tujuan-visi-misi');"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-bullseye text-teal-700 dark:text-teal-400 w-4"></i>
                                     <span>Visi & Misi</span>
                                 </button>
-                                <button onclick="switchTab('struktur-kepengurusan'); closeAllDropdowns();"
+                                <button onclick="switchTab('struktur-kepengurusan');"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-sitemap text-teal-700 dark:text-teal-400 w-4"></i>
                                     <span>Struktur Pengurus</span>
@@ -156,36 +148,35 @@
 
                     <!-- 3. Dropdown: Pendidikan -->
                     <div class="relative group">
-                        <button onclick="toggleDeskDropdown('desk-menu-pendidikan', event);" id="desk-nav-program-pilihan"
+                        <button type="button" id="desk-nav-program-pilihan"
                             class="nav-desk-btn px-3.5 py-2 rounded-xl font-bold text-teal-100 hover:text-white hover:bg-teal-800/80 dark:hover:bg-[#15202d] transition flex items-center space-x-1">
                             <span>Pendidikan</span>
                             <i class="fa-solid fa-chevron-down text-[9px] ml-1 transition-transform duration-200 group-hover:rotate-180"></i>
                         </button>
-                        <div id="desk-menu-pendidikan"
-                            class="desk-dropdown-panel absolute left-0 top-full pt-2 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        <div class="absolute left-0 top-full pt-2 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-200 z-50">
                             <div class="bg-white dark:bg-[#15202d] rounded-2xl shadow-xl border border-slate-100 dark:border-[#253447] p-2 space-y-1 text-slate-700 dark:text-slate-200">
-                                <button onclick="switchTab('program-pilihan'); closeAllDropdowns();"
+                                <button onclick="switchTab('program-pilihan');"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-amber-50 dark:hover:bg-[#1c2836] hover:text-amber-700 dark:hover:text-amber-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-layer-group text-amber-600 dark:text-amber-400 w-4"></i>
                                     <span>Semua Program Pilihan</span>
                                 </button>
                                 <div class="border-t border-slate-100 dark:border-[#253447] my-1"></div>
-                                <button onclick="switchTab('sd-islam'); closeAllDropdowns();"
+                                <button onclick="switchTab('sd-islam');"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-blue-50 dark:hover:bg-[#1c2836] hover:text-blue-700 dark:hover:text-blue-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-school text-blue-500 w-4"></i>
                                     <span>SD Islam Unggulan</span>
                                 </button>
-                                <button onclick="switchTab('tahfidz-anak'); closeAllDropdowns();"
+                                <button onclick="switchTab('tahfidz-anak');"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-child-reaching text-amber-500 w-4"></i>
                                     <span>Pesantren Tahfidz Anak</span>
                                 </button>
-                                <button onclick="switchTab('dewasa-putra'); closeAllDropdowns();"
+                                <button onclick="switchTab('dewasa-putra');"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-user-graduate text-teal-700 dark:text-teal-400 w-4"></i>
                                     <span>Pesantren Dewasa Putra</span>
                                 </button>
-                                <button onclick="switchTab('dewasa-putri'); closeAllDropdowns();"
+                                <button onclick="switchTab('dewasa-putri');"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-person-dress text-purple-600 dark:text-purple-400 w-4"></i>
                                     <span>Pesantren Dewasa Putri</span>
@@ -196,25 +187,24 @@
 
                     <!-- 4. Dropdown: Kehidupan Santri -->
                     <div class="relative group">
-                        <button onclick="toggleDeskDropdown('desk-menu-santri', event);" id="desk-nav-jadwal-kegiatan"
+                        <button type="button" id="desk-nav-jadwal-kegiatan"
                             class="nav-desk-btn px-3.5 py-2 rounded-xl font-bold text-teal-100 hover:text-white hover:bg-teal-800/80 dark:hover:bg-[#15202d] transition flex items-center space-x-1">
                             <span>Kehidupan Santri</span>
                             <i class="fa-solid fa-chevron-down text-[9px] ml-1 transition-transform duration-200 group-hover:rotate-180"></i>
                         </button>
-                        <div id="desk-menu-santri"
-                            class="desk-dropdown-panel absolute left-0 top-full pt-2 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        <div class="absolute left-0 top-full pt-2 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-200 z-50">
                             <div class="bg-white dark:bg-[#15202d] rounded-2xl shadow-xl border border-slate-100 dark:border-[#253447] p-2 space-y-1 text-slate-700 dark:text-slate-200">
-                                <button onclick="switchTab('jadwal-kegiatan'); closeAllDropdowns();"
+                                <button onclick="switchTab('jadwal-kegiatan');"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-rose-50 dark:hover:bg-[#1c2836] hover:text-rose-700 dark:hover:text-rose-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-calendar-check text-rose-600 dark:text-rose-400 w-4"></i>
                                     <span>Jadwal Kegiatan Santri</span>
                                 </button>
-                                <button onclick="switchTab('unit-kegiatan'); closeAllDropdowns();"
+                                <button onclick="switchTab('unit-kegiatan');"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-blue-50 dark:hover:bg-[#1c2836] hover:text-blue-700 dark:hover:text-blue-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-people-group text-blue-600 dark:text-blue-400 w-4"></i>
                                     <span>Unit Kegiatan Santri (UKS)</span>
                                 </button>
-                                <button onclick="switchTab('alumni'); closeAllDropdowns();"
+                                <button onclick="switchTab('alumni');"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-orange-50 dark:hover:bg-[#1c2836] hover:text-orange-700 dark:hover:text-orange-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-graduation-cap text-orange-600 dark:text-orange-400 w-4"></i>
                                     <span>Ikatan Alumni Pesantren</span>
@@ -224,37 +214,36 @@
                     </div>
 
                     <!-- 5. Berita -->
-                    <button onclick="navigateToNews(); closeAllDropdowns();" id="desk-nav-berita"
+                    <button onclick="navigateToNews();" id="desk-nav-berita"
                         class="nav-desk-btn px-3.5 py-2 rounded-xl font-bold text-teal-100 hover:text-white hover:bg-teal-800/80 dark:hover:bg-[#15202d] transition">
                         Berita
                     </button>
 
                     <!-- 6. Dropdown: Layanan -->
                     <div class="relative group">
-                        <button onclick="toggleDeskDropdown('desk-menu-layanan', event);" id="desk-nav-layanan-hub"
+                        <button type="button" id="desk-nav-layanan-hub"
                             class="nav-desk-btn px-3.5 py-2 rounded-xl font-bold text-teal-100 hover:text-white hover:bg-teal-800/80 dark:hover:bg-[#15202d] transition flex items-center space-x-1">
                             <span>Layanan</span>
                             <i class="fa-solid fa-chevron-down text-[9px] ml-1 transition-transform duration-200 group-hover:rotate-180"></i>
                         </button>
-                        <div id="desk-menu-layanan"
-                            class="desk-dropdown-panel absolute left-0 top-full pt-2 w-52 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        <div class="absolute left-0 top-full pt-2 w-52 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-200 z-50">
                             <div class="bg-white dark:bg-[#15202d] rounded-2xl shadow-xl border border-slate-100 dark:border-[#253447] p-2 space-y-1 text-slate-700 dark:text-slate-200">
-                                <button onclick="switchTab('layanan-hub'); closeAllDropdowns();"
+                                <button onclick="switchTab('layanan-hub');"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-layer-group text-teal-600 dark:text-teal-400 w-4"></i>
                                     <span>Pusat Layanan</span>
                                 </button>
-                                <button onclick="switchTab('galeri'); closeAllDropdowns();"
+                                <button onclick="switchTab('galeri');"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-sky-50 dark:hover:bg-[#1c2836] hover:text-sky-700 dark:hover:text-sky-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-photo-film text-sky-600 dark:text-sky-400 w-4"></i>
                                     <span>Galeri Dokumentasi</span>
                                 </button>
-                                <button onclick="switchTab('kalender'); closeAllDropdowns();"
+                                <button onclick="switchTab('kalender');"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-amber-50 dark:hover:bg-[#1c2836] hover:text-amber-700 dark:hover:text-amber-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-calendar-days text-amber-600 dark:text-amber-400 w-4"></i>
                                     <span>Kalender Masehi & Jawa</span>
                                 </button>
-                                <button onclick="switchTab('ibadah'); closeAllDropdowns();"
+                                <button onclick="switchTab('ibadah');"
                                     class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
                                     <i class="fa-solid fa-book-quran text-teal-600 dark:text-teal-400 w-4"></i>
                                     <span>Portal Ibadah & Yaumiyyah</span>
@@ -276,13 +265,13 @@
                     </button>
 
                     <!-- Tombol Notifikasi Desktop -->
-                    <button onclick="switchTab('notifikasi'); closeAllDropdowns();"
+                    <button onclick="switchTab('notifikasi');"
                         class="relative w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-amber-300 flex items-center justify-center text-sm border border-white/10 shadow-sm transition active:scale-95"
                         title="Pusat Notifikasi">
                         <i class="fa-solid fa-bell"></i>
                         <span id="desk-notif-badge" class="hidden absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[10px] font-extrabold rounded-full flex items-center justify-center shadow border-2 border-teal-900 leading-none">0</span>
                     </button>
-                    <button onclick="switchTab('ppdb'); closeAllDropdowns();"
+                    <button onclick="switchTab('ppdb');"
                         class="bg-amber-500 hover:bg-amber-400 text-brand-dark px-4 py-2 rounded-xl font-extrabold text-xs shadow-md transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 flex items-center space-x-1.5">
                         <i class="fa-solid fa-user-plus text-xs"></i>
                         <span>Daftar PPDB</span>
