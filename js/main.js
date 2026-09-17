@@ -1,24 +1,42 @@
         // ==================== MOBILE SPLASH LOGIC ====================
+        let isSplashDismissed = false;
         function initMobileSplash() {
+            if (isSplashDismissed) return;
             const splashScreen = document.getElementById('mobile-splash-screen');
             const logoContainer = document.getElementById('mobile-splash-logo-container');
+            if (!splashScreen) return;
 
-            // Tampilkan animasi
-            setTimeout(() => {
-                logoContainer.classList.remove('scale-110', 'opacity-0');
-                logoContainer.classList.add('scale-100', 'opacity-100');
-            }, 100);
-
-            // Hilangkan perlahan setelah 2 detik
-            setTimeout(() => {
-                splashScreen.classList.add('opacity-0');
-            }, 2000);
-
-            // Hapus dari DOM
-            setTimeout(() => {
+            // Jika desktop (layar >= 768px), langsung sembunyikan splash agar tidak blocking
+            if (window.innerWidth >= 768) {
+                isSplashDismissed = true;
                 splashScreen.style.display = 'none';
-            }, 3000);
+                return;
+            }
+
+            // Tampilkan animasi logo
+            if (logoContainer) {
+                setTimeout(() => {
+                    logoContainer.classList.remove('scale-110', 'opacity-0');
+                    logoContainer.classList.add('scale-100', 'opacity-100');
+                }, 50);
+            }
+
+            // Hilangkan perlahan dan matikan pointer events (800ms)
+            setTimeout(() => {
+                splashScreen.classList.add('opacity-0', 'pointer-events-none');
+            }, 800);
+
+            // Sembunyikan total dari layout (1500ms)
+            setTimeout(() => {
+                isSplashDismissed = true;
+                splashScreen.style.display = 'none';
+            }, 1500);
         }
+
+        // Trigger sedini mungkin agar mobile tidak menunggu asset berat
+        document.addEventListener('DOMContentLoaded', () => {
+            initMobileSplash();
+        });
 
         // ==================== INISIALISASI UTAMA (SINGLE ONLOAD) ====================
         window.onload = function () {
@@ -420,13 +438,13 @@
 
             // Nav Desktop
             document.querySelectorAll('.nav-desk-btn').forEach(btn => {
-                btn.classList.remove('bg-brand-800', 'text-white');
-                btn.classList.add('text-emerald-100', 'hover:bg-brand-800', 'hover:text-white');
+                btn.classList.remove('bg-teal-800', 'bg-brand-800', 'text-white');
+                btn.classList.add('text-teal-100', 'hover:bg-teal-800/80', 'hover:text-white');
             });
             const activeDeskBtn = document.getElementById(`desk-nav-${tabId}`);
             if (activeDeskBtn) {
-                activeDeskBtn.classList.remove('text-emerald-100', 'hover:bg-brand-800', 'hover:text-white');
-                activeDeskBtn.classList.add('bg-brand-800', 'text-white');
+                activeDeskBtn.classList.remove('text-teal-100', 'hover:bg-teal-800/80', 'hover:text-white');
+                activeDeskBtn.classList.add('bg-teal-800', 'text-white');
             }
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
