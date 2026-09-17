@@ -501,25 +501,82 @@
                 }
             }
 
-            // Nav Mobile
+            // Nav Mobile Mapping
+            const PARENT_MOB_MAP = {
+                'beranda': 'mobile-nav-beranda',
+                'kabar': 'mobile-nav-kabar',
+                'detail-berita': 'mobile-nav-kabar',
+                'ppdb': 'mobile-nav-ppdb',
+                'ibadah': 'mobile-nav-ibadah',
+                'quran-index': 'mobile-nav-ibadah',
+                'quran-detail': 'mobile-nav-ibadah',
+                'quran-page': 'mobile-nav-ibadah',
+                'maulid-hub': 'mobile-nav-ibadah',
+                'maulid-index': 'mobile-nav-ibadah',
+                'maulid-detail': 'mobile-nav-ibadah',
+                'burdah-index': 'mobile-nav-ibadah',
+                'burdah-detail': 'mobile-nav-ibadah',
+                'tahlil-yasin': 'mobile-nav-ibadah',
+                'pengaturan': 'mobile-nav-pengaturan',
+                'admin': 'mobile-nav-pengaturan'
+            };
+
             document.querySelectorAll('.nav-mob-btn').forEach(btn => {
                 btn.classList.remove('text-emerald-300', 'font-bold');
                 btn.classList.add('text-white/80');
             });
-            const activeMobBtn = document.getElementById(`mobile-nav-${tabId}`);
+            const targetMobId = PARENT_MOB_MAP[tabId] || `mobile-nav-${tabId}`;
+            const activeMobBtn = document.getElementById(targetMobId);
             if (activeMobBtn) {
                 activeMobBtn.classList.remove('text-white/80');
                 activeMobBtn.classList.add('text-emerald-300', 'font-bold');
             }
 
-            // Nav Desktop
+            // Nav Desktop Mapping (Hubungkan submenu ke tombol induk di header)
+            const PARENT_DESK_MAP = {
+                'beranda': 'desk-nav-beranda',
+                'profil': 'desk-nav-profil',
+                'sejarah-berdirinya': 'desk-nav-profil',
+                'tujuan-visi-misi': 'desk-nav-profil',
+                'struktur-kepengurusan': 'desk-nav-profil',
+                'program-pilihan': 'desk-nav-program-pilihan',
+                'sd-islam': 'desk-nav-program-pilihan',
+                'tahfidz-anak': 'desk-nav-program-pilihan',
+                'dewasa-putra': 'desk-nav-program-pilihan',
+                'dewasa-putri': 'desk-nav-program-pilihan',
+                'jadwal-kegiatan': 'desk-nav-jadwal-kegiatan',
+                'unit-kegiatan': 'desk-nav-jadwal-kegiatan',
+                'alumni': 'desk-nav-jadwal-kegiatan',
+                'form-alumni': 'desk-nav-jadwal-kegiatan',
+                'poskestren': 'desk-nav-jadwal-kegiatan',
+                'kabar': 'desk-nav-berita',
+                'detail-berita': 'desk-nav-berita',
+                'layanan-hub': 'desk-nav-layanan-hub',
+                'galeri': 'desk-nav-layanan-hub',
+                'kalender': 'desk-nav-layanan-hub',
+                'ibadah': 'desk-nav-layanan-hub',
+                'jadwal-sholat': 'desk-nav-layanan-hub',
+                'maulid-hub': 'desk-nav-layanan-hub',
+                'maulid-index': 'desk-nav-layanan-hub',
+                'maulid-detail': 'desk-nav-layanan-hub',
+                'burdah-index': 'desk-nav-layanan-hub',
+                'burdah-detail': 'desk-nav-layanan-hub',
+                'tahlil-yasin': 'desk-nav-layanan-hub',
+                'quran-index': 'desk-nav-layanan-hub',
+                'quran-detail': 'desk-nav-layanan-hub',
+                'quran-page': 'desk-nav-layanan-hub',
+                'ppdb': 'desk-nav-ppdb',
+                'notifikasi': 'desk-nav-notifikasi'
+            };
+
             document.querySelectorAll('.nav-desk-btn').forEach(btn => {
                 btn.classList.remove('bg-teal-800', 'bg-brand-800', 'text-white');
                 btn.classList.add('text-teal-100', 'hover:bg-teal-800/80', 'hover:text-white');
             });
-            const activeDeskBtn = document.getElementById(`desk-nav-${tabId}`);
+            const targetDeskId = PARENT_DESK_MAP[tabId] || `desk-nav-${tabId}`;
+            const activeDeskBtn = document.getElementById(targetDeskId);
             if (activeDeskBtn) {
-                activeDeskBtn.classList.remove('text-teal-100', 'hover:bg-teal-800/80', 'hover:text-white');
+                activeDeskBtn.classList.remove('text-teal-100', 'hover:bg-teal-800/80');
                 activeDeskBtn.classList.add('bg-teal-800', 'text-white');
             }
             closeAllDropdowns();

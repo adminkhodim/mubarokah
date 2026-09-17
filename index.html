@@ -113,7 +113,7 @@
 
                     <!-- 2. Dropdown: Tentang Kami -->
                     <div class="relative group">
-                        <button onclick="toggleDeskDropdown('desk-menu-tentang', event)" id="desk-nav-profil"
+                        <button onclick="switchTab('profil'); closeAllDropdowns();" id="desk-nav-profil"
                             class="nav-desk-btn px-3.5 py-2 rounded-xl font-bold text-teal-100 hover:text-white hover:bg-teal-800/80 dark:hover:bg-[#15202d] transition flex items-center space-x-1">
                             <span>Tentang Kami</span>
                             <i class="fa-solid fa-chevron-down text-[9px] ml-1 transition-transform duration-200 group-hover:rotate-180"></i>
@@ -142,7 +142,7 @@
 
                     <!-- 3. Dropdown: Pendidikan -->
                     <div class="relative group">
-                        <button onclick="toggleDeskDropdown('desk-menu-pendidikan', event)" id="desk-nav-program-pilihan"
+                        <button onclick="switchTab('program-pilihan'); closeAllDropdowns();" id="desk-nav-program-pilihan"
                             class="nav-desk-btn px-3.5 py-2 rounded-xl font-bold text-teal-100 hover:text-white hover:bg-teal-800/80 dark:hover:bg-[#15202d] transition flex items-center space-x-1">
                             <span>Pendidikan</span>
                             <i class="fa-solid fa-chevron-down text-[9px] ml-1 transition-transform duration-200 group-hover:rotate-180"></i>
@@ -182,7 +182,7 @@
 
                     <!-- 4. Dropdown: Kehidupan Santri -->
                     <div class="relative group">
-                        <button onclick="toggleDeskDropdown('desk-menu-santri', event)" id="desk-nav-jadwal-kegiatan"
+                        <button onclick="switchTab('jadwal-kegiatan'); closeAllDropdowns();" id="desk-nav-jadwal-kegiatan"
                             class="nav-desk-btn px-3.5 py-2 rounded-xl font-bold text-teal-100 hover:text-white hover:bg-teal-800/80 dark:hover:bg-[#15202d] transition flex items-center space-x-1">
                             <span>Kehidupan Santri</span>
                             <i class="fa-solid fa-chevron-down text-[9px] ml-1 transition-transform duration-200 group-hover:rotate-180"></i>
@@ -210,14 +210,14 @@
                     </div>
 
                     <!-- 5. Berita -->
-                    <button onclick="navigateToNews(); closeAllDropdowns();"
+                    <button onclick="navigateToNews(); closeAllDropdowns();" id="desk-nav-berita"
                         class="nav-desk-btn px-3.5 py-2 rounded-xl font-bold text-teal-100 hover:text-white hover:bg-teal-800/80 dark:hover:bg-[#15202d] transition">
                         Berita
                     </button>
 
                     <!-- 6. Dropdown: Layanan -->
                     <div class="relative group">
-                        <button onclick="toggleDeskDropdown('desk-menu-layanan', event)" id="desk-nav-layanan-hub"
+                        <button onclick="switchTab('layanan-hub'); closeAllDropdowns();" id="desk-nav-layanan-hub"
                             class="nav-desk-btn px-3.5 py-2 rounded-xl font-bold text-teal-100 hover:text-white hover:bg-teal-800/80 dark:hover:bg-[#15202d] transition flex items-center space-x-1">
                             <span>Layanan</span>
                             <i class="fa-solid fa-chevron-down text-[9px] ml-1 transition-transform duration-200 group-hover:rotate-180"></i>
@@ -1381,7 +1381,9 @@
                         <p class="mt-2 text-xs leading-relaxed text-brand-700 dark:text-emerald-400/80">5 Desember 1981</p>
                     </div>
                     <div id="public-sejarah-container" class="rounded-3xl bg-slate-50 dark:bg-[#1c2836] border border-slate-100 dark:border-[#253447] p-5 md:p-7 space-y-4 text-xs md:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                        <!-- Akan dirender oleh JS -->
+                        <p>Pondok Pesantren Tahfidzul Qur'an Roudlotul Mubarokah didirikan dengan tekad luhur untuk mencetak generasi penghafal Al-Qur'an yang mutqin, berakhlak mulia, dan berwawasan kebangsaan yang luas.</p>
+                        <p>Berawal dari majelis halaqah tahfidz dan pembinaan keagamaan masyarakat, Pesantren Roudlotul Mubarokah kini berkembang menjadi lembaga pendidikan terpadu yang memadukan sanad tahfidz Al-Qur'an bersanad muttashil, kajian kitab kuning (salaf), serta penguasaan sains dan teknologi modern.</p>
+                        <p>Dengan lingkungan pesantren yang kondusif, asri, dan berdisiplin tinggi di Karanganyar Demak, kami berkomitmen mendampingi para santri mencapai kemandirian spiritual, kedalaman keilmuan syariah, dan kesiapan menjadi pemimpin umat masa depan.</p>
                     </div>
                 </div>
             </section>
@@ -1408,7 +1410,21 @@
             </div>
             <section class="space-y-4">
                 <div id="public-visimisi-container" class="rounded-3xl border border-slate-100 dark:border-[#253447] bg-slate-50 dark:bg-[#1c2836] p-6 md:p-8 space-y-4 text-xs md:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                    <!-- Akan dirender oleh JS -->
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-white dark:bg-[#1c2836] border border-slate-100 dark:border-[#253447] flex items-center justify-center text-teal-600 dark:text-teal-400 shadow-sm">
+                            <i class="fa-solid fa-bullseye"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-800 dark:text-slate-100">Arah & Tujuan</h4>
+                        </div>
+                    </div>
+                    <p class="font-bold text-slate-800 dark:text-slate-100">Visi:</p>
+                    <p>Mencetak Generasi Qur'ani, Berakhlak Mulia, Unggul dalam Ilmu Syariah, dan Berdaya Saing Global.</p>
+                    <p class="font-bold text-slate-800 dark:text-slate-100 pt-2">Misi:</p>
+                    <p>1. Menyelenggarakan pendidikan tahfidzul Qur'an intensif dengan standar bacaan tartil dan sanad muttashil.</p>
+                    <p>2. Menanamkan adab, akhlaqul karimah, dan keteladanan salafus shalih dalam rutinitas keseharian santri.</p>
+                    <p>3. Mengembangkan keilmuan integratif antara kajian turots Islamiyah dan penguasaan sains teknologi.</p>
+                    <p>4. Membangun kemandirian santri melalui pembinaan karakter, kedisiplinan asrama, dan kepemimpinan dakwah.</p>
                 </div>
             </section>
         </div>
@@ -1434,7 +1450,42 @@
             </div>
             <section class="space-y-4">
                 <div id="public-pengurus-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    <!-- Akan dirender oleh JS -->
+                    <div class="bg-slate-50 dark:bg-[#1c2836] rounded-3xl overflow-hidden border border-slate-100 dark:border-[#253447] p-4 text-center space-y-3 flex flex-col items-center hover:shadow-md transition">
+                        <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-teal-600 shadow-sm shrink-0 bg-white dark:bg-[#15202d] flex items-center justify-center">
+                            <i class="fa-solid fa-user-tie text-3xl text-teal-700 dark:text-teal-400"></i>
+                        </div>
+                        <div>
+                            <span class="bg-teal-100 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase">PENGASUH</span>
+                            <h4 class="text-xs md:text-sm font-bold text-slate-800 dark:text-slate-100 mt-1">Pengasuh Pesantren</h4>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-[#1c2836] rounded-3xl overflow-hidden border border-slate-100 dark:border-[#253447] p-4 text-center space-y-3 flex flex-col items-center hover:shadow-md transition">
+                        <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-teal-600 shadow-sm shrink-0 bg-white dark:bg-[#15202d] flex items-center justify-center">
+                            <i class="fa-solid fa-user-gear text-3xl text-teal-700 dark:text-teal-400"></i>
+                        </div>
+                        <div>
+                            <span class="bg-teal-100 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase">LURAH PONDOK</span>
+                            <h4 class="text-xs md:text-sm font-bold text-slate-800 dark:text-slate-100 mt-1">Kepala / Lurah Pondok</h4>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-[#1c2836] rounded-3xl overflow-hidden border border-slate-100 dark:border-[#253447] p-4 text-center space-y-3 flex flex-col items-center hover:shadow-md transition">
+                        <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-teal-600 shadow-sm shrink-0 bg-white dark:bg-[#15202d] flex items-center justify-center">
+                            <i class="fa-solid fa-book-quran text-3xl text-teal-700 dark:text-teal-400"></i>
+                        </div>
+                        <div>
+                            <span class="bg-teal-100 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase">TAHFIDZ</span>
+                            <h4 class="text-xs md:text-sm font-bold text-slate-800 dark:text-slate-100 mt-1">Koordinator Tahfidz</h4>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-[#1c2836] rounded-3xl overflow-hidden border border-slate-100 dark:border-[#253447] p-4 text-center space-y-3 flex flex-col items-center hover:shadow-md transition">
+                        <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-teal-600 shadow-sm shrink-0 bg-white dark:bg-[#15202d] flex items-center justify-center">
+                            <i class="fa-solid fa-graduation-cap text-3xl text-teal-700 dark:text-teal-400"></i>
+                        </div>
+                        <div>
+                            <span class="bg-teal-100 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase">PENDIDIKAN</span>
+                            <h4 class="text-xs md:text-sm font-bold text-slate-800 dark:text-slate-100 mt-1">Bidang Pendidikan & Kitab</h4>
+                        </div>
+                    </div>
                 </div>
             </section>
         </div>

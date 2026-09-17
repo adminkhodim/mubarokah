@@ -61,22 +61,17 @@
         }
 
         async function initializeProgramRuntime() {
-            programRuntimeState.status = "loading";
-            programRuntimeState.error = null;
-            programRuntimeState.requestId = null;
-            renderProgramLoadingState();
+            // Render instan dari PROGRAM_DATA lokal (Stale-While-Revalidate) agar halaman tidak pernah kosong
+            if (Array.isArray(PROGRAM_DATA) && PROGRAM_DATA.length > 0) {
+                RUNTIME_PROGRAM_DATA = [...PROGRAM_DATA];
+                programRuntimeState.status = "ready";
+                renderProgramAllViews();
+            } else {
+                programRuntimeState.status = "loading";
+                renderProgramLoadingState();
+            }
 
             if (!isApiConfigured()) {
-                if (Array.isArray(PROGRAM_DATA) && PROGRAM_DATA.length > 0) {
-                    console.warn("API Endpoint belum dikonfigurasi, menggunakan fallback data lokal PROGRAM_DATA.");
-                    RUNTIME_PROGRAM_DATA = [...PROGRAM_DATA];
-                    programRuntimeState.status = "ready";
-                    renderProgramAllViews();
-                    return;
-                }
-                programRuntimeState.status = "error";
-                programRuntimeState.error = "API Endpoint belum dikonfigurasi.";
-                renderProgramErrorState();
                 return;
             }
 

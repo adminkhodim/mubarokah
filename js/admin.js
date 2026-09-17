@@ -226,21 +226,45 @@
         }
 
         // ==================== RENDER PROFIL LEMBAGA (PUBLIK) ====================
+        const DEFAULT_PROFIL_MUBAROKAH = {
+            sejarah: "Pondok Pesantren Tahfidzul Qur'an Roudlotul Mubarokah didirikan dengan tekad luhur untuk mencetak generasi penghafal Al-Qur'an yang mutqin, berakhlak mulia, dan berwawasan kebangsaan yang luas.\n\nBerawal dari majelis halaqah tahfidz dan pembinaan keagamaan masyarakat, Pesantren Roudlotul Mubarokah kini berkembang menjadi lembaga pendidikan terpadu yang memadukan sanad tahfidz Al-Qur'an bersanad muttashil, kajian kitab kuning (salaf), serta penguasaan sains dan teknologi modern.\n\nDengan lingkungan pesantren yang kondusif, asri, dan berdisiplin tinggi di Karanganyar Demak, kami berkomitmen mendampingi para santri mencapai kemandirian spiritual, kedalaman keilmuan syariah, dan kesiapan menjadi pemimpin umat masa depan.",
+            visi_misi: "Visi:\nMencetak Generasi Qur'ani, Berakhlak Mulia, Unggul dalam Ilmu Syariah, dan Berdaya Saing Global.\n\nMisi:\n1. Menyelenggarakan pendidikan tahfidzul Qur'an intensif dengan standar bacaan tartil dan sanad muttashil.\n2. Menanamkan adab, akhlaqul karimah, dan keteladanan salafus shalih dalam rutinitas keseharian santri.\n3. Mengembangkan keilmuan integratif antara kajian turots Islamiyah dan penguasaan sains teknologi.\n4. Membangun kemandirian santri melalui pembinaan karakter, kedisiplinan asrama, dan kepemimpinan dakwah.",
+            struktur_kepengurusan: JSON.stringify([
+                { nama: "Pengasuh Pesantren", jabatan: "Pengasuh Pondok Pesantren", foto: "" },
+                { nama: "Lurah Pondok", jabatan: "Kepala / Lurah Pondok", foto: "" },
+                { nama: "Koordinator Tahfidz", jabatan: "Koordinator Tahfidzul Qur'an", foto: "" },
+                { nama: "Koordinator Kurikulum", jabatan: "Bidang Pendidikan & Kitab", foto: "" },
+                { nama: "Bagian Keamanan & Disiplin", jabatan: "Bidang Ketertiban & Keamanan", foto: "" },
+                { nama: "Bagian Humas & Layanan", jabatan: "Humas & Hubungan Masyarakat", foto: "" }
+            ])
+        };
+
         window.APP_PROFIL_STATE = window.APP_PROFIL_STATE || {};
+        if (!window.APP_PROFIL_STATE.sejarah) window.APP_PROFIL_STATE.sejarah = DEFAULT_PROFIL_MUBAROKAH.sejarah;
+        if (!window.APP_PROFIL_STATE.visi_misi) window.APP_PROFIL_STATE.visi_misi = DEFAULT_PROFIL_MUBAROKAH.visi_misi;
+        if (!window.APP_PROFIL_STATE.struktur_kepengurusan) window.APP_PROFIL_STATE.struktur_kepengurusan = DEFAULT_PROFIL_MUBAROKAH.struktur_kepengurusan;
 
         async function loadPublicProfilLembaga() {
+            // Render default state terlebih dahulu agar tidak blank
+            renderPublicProfilLembaga();
+
+            if (typeof isApiConfigured === 'function' && !isApiConfigured()) {
+                return;
+            }
+
             try {
                 const data = await apiGet("getPengaturan");
                 if (data && data.status === "success" && data.data) {
                     const config = data.data;
-                    window.APP_PROFIL_STATE.sejarah = config.sejarah || "";
-                    window.APP_PROFIL_STATE.visi_misi = config.visi_misi || "";
-                    window.APP_PROFIL_STATE.struktur_kepengurusan = config.struktur_kepengurusan || "";
+                    if (config.sejarah) window.APP_PROFIL_STATE.sejarah = config.sejarah;
+                    if (config.visi_misi) window.APP_PROFIL_STATE.visi_misi = config.visi_misi;
+                    if (config.struktur_kepengurusan) window.APP_PROFIL_STATE.struktur_kepengurusan = config.struktur_kepengurusan;
                     
                     renderPublicProfilLembaga();
                 }
             } catch(e) {
-                console.error("Gagal load profil publik:", e);
+                console.warn("Menggunakan profil default (API offline):", e);
+                renderPublicProfilLembaga();
             }
         }
 
