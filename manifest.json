@@ -1,0 +1,15 @@
+{
+  "name": "Mubarokah App",
+  "short_name": "Mubarokah",
+  "description": "Aplikasi Pesantren Mubarokah",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#059669",
+  "orientation": "portrait-primary",
+  "categories": ["education", "lifestyle"],
+  "icons": []
+}
+

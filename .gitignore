@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Build / Vercel
+.vercel/
+dist/
+build/
+
+# Local logs
+*.log
+
+# Secrets / credentials
+*.pem
+*.key
+service-account*.json
+credentials*.json
+
+# Temporary files
+*.tmp
+*.bak
+scratch/
+.vercel

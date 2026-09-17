@@ -1,0 +1,7 @@
+# Ignore all files by default
+**/*
+
+# Explicitly whitelist files for Google Apps Script
+!Code.gs
+!Index.html
+!appsscript.json

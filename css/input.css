@@ -1,0 +1,137 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  @keyframes slideUpDynamic {
+    0% {
+      transform: translateY(100px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-slide-up-dynamic {
+    animation: slideUpDynamic 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes slideInLeftHero {
+    0% {
+      transform: translateX(-30px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-slide-in-left-hero {
+    animation: slideInLeftHero 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes fadeInUpHero {
+    0% {
+      transform: translateY(30px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-fade-in-up-hero {
+    animation: fadeInUpHero 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .opacity-0-init {
+    opacity: 0;
+  }
+
+  /* Utility Class no-scrollbar */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Efek transisi antar tab */
+  .tab-content {
+    transition: opacity 0.2s ease-in-out;
+  }
+}
+
+/* Sembunyikan Scrollbar Utama Browser (Chrome, Safari, Opera) */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Sembunyikan Scrollbar (Firefox, IE, Edge) */
+html,
+body {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+/* Dark mode native controls & color-scheme */
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body {
+  background-color: #0b131e;
+  color: #f1f5f9;
+}
+
+/* Base form controls for dark mode */
+html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
+html.dark textarea,
+html.dark select {
+  background-color: #1c2836;
+  color: #f1f5f9;
+  border-color: #253447;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #94a3b8;
+}
+
+html.dark option {
+  background-color: #15202d;
+  color: #f1f5f9;
+}
+
+/* ========================================================================= */
+/* PROTEKSI MUTLAK ISOLASI LAYOUT DESKTOP VS MOBILE (ANTI-LEAKAGE)           */
+/* ========================================================================= */
+@media (min-width: 768px) {
+  #beranda-mobile-section {
+    display: none !important;
+  }
+  #beranda-desktop-section {
+    display: block !important;
+  }
+  #account-state-admin {
+    display: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  #beranda-mobile-section {
+    display: block !important;
+  }
+  #beranda-desktop-section {
+    display: none !important;
+  }
+}

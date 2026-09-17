@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>STEP 4A — API Contract Integration Test</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:#f6f7f9;color:#172033;margin:0}
+    .wrap{max-width:980px;margin:40px auto;padding:0 20px}
+    h1{margin-bottom:6px}.muted{color:#64748b}
+    .card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;margin:16px 0}
+    input{width:100%;box-sizing:border-box;padding:10px;border:1px solid #cbd5e1;border-radius:8px}
+    button{padding:10px 14px;border:0;border-radius:8px;background:#0f766e;color:#fff;font-weight:700;cursor:pointer}
+    button.secondary{background:#334155}
+    table{width:100%;border-collapse:collapse;margin-top:14px}
+    th,td{padding:10px;border-bottom:1px solid #e2e8f0;text-align:left;font-size:14px;vertical-align:top}
+    .pass{color:#047857;font-weight:800}.fail{color:#b91c1c;font-weight:800}.skip{color:#a16207;font-weight:800}
+    pre{white-space:pre-wrap;word-break:break-word;background:#0f172a;color:#e2e8f0;padding:12px;border-radius:10px;font-size:12px}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>STEP 4A — Integration Test API Contract</h1>
+  <div class="muted">Read-only + negative-path test. Tidak membuat berita/banner/PPDB baru.</div>
+
+  <div class="card">
+    <label><strong>Apps Script Web App URL</strong></label>
+    <input id="baseUrl" value="" placeholder="__MUBAROKAH_CONFIG_PENDING__">
+    <p><button onclick="runAll()">▶ Jalankan Semua Test</button> <button class="secondary" onclick="clearResults()">Bersihkan</button></p>
+    <div id="summary" class="muted">Belum dijalankan.</div>
+  </div>
+
+  <div class="card">
+    <table>
+      <thead><tr><th>Test</th><th>HTTP</th><th>Result</th><th>Detail</th></tr></thead>
+      <tbody id="results"></tbody>
+    </table>
+  </div>
+
+  <div class="card" style="border: 2px solid #0f766e; background: #f0fdfa;">
+    <h2 style="margin-top:0; color:#0f766e; font-size:16px;">PHASE 2B — Admin OTP Happy-Path Lifecycle Test</h2>
+    <div class="muted" style="margin-bottom:12px;">Alur lengkap: <strong>auth.admin.verifyOtp</strong> → <strong>auth.session</strong> → <strong>auth.logout</strong> → <strong>re-check rejection</strong>.</div>
+    
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+      <div>
+        <label><strong>Email Admin</strong></label>
+        <input id="adminEmail" value="facenovaid@gmail.com" readonly style="background:#f8fafc;">
+      </div>
+      <div>
+        <label><strong>6-Digit Kode OTP dari Email</strong></label>
+        <input id="adminOtp" placeholder="Masukkan 6 angka OTP..." maxlength="6" style="font-weight:bold; letter-spacing:3px; text-align:center;">
+      </div>
+    </div>
+
+    <div style="margin-bottom: 12px;">
+      <label><strong>Session Token (Otomatis terisi setelah verifyOtp)</strong></label>
+      <input id="sessionToken" placeholder="Session token akan otomatis tersimpan di sini..." style="font-family:monospace; font-size:12px; background:#f8fafc;">
+    </div>
+
+    <p style="margin:0 0 10px 0;">
+      <button onclick="runAdminOtpHappyPath()" style="background:#0f766e; font-size:14px; padding:10px 18px;">▶ Jalankan Alur Happy-Path Lengkap (1 s/d 4)</button>
+      <button class="secondary" onclick="requestAdminOtpAgain()">Minta OTP Baru (auth.admin.requestOtp)</button>
+    </p>
+
+    <div style="display:flex; flex-wrap:wrap; gap:6px; padding-top:10px; border-top:1px dashed #99f6e4;">
+      <span style="font-size:12px; color:#0f766e; width:100%; font-weight:600;">Eksekusi Step-by-Step (Opsional):</span>
+      <button class="secondary" onclick="step1VerifyOtp()" style="font-size:12px; padding:5px 10px;">Step 1: verifyOtp</button>
+      <button class="secondary" onclick="step2CheckSession()" style="font-size:12px; padding:5px 10px;">Step 2: auth.session</button>
+      <button class="secondary" onclick="step3Logout()" style="font-size:12px; padding:5px 10px;">Step 3: auth.logout</button>
+      <button class="secondary" onclick="step4RecheckSession()" style="font-size:12px; padding:5px 10px;">Step 4: Re-check Rejection</button>
+    </div>
+  </div>
+
+  <div class="card" style="border: 2px solid #2563eb; background: #eff6ff;">
+    <h2 style="margin-top:0; color:#1d4ed8; font-size:16px;">PHASE 2B — Wali Santri Email OTP Happy-Path Lifecycle Test</h2>
+    <div class="muted" style="margin-bottom:12px;">Alur lengkap: <strong>auth.parent.requestOtp</strong> → <strong>auth.parent.verifyOtp</strong> → <strong>auth.parent.me</strong> → <strong>auth.parent.students</strong> → <strong>auth.logout</strong> → <strong>re-check rejection</strong>.</div>
+    
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+      <div>
+        <label><strong>Email Wali Santri</strong></label>
+        <input id="waliEmail" value="facenovaid@gmail.com" placeholder="Masukkan email wali santri terdaftar..." style="background:#fff;">
+      </div>
+      <div>
+        <label><strong>6-Digit Kode OTP dari Email</strong></label>
+        <input id="waliOtp" placeholder="Masukkan 6 angka OTP..." maxlength="6" style="font-weight:bold; letter-spacing:3px; text-align:center;">
+      </div>
+    </div>
+
+    <div style="margin-bottom: 12px;">
+      <label><strong>Session Token Wali (Otomatis terisi setelah verifyOtp)</strong></label>
+      <input id="waliSessionToken" placeholder="Session token wali akan otomatis tersimpan di sini..." style="font-family:monospace; font-size:12px; background:#f8fafc;">
+    </div>
+
+    <p style="margin:0 0 10px 0;">
+      <button onclick="requestWaliOtp()" style="background:#2563eb; font-size:14px; padding:10px 18px;">1. Minta OTP Email (auth.parent.requestOtp)</button>
+      <button onclick="runWaliOtpHappyPath()" style="background:#1d4ed8; font-size:14px; padding:10px 18px;">▶ Jalankan Alur Verifikasi s/d Logout (2 s/d 6)</button>
+    </p>
+
+    <div style="display:flex; flex-wrap:wrap; gap:6px; padding-top:10px; border-top:1px dashed #bfdbfe;">
+      <span style="font-size:12px; color:#1d4ed8; width:100%; font-weight:600;">Eksekusi Step-by-Step (Opsional):</span>
+      <button class="secondary" onclick="stepWali1RequestOtp()" style="font-size:12px; padding:5px 10px;">Step 1: requestOtp</button>
+      <button class="secondary" onclick="stepWali2VerifyOtp()" style="font-size:12px; padding:5px 10px;">Step 2: verifyOtp</button>
+      <button class="secondary" onclick="stepWali3ParentMe()" style="font-size:12px; padding:5px 10px;">Step 3: parent.me</button>
+      <button class="secondary" onclick="stepWali4ParentStudents()" style="font-size:12px; padding:5px 10px;">Step 4: parent.students</button>
+      <button class="secondary" onclick="stepWali5Logout()" style="font-size:12px; padding:5px 10px;">Step 5: auth.logout</button>
+      <button class="secondary" onclick="stepWali6RecheckSession()" style="font-size:12px; padding:5px 10px;">Step 6: Re-check Rejection</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <strong>Raw response terakhir</strong>
+    <pre id="raw">-</pre>
+  </div>
+</div>
+
+<script>
+const tests = [];
+
+function baseUrl() {
+  return document.getElementById('baseUrl').value.trim().replace(/\/+$/,'');
+}
+function add(name, status, http, detail, raw) {
+  tests.push({name,status,http,detail,raw});
+  document.getElementById('raw').textContent = raw ? JSON.stringify(raw,null,2) : '-';
+  render();
+}
+function render() {
+  const body=document.getElementById('results');
+  body.innerHTML=tests.map(t=>`
+    <tr>
+      <td>${escapeHtml(t.name)}</td>
+      <td>${t.http ?? '-'}</td>
+      <td class="${t.status==='PASS'?'pass':t.status==='FAIL'?'fail':'skip'}">${t.status}</td>
+      <td>${escapeHtml(t.detail||'')}</td>
+    </tr>`).join('');
+  const pass=tests.filter(x=>x.status==='PASS').length;
+  const fail=tests.filter(x=>x.status==='FAIL').length;
+  document.getElementById('summary').textContent =
+    `PASS ${pass} · FAIL ${fail} · Total ${tests.length}`;
+}
+function clearResults(){tests.length=0;render();document.getElementById('summary').textContent='Belum dijalankan.';}
+function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
+
+async function get(action, params={}) {
+  const u=new URL(baseUrl());
+  u.searchParams.set('action',action);
+  Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));
+  const r=await fetch(u.toString(),{headers:{Accept:'application/json'}});
+  const text=await r.text();
+  let data; try{data=JSON.parse(text)}catch{throw new Error(`Response bukan JSON: ${text.slice(0,200)}`)}
+  return {http:r.status,data};
+}
+async function post(body) {
+  const r=await fetch(baseUrl(),{
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8',Accept:'application/json'},
+    body:JSON.stringify(body)
+  });
+  const text=await r.text();
+  let data; try{data=JSON.parse(text)}catch{throw new Error(`Response bukan JSON: ${text.slice(0,200)}`)}
+  return {http:r.status,data};
+}
+
+async function one(name, fn, validator){
+  try{
+    const x=await fn();
+    const ok=validator(x);
+    add(name,ok?'PASS':'FAIL',x.http,ok?'Contract sesuai':`Contract mismatch: ${JSON.stringify(x.data)}`,x.data);
+  }catch(e){
+    add(name,'FAIL','-',e.message);
+  }
+}
+
+async function runAll(){
+  clearResults();
+
+  await one('GET getKabar — HTTP + JSON + status success',
+    ()=>get('getKabar'),
+    x=>x.http===200 && x.data && x.data.status==='success' && Array.isArray(x.data.data));
+
+  await one('GET getBanner — HTTP + JSON + status success',
+    ()=>get('getBanner'),
+    x=>x.http===200 && x.data && x.data.status==='success' && Array.isArray(x.data.data));
+
+  await one('GET checkStatus tanpa NISN — validation error',
+    ()=>get('checkStatus'),
+    x=>x.http===200 && x.data && x.data.status==='error' &&
+       /NISN wajib diisi/i.test(x.data.message||''));
+
+  await one('POST tanpa action — validation error',
+    ()=>post({}),
+    x=>x.http===200 && x.data && x.data.status==='error' &&
+       /action wajib diisi/i.test(x.data.message||''));
+
+  await one('POST unknown action — router error',
+    ()=>post({action:'__contract_test_unknown__'}),
+    x=>x.http===200 && x.data && x.data.status==='error' &&
+       /Action tidak dikenal/i.test(x.data.message||''));
+
+  await one('POST deleteBanner tanpa ID — validation error',
+    ()=>post({action:'deleteBanner'}),
+    x=>x.http===200 && x.data && x.data.status==='error' &&
+       /ID Banner wajib diisi/i.test(x.data.message||''));
+
+  await one('POST toggleBanner tanpa field — validation error',
+    ()=>post({action:'toggleBanner'}),
+    x=>x.http===200 && x.data && x.data.status==='error' &&
+       /ID Banner dan status wajib diisi/i.test(x.data.message||''));
+
+  document.getElementById('summary').textContent +=
+    ' — Test mutasi data (save/delete/toggle/PPDB valid) sengaja tidak dijalankan otomatis.';
+}
+
+// ============================================================================
+// PHASE 2B — ADMIN OTP HAPPY-PATH LIFECYCLE TEST
+// ============================================================================
+let currentSessionToken = '';
+
+function getAdminEmail() {
+  const el = document.getElementById('adminEmail');
+  return (el ? el.value : 'facenovaid@gmail.com').trim();
+}
+
+function getAdminOtp() {
+  const el = document.getElementById('adminOtp');
+  return (el ? el.value : '').trim();
+}
+
+function getSessionToken() {
+  const el = document.getElementById('sessionToken');
+  const tok = el ? el.value.trim() : '';
+  return tok || currentSessionToken;
+}
+
+function setSessionToken(tok) {
+  currentSessionToken = tok || '';
+  const el = document.getElementById('sessionToken');
+  if (el) el.value = currentSessionToken;
+}
+
+async function requestAdminOtpAgain() {
+  const email = getAdminEmail();
+  await one('POST auth.admin.requestOtp — request fresh OTP',
+    () => post({ action: 'auth.admin.requestOtp', email: email }),
+    x => x.http === 200 && x.data && x.data.success === true
+  );
+}
+
+async function step1VerifyOtp() {
+  const email = getAdminEmail();
+  const otp = getAdminOtp();
+  if (!otp || !/^\d{6}$/.test(otp)) {
+    alert('Harap masukkan 6 digit angka OTP yang diterima di email ' + email);
+    const el = document.getElementById('adminOtp');
+    if (el) el.focus();
+    return false;
+  }
+
+  let verified = false;
+  await one('1. POST auth.admin.verifyOtp — verify OTP & issue session token',
+    () => post({ action: 'auth.admin.verifyOtp', email: email, otp: otp }),
+    x => {
+      if (x.http === 200 && x.data && x.data.success === true) {
+        const tok = x.data.token || (x.data.data && x.data.data.token) || '';
+        if (tok) {
+          setSessionToken(tok);
+          verified = true;
+          return true;
+        }
+      }
+      return false;
+    }
+  );
+  return verified;
+}
+
+async function step2CheckSession() {
+  const token = getSessionToken();
+  if (!token) {
+    alert('Session token belum tersedia. Jalankan Step 1 (verifyOtp) terlebih dahulu atau isi Session Token.');
+    return false;
+  }
+
+  let valid = false;
+  await one('2. POST auth.session — validate active session token & role',
+    () => post({ action: 'auth.session', token: token }),
+    x => {
+      const ok = x.http === 200 && x.data && x.data.success === true &&
+                 (x.data.role === 'ADMIN' || (x.data.identity && x.data.identity.role === 'ADMIN'));
+      if (ok) valid = true;
+      return ok;
+    }
+  );
+  return valid;
+}
+
+async function step3Logout() {
+  const token = getSessionToken();
+  if (!token) {
+    alert('Session token belum tersedia.');
+    return false;
+  }
+
+  let loggedOut = false;
+  await one('3. POST auth.logout — server-side session revocation',
+    () => post({ action: 'auth.logout', token: token }),
+    x => {
+      const ok = x.http === 200 && x.data && x.data.success === true;
+      if (ok) loggedOut = true;
+      return ok;
+    }
+  );
+  return loggedOut;
+}
+
+async function step4RecheckSession() {
+  const token = getSessionToken();
+  if (!token) {
+    alert('Session token belum tersedia.');
+    return false;
+  }
+
+  let properlyRejected = false;
+  await one('4. POST auth.session (post-logout) — ensure revoked token is rejected',
+    () => post({ action: 'auth.session', token: token }),
+    x => {
+      const isRejected = x.http === 200 && x.data && x.data.success === false;
+      if (isRejected) properlyRejected = true;
+      return isRejected;
+    }
+  );
+  return properlyRejected;
+}
+
+async function runAdminOtpHappyPath() {
+  add('=== START ADMIN OTP LIFECYCLE TEST ===', 'SKIP', '-', 'Memulai sekuens: verifyOtp -> auth.session -> auth.logout -> re-check rejection');
+
+  const ok1 = await step1VerifyOtp();
+  if (!ok1) {
+    add('Lifecycle Terhenti di Step 1', 'FAIL', '-', 'Verifikasi OTP gagal atau tidak mengembalikan session token.');
+    return;
+  }
+
+  const ok2 = await step2CheckSession();
+  if (!ok2) {
+    add('Lifecycle Terhenti di Step 2', 'FAIL', '-', 'auth.session gagal memvalidasi token sesi aktif.');
+    return;
+  }
+
+  const ok3 = await step3Logout();
+  if (!ok3) {
+    add('Lifecycle Terhenti di Step 3', 'FAIL', '-', 'auth.logout gagal mencabut sesi dari server.');
+    return;
+  }
+
+  const ok4 = await step4RecheckSession();
+  if (ok4) {
+    add('🏆 SELURUH ALUR HAPPY-PATH ADMIN SUKSES!', 'PASS', 200, 'Alur verifyOtp -> session -> logout -> revoked token rejection tervalidasi 100%!');
+  } else {
+    add('Lifecycle Gagal di Step 4', 'FAIL', '-', 'Token yang telah dicabut ternyata masih diterima oleh auth.session.');
+  }
+}
+
+// ============================================================================
+// PHASE 2B — WALI SANTRI EMAIL OTP HAPPY-PATH LIFECYCLE TEST
+// ============================================================================
+let currentWaliSessionToken = '';
+
+function getWaliEmail() {
+  const el = document.getElementById('waliEmail');
+  return (el ? el.value : '').trim().toLowerCase();
+}
+
+function getWaliOtp() {
+  const el = document.getElementById('waliOtp');
+  return (el ? el.value : '').trim();
+}
+
+function getWaliSessionToken() {
+  const el = document.getElementById('waliSessionToken');
+  const tok = el ? el.value.trim() : '';
+  return tok || currentWaliSessionToken;
+}
+
+function setWaliSessionToken(tok) {
+  currentWaliSessionToken = tok || '';
+  const el = document.getElementById('waliSessionToken');
+  if (el) el.value = currentWaliSessionToken;
+}
+
+async function requestWaliOtp() {
+  const email = getWaliEmail();
+  if (!email || !email.includes('@')) {
+    alert('Masukkan alamat email Wali Santri terdaftar terlebih dahulu!');
+    const el = document.getElementById('waliEmail');
+    if (el) el.focus();
+    return false;
+  }
+
+  let requested = false;
+  await one('1. POST auth.parent.requestOtp — request Email OTP',
+    () => post({ action: 'auth.parent.requestOtp', email: email }),
+    x => {
+      const ok = x.http === 200 && x.data && x.data.success === true;
+      if (ok) requested = true;
+      return ok;
+    }
+  );
+  return requested;
+}
+
+async function stepWali1RequestOtp() {
+  return await requestWaliOtp();
+}
+
+async function stepWali2VerifyOtp() {
+  const email = getWaliEmail();
+  const otp = getWaliOtp();
+  if (!email || !email.includes('@')) {
+    alert('Masukkan alamat email Wali Santri!');
+    const el = document.getElementById('waliEmail');
+    if (el) el.focus();
+    return false;
+  }
+  if (!otp || !/^\d{6}$/.test(otp)) {
+    alert('Harap masukkan 6 digit angka OTP yang diterima di email ' + email);
+    const el = document.getElementById('waliOtp');
+    if (el) el.focus();
+    return false;
+  }
+
+  let verified = false;
+  await one('2. POST auth.parent.verifyOtp — verify OTP & issue token',
+    () => post({ action: 'auth.parent.verifyOtp', email: email, otp: otp }),
+    x => {
+      if (x.http === 200 && x.data && x.data.success === true) {
+        const tok = x.data.token || (x.data.data && x.data.data.token) || '';
+        if (tok) {
+          setWaliSessionToken(tok);
+          verified = true;
+          return true;
+        }
+      }
+      return false;
+    }
+  );
+  return verified;
+}
+
+async function stepWali3ParentMe() {
+  const token = getWaliSessionToken();
+  if (!token) {
+    alert('Session token wali belum tersedia. Jalankan Step 2 (verifyOtp) terlebih dahulu.');
+    return false;
+  }
+
+  let valid = false;
+  await one('3. POST auth.parent.me — fetch authenticated parent profile',
+    () => post({ action: 'auth.parent.me', token: token }),
+    x => {
+      const ok = x.http === 200 && x.data && x.data.success === true && x.data.parent && Boolean(x.data.parent.identityId);
+      if (ok) valid = true;
+      return ok;
+    }
+  );
+  return valid;
+}
+
+async function stepWali4ParentStudents() {
+  const token = getWaliSessionToken();
+  if (!token) {
+    alert('Session token wali belum tersedia.');
+    return false;
+  }
+
+  let valid = false;
+  await one('4. POST auth.parent.students — fetch linked students array',
+    () => post({ action: 'auth.parent.students', token: token }),
+    x => {
+      const ok = x.http === 200 && x.data && x.data.success === true && Array.isArray(x.data.students);
+      if (ok) valid = true;
+      return ok;
+    }
+  );
+  return valid;
+}
+
+async function stepWali5Logout() {
+  const token = getWaliSessionToken();
+  if (!token) {
+    alert('Session token wali belum tersedia.');
+    return false;
+  }
+
+  let loggedOut = false;
+  await one('5. POST auth.logout — server-side session revocation for wali',
+    () => post({ action: 'auth.logout', token: token }),
+    x => {
+      const ok = x.http === 200 && x.data && x.data.success === true;
+      if (ok) loggedOut = true;
+      return ok;
+    }
+  );
+  return loggedOut;
+}
+
+async function stepWali6RecheckSession() {
+  const token = getWaliSessionToken();
+  if (!token) {
+    alert('Session token wali belum tersedia.');
+    return false;
+  }
+
+  let properlyRejected = false;
+  await one('6. POST auth.session (post-logout) — ensure revoked wali token is rejected',
+    () => post({ action: 'auth.session', token: token }),
+    x => {
+      const isRejected = x.http === 200 && x.data && x.data.success === false;
+      if (isRejected) properlyRejected = true;
+      return isRejected;
+    }
+  );
+  return properlyRejected;
+}
+
+async function runWaliOtpHappyPath() {
+  add('=== START WALI EMAIL OTP LIFECYCLE TEST ===', 'SKIP', '-', 'Memulai sekuens: verifyOtp -> auth.parent.me -> auth.parent.students -> auth.logout -> re-check rejection');
+
+  const ok2 = await stepWali2VerifyOtp();
+  if (!ok2) {
+    add('Lifecycle Wali Terhenti di Step 2', 'FAIL', '-', 'Verifikasi OTP Wali gagal atau tidak mengembalikan session token.');
+    return;
+  }
+
+  const ok3 = await stepWali3ParentMe();
+  if (!ok3) {
+    add('Lifecycle Wali Terhenti di Step 3', 'FAIL', '-', 'auth.parent.me gagal memvalidasi profil wali.');
+    return;
+  }
+
+  const ok4 = await stepWali4ParentStudents();
+  if (!ok4) {
+    add('Lifecycle Wali Terhenti di Step 4', 'FAIL', '-', 'auth.parent.students gagal mengembalikan daftar santri.');
+    return;
+  }
+
+  const ok5 = await stepWali5Logout();
+  if (!ok5) {
+    add('Lifecycle Wali Terhenti di Step 5', 'FAIL', '-', 'auth.logout gagal mencabut sesi wali dari server.');
+    return;
+  }
+
+  const ok6 = await stepWali6RecheckSession();
+  if (ok6) {
+    add('🏆 SELURUH ALUR HAPPY-PATH WALI SANTRI SUKSES!', 'PASS', 200, 'Alur verifyOtp -> parent.me -> parent.students -> logout -> rejection tervalidasi 100%!');
+  } else {
+    add('Lifecycle Wali Gagal di Step 6', 'FAIL', '-', 'Token wali yang telah dicabut ternyata masih diterima oleh auth.session.');
+  }
+}
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "mubarokah-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Aplikasi Pesantren Mubarokah",
+  "scripts": {
+    "build:css": "tailwindcss -i ./css/input.css -o ./css/styles.min.css --minify",
+    "watch:css": "tailwindcss -i ./css/input.css -o ./css/styles.min.css --watch",
+    "build": "npm run build:css",
+    "backend:status": "cd legacy && clasp status",
+    "backend:push": "cd legacy && clasp push -f",
+    "backend:pull": "cd legacy && clasp pull"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.19"
+  }
+}
