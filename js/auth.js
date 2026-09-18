@@ -121,6 +121,8 @@ async function authApiPost(action, payload = {}) {
 
     const response = await fetch(targetUrl, {
         method: "POST",
+        redirect: "follow",
+        credentials: "omit",
         headers: {
             "Content-Type": "text/plain;charset=utf-8",
             "Accept": "application/json"

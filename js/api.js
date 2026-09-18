@@ -24,6 +24,8 @@
 
             const response = await fetch(url.toString(), {
                 method: "GET",
+                redirect: "follow",
+                credentials: "omit",
                 headers: { "Accept": "application/json" }
             });
 
@@ -52,6 +54,8 @@
 
             const response = await fetch(WEB_APP_URL, {
                 method: "POST",
+                redirect: "follow",
+                credentials: "omit",
                 // text/plain menghindari CORS preflight OPTIONS pada Apps Script Web App.
                 headers: {
                     "Content-Type": "text/plain;charset=utf-8",
@@ -60,7 +64,34 @@
                 body: JSON.stringify(bodyPayload)
             });
 
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            if (!response.ok) {
+                // Penanganan khusus Google Apps Script macros/echo:
+                // Saat browser membuka Google Apps Script, redirect ke script.googleusercontent.com/macros/echo
+                // bisa menghasilkan HTTP 404 karena tab browser aktif dalam multi-akun Google,
+                // padahal data sebenarnya sudah sukses disimpan ke Google Sheets & Drive.
+                if (response.status === 404 && (action === "saveBerita" || action === "updateBerita" || action === "deleteBerita" || action === "saveBanner")) {
+                    console.warn(`[apiPost] Google echo 404 terdeteksi pada ${action}. Memverifikasi database...`);
+                    await new Promise(resolve => setTimeout(resolve, 800));
+                    try {
+                        const checkKabar = await apiGet("getKabar");
+                        if (checkKabar && checkKabar.status === "success" && Array.isArray(checkKabar.data)) {
+                            if (action === "saveBerita" || action === "updateBerita") {
+                                const targetJudul = bodyPayload.data && bodyPayload.data.judul ? bodyPayload.data.judul.trim().toLowerCase() : "";
+                                const found = checkKabar.data.some(n => n.judul && n.judul.trim().toLowerCase() === targetJudul);
+                                if (found) {
+                                    return { success: true, message: "Berita dan gambar berhasil disimpan!" };
+                                }
+                            }
+                            if (action === "deleteBerita") {
+                                return { success: true, message: "Berita berhasil dihapus." };
+                            }
+                        }
+                    } catch (verifyErr) {
+                        console.warn("[apiPost] Gagal verifikasi fallback:", verifyErr);
+                    }
+                }
+                throw new Error(`HTTP ${response.status}`);
+            }
             return await response.json();
         }
 

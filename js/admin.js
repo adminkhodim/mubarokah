@@ -929,6 +929,23 @@
 
             } catch (err) {
                 console.error("Submit Error: ", err);
+                // Fallback cek jika HTTP 404 terjadi pada Google echo redirect tapi data sebenarnya sudah masuk:
+                if (String(err && err.message).includes('404')) {
+                    try {
+                        const verifyKabar = await apiGet("getKabar");
+                        const targetJudul = payload.judul ? payload.judul.trim().toLowerCase() : "";
+                        const exists = verifyKabar && Array.isArray(verifyKabar.data) && verifyKabar.data.some(n => n.judul && n.judul.trim().toLowerCase() === targetJudul);
+                        if (exists) {
+                            btn.disabled = false;
+                            btnIcon.className = "fa-solid fa-paper-plane";
+                            btnText.innerText = "Publikasikan Berita";
+                            showToast("✅ Berita dan gambar berhasil disimpan!");
+                            resetAdminNewsForm();
+                            loadNews();
+                            return;
+                        }
+                    } catch (checkErr) {}
+                }
                 btn.disabled = false;
                 btnIcon.className = "fa-solid fa-paper-plane";
                 btnText.innerText = "Publikasikan Berita";
