@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mubarokah-cache-v4';
+const CACHE_NAME = 'mubarokah-cache-v5';
 
 const PRECACHE_URLS = [
   '/',
@@ -18,7 +18,9 @@ const PRECACHE_URLS = [
   '/js/admin.js',
   '/js/alumni.js',
   '/js/auth.js',
-  '/js/main.js'
+  '/js/main.js',
+  '/assets/img/splash-logo.png',
+  '/assets/img/header-logo.png'
 ];
 
 

@@ -10,6 +10,19 @@
   "theme_color": "#0f766e",
   "orientation": "portrait-primary",
   "categories": ["education", "lifestyle"],
-  "icons": []
+  "icons": [
+    {
+      "src": "assets/img/splash-logo.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/img/splash-logo.png",
+      "sizes": "175x163",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
 }
 
