@@ -273,14 +273,6 @@
 
                 <!-- Tombol Aksi Kanan (Rata Kanan Presisi dengan Kartu Beranda) -->
                 <div id="desk-action-menu" class="flex items-center space-x-2.5">
-                    <!-- Tombol Install PWA Desktop (Otomatis tampil jika belum diinstal) -->
-                    <button id="desk-btn-install-app" onclick="triggerInstallApp()"
-                        class="hidden bg-teal-600 hover:bg-teal-500 text-white px-3.5 py-2 rounded-xl font-bold text-xs shadow-sm border border-teal-400/30 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 items-center space-x-1.5"
-                        title="Pasang Aplikasi Pesantren">
-                        <i class="fa-solid fa-cloud-arrow-down text-teal-200"></i>
-                        <span>Pasang App</span>
-                    </button>
-
                     <!-- Tombol Notifikasi Desktop -->
                     <button onclick="switchTab('notifikasi');"
                         class="relative w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-amber-300 flex items-center justify-center text-sm border border-white/10 shadow-sm transition active:scale-95"
@@ -10831,7 +10823,7 @@
 
     <!-- ==================== SMART FLOATING INSTALL BANNER ==================== -->
     <div id="pwa-smart-install-banner"
-        class="fixed bottom-20 md:bottom-6 left-4 right-4 md:left-auto md:right-6 md:max-w-sm z-[9990] bg-white/95 dark:bg-[#15202d]/95 backdrop-blur-md p-3.5 sm:p-4 rounded-2xl shadow-2xl border border-emerald-500/20 dark:border-emerald-500/30 flex items-center justify-between gap-3 transform translate-y-full opacity-0 transition-all duration-300 hidden">
+        class="md:hidden fixed bottom-20 left-4 right-4 z-[9990] bg-white/95 dark:bg-[#15202d]/95 backdrop-blur-md p-3.5 sm:p-4 rounded-2xl shadow-2xl border border-emerald-500/20 dark:border-emerald-500/30 flex items-center justify-between gap-3 transform translate-y-full opacity-0 transition-all duration-300 hidden">
         <div class="flex items-center space-x-3 min-w-0">
             <div
                 class="w-10 h-10 rounded-xl bg-emerald-700 text-white flex items-center justify-center text-lg shadow-sm shrink-0">

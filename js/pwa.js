@@ -28,6 +28,17 @@
         return /iphone|ipad|ipod/.test(ua);
     }
 
+    /**
+     * Deteksi apakah pengguna menggunakan perangkat Mobile (Android / iOS / Small Touch Screen)
+     */
+    function isMobileDevice() {
+        const ua = (window.navigator.userAgent || window.navigator.vendor || window.opera).toLowerCase();
+        const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(ua);
+        const isTouchScreen = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        const isSmallScreen = window.innerWidth < 768;
+        return isMobileUA || (isTouchScreen && isSmallScreen);
+    }
+
     const PWA_DISMISSED_KEY = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.storage && APP_CONFIG.storage.keys)
         ? APP_CONFIG.storage.keys.pwaDismissed
         : 'mubarokah_pwa_dismissed';
@@ -47,24 +58,19 @@
     }
 
     /**
-     * Memperbarui tampilan tombol Pasang Aplikasi di navigasi Header
+     * Memperbarui tampilan tombol Pasang Aplikasi di navigasi Header (HANYA Mobile)
      */
     function updateNavInstallButtons(show) {
+        // Tombol desktop dinonaktifkan permanen
         const deskBtn = document.getElementById('desk-btn-install-app');
-        const mobileBtn = document.getElementById('mobile-btn-install-app');
-
         if (deskBtn) {
-            if (show) {
-                deskBtn.classList.remove('hidden');
-                deskBtn.classList.add('flex');
-            } else {
-                deskBtn.classList.add('hidden');
-                deskBtn.classList.remove('flex');
-            }
+            deskBtn.classList.add('hidden');
+            deskBtn.classList.remove('flex');
         }
 
+        const mobileBtn = document.getElementById('mobile-btn-install-app');
         if (mobileBtn) {
-            if (show) {
+            if (show && isMobileDevice()) {
                 mobileBtn.classList.remove('hidden');
                 mobileBtn.classList.add('flex');
             } else {
@@ -75,10 +81,10 @@
     }
 
     /**
-     * Menampilkan Smart Floating Install Banner
+     * Menampilkan Smart Floating Install Banner (HANYA Mobile Android & iOS)
      */
     function showFloatingInstallBanner() {
-        if (isRunningStandalone() || isBannerDismissed()) {
+        if (!isMobileDevice() || isRunningStandalone() || isBannerDismissed()) {
             return;
         }
 
@@ -196,15 +202,16 @@
     // Event Listeners Lifecycle PWA
     // ==========================================
 
-    // Tangkap event sebelum prompt instalasi muncul (Android & Chrome Desktop)
+    // Tangkap event sebelum prompt instalasi muncul (Hanya tampilkan UI pada Mobile)
     window.addEventListener('beforeinstallprompt', (e) => {
-        // Cegah mini-infobar default browser agar kita bisa menampilkan UI yang lebih elegan
         e.preventDefault();
         window.deferredPwaPrompt = e;
 
-        if (!isRunningStandalone()) {
+        if (!isRunningStandalone() && isMobileDevice()) {
             updateNavInstallButtons(true);
             showFloatingInstallBanner();
+        } else {
+            updateNavInstallButtons(false);
         }
     });
 
@@ -220,22 +227,31 @@
         console.log('Aplikasi berhasil dipasang sebagai PWA.');
     });
 
-    // Inisialisasi saat DOM siap atau jika sudah siap
+    // Inisialisasi saat DOM siap
     function initPwa() {
-        // Jika sudah standalone, pastikan semua promo install disembunyikan
-        if (isRunningStandalone()) {
+        // Jika bukan mobile atau sudah standalone, sembunyikan semua UI instalasi
+        if (isRunningStandalone() || !isMobileDevice()) {
             updateNavInstallButtons(false);
             const banner = document.getElementById('pwa-smart-install-banner');
             if (banner) banner.classList.add('hidden');
             return;
         }
 
-        // Jika di iOS dan belum standalone, tampilkan tombol Pasang di navbar dan banner
+        // Jika di mobile iOS dan belum standalone, tampilkan tombol Pasang di mobile header & banner
         if (isIosDevice()) {
             updateNavInstallButtons(true);
             showFloatingInstallBanner();
         }
     }
+
+    // Dengarkan perubahan ukuran layar (Resize)
+    window.addEventListener('resize', () => {
+        if (!isMobileDevice()) {
+            updateNavInstallButtons(false);
+            const banner = document.getElementById('pwa-smart-install-banner');
+            if (banner) banner.classList.add('hidden');
+        }
+    });
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initPwa);
