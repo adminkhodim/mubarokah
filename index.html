@@ -172,26 +172,28 @@
                                     <span>Semua Program Pilihan</span>
                                 </button>
                                 <div class="border-t border-slate-100 dark:border-[#253447] my-1"></div>
-                                <button onclick="switchTab('sd-islam');"
-                                    class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-blue-50 dark:hover:bg-[#1c2836] hover:text-blue-700 dark:hover:text-blue-400 transition flex items-center space-x-2.5">
-                                    <i class="fa-solid fa-school text-blue-500 w-4"></i>
-                                    <span>SD Islam Unggulan</span>
-                                </button>
-                                <button onclick="switchTab('tahfidz-anak');"
-                                    class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
-                                    <i class="fa-solid fa-child-reaching text-amber-500 w-4"></i>
-                                    <span>Pesantren Tahfidz Anak</span>
-                                </button>
-                                <button onclick="switchTab('dewasa-putra');"
-                                    class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
-                                    <i class="fa-solid fa-user-graduate text-teal-700 dark:text-teal-400 w-4"></i>
-                                    <span>Pesantren Dewasa Putra</span>
-                                </button>
-                                <button onclick="switchTab('dewasa-putri');"
-                                    class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
-                                    <i class="fa-solid fa-person-dress text-purple-600 dark:text-purple-400 w-4"></i>
-                                    <span>Pesantren Dewasa Putri</span>
-                                </button>
+                                <div id="nav-programs-submenu-desktop" class="space-y-1">
+                                    <button onclick="switchTab('ma-tahfidz');"
+                                        class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
+                                        <i class="fa-solid fa-graduation-cap text-teal-600 dark:text-teal-400 w-4"></i>
+                                        <span>MA Tahfidz</span>
+                                    </button>
+                                    <button onclick="switchTab('tahfidz-anak');"
+                                        class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
+                                        <i class="fa-solid fa-child-reaching text-amber-500 w-4"></i>
+                                        <span>Pesantren Tahfidz Anak</span>
+                                    </button>
+                                    <button onclick="switchTab('reguler-putra-putri');"
+                                        class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
+                                        <i class="fa-solid fa-user-graduate text-teal-700 dark:text-teal-400 w-4"></i>
+                                        <span>Pesantren Reguler Putra Putri</span>
+                                    </button>
+                                    <button onclick="switchTab('tahfidz-dewasa');"
+                                        class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
+                                        <i class="fa-solid fa-book-quran text-purple-600 dark:text-purple-400 w-4"></i>
+                                        <span>Pesantren Tahfidz Dewasa</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -392,26 +394,28 @@
                         <i class="fa-solid fa-layer-group text-[11px] text-amber-400 w-4"></i>
                         <span>Semua Program Pilihan</span>
                     </button>
-                    <button onclick="switchTab('sd-islam'); closeMobileMenu();"
-                        class="w-full text-left px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/60 hover:text-white transition flex items-center space-x-2">
-                        <i class="fa-solid fa-school text-[11px] text-blue-400 w-4"></i>
-                        <span>SD Islam Unggulan</span>
-                    </button>
-                    <button onclick="switchTab('tahfidz-anak'); closeMobileMenu();"
-                        class="w-full text-left px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/60 hover:text-white transition flex items-center space-x-2">
-                        <i class="fa-solid fa-child-reaching text-[11px] text-teal-400 w-4"></i>
-                        <span>Pesantren Tahfidz Anak</span>
-                    </button>
-                    <button onclick="switchTab('dewasa-putra'); closeMobileMenu();"
-                        class="w-full text-left px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/60 hover:text-white transition flex items-center space-x-2">
-                        <i class="fa-solid fa-user-graduate text-[11px] text-teal-400 w-4"></i>
-                        <span>Pesantren Dewasa Putra</span>
-                    </button>
-                    <button onclick="switchTab('dewasa-putri'); closeMobileMenu();"
-                        class="w-full text-left px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/60 hover:text-white transition flex items-center space-x-2">
-                        <i class="fa-solid fa-person-dress text-[11px] text-purple-400 w-4"></i>
-                        <span>Pesantren Dewasa Putri</span>
-                    </button>
+                    <div id="nav-programs-submenu-mobile" class="space-y-1">
+                        <button onclick="switchTab('ma-tahfidz'); closeMobileMenu();"
+                            class="w-full text-left px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/60 hover:text-white transition flex items-center space-x-2">
+                            <i class="fa-solid fa-graduation-cap text-[11px] text-blue-400 w-4"></i>
+                            <span>MA Tahfidz</span>
+                        </button>
+                        <button onclick="switchTab('tahfidz-anak'); closeMobileMenu();"
+                            class="w-full text-left px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/60 hover:text-white transition flex items-center space-x-2">
+                            <i class="fa-solid fa-child-reaching text-[11px] text-teal-400 w-4"></i>
+                            <span>Pesantren Tahfidz Anak</span>
+                        </button>
+                        <button onclick="switchTab('reguler-putra-putri'); closeMobileMenu();"
+                            class="w-full text-left px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/60 hover:text-white transition flex items-center space-x-2">
+                            <i class="fa-solid fa-user-graduate text-[11px] text-teal-400 w-4"></i>
+                            <span>Pesantren Reguler Putra Putri</span>
+                        </button>
+                        <button onclick="switchTab('tahfidz-dewasa'); closeMobileMenu();"
+                            class="w-full text-left px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/60 hover:text-white transition flex items-center space-x-2">
+                            <i class="fa-solid fa-book-quran text-[11px] text-purple-400 w-4"></i>
+                            <span>Pesantren Tahfidz Dewasa</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -560,13 +564,12 @@
                         <span class="text-[11px] mt-2 font-semibold text-slate-600 dark:text-slate-300">Unit
                             Kegiatan</span>
                     </button>
-                    <button onclick="switchTab('sd-islam')" class="flex flex-col items-center group transition">
+                    <button onclick="switchTab('ma-tahfidz')" class="flex flex-col items-center group transition">
                         <div
                             class="w-12 h-12 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center text-xl shadow-sm group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
-                            <i class="fa-solid fa-school"></i>
+                            <i class="fa-solid fa-graduation-cap"></i>
                         </div>
-                        <span class="text-[11px] mt-2 font-semibold text-slate-600 dark:text-slate-300">SD Islam
-                            Unggulan</span>
+                        <span class="text-[11px] mt-2 font-semibold text-slate-600 dark:text-slate-300">MA Tahfidz</span>
                     </button>
                     <button onclick="switchTab('profil')" class="flex flex-col items-center group transition">
                         <div
@@ -2591,8 +2594,11 @@
         </div>
 
         <!-- ==================== TABS DETAIL: PROGRAM (RENDERED VIA PROGRAM_DATA) ==================== -->
-        <div id="page-sd-islam" class="tab-content hidden space-y-6"></div>
+        <div id="page-ma-tahfidz" class="tab-content hidden space-y-6"></div>
         <div id="page-tahfidz-anak" class="tab-content hidden space-y-6"></div>
+        <div id="page-reguler-putra-putri" class="tab-content hidden space-y-6"></div>
+        <div id="page-tahfidz-dewasa" class="tab-content hidden space-y-6"></div>
+        <div id="page-sd-islam" class="tab-content hidden space-y-6"></div>
         <div id="page-dewasa-putra" class="tab-content hidden space-y-6"></div>
         <div id="page-dewasa-putri" class="tab-content hidden space-y-6"></div>
 

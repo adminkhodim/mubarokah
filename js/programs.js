@@ -8,13 +8,13 @@
 
         function getProgramUiTheme(prog) {
             const id = prog ? (prog.id || "") : "";
-            if (id === "sd-islam") {
+            if (id === "ma-tahfidz" || id === "sd-islam") {
                 return {
                     berandaBadgeStyle: "bg-blue-600/90 text-white",
                     pilihanBadgeStyle: "bg-blue-500 text-white",
-                    headerBadge: "Usia Sekolah Dasar (6 – 12 Tahun)",
+                    headerBadge: "Tingkat Menengah Atas / Aliyah",
                     headerTheme: "from-blue-900 via-blue-800 to-cyan-800",
-                    headerIcon: "fa-school",
+                    headerIcon: "fa-graduation-cap",
                     headerCategoryColor: "text-blue-700"
                 };
             } else if (id === "tahfidz-anak") {
@@ -26,22 +26,22 @@
                     headerIcon: "fa-child-reaching",
                     headerCategoryColor: "text-brand-700"
                 };
-            } else if (id === "dewasa-putra") {
+            } else if (id === "reguler-putra-putri" || id === "dewasa-putra") {
                 return {
                     berandaBadgeStyle: "bg-slate-900/90 text-white",
                     pilihanBadgeStyle: "bg-brand-600 text-white",
-                    headerBadge: "Lulusan SMA / MA / Mahasiswa / Umum (Dewasa)",
+                    headerBadge: "Program Reguler Putra & Putri",
                     headerTheme: "from-brand-900 via-brand-800 to-emerald-800",
                     headerIcon: "fa-user-graduate",
                     headerCategoryColor: "text-brand-700"
                 };
-            } else if (id === "dewasa-putri") {
+            } else if (id === "tahfidz-dewasa" || id === "dewasa-putri") {
                 return {
                     berandaBadgeStyle: "bg-purple-900/90 text-white",
                     pilihanBadgeStyle: "bg-purple-600 text-white",
-                    headerBadge: "Khusus Santriwati Dewasa (Putri)",
+                    headerBadge: "Khusus Santri Dewasa (Tahfidz)",
                     headerTheme: "from-purple-900 via-purple-800 to-brand-900",
-                    headerIcon: "fa-person-shelter",
+                    headerIcon: "fa-book-quran",
                     headerCategoryColor: "text-purple-700"
                 };
             }
@@ -60,7 +60,7 @@
             return RUNTIME_PROGRAM_DATA.find(item => item.id === programId);
         }
 
-        const PROGRAMS_CACHE_KEY = "mubarokah_programs_cache_v2";
+        const PROGRAMS_CACHE_KEY = "mubarokah_programs_cache_v3";
         let isProgramRuntimeFetching = false;
 
         async function initializeProgramRuntime() {
@@ -522,8 +522,44 @@
             });
         }
 
+        function renderProgramSubmenus() {
+            if (!Array.isArray(RUNTIME_PROGRAM_DATA) || RUNTIME_PROGRAM_DATA.length === 0) return;
+
+            const desktopContainer = document.getElementById('nav-programs-submenu-desktop');
+            const mobileContainer = document.getElementById('nav-programs-submenu-mobile');
+
+            if (desktopContainer) {
+                desktopContainer.innerHTML = RUNTIME_PROGRAM_DATA.map(prog => {
+                    const theme = getProgramUiTheme(prog);
+                    const icon = theme.headerIcon || "fa-book-quran";
+                    return `
+                        <button onclick="switchTab('${prog.id}');"
+                            class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 dark:hover:bg-[#1c2836] hover:text-teal-700 dark:hover:text-teal-400 transition flex items-center space-x-2.5">
+                            <i class="fa-solid ${icon} text-teal-600 dark:text-teal-400 w-4"></i>
+                            <span class="truncate">${escapeHtml(prog.name)}</span>
+                        </button>
+                    `;
+                }).join('');
+            }
+
+            if (mobileContainer) {
+                mobileContainer.innerHTML = RUNTIME_PROGRAM_DATA.map(prog => {
+                    const theme = getProgramUiTheme(prog);
+                    const icon = theme.headerIcon || "fa-book-quran";
+                    return `
+                        <button onclick="switchTab('${prog.id}'); closeMobileMenu();"
+                            class="w-full text-left px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/60 hover:text-white transition flex items-center space-x-2">
+                            <i class="fa-solid ${icon} text-[11px] text-teal-400 w-4"></i>
+                            <span class="truncate">${escapeHtml(prog.name)}</span>
+                        </button>
+                    `;
+                }).join('');
+            }
+        }
+
         function renderProgramAllViews() {
             renderProgramShowcaseBeranda();
             renderProgramPilihanGrid();
             renderAllProgramDetails();
+            renderProgramSubmenus();
         }

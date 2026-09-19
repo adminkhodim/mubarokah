@@ -3497,7 +3497,7 @@ function handleProgramApiAction(action, payload, e) {
       let scriptCache = null;
       try {
         scriptCache = CacheService.getScriptCache();
-        const cachedJson = scriptCache ? scriptCache.get("pub_programs_cache_v1") : null;
+        const cachedJson = scriptCache ? scriptCache.get("pub_programs_cache_v2") : null;
         if (cachedJson) {
           const cachedPayload = JSON.parse(cachedJson);
           cachedPayload.requestId = requestId;
@@ -3518,7 +3518,7 @@ function handleProgramApiAction(action, payload, e) {
         try {
           const payloadStr = JSON.stringify(responseEnvelope);
           if (payloadStr.length < 95000) {
-            scriptCache.put("pub_programs_cache_v1", payloadStr, 21600); // Cache selama 6 jam
+            scriptCache.put("pub_programs_cache_v2", payloadStr, 21600); // Cache selama 6 jam
           }
         } catch (e) {
           Logger.log("Cache write error: " + e.message);
@@ -3624,7 +3624,7 @@ function invalidateProgramCache() {
   try {
     const cache = CacheService.getScriptCache();
     if (cache) {
-      cache.remove("pub_programs_cache_v1");
+      cache.remove("pub_programs_cache_v2");
     }
   } catch (e) {
     Logger.log("Cache invalidate error: " + e.message);

@@ -179,14 +179,14 @@
                 switchTab('struktur-kepengurusan', false);
             } else if (path === '/pendidikan/semua-program-pilihan') {
                 switchTab('program-pilihan', false);
-            } else if (path === '/pendidikan/sd-islam-unggulan') {
-                switchTab('sd-islam', false);
+            } else if (path === '/pendidikan/ma-tahfidz' || path === '/pendidikan/sd-islam-unggulan') {
+                switchTab('ma-tahfidz', false);
             } else if (path === '/pendidikan/pesantren-tahfidz-anak') {
                 switchTab('tahfidz-anak', false);
-            } else if (path === '/pendidikan/pesantren-dewasa-putra') {
-                switchTab('dewasa-putra', false);
-            } else if (path === '/pendidikan/pesantren-dewasa-putri') {
-                switchTab('dewasa-putri', false);
+            } else if (path === '/pendidikan/pesantren-reguler-putra-putri' || path === '/pendidikan/pesantren-dewasa-putra') {
+                switchTab('reguler-putra-putri', false);
+            } else if (path === '/pendidikan/pesantren-tahfidz-dewasa' || path === '/pendidikan/pesantren-dewasa-putri') {
+                switchTab('tahfidz-dewasa', false);
             } else if (path === '/kehidupan-santri/jadwal-kegiatan') {
                 switchTab('jadwal-kegiatan', false);
             } else if (path === '/kehidupan-santri/unit-kegiatan') {
@@ -277,14 +277,14 @@
                 switchTab('struktur-kepengurusan', false);
             } else if (path === '/pendidikan/semua-program-pilihan') {
                 switchTab('program-pilihan', false);
-            } else if (path === '/pendidikan/sd-islam-unggulan') {
-                switchTab('sd-islam', false);
+            } else if (path === '/pendidikan/ma-tahfidz' || path === '/pendidikan/sd-islam-unggulan') {
+                switchTab('ma-tahfidz', false);
             } else if (path === '/pendidikan/pesantren-tahfidz-anak') {
                 switchTab('tahfidz-anak', false);
-            } else if (path === '/pendidikan/pesantren-dewasa-putra') {
-                switchTab('dewasa-putra', false);
-            } else if (path === '/pendidikan/pesantren-dewasa-putri') {
-                switchTab('dewasa-putri', false);
+            } else if (path === '/pendidikan/pesantren-reguler-putra-putri' || path === '/pendidikan/pesantren-dewasa-putra') {
+                switchTab('reguler-putra-putri', false);
+            } else if (path === '/pendidikan/pesantren-tahfidz-dewasa' || path === '/pendidikan/pesantren-dewasa-putri') {
+                switchTab('tahfidz-dewasa', false);
             } else if (path === '/kehidupan-santri/jadwal-kegiatan') {
                 switchTab('jadwal-kegiatan', false);
             } else if (path === '/kehidupan-santri/unit-kegiatan') {
@@ -386,10 +386,10 @@
                 else if (tabId === 'struktur-kepengurusan') targetUrl = '/struktur-kepengurusan';
                 else if (tabId === 'kabar') targetUrl = '/berita/';
                 else if (tabId === 'program-pilihan') targetUrl = '/pendidikan/semua-program-pilihan/';
-                else if (tabId === 'sd-islam') targetUrl = '/pendidikan/sd-islam-unggulan/';
+                else if (tabId === 'ma-tahfidz' || tabId === 'sd-islam') targetUrl = '/pendidikan/ma-tahfidz/';
                 else if (tabId === 'tahfidz-anak') targetUrl = '/pendidikan/pesantren-tahfidz-anak/';
-                else if (tabId === 'dewasa-putra') targetUrl = '/pendidikan/pesantren-dewasa-putra/';
-                else if (tabId === 'dewasa-putri') targetUrl = '/pendidikan/pesantren-dewasa-putri/';
+                else if (tabId === 'reguler-putra-putri' || tabId === 'dewasa-putra') targetUrl = '/pendidikan/pesantren-reguler-putra-putri/';
+                else if (tabId === 'tahfidz-dewasa' || tabId === 'dewasa-putri') targetUrl = '/pendidikan/pesantren-tahfidz-dewasa/';
                 else if (tabId === 'jadwal-kegiatan') targetUrl = '/kehidupan-santri/jadwal-kegiatan/';
                 else if (tabId === 'unit-kegiatan') targetUrl = '/kehidupan-santri/unit-kegiatan/';
                 else if (tabId === 'poskestren') targetUrl = '/kehidupan-santri/poskestren/';
@@ -414,7 +414,9 @@
                 if (window.location.pathname !== targetUrl && (
                     tabId === 'profil' || tabId === 'sejarah-berdirinya' || tabId === 'tujuan-visi-misi' || tabId === 'struktur-kepengurusan' ||
                     tabId === 'kabar' || tabId === 'program-pilihan' ||
-                    tabId === 'sd-islam' || tabId === 'tahfidz-anak' || tabId === 'dewasa-putra' || tabId === 'dewasa-putri' ||
+                    tabId === 'ma-tahfidz' || tabId === 'sd-islam' || tabId === 'tahfidz-anak' || 
+                    tabId === 'reguler-putra-putri' || tabId === 'dewasa-putra' || 
+                    tabId === 'tahfidz-dewasa' || tabId === 'dewasa-putri' ||
                     tabId === 'jadwal-kegiatan' || tabId === 'unit-kegiatan' || tabId === 'poskestren' || tabId === 'admin' || tabId === 'pengaturan' || tabId === 'notifikasi' || tabId === 'alumni' || tabId === 'form-alumni' ||
                     tabId === 'layanan-hub' || tabId === 'galeri' || tabId === 'kalender' || tabId === 'ibadah' ||
                     tabId === 'quran-index' || tabId === 'quran-detail' || tabId === 'quran-page' ||
@@ -534,9 +536,12 @@
                 'tujuan-visi-misi': 'desk-nav-profil',
                 'struktur-kepengurusan': 'desk-nav-profil',
                 'program-pilihan': 'desk-nav-program-pilihan',
+                'ma-tahfidz': 'desk-nav-program-pilihan',
                 'sd-islam': 'desk-nav-program-pilihan',
                 'tahfidz-anak': 'desk-nav-program-pilihan',
+                'reguler-putra-putri': 'desk-nav-program-pilihan',
                 'dewasa-putra': 'desk-nav-program-pilihan',
+                'tahfidz-dewasa': 'desk-nav-program-pilihan',
                 'dewasa-putri': 'desk-nav-program-pilihan',
                 'jadwal-kegiatan': 'desk-nav-jadwal-kegiatan',
                 'unit-kegiatan': 'desk-nav-jadwal-kegiatan',
