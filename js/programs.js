@@ -61,19 +61,22 @@
         }
 
         async function initializeProgramRuntime() {
-            // Render instan dari PROGRAM_DATA lokal (Stale-While-Revalidate) agar halaman tidak pernah kosong
-            if (Array.isArray(PROGRAM_DATA) && PROGRAM_DATA.length > 0) {
-                RUNTIME_PROGRAM_DATA = [...PROGRAM_DATA];
-                programRuntimeState.status = "ready";
-                renderProgramAllViews();
-            } else {
-                programRuntimeState.status = "loading";
-                renderProgramLoadingState();
-            }
-
             if (!isApiConfigured()) {
+                // Fallback hanya saat API belum dikonfigurasi sama sekali (mode dev lokal)
+                if (Array.isArray(PROGRAM_DATA) && PROGRAM_DATA.length > 0) {
+                    RUNTIME_PROGRAM_DATA = [...PROGRAM_DATA];
+                    programRuntimeState.status = "ready";
+                    renderProgramAllViews();
+                } else {
+                    programRuntimeState.status = "empty";
+                    renderProgramEmptyState();
+                }
                 return;
             }
+
+            // Saat API terkonfigurasi, tampilkan loading state murni (zero mock data)
+            programRuntimeState.status = "loading";
+            renderProgramLoadingState();
 
             try {
                 const response = await apiGet("program.listPublished");
@@ -91,7 +94,10 @@
 
                 const data = response.data;
                 if (!Array.isArray(data) || data.length === 0) {
-                    throw new Error("Data program dari server kosong");
+                    programRuntimeState.status = "empty";
+                    RUNTIME_PROGRAM_DATA = [];
+                    renderProgramEmptyState();
+                    return;
                 }
 
                 // Validate payload contract items (Fail-Closed per item)
@@ -103,30 +109,18 @@
                 }
 
                 programRuntimeState.status = "ready";
+                programRuntimeState.error = null;
                 programRuntimeState.requestId = response.requestId || null;
+                // Live database data strictly replaces all local data (ZERO mock data)
                 RUNTIME_PROGRAM_DATA = data;
-
-                // Merge local PROGRAM_DATA for items not present in API (e.g., local dummy templates)
-                PROGRAM_DATA.forEach(localProg => {
-                    if (!RUNTIME_PROGRAM_DATA.find(p => p.id === localProg.id)) {
-                        RUNTIME_PROGRAM_DATA.push(localProg);
-                    }
-                });
 
                 renderProgramAllViews();
 
             } catch (err) {
-                console.warn("Gagal memuat runtime PROGRAM_DATA via API, beralih ke fallback PROGRAM_DATA lokal:", err);
-                if (Array.isArray(PROGRAM_DATA) && PROGRAM_DATA.length > 0) {
-                    programRuntimeState.status = "ready";
-                    programRuntimeState.error = null;
-                    RUNTIME_PROGRAM_DATA = [...PROGRAM_DATA];
-                    renderProgramAllViews();
-                } else {
-                    programRuntimeState.status = "error";
-                    programRuntimeState.error = err.message || "Terjadi kesalahan koneksi server.";
-                    renderProgramErrorState();
-                }
+                console.error("Gagal memuat runtime PROGRAM_DATA via API:", err);
+                programRuntimeState.status = "error";
+                programRuntimeState.error = err.message || "Terjadi kesalahan koneksi server.";
+                renderProgramErrorState();
             }
         }
 
@@ -239,8 +233,19 @@
             if (programRuntimeState.status !== "ready") return;
 
             RUNTIME_PROGRAM_DATA.forEach(prog => {
-                const pageEl = document.getElementById(`page-${prog.id}`);
-                if (!pageEl) return;
+                let pageEl = document.getElementById(`page-${prog.id}`);
+                if (!pageEl) {
+                    pageEl = document.createElement('div');
+                    pageEl.id = `page-${prog.id}`;
+                    pageEl.className = 'tab-content hidden space-y-6';
+                    const refEl = document.getElementById('page-jadwal-kegiatan');
+                    if (refEl && refEl.parentNode) {
+                        refEl.parentNode.insertBefore(pageEl, refEl);
+                    } else {
+                        const mainContainer = document.querySelector('main') || document.body;
+                        mainContainer.appendChild(pageEl);
+                    }
+                }
 
                 const d = prog.detail;
                 const theme = getProgramUiTheme(prog);

@@ -2526,34 +2526,46 @@ class GoogleSheetsProgramAdapter extends ProgramRepository {
   }
 
   /**
-   * Internal Helper: Seeds canonical default programs into newly created or empty sheet.
+   * Internal Helper: Seeds canonical default programs into newly created, empty, or incomplete sheet.
    */
   _seedDefaultPrograms(sheet) {
     try {
       if (typeof getCanonicalMigrationSource === "function") {
         const source = getCanonicalMigrationSource();
         if (Array.isArray(source) && source.length > 0) {
-          const nowIso = new Date().toISOString();
-          const rows = source.map((item, idx) => [
-            item.id,
-            item.name,
-            item.badge,
-            item.image,
-            item.description,
-            serializeProgramPayload(item.highlights || []),
-            serializeProgramPayload(item.detail || {}),
-            ProgramStatus.PUBLISHED,
-            idx + 1,
-            nowIso,
-            nowIso,
-            "system:init",
-            "system:init",
-            nowIso,
-            "system:init",
-            1
-          ]);
-          sheet.getRange(2, 1, rows.length, this.expectedHeaders.length).setValues(rows);
-          Logger.log(`[OK] Seeded ${rows.length} canonical programs into sheet '${sheet.getName()}'.`);
+          const values = sheet.getDataRange().getValues();
+          const existingIds = new Set();
+          for (let r = 1; r < values.length; r++) {
+            if (values[r][0]) {
+              existingIds.add(String(values[r][0]).trim());
+            }
+          }
+
+          const missing = source.filter(item => !existingIds.has(item.id));
+          if (missing.length > 0) {
+            const nowIso = new Date().toISOString();
+            const startRow = Math.max(2, sheet.getLastRow() + 1);
+            const rows = missing.map((item, idx) => [
+              item.id,
+              item.name,
+              item.badge,
+              item.image,
+              item.description,
+              serializeProgramPayload(item.highlights || []),
+              serializeProgramPayload(item.detail || {}),
+              ProgramStatus.PUBLISHED,
+              existingIds.size + idx + 1,
+              nowIso,
+              nowIso,
+              "system:init",
+              "system:init",
+              nowIso,
+              "system:init",
+              1
+            ]);
+            sheet.getRange(startRow, 1, rows.length, this.expectedHeaders.length).setValues(rows);
+            Logger.log(`[OK] Seeded ${rows.length} programs into sheet '${sheet.getName()}'.`);
+          }
         }
       }
     } catch (e) {
@@ -3829,6 +3841,71 @@ function getCanonicalMigrationSource() {
           waText: "Daftar Dewasa Putri via WA"
         }
       }
+    },
+    {
+      id: "sd-islam",
+      name: "SD Islam Unggulan",
+      badge: "SD Islam",
+      image: "https://images.unsplash.com/photo-1585036156171-384164a8c675?q=80&w=800&auto=format&fit=crop",
+      description: "Pendidikan dasar unggulan memadukan kurikulum nasional dan nilai-nilai Al-Qur'an.",
+      highlights: [
+        "Kurikulum Terintegrasi",
+        "Tahfidz Dasar & Adab"
+      ],
+      detail: {
+        tagline: "Membangun Fondasi Keilmuan dan Karakter Islami Sejak Dini",
+        summary: "Program SD Islam Unggulan yang memadukan pendidikan formal (kurikulum nasional) dengan pendidikan agama Islam yang mendalam, termasuk tahfidz dasar dan pembentukan karakter/adab harian yang menyenangkan.",
+        video: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        videoTitle: "Video Profil SD Islam Unggulan",
+        keunggulan: [
+          { title: "Kurikulum Terpadu", desc: "Memadukan materi umum dan diniyah dengan pendekatan belajar aktif dan menyenangkan.", icon: "fa-book-open", iconBg: "bg-blue-50 text-blue-600" },
+          { title: "Program Tahfidz Dini", desc: "Bimbingan hafalan surah-surah pendek dan juz amma sejak dini.", icon: "fa-book-quran", iconBg: "bg-amber-50 text-amber-600" },
+          { title: "Penguatan Adab Harian", desc: "Menanamkan nilai-nilai akhlakul karimah dalam setiap aktivitas harian siswa.", icon: "fa-child-reaching", iconBg: "bg-emerald-50 text-emerald-600" }
+        ],
+        targetOutput: [
+          "Menguasai materi pendidikan dasar nasional dengan baik.",
+          "Mampu membaca Al-Qur'an dengan tartil.",
+          "Memiliki hafalan Juz 30 (Juz Amma).",
+          "Menjadikan adab Islami sebagai karakter harian.",
+          "Memiliki dasar-dasar kemandirian dan keberanian."
+        ],
+        gallery: [
+          { image: "https://images.unsplash.com/photo-1585036156171-384164a8c675?q=80&w=800&auto=format&fit=crop", caption: "Kegiatan Belajar Pendidikan Formal", sliderId: "sd-1" },
+          { image: "https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=800&auto=format&fit=crop", caption: "Bimbingan Tahfidz Anak SD", sliderId: "sd-2" }
+        ],
+        fasilitas: [
+          { text: "Ruang kelas ber-AC, multimedia, dan nyaman.", icon: "fa-school", iconColor: "text-blue-600" },
+          { text: "Area bermain dan olahraga yang aman.", icon: "fa-futbol", iconColor: "text-emerald-600" },
+          { text: "Perpustakaan mini dan sudut baca di setiap kelas.", icon: "fa-book", iconColor: "text-amber-600" }
+        ],
+        prosedur: {
+          items: [
+            { step: "01", title: "Pendaftaran Online", desc: "Melakukan registrasi formulir calon siswa melalui portal PPDB." },
+            { step: "02", title: "Tes Observasi Kesiapan", desc: "Observasi kesiapan belajar dan pemetaan dasar membaca Al-Qur'an." },
+            { step: "03", title: "Wawancara Orang Tua", desc: "Wawancara keselarasan visi pendidikan bersama wali murid." },
+            { step: "04", title: "Daftar Ulang", desc: "Penyelesaian administrasi dan penyerahan perlengkapan sekolah." }
+          ],
+          image: "https://images.unsplash.com/photo-1585036156171-384164a8c675?q=80&w=800&auto=format&fit=crop",
+          imageAlt: "Siswa SD Islam Unggulan"
+        },
+        persyaratan: [
+          { title: "Usia Minimal 6 Tahun", desc: "Berusia minimal 6 tahun pada tahun ajaran baru.", icon: "fa-cake-candles" },
+          { title: "Fotokopi Akta & KK", desc: "Menyerahkan fotokopi akta kelahiran dan KK 2 lembar.", icon: "fa-file-lines" },
+          { title: "Pas Foto 3x4", desc: "Pas foto berwarna 3x4 sebanyak 4 lembar.", icon: "fa-image" },
+          { title: "Surat Sehat", desc: "Surat keterangan sehat dokter.", icon: "fa-file-medical" }
+        ],
+        biaya: {
+          pendaftaran: { nominal: "Rp 1.500.000", note: "Termasuk observasi & seragam 4 stel" },
+          syahriyah: { nominal: "Rp 250.000", note: "SPP bulanan pendidikan" }
+        },
+        cta: {
+          title: "Daftarkan Putra-Putri Anda di SD Islam Unggulan",
+          description: "Pendidikan dasar berkualitas yang memadukan keilmuan nasional dan nilai-nilai Al-Qur'an.",
+          waLink: "https://wa.me/6281234567890?text=Halo%20Admin%2C%20saya%20ingin%20bertanya%20tentang%20SD%20Islam%20Unggulan",
+          waBtnClass: "bg-blue-600 hover:bg-blue-700 text-white",
+          waText: "Konsultasi SD Islam via WA"
+        }
+      }
     }
   ];
 }
@@ -4327,32 +4404,44 @@ function initProgramsSheet(token) {
       .setFontColor("#ffffff");
     sheet.setFrozenRows(1);
 
-    // If newly created or only has headers, seed canonical default programs
+    // Seed canonical default programs (insert missing items idempotently)
     let seededCount = 0;
-    if (sheet.getLastRow() <= 1 && typeof getCanonicalMigrationSource === "function") {
+    if (typeof getCanonicalMigrationSource === "function") {
       const canonicalData = getCanonicalMigrationSource();
       if (Array.isArray(canonicalData) && canonicalData.length > 0) {
-        const nowIso = new Date().toISOString();
-        const rows = canonicalData.map((item, idx) => [
-          item.id,
-          item.name,
-          item.badge,
-          item.image,
-          item.description,
-          serializeProgramPayload(item.highlights || []),
-          serializeProgramPayload(item.detail || {}),
-          "published",
-          idx + 1,
-          nowIso,
-          nowIso,
-          "system:init",
-          "system:init",
-          nowIso,
-          "system:init",
-          1
-        ]);
-        sheet.getRange(2, 1, rows.length, expectedHeaders.length).setValues(rows);
-        seededCount = rows.length;
+        const values = sheet.getDataRange().getValues();
+        const existingIds = new Set();
+        for (let r = 1; r < values.length; r++) {
+          if (values[r][0]) {
+            existingIds.add(String(values[r][0]).trim());
+          }
+        }
+
+        const missing = canonicalData.filter(item => !existingIds.has(item.id));
+        if (missing.length > 0) {
+          const nowIso = new Date().toISOString();
+          const startRow = Math.max(2, sheet.getLastRow() + 1);
+          const rows = missing.map((item, idx) => [
+            item.id,
+            item.name,
+            item.badge,
+            item.image,
+            item.description,
+            serializeProgramPayload(item.highlights || []),
+            serializeProgramPayload(item.detail || {}),
+            "published",
+            existingIds.size + idx + 1,
+            nowIso,
+            nowIso,
+            "system:init",
+            "system:init",
+            nowIso,
+            "system:init",
+            1
+          ]);
+          sheet.getRange(startRow, 1, rows.length, expectedHeaders.length).setValues(rows);
+          seededCount = rows.length;
+        }
       }
     }
 
