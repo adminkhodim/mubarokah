@@ -1902,9 +1902,20 @@
                     const errCode = errObj.code || "SERVER_ERROR";
                     const errMsg = errObj.message || "Gagal memuat daftar program.";
                     const reqId = errObj.requestId || response.requestId || "";
+                    const isSheetMissing = (errCode === "PERSISTENCE_ERROR") || (errMsg && (errMsg.toLowerCase().includes("sheet") || errMsg.toLowerCase().includes("not found")));
+                    const initBtnHtml = isSheetMissing ? `
+                        <div class="pt-2">
+                            <button type="button" onclick="initAdminProgramsSheet()" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition shadow-sm inline-flex items-center space-x-1.5 active:scale-95">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                <span>Inisialisasi Tab Sheet Program Otomatis</span>
+                            </button>
+                            <p class="text-[10px] text-slate-500 mt-1">Klik untuk membuat Tab "Programs" beserta 16 kolom header dan data awal.</p>
+                        </div>
+                    ` : '';
+
                     if (stateContainer) {
                         stateContainer.className = "py-8 text-center text-xs text-rose-600 bg-rose-50/70 rounded-2xl border border-rose-200 space-y-2";
-                        stateContainer.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-xl text-rose-500"></i><p class="font-bold">[${escapeHtml(errCode)}] ${escapeHtml(errMsg)}</p>${reqId ? `<span class="text-[10px] text-slate-400 font-mono block">Ref ID: ${escapeHtml(reqId)}</span>` : ''}`;
+                        stateContainer.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-xl text-rose-500"></i><p class="font-bold">[${escapeHtml(errCode)}] ${escapeHtml(errMsg)}</p>${initBtnHtml}${reqId ? `<span class="text-[10px] text-slate-400 font-mono block">Ref ID: ${escapeHtml(reqId)}</span>` : ''}`;
                         stateContainer.classList.remove('hidden');
                     }
                     if (tbody) tbody.innerHTML = "";
@@ -1922,13 +1933,44 @@
 
             } catch (err) {
                 console.error("Gagal memuat program CMS:", err);
+                const isSheetMissing = err.message && (err.message.toLowerCase().includes("sheet") || err.message.toLowerCase().includes("not found"));
+                const initBtnHtml = isSheetMissing ? `
+                    <div class="pt-2">
+                        <button type="button" onclick="initAdminProgramsSheet()" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition shadow-sm inline-flex items-center space-x-1.5 active:scale-95">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>Inisialisasi Tab Sheet Program Otomatis</span>
+                        </button>
+                    </div>
+                ` : '';
                 if (stateContainer) {
                     stateContainer.className = "py-8 text-center text-xs text-rose-600 bg-rose-50/70 rounded-2xl border border-rose-200 space-y-2";
-                    stateContainer.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-xl text-rose-500"></i><p class="font-bold">Gagal memuat program dari server.</p><p class="text-[11px] text-rose-500">${escapeHtml(err.message)}</p>`;
+                    stateContainer.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-xl text-rose-500"></i><p class="font-bold">Gagal memuat program dari server.</p><p class="text-[11px] text-rose-500">${escapeHtml(err.message)}</p>${initBtnHtml}`;
                     stateContainer.classList.remove('hidden');
                 }
                 if (tbody) tbody.innerHTML = "";
                 if (mobileList) mobileList.innerHTML = "";
+            }
+        }
+
+        async function initAdminProgramsSheet() {
+            const token = getAdminSessionToken();
+            if (!token) {
+                showToast("❌ Sesi admin tidak ditemukan. Silakan login kembali.");
+                return;
+            }
+
+            showToast("⏳ Sedang menginisialisasi tab sheet program di Google Sheets...");
+            try {
+                const response = await apiPost("program.init", { token });
+                if (response && response.success) {
+                    showToast("✅ Tab Sheet Program berhasil dibuat dan diinisialisasi!");
+                    await loadAdminProgramList();
+                } else {
+                    const msg = (response && response.error && response.error.message) || "Gagal menginisialisasi tab program.";
+                    showToast("❌ " + msg);
+                }
+            } catch (err) {
+                showToast("❌ Gagal inisialisasi tab program: " + err.message);
             }
         }
 
@@ -3038,8 +3080,20 @@
             } catch (err) {
                 console.error("Gagal menyimpan program CMS:", err);
                 if (alertBox) {
-                    alertBox.className = "p-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-xs";
-                    alertBox.innerHTML = `<strong>Gagal:</strong> ${escapeHtml(err.message)}`;
+                    const isSheetErr = err.message && (err.message.toLowerCase().includes("sheet") || err.message.toLowerCase().includes("not found") || err.message.includes("PERSISTENCE_ERROR"));
+                    alertBox.className = "p-3.5 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-xs space-y-2";
+                    alertBox.innerHTML = `
+                        <p><strong>Gagal Menyimpan:</strong> ${escapeHtml(err.message)}</p>
+                        ${isSheetErr ? `
+                            <div class="pt-1">
+                                <button type="button" onclick="initAdminProgramsSheet()" class="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg font-bold text-xs shadow-sm inline-flex items-center space-x-1.5">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                    <span>Inisialisasi Tab Sheet Program Otomatis</span>
+                                </button>
+                                <p class="text-[10px] text-slate-500 mt-1">Setelah tab dibuat, silakan klik Simpan Perubahan kembali.</p>
+                            </div>
+                        ` : ''}
+                    `;
                     alertBox.classList.remove('hidden');
                 }
                 showToast("❌ " + err.message);

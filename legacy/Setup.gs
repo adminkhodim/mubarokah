@@ -59,7 +59,8 @@ var AUTHORITATIVE_SCHEMAS_ = {
   "Tahfidz_Target": ["student_id", "student_name", "target_ziyadah_sesi", "target_ziyadah_pekan", "target_murajaah_sesi", "target_murajaah_pekan", "target_juz", "updated_at"],
   "Tahfidz_Halaqah": ["halaqah_id", "nama_halaqah", "kategori", "muhafiz", "target_kurikulum", "student_ids", "created_at"],
   "Tahfidz_Jadwal_Sesi": ["sesi_id", "nama_sesi", "jenis_sesi", "status", "jam_mulai", "jam_selesai", "hari_list", "created_at"],
-  "Pegawai": ["employee_id", "nama", "nip", "gender", "jabatan", "spesialisasi", "telepon", "email", "status", "created_at"]
+  "Pegawai": ["employee_id", "nama", "nip", "gender", "jabatan", "spesialisasi", "telepon", "email", "status", "created_at"],
+  "Programs": ["id", "name", "badge", "image", "description", "highlights_json", "detail_json", "status", "sort_order", "created_at", "updated_at", "created_by", "updated_by", "published_at", "published_by", "version"]
 };
 
 // ============================================================
@@ -104,6 +105,11 @@ function inspectSpreadsheet_(ss) {
   authNames.forEach(function(sheetName) {
     var expectedHeaders = AUTHORITATIVE_SCHEMAS_[sheetName];
     var sheet = ss.getSheetByName(sheetName);
+    if (!sheet && sheetName === "Programs") {
+      sheet = ss.getSheetByName("Program");
+    }
+
+    var effectiveName = sheet ? sheet.getName() : sheetName;
 
     // --- CASE: Sheet does not exist ---
     if (!sheet) {
@@ -125,7 +131,7 @@ function inspectSpreadsheet_(ss) {
     if (expectedHeaders === null) {
       if (lastRow > 0) {
         result.ok = false;
-        result.errors.push("Sheet [" + sheetName + "] already exists with " + lastRow + " row(s) of content. Cannot modify — schema pending confirmation.");
+        result.errors.push("Sheet [" + effectiveName + "] already exists with " + lastRow + " row(s) of content. Cannot modify — schema pending confirmation.");
       } else {
         // Existing empty Pendaftar — just needs frozen row
         result.pendaftarAction = "FREEZE_ONLY";
@@ -136,7 +142,7 @@ function inspectSpreadsheet_(ss) {
     // --- Sub-case: Sheet with defined schema ---
     if (lastRow === 0 && lastCol === 0) {
       // Completely empty — needs headers written
-      result.sheetsToWriteHeaders.push({ name: sheetName, headers: expectedHeaders });
+      result.sheetsToWriteHeaders.push({ name: effectiveName, headers: expectedHeaders });
       return;
     }
 
@@ -148,7 +154,7 @@ function inspectSpreadsheet_(ss) {
 
       if (headersMatch) {
         // Headers match — only formatting needed
-        result.sheetsToFormat.push(sheetName);
+        result.sheetsToFormat.push(effectiveName);
         return;
       }
 
@@ -159,25 +165,34 @@ function inspectSpreadsheet_(ss) {
 
       if (allEmpty) {
         // Row 1 is all empty — safe to write headers
-        result.sheetsToWriteHeaders.push({ name: sheetName, headers: expectedHeaders });
+        result.sheetsToWriteHeaders.push({ name: effectiveName, headers: expectedHeaders });
         return;
       }
 
       // Non-empty headers that don't match — FAIL
       result.ok = false;
-      result.errors.push("Sheet [" + sheetName + "] has mismatched headers. Expected: [" + expectedHeaders.join(", ") + "]. Found: [" + trimmedCurrent.join(", ") + "].");
+      result.errors.push("Sheet [" + effectiveName + "] has mismatched headers. Expected: [" + expectedHeaders.join(", ") + "]. Found: [" + trimmedCurrent.join(", ") + "].");
       return;
     }
 
     // lastRow > 1 — sheet has data rows beyond header
-    result.ok = false;
-    result.errors.push("Sheet [" + sheetName + "] already contains " + lastRow + " row(s) (including header). " + (lastRow - 1) + " data row(s) detected. EXISTING DATA MUST NEVER BE CLEARED.");
+    if (lastRow > 1) {
+      var currentHeaders = sheet.getRange(1, 1, 1, Math.max(lastCol, expectedHeaders.length)).getValues()[0];
+      var trimmedCurrent = currentHeaders.slice(0, expectedHeaders.length);
+      var headersMatch = (JSON.stringify(trimmedCurrent) === JSON.stringify(expectedHeaders));
+      if (headersMatch && (sheetName === "Programs" || effectiveName === "Program")) {
+        result.sheetsToFormat.push(effectiveName);
+        return;
+      }
+      result.ok = false;
+      result.errors.push("Sheet [" + effectiveName + "] already contains " + lastRow + " row(s) (including header). " + (lastRow - 1) + " data row(s) detected. EXISTING DATA MUST NEVER BE CLEARED.");
+    }
   });
 
   // Inspect default sheets (Sheet1, Lembar1, etc.)
   allSheets.forEach(function(s) {
     var sName = s.getName();
-    if (AUTHORITATIVE_SCHEMAS_.hasOwnProperty(sName)) {
+    if (AUTHORITATIVE_SCHEMAS_.hasOwnProperty(sName) || sName === "Program" || sName === "Programs") {
       return; // authoritative sheet, already inspected above
     }
 
@@ -329,7 +344,7 @@ function executeInitialization_(ss, preflight) {
   verifySheets.forEach(function(s) {
     var sName = s.getName();
     var lRow = s.getLastRow();
-    var headers = AUTHORITATIVE_SCHEMAS_[sName];
+    var headers = AUTHORITATIVE_SCHEMAS_[sName] || (sName === "Program" ? AUTHORITATIVE_SCHEMAS_["Programs"] : null);
     var dataCount = 0;
 
     if (headers && headers.length > 0) {
@@ -797,5 +812,68 @@ function auditMubarokahIntegration() {
     scriptPropertiesOk: report.scriptProperties.ok,
     spreadsheetOk: report.spreadsheet.ok,
     driveOk: report.drive.ok
+  };
+}
+
+/**
+ * FUNGSI CEPAT INISIALISASI TAB SHEET "Program" / "Programs"
+ * Dapat dijalankan langsung via Apps Script Editor (pilih: initProgramsSheet -> Run).
+ * Membuat tab sheet Programs (atau Program) jika belum ada, dengan 16 kolom terstandarisasi.
+ */
+function initProgramsSheet() {
+  var ss = null;
+  var props = PropertiesService.getScriptProperties();
+  var ssId = props.getProperty("SPREADSHEET_ID");
+  if (ssId) {
+    try {
+      ss = SpreadsheetApp.openById(ssId);
+    } catch (e) {}
+  }
+  if (!ss) {
+    try {
+      ss = SpreadsheetApp.getActiveSpreadsheet();
+    } catch (e) {}
+  }
+  if (!ss) {
+    throw new Error("Spreadsheet database tidak ditemukan. Periksa SPREADSHEET_ID di Script Properties.");
+  }
+
+  var expectedHeaders = AUTHORITATIVE_SCHEMAS_["Programs"];
+  var sheet = ss.getSheetByName("Programs");
+  if (!sheet) {
+    sheet = ss.getSheetByName("Program");
+  }
+  if (!sheet) {
+    var all = ss.getSheets();
+    for (var i = 0; i < all.length; i++) {
+      var n = all[i].getName().trim().toLowerCase();
+      if (n === "programs" || n === "program") {
+        sheet = all[i];
+        break;
+      }
+    }
+  }
+
+  var isNew = false;
+  if (!sheet) {
+    sheet = ss.insertSheet("Programs");
+    isNew = true;
+  }
+
+  var lastRow = sheet.getLastRow();
+  if (lastRow === 0) {
+    sheet.getRange(1, 1, 1, expectedHeaders.length).setValues([expectedHeaders]);
+  }
+  sheet.getRange(1, 1, 1, expectedHeaders.length)
+    .setFontWeight("bold")
+    .setBackground("#047857")
+    .setFontColor("#ffffff");
+  sheet.setFrozenRows(1);
+
+  Logger.log("[OK] Sheet '" + sheet.getName() + "' siap (" + (isNew ? "Baru dibuat" : "Sudah ada") + ") dengan 16 kolom header.");
+  return {
+    success: true,
+    sheetName: sheet.getName(),
+    isNew: isNew
   };
 }

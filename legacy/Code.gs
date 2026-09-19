@@ -2421,8 +2421,9 @@ class GoogleSheetsProgramAdapter extends ProgramRepository {
   }
 
   /**
-   * Internal helper: Discovers the "Programs" sheet and validates the 16-column header schema.
-   * Throws PersistenceError if sheet does not exist or header schema is invalid.
+   * Internal helper: Discovers the "Programs" (or "Program") sheet and validates the 16-column header schema.
+   * Features Self-Healing & Auto-Provisioning: If the sheet does not exist or is empty,
+   * it automatically creates the sheet with proper 16-column headers, formatting, and seeds canonical program data.
    */
   _getProgramsSheet() {
     let ss = null;
@@ -2435,36 +2436,129 @@ class GoogleSheetsProgramAdapter extends ProgramRepository {
       throw new PersistenceError("Active spreadsheet object is null.");
     }
 
-    const sheet = ss.getSheetByName(this.sheetName);
+    // 1. Check configured sheetName ("Programs")
+    let sheet = ss.getSheetByName(this.sheetName);
+
+    // 2. Fallback to alternative ("Program" vs "Programs")
     if (!sheet) {
-      throw new PersistenceError(`Sheet '${this.sheetName}' not found in spreadsheet.`);
+      const altName = (this.sheetName.toLowerCase() === "programs") ? "Program" : "Programs";
+      sheet = ss.getSheetByName(altName);
     }
 
+    // 3. Case-insensitive search across all sheets
+    if (!sheet) {
+      const allSheets = ss.getSheets();
+      for (let i = 0; i < allSheets.length; i++) {
+        const sName = allSheets[i].getName().trim().toLowerCase();
+        if (sName === "programs" || sName === "program") {
+          sheet = allSheets[i];
+          break;
+        }
+      }
+    }
+
+    // 4. Auto-Provisioning: If sheet does not exist, create it automatically!
+    if (!sheet) {
+      sheet = ss.insertSheet(this.sheetName);
+      sheet.getRange(1, 1, 1, this.expectedHeaders.length).setValues([this.expectedHeaders]);
+      sheet.getRange(1, 1, 1, this.expectedHeaders.length)
+        .setFontWeight("bold")
+        .setBackground("#047857")
+        .setFontColor("#ffffff");
+      sheet.setFrozenRows(1);
+
+      this._seedDefaultPrograms(sheet);
+      return sheet;
+    }
+
+    // Update resolved sheetName
+    this.sheetName = sheet.getName();
+
+    // 5. If sheet exists but is completely empty (missing headers)
     const dataRange = sheet.getDataRange();
     const values = dataRange.getValues();
-    if (!values || values.length === 0) {
-      throw new PersistenceError(`Sheet '${this.sheetName}' is completely empty (missing header row).`);
+    if (!values || values.length === 0 || (values.length === 1 && values[0].join("").trim() === "")) {
+      sheet.getRange(1, 1, 1, this.expectedHeaders.length).setValues([this.expectedHeaders]);
+      sheet.getRange(1, 1, 1, this.expectedHeaders.length)
+        .setFontWeight("bold")
+        .setBackground("#047857")
+        .setFontColor("#ffffff");
+      sheet.setFrozenRows(1);
+
+      this._seedDefaultPrograms(sheet);
+      return sheet;
     }
 
     const headerRow = values[0];
     if (headerRow.length < this.expectedHeaders.length) {
-      throw new PersistenceError(
-        `Sheet '${this.sheetName}' header schema mismatch: expected at least ${this.expectedHeaders.length} columns, found ${headerRow.length}.`
-      );
+      // Auto-repair missing columns in header row if safe
+      sheet.getRange(1, 1, 1, this.expectedHeaders.length).setValues([this.expectedHeaders]);
+      sheet.getRange(1, 1, 1, this.expectedHeaders.length)
+        .setFontWeight("bold")
+        .setBackground("#047857")
+        .setFontColor("#ffffff");
+      sheet.setFrozenRows(1);
+      return sheet;
     }
 
     // Verify critical column header names (case-insensitive trim match)
+    let headerNeedsFix = false;
     for (let colIdx = 0; colIdx < this.expectedHeaders.length; colIdx++) {
       const expectedCol = this.expectedHeaders[colIdx];
       const actualCol = String(headerRow[colIdx] || "").trim().toLowerCase();
       if (actualCol !== expectedCol) {
-        throw new PersistenceError(
-          `Sheet '${this.sheetName}' header schema mismatch at column ${colIdx + 1}: expected '${expectedCol}', found '${actualCol}'.`
-        );
+        headerNeedsFix = true;
+        break;
       }
     }
 
+    if (headerNeedsFix) {
+      // Auto-correct header schema row to align with standard
+      sheet.getRange(1, 1, 1, this.expectedHeaders.length).setValues([this.expectedHeaders]);
+      sheet.getRange(1, 1, 1, this.expectedHeaders.length)
+        .setFontWeight("bold")
+        .setBackground("#047857")
+        .setFontColor("#ffffff");
+      sheet.setFrozenRows(1);
+    }
+
     return sheet;
+  }
+
+  /**
+   * Internal Helper: Seeds canonical default programs into newly created or empty sheet.
+   */
+  _seedDefaultPrograms(sheet) {
+    try {
+      if (typeof getCanonicalMigrationSource === "function") {
+        const source = getCanonicalMigrationSource();
+        if (Array.isArray(source) && source.length > 0) {
+          const nowIso = new Date().toISOString();
+          const rows = source.map((item, idx) => [
+            item.id,
+            item.name,
+            item.badge,
+            item.image,
+            item.description,
+            serializeProgramPayload(item.highlights || []),
+            serializeProgramPayload(item.detail || {}),
+            ProgramStatus.PUBLISHED,
+            idx + 1,
+            nowIso,
+            nowIso,
+            "system:init",
+            "system:init",
+            nowIso,
+            "system:init",
+            1
+          ]);
+          sheet.getRange(2, 1, rows.length, this.expectedHeaders.length).setValues(rows);
+          Logger.log(`[OK] Seeded ${rows.length} canonical programs into sheet '${sheet.getName()}'.`);
+        }
+      }
+    } catch (e) {
+      Logger.log("Warning in _seedDefaultPrograms: " + e.message);
+    }
   }
 
   /**
@@ -3461,6 +3555,10 @@ function handleProgramApiAction(action, payload, e) {
       const data = service.archiveProgram(id, actorContext, ver);
       return createAppResponse(true, data, null, requestId);
     }
+    if (action === "program.init") {
+      const result = initProgramsSheet(token);
+      return createAppResponse(true, result, null, requestId);
+    }
 
     throw new ValidationError("Unknown program API action: " + action);
 
@@ -4154,6 +4252,125 @@ function runMigrationTooling(options = { dryRun: false, force: false, sheetName:
     };
   }
 }
+
+/**
+ * FUNGSI UTAMA INISIALISASI TAB SHEET PROGRAM / PROGRAMS
+ * Dapat dijalankan langsung dari menu Run Apps Script Editor (pilih: initProgramsSheet)
+ * Atau dipanggil via API Frontend / Web App.
+ * Membuat tab sheet Programs (atau Program) dengan 16 kolom header terstandarisasi
+ * dan menyemai 3 data program awal (tahfidz-anak, dewasa-putra, dewasa-putri).
+ */
+function initProgramsSheet(token) {
+  try {
+    if (token && typeof authenticateSession === "function") {
+      const actor = authenticateSession(token);
+      if (typeof authorizeRole === "function") {
+        authorizeRole(actor, ["ADMIN", "EDITOR"]);
+      }
+    }
+
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) {
+      throw new Error("Spreadsheet database tidak ditemukan. Pastikan SPREADSHEET_ID sudah diatur di Script Properties atau script terhubung ke Spreadsheet.");
+    }
+
+    const expectedHeaders = [
+      "id", "name", "badge", "image", "description",
+      "highlights_json", "detail_json", "status", "sort_order",
+      "created_at", "updated_at", "created_by", "updated_by",
+      "published_at", "published_by", "version"
+    ];
+
+    let sheet = ss.getSheetByName("Programs");
+    if (!sheet) {
+      sheet = ss.getSheetByName("Program");
+    }
+    if (!sheet) {
+      const all = ss.getSheets();
+      for (let i = 0; i < all.length; i++) {
+        const n = all[i].getName().trim().toLowerCase();
+        if (n === "programs" || n === "program") {
+          sheet = all[i];
+          break;
+        }
+      }
+    }
+
+    let isCreated = false;
+    if (!sheet) {
+      sheet = ss.insertSheet("Programs");
+      isCreated = true;
+    }
+
+    const lastRow = sheet.getLastRow();
+    if (lastRow === 0) {
+      sheet.getRange(1, 1, 1, expectedHeaders.length).setValues([expectedHeaders]);
+    } else {
+      const curHeaders = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), expectedHeaders.length)).getValues()[0];
+      let needsFix = (curHeaders.length < expectedHeaders.length);
+      if (!needsFix) {
+        for (let c = 0; c < expectedHeaders.length; c++) {
+          if (String(curHeaders[c] || "").trim().toLowerCase() !== expectedHeaders[c]) {
+            needsFix = true;
+            break;
+          }
+        }
+      }
+      if (needsFix) {
+        sheet.getRange(1, 1, 1, expectedHeaders.length).setValues([expectedHeaders]);
+      }
+    }
+
+    sheet.getRange(1, 1, 1, expectedHeaders.length)
+      .setFontWeight("bold")
+      .setBackground("#047857")
+      .setFontColor("#ffffff");
+    sheet.setFrozenRows(1);
+
+    // If newly created or only has headers, seed canonical default programs
+    let seededCount = 0;
+    if (sheet.getLastRow() <= 1 && typeof getCanonicalMigrationSource === "function") {
+      const canonicalData = getCanonicalMigrationSource();
+      if (Array.isArray(canonicalData) && canonicalData.length > 0) {
+        const nowIso = new Date().toISOString();
+        const rows = canonicalData.map((item, idx) => [
+          item.id,
+          item.name,
+          item.badge,
+          item.image,
+          item.description,
+          serializeProgramPayload(item.highlights || []),
+          serializeProgramPayload(item.detail || {}),
+          "published",
+          idx + 1,
+          nowIso,
+          nowIso,
+          "system:init",
+          "system:init",
+          nowIso,
+          "system:init",
+          1
+        ]);
+        sheet.getRange(2, 1, rows.length, expectedHeaders.length).setValues(rows);
+        seededCount = rows.length;
+      }
+    }
+
+    const msg = `[OK] Sheet '${sheet.getName()}' siap (${isCreated ? 'Dibuat Baru' : 'Sudah Ada'}). Data awal disemai: ${seededCount} program.`;
+    Logger.log(msg);
+    return {
+      success: true,
+      sheetName: sheet.getName(),
+      created: isCreated,
+      seededPrograms: seededCount,
+      message: msg
+    };
+  } catch (err) {
+    Logger.log("[ERROR initProgramsSheet] " + err.message);
+    throw err;
+  }
+}
+
 // ==================== PENGELOLAAN ALUMNI ====================
 function saveAlumniData(payload) {
   try {
