@@ -1394,7 +1394,7 @@
                             Pusat Lembaga
                         </span>
 
-                        <span
+                        <span id="public-profil-berdiri-badge"
                             class="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-50">
                             Berdiri sejak 1981
                         </span>
@@ -1478,11 +1478,11 @@
                 <div class="grid md:grid-cols-[180px_1fr] gap-5 md:gap-8">
                     <div
                         class="rounded-3xl bg-brand-50 dark:bg-emerald-950/30 border border-brand-100 dark:border-emerald-900/50 p-5 md:p-6 h-fit">
-                        <span
+                        <span id="public-didirikan-label"
                             class="block text-[10px] font-extrabold uppercase tracking-widest text-brand-700 dark:text-emerald-400">Didirikan</span>
-                        <strong
+                        <strong id="public-didirikan-tahun"
                             class="block mt-1 text-4xl md:text-5xl font-black tracking-tight text-brand-900 dark:text-emerald-300">1981</strong>
-                        <p class="mt-2 text-xs leading-relaxed text-brand-700 dark:text-emerald-400/80">5 Desember 1981
+                        <p id="public-didirikan-tanggal" class="mt-2 text-xs leading-relaxed text-brand-700 dark:text-emerald-400/80">5 Desember 1981
                         </p>
                     </div>
                     <div id="public-sejarah-container"
@@ -5955,6 +5955,34 @@
                                 <section class="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-100">
                                     <form id="form-profil-lembaga"
                                         onsubmit="event.preventDefault(); saveAdminProfilLembaga();" class="space-y-6">
+
+                                        <!-- Informasi Tahun & Tanggal Berdiri -->
+                                        <div class="space-y-2">
+                                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                                Informasi Pendirian Lembaga
+                                            </label>
+                                            <p class="text-[10px] text-slate-500 leading-relaxed mb-2">Tahun dan tanggal/keterangan berdirinya pesantren yang tampil di halaman Sejarah.</p>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                                <div class="space-y-1">
+                                                    <label class="block text-[11px] font-bold text-slate-600">
+                                                        Tahun Berdiri
+                                                    </label>
+                                                    <input type="text" id="input-profil-tahun-berdiri"
+                                                        class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm font-bold text-slate-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
+                                                        placeholder="Contoh: 1981">
+                                                </div>
+                                                <div class="space-y-1">
+                                                    <label class="block text-[11px] font-bold text-slate-600">
+                                                        Tanggal / Keterangan Berdiri
+                                                    </label>
+                                                    <input type="text" id="input-profil-tanggal-berdiri"
+                                                        class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm text-slate-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
+                                                        placeholder="Contoh: 5 Desember 1981">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <hr class="border-slate-100">
 
                                         <!-- Sejarah -->
                                         <div class="space-y-2">

@@ -227,6 +227,8 @@
 
         // ==================== RENDER PROFIL LEMBAGA (PUBLIK) ====================
         const DEFAULT_PROFIL_MUBAROKAH = {
+            tahun_berdiri: "1981",
+            tanggal_berdiri: "5 Desember 1981",
             sejarah: "Pondok Pesantren Tahfidzul Qur'an Roudlotul Mubarokah didirikan dengan tekad luhur untuk mencetak generasi penghafal Al-Qur'an yang mutqin, berakhlak mulia, dan berwawasan kebangsaan yang luas.\n\nBerawal dari majelis halaqah tahfidz dan pembinaan keagamaan masyarakat, Pesantren Roudlotul Mubarokah kini berkembang menjadi lembaga pendidikan terpadu yang memadukan sanad tahfidz Al-Qur'an bersanad muttashil, kajian kitab kuning (salaf), serta penguasaan sains dan teknologi modern.\n\nDengan lingkungan pesantren yang kondusif, asri, dan berdisiplin tinggi di Karanganyar Demak, kami berkomitmen mendampingi para santri mencapai kemandirian spiritual, kedalaman keilmuan syariah, dan kesiapan menjadi pemimpin umat masa depan.",
             visi_misi: "Visi:\nMencetak Generasi Qur'ani, Berakhlak Mulia, Unggul dalam Ilmu Syariah, dan Berdaya Saing Global.\n\nMisi:\n1. Menyelenggarakan pendidikan tahfidzul Qur'an intensif dengan standar bacaan tartil dan sanad muttashil.\n2. Menanamkan adab, akhlaqul karimah, dan keteladanan salafus shalih dalam rutinitas keseharian santri.\n3. Mengembangkan keilmuan integratif antara kajian turots Islamiyah dan penguasaan sains teknologi.\n4. Membangun kemandirian santri melalui pembinaan karakter, kedisiplinan asrama, dan kepemimpinan dakwah.",
             struktur_kepengurusan: JSON.stringify([
@@ -240,6 +242,8 @@
         };
 
         window.APP_PROFIL_STATE = window.APP_PROFIL_STATE || {};
+        if (!window.APP_PROFIL_STATE.tahun_berdiri) window.APP_PROFIL_STATE.tahun_berdiri = DEFAULT_PROFIL_MUBAROKAH.tahun_berdiri;
+        if (!window.APP_PROFIL_STATE.tanggal_berdiri) window.APP_PROFIL_STATE.tanggal_berdiri = DEFAULT_PROFIL_MUBAROKAH.tanggal_berdiri;
         if (!window.APP_PROFIL_STATE.sejarah) window.APP_PROFIL_STATE.sejarah = DEFAULT_PROFIL_MUBAROKAH.sejarah;
         if (!window.APP_PROFIL_STATE.visi_misi) window.APP_PROFIL_STATE.visi_misi = DEFAULT_PROFIL_MUBAROKAH.visi_misi;
         if (!window.APP_PROFIL_STATE.struktur_kepengurusan) window.APP_PROFIL_STATE.struktur_kepengurusan = DEFAULT_PROFIL_MUBAROKAH.struktur_kepengurusan;
@@ -256,6 +260,8 @@
                 const data = await apiGet("getPengaturan");
                 if (data && data.status === "success" && data.data) {
                     const config = data.data;
+                    if (config.tahun_berdiri) window.APP_PROFIL_STATE.tahun_berdiri = config.tahun_berdiri;
+                    if (config.tanggal_berdiri) window.APP_PROFIL_STATE.tanggal_berdiri = config.tanggal_berdiri;
                     if (config.sejarah) window.APP_PROFIL_STATE.sejarah = config.sejarah;
                     if (config.visi_misi) window.APP_PROFIL_STATE.visi_misi = config.visi_misi;
                     if (config.struktur_kepengurusan) window.APP_PROFIL_STATE.struktur_kepengurusan = config.struktur_kepengurusan;
@@ -269,6 +275,20 @@
         }
 
         function renderPublicProfilLembaga() {
+            const elTahun = document.getElementById('public-didirikan-tahun');
+            const elTanggal = document.getElementById('public-didirikan-tanggal');
+            const elBadge = document.getElementById('public-profil-berdiri-badge');
+
+            if (elTahun) {
+                elTahun.textContent = window.APP_PROFIL_STATE.tahun_berdiri || "1981";
+            }
+            if (elTanggal) {
+                elTanggal.textContent = window.APP_PROFIL_STATE.tanggal_berdiri || "5 Desember 1981";
+            }
+            if (elBadge) {
+                elBadge.textContent = `Berdiri sejak ${window.APP_PROFIL_STATE.tahun_berdiri || "1981"}`;
+            }
+
             const containerSejarah = document.getElementById('public-sejarah-container');
             const containerVisiMisi = document.getElementById('public-visimisi-container');
             const containerPengurus = document.getElementById('public-pengurus-container');
@@ -447,6 +467,11 @@
                 const data = await apiGet("getPengaturan");
                 if (data && data.status === "success" && data.data) {
                     const config = data.data;
+                    const inputTahun = document.getElementById('input-profil-tahun-berdiri');
+                    const inputTanggal = document.getElementById('input-profil-tanggal-berdiri');
+                    if (inputTahun) inputTahun.value = config.tahun_berdiri || "1981";
+                    if (inputTanggal) inputTanggal.value = config.tanggal_berdiri || "5 Desember 1981";
+
                     document.getElementById('input-profil-sejarah').value = config.sejarah || "";
                     document.getElementById('input-profil-visimisi').value = config.visi_misi || "";
                     
@@ -485,7 +510,12 @@
 
                 syncPengurusList(); 
 
+                const inputTahun = document.getElementById('input-profil-tahun-berdiri');
+                const inputTanggal = document.getElementById('input-profil-tanggal-berdiri');
+
                 const payload = {
+                    tahun_berdiri: inputTahun ? inputTahun.value.trim() : "1981",
+                    tanggal_berdiri: inputTanggal ? inputTanggal.value.trim() : "5 Desember 1981",
                     sejarah: document.getElementById('input-profil-sejarah').value,
                     visi_misi: document.getElementById('input-profil-visimisi').value,
                     struktur_kepengurusan: JSON.stringify(adminPengurusList)
@@ -495,6 +525,8 @@
                 if (response.success) {
                     showToast("Profil Lembaga berhasil disimpan!");
                     
+                    window.APP_PROFIL_STATE.tahun_berdiri = payload.tahun_berdiri;
+                    window.APP_PROFIL_STATE.tanggal_berdiri = payload.tanggal_berdiri;
                     window.APP_PROFIL_STATE.sejarah = payload.sejarah;
                     window.APP_PROFIL_STATE.visi_misi = payload.visi_misi;
                     window.APP_PROFIL_STATE.struktur_kepengurusan = payload.struktur_kepengurusan;
