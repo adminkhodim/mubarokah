@@ -3074,6 +3074,10 @@
                     showToast("Alhamdulillah! Program berhasil disimpan.");
                 }
 
+                try {
+                    localStorage.removeItem('mubarokah_programs_cache_v2');
+                } catch (e) {}
+
                 closeAdminProgramEditor();
                 await loadAdminProgramList();
 
@@ -3109,6 +3113,7 @@
             try {
                 const response = await apiPost("program.publish", { token, id, version });
                 if (response && response.success) {
+                    try { localStorage.removeItem('mubarokah_programs_cache_v2'); } catch (e) {}
                     showToast("Alhamdulillah! Program berhasil dipublikasikan.");
                     await loadAdminProgramList();
                 } else {
@@ -3127,6 +3132,7 @@
             try {
                 const response = await apiPost("program.unpublish", { token, id, version });
                 if (response && response.success) {
+                    try { localStorage.removeItem('mubarokah_programs_cache_v2'); } catch (e) {}
                     showToast("Status program diubah menjadi Draft.");
                     await loadAdminProgramList();
                 } else {
@@ -3145,6 +3151,7 @@
             try {
                 const response = await apiPost("program.archive", { token, id, version });
                 if (response && response.success) {
+                    try { localStorage.removeItem('mubarokah_programs_cache_v2'); } catch (e) {}
                     showToast("Program berhasil diarsipkan.");
                     await loadAdminProgramList();
                 } else {

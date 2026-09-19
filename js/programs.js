@@ -60,24 +60,54 @@
             return RUNTIME_PROGRAM_DATA.find(item => item.id === programId);
         }
 
+        const PROGRAMS_CACHE_KEY = "mubarokah_programs_cache_v2";
+        let isProgramRuntimeFetching = false;
+
         async function initializeProgramRuntime() {
+            // 1. FAST STALE PHASE (Instant Render < 5ms):
+            // Render langsung dari cache lokal (localStorage) jika tersedia
+            let hasCachedData = false;
+            try {
+                const cachedRaw = localStorage.getItem(PROGRAMS_CACHE_KEY);
+                if (cachedRaw) {
+                    const cachedData = JSON.parse(cachedRaw);
+                    if (Array.isArray(cachedData) && cachedData.length > 0) {
+                        RUNTIME_PROGRAM_DATA = cachedData;
+                        programRuntimeState.status = "ready";
+                        renderProgramAllViews();
+                        hasCachedData = true;
+                    }
+                }
+            } catch (e) {
+                console.warn("Gagal membaca cache program lokal:", e);
+            }
+
             if (!isApiConfigured()) {
                 // Fallback hanya saat API belum dikonfigurasi sama sekali (mode dev lokal)
-                if (Array.isArray(PROGRAM_DATA) && PROGRAM_DATA.length > 0) {
-                    RUNTIME_PROGRAM_DATA = [...PROGRAM_DATA];
-                    programRuntimeState.status = "ready";
-                    renderProgramAllViews();
-                } else {
-                    programRuntimeState.status = "empty";
-                    renderProgramEmptyState();
+                if (!hasCachedData) {
+                    if (Array.isArray(PROGRAM_DATA) && PROGRAM_DATA.length > 0) {
+                        RUNTIME_PROGRAM_DATA = [...PROGRAM_DATA];
+                        programRuntimeState.status = "ready";
+                        renderProgramAllViews();
+                    } else {
+                        programRuntimeState.status = "empty";
+                        renderProgramEmptyState();
+                    }
                 }
                 return;
             }
 
-            // Saat API terkonfigurasi, tampilkan loading state murni (zero mock data)
-            programRuntimeState.status = "loading";
-            renderProgramLoadingState();
+            // Cegah request paralel ganda
+            if (isProgramRuntimeFetching) return;
+            isProgramRuntimeFetching = true;
 
+            // HANYA tampilkan skeleton loading jika BELUM ada data di layar sama sekali
+            if (!hasCachedData && RUNTIME_PROGRAM_DATA.length === 0) {
+                programRuntimeState.status = "loading";
+                renderProgramLoadingState();
+            }
+
+            // 2. BACKGROUND REVALIDATE PHASE: Ambil data segar dari database server di background
             try {
                 const response = await apiGet("program.listPublished");
 
@@ -94,9 +124,11 @@
 
                 const data = response.data;
                 if (!Array.isArray(data) || data.length === 0) {
-                    programRuntimeState.status = "empty";
-                    RUNTIME_PROGRAM_DATA = [];
-                    renderProgramEmptyState();
+                    if (RUNTIME_PROGRAM_DATA.length === 0) {
+                        programRuntimeState.status = "empty";
+                        RUNTIME_PROGRAM_DATA = [];
+                        renderProgramEmptyState();
+                    }
                     return;
                 }
 
@@ -108,19 +140,35 @@
                     }
                 }
 
-                programRuntimeState.status = "ready";
-                programRuntimeState.error = null;
-                programRuntimeState.requestId = response.requestId || null;
-                // Live database data strictly replaces all local data (ZERO mock data)
-                RUNTIME_PROGRAM_DATA = data;
+                const newJson = JSON.stringify(data);
+                const oldJson = localStorage.getItem(PROGRAMS_CACHE_KEY);
 
-                renderProgramAllViews();
+                // Perbarui cache lokal untuk rendering instan berikutnya
+                try {
+                    localStorage.setItem(PROGRAMS_CACHE_KEY, newJson);
+                } catch (e) {
+                    console.warn("Gagal menyimpan cache program:", e);
+                }
+
+                // Render ulang HANYA jika data berbeda dari cache atau jika layar belum punya data
+                if (newJson !== oldJson || RUNTIME_PROGRAM_DATA.length === 0) {
+                    programRuntimeState.status = "ready";
+                    programRuntimeState.error = null;
+                    programRuntimeState.requestId = response.requestId || null;
+                    RUNTIME_PROGRAM_DATA = data;
+                    renderProgramAllViews();
+                }
 
             } catch (err) {
                 console.error("Gagal memuat runtime PROGRAM_DATA via API:", err);
-                programRuntimeState.status = "error";
-                programRuntimeState.error = err.message || "Terjadi kesalahan koneksi server.";
-                renderProgramErrorState();
+                // Jika sudah ada data dari cache yang sedang tampil, jangan timpa dengan tampilan error
+                if (RUNTIME_PROGRAM_DATA.length === 0) {
+                    programRuntimeState.status = "error";
+                    programRuntimeState.error = err.message || "Terjadi kesalahan koneksi server.";
+                    renderProgramErrorState();
+                }
+            } finally {
+                isProgramRuntimeFetching = false;
             }
         }
 

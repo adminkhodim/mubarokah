@@ -134,13 +134,15 @@
             }
         };
 
-        // Render banner & notifikasi secepat kilat sebelum window.onload (Stale-While-Revalidate)
+        // Render program, banner & notifikasi secepat kilat sebelum window.onload (Stale-While-Revalidate)
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
+                if (typeof initializeProgramRuntime === 'function') initializeProgramRuntime();
                 loadBanners();
                 loadNotifikasi();
             });
         } else {
+            if (typeof initializeProgramRuntime === 'function') initializeProgramRuntime();
             loadBanners();
             loadNotifikasi();
         }

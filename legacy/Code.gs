@@ -3494,8 +3494,38 @@ function handleProgramApiAction(action, payload, e) {
 
     // 1. PUBLIC GET ACTIONS (No Token Required)
     if (action === "program.listPublished") {
+      let scriptCache = null;
+      try {
+        scriptCache = CacheService.getScriptCache();
+        const cachedJson = scriptCache ? scriptCache.get("pub_programs_cache_v1") : null;
+        if (cachedJson) {
+          const cachedPayload = JSON.parse(cachedJson);
+          cachedPayload.requestId = requestId;
+          return createJsonResponse(cachedPayload);
+        }
+      } catch (e) {
+        Logger.log("Cache read error: " + e.message);
+      }
+
       const data = service.getPublishedPrograms();
-      return createAppResponse(true, data, null, requestId);
+      const responseEnvelope = {
+        success: true,
+        data: data,
+        requestId: requestId
+      };
+
+      if (scriptCache) {
+        try {
+          const payloadStr = JSON.stringify(responseEnvelope);
+          if (payloadStr.length < 95000) {
+            scriptCache.put("pub_programs_cache_v1", payloadStr, 21600); // Cache selama 6 jam
+          }
+        } catch (e) {
+          Logger.log("Cache write error: " + e.message);
+        }
+      }
+
+      return createJsonResponse(responseEnvelope);
     }
     if (action === "program.getPublished") {
       const id = (payload && payload.id) || (e && e.parameter && e.parameter.id);
@@ -3547,28 +3577,33 @@ function handleProgramApiAction(action, payload, e) {
     if (action === "program.create" || action === "program.update") {
       const input = (payload && payload.payload) || (payload && payload.data) || payload;
       const data = service.saveProgram(input, actorContext);
+      invalidateProgramCache();
       return createAppResponse(true, data, null, requestId);
     }
     if (action === "program.publish") {
       const id = (payload && payload.id) || (payload && payload.data && payload.data.id);
       const ver = payload && payload.version;
       const data = service.publishProgram(id, actorContext, ver);
+      invalidateProgramCache();
       return createAppResponse(true, data, null, requestId);
     }
     if (action === "program.unpublish") {
       const id = (payload && payload.id) || (payload && payload.data && payload.data.id);
       const ver = payload && payload.version;
       const data = service.unpublishProgram(id, actorContext, ver);
+      invalidateProgramCache();
       return createAppResponse(true, data, null, requestId);
     }
     if (action === "program.archive") {
       const id = (payload && payload.id) || (payload && payload.data && payload.data.id);
       const ver = payload && payload.version;
       const data = service.archiveProgram(id, actorContext, ver);
+      invalidateProgramCache();
       return createAppResponse(true, data, null, requestId);
     }
     if (action === "program.init") {
       const result = initProgramsSheet(token);
+      invalidateProgramCache();
       return createAppResponse(true, result, null, requestId);
     }
 
@@ -3579,6 +3614,20 @@ function handleProgramApiAction(action, payload, e) {
       return createAppResponse(false, null, err, requestId);
     }
     return createAppResponse(false, null, new PersistenceError(err.message || String(err)), requestId);
+  }
+}
+
+/**
+ * Cache Invalidation Helper for Public Programs
+ */
+function invalidateProgramCache() {
+  try {
+    const cache = CacheService.getScriptCache();
+    if (cache) {
+      cache.remove("pub_programs_cache_v1");
+    }
+  } catch (e) {
+    Logger.log("Cache invalidate error: " + e.message);
   }
 }
 
