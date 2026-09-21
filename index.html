@@ -1396,7 +1396,7 @@
 
                         <span id="public-profil-berdiri-badge"
                             class="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-50">
-                            Berdiri sejak 1981
+                            Berdiri sejak 1983
                         </span>
                     </div>
 
@@ -1405,8 +1405,8 @@
                             Pondok Pesantren Tahfidzul Qur'an
                         </p>
 
-                        <h1 class="text-2xl md:text-4xl font-extrabold tracking-tight leading-tight">
-                            Pesantren Mubarokah
+                        <h1 id="public-profil-nama-pesantren" class="text-2xl md:text-4xl font-extrabold tracking-tight leading-tight">
+                            Pondok Pesantren Roudlotul Mubarokah
                         </h1>
 
                         <p class="mt-4 max-w-2xl text-sm md:text-base leading-relaxed text-emerald-50">
@@ -1481,8 +1481,8 @@
                         <span id="public-didirikan-label"
                             class="block text-[10px] font-extrabold uppercase tracking-widest text-brand-700 dark:text-emerald-400">Didirikan</span>
                         <strong id="public-didirikan-tahun"
-                            class="block mt-1 text-4xl md:text-5xl font-black tracking-tight text-brand-900 dark:text-emerald-300">1981</strong>
-                        <p id="public-didirikan-tanggal" class="mt-2 text-xs leading-relaxed text-brand-700 dark:text-emerald-400/80">5 Desember 1981
+                            class="block mt-1 text-4xl md:text-5xl font-black tracking-tight text-brand-900 dark:text-emerald-300">1983</strong>
+                        <p id="public-didirikan-tanggal" class="mt-2 text-xs leading-relaxed text-brand-700 dark:text-emerald-400/80">12 Desember 1983
                         </p>
                     </div>
                     <div id="public-sejarah-container"
@@ -5956,6 +5956,26 @@
                                     <form id="form-profil-lembaga"
                                         onsubmit="event.preventDefault(); saveAdminProfilLembaga();" class="space-y-6">
 
+                                        <!-- Identitas & Nama Pesantren -->
+                                        <div class="space-y-2">
+                                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                                Identitas &amp; Nama Pesantren
+                                            </label>
+                                            <p class="text-[10px] text-slate-500 leading-relaxed mb-2">Nama resmi pondok pesantren yang tampil pada kartu utama halaman Profil Pesantren.</p>
+                                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                                <div class="space-y-1">
+                                                    <label class="block text-[11px] font-bold text-slate-600">
+                                                        Nama Resmi Pesantren
+                                                    </label>
+                                                    <input type="text" id="input-profil-nama-pesantren"
+                                                        class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm font-bold text-slate-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
+                                                        placeholder="Contoh: Pondok Pesantren Roudlotul Mubarokah">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <hr class="border-slate-100">
+
                                         <!-- Informasi Tahun & Tanggal Berdiri -->
                                         <div class="space-y-2">
                                             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
@@ -5969,7 +5989,7 @@
                                                     </label>
                                                     <input type="text" id="input-profil-tahun-berdiri"
                                                         class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm font-bold text-slate-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
-                                                        placeholder="Contoh: 1981">
+                                                        placeholder="Contoh: 1983">
                                                 </div>
                                                 <div class="space-y-1">
                                                     <label class="block text-[11px] font-bold text-slate-600">
@@ -5977,7 +5997,7 @@
                                                     </label>
                                                     <input type="text" id="input-profil-tanggal-berdiri"
                                                         class="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm text-slate-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
-                                                        placeholder="Contoh: 5 Desember 1981">
+                                                        placeholder="Contoh: 12 Desember 1983">
                                                 </div>
                                             </div>
                                         </div>

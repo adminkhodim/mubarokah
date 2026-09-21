@@ -229,9 +229,28 @@
         }
 
         // ==================== RENDER PROFIL LEMBAGA (PUBLIK) ====================
+        function formatTanggalIndo(val) {
+            if (!val) return "";
+            val = String(val).trim().replace(/^'/, '');
+            const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            if (/^\d{1,2}\s+(Januari|Februari|Maret|April|Mei|Juni|Juli|Agustus|September|Oktober|November|Desember)\s+\d{4}$/i.test(val)) {
+                return val;
+            }
+            if (/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+                const parts = val.split('-');
+                return `${parseInt(parts[2], 10)} ${months[parseInt(parts[1], 10) - 1]} ${parts[0]}`;
+            }
+            const parsed = new Date(val);
+            if (!isNaN(parsed.getTime())) {
+                return `${parsed.getDate()} ${months[parsed.getMonth()]} ${parsed.getFullYear()}`;
+            }
+            return val;
+        }
+
         const DEFAULT_PROFIL_MUBAROKAH = {
-            tahun_berdiri: "1981",
-            tanggal_berdiri: "5 Desember 1981",
+            nama_pesantren: "Pondok Pesantren Roudlotul Mubarokah",
+            tahun_berdiri: "1983",
+            tanggal_berdiri: "12 Desember 1983",
             sejarah: "Pondok Pesantren Tahfidzul Qur'an Roudlotul Mubarokah didirikan dengan tekad luhur untuk mencetak generasi penghafal Al-Qur'an yang mutqin, berakhlak mulia, dan berwawasan kebangsaan yang luas.\n\nBerawal dari majelis halaqah tahfidz dan pembinaan keagamaan masyarakat, Pesantren Roudlotul Mubarokah kini berkembang menjadi lembaga pendidikan terpadu yang memadukan sanad tahfidz Al-Qur'an bersanad muttashil, kajian kitab kuning (salaf), serta penguasaan sains dan teknologi modern.\n\nDengan lingkungan pesantren yang kondusif, asri, dan berdisiplin tinggi di Karanganyar Demak, kami berkomitmen mendampingi para santri mencapai kemandirian spiritual, kedalaman keilmuan syariah, dan kesiapan menjadi pemimpin umat masa depan.",
             visi_misi: "Visi:\nMencetak Generasi Qur'ani, Berakhlak Mulia, Unggul dalam Ilmu Syariah, dan Berdaya Saing Global.\n\nMisi:\n1. Menyelenggarakan pendidikan tahfidzul Qur'an intensif dengan standar bacaan tartil dan sanad muttashil.\n2. Menanamkan adab, akhlaqul karimah, dan keteladanan salafus shalih dalam rutinitas keseharian santri.\n3. Mengembangkan keilmuan integratif antara kajian turots Islamiyah dan penguasaan sains teknologi.\n4. Membangun kemandirian santri melalui pembinaan karakter, kedisiplinan asrama, dan kepemimpinan dakwah.",
             struktur_kepengurusan: JSON.stringify([
@@ -245,6 +264,7 @@
         };
 
         window.APP_PROFIL_STATE = window.APP_PROFIL_STATE || {};
+        if (!window.APP_PROFIL_STATE.nama_pesantren) window.APP_PROFIL_STATE.nama_pesantren = DEFAULT_PROFIL_MUBAROKAH.nama_pesantren;
         if (!window.APP_PROFIL_STATE.tahun_berdiri) window.APP_PROFIL_STATE.tahun_berdiri = DEFAULT_PROFIL_MUBAROKAH.tahun_berdiri;
         if (!window.APP_PROFIL_STATE.tanggal_berdiri) window.APP_PROFIL_STATE.tanggal_berdiri = DEFAULT_PROFIL_MUBAROKAH.tanggal_berdiri;
         if (!window.APP_PROFIL_STATE.sejarah) window.APP_PROFIL_STATE.sejarah = DEFAULT_PROFIL_MUBAROKAH.sejarah;
@@ -263,8 +283,9 @@
                 const data = await apiGet("getPengaturan");
                 if (data && data.status === "success" && data.data) {
                     const config = data.data;
+                    if (config.nama_pesantren) window.APP_PROFIL_STATE.nama_pesantren = config.nama_pesantren;
                     if (config.tahun_berdiri) window.APP_PROFIL_STATE.tahun_berdiri = config.tahun_berdiri;
-                    if (config.tanggal_berdiri) window.APP_PROFIL_STATE.tanggal_berdiri = config.tanggal_berdiri;
+                    if (config.tanggal_berdiri) window.APP_PROFIL_STATE.tanggal_berdiri = formatTanggalIndo(config.tanggal_berdiri);
                     if (config.sejarah) window.APP_PROFIL_STATE.sejarah = config.sejarah;
                     if (config.visi_misi) window.APP_PROFIL_STATE.visi_misi = config.visi_misi;
                     if (config.struktur_kepengurusan) window.APP_PROFIL_STATE.struktur_kepengurusan = config.struktur_kepengurusan;
@@ -278,18 +299,22 @@
         }
 
         function renderPublicProfilLembaga() {
+            const elNamaPesantren = document.getElementById('public-profil-nama-pesantren');
             const elTahun = document.getElementById('public-didirikan-tahun');
             const elTanggal = document.getElementById('public-didirikan-tanggal');
             const elBadge = document.getElementById('public-profil-berdiri-badge');
 
+            if (elNamaPesantren) {
+                elNamaPesantren.textContent = window.APP_PROFIL_STATE.nama_pesantren || DEFAULT_PROFIL_MUBAROKAH.nama_pesantren;
+            }
             if (elTahun) {
-                elTahun.textContent = window.APP_PROFIL_STATE.tahun_berdiri || "1981";
+                elTahun.textContent = window.APP_PROFIL_STATE.tahun_berdiri || "1983";
             }
             if (elTanggal) {
-                elTanggal.textContent = window.APP_PROFIL_STATE.tanggal_berdiri || "5 Desember 1981";
+                elTanggal.textContent = formatTanggalIndo(window.APP_PROFIL_STATE.tanggal_berdiri) || "12 Desember 1983";
             }
             if (elBadge) {
-                elBadge.textContent = `Berdiri sejak ${window.APP_PROFIL_STATE.tahun_berdiri || "1981"}`;
+                elBadge.textContent = `Berdiri sejak ${window.APP_PROFIL_STATE.tahun_berdiri || "1983"}`;
             }
 
             const containerSejarah = document.getElementById('public-sejarah-container');
@@ -470,10 +495,12 @@
                 const data = await apiGet("getPengaturan");
                 if (data && data.status === "success" && data.data) {
                     const config = data.data;
+                    const inputNama = document.getElementById('input-profil-nama-pesantren');
                     const inputTahun = document.getElementById('input-profil-tahun-berdiri');
                     const inputTanggal = document.getElementById('input-profil-tanggal-berdiri');
-                    if (inputTahun) inputTahun.value = config.tahun_berdiri || "1981";
-                    if (inputTanggal) inputTanggal.value = config.tanggal_berdiri || "5 Desember 1981";
+                    if (inputNama) inputNama.value = config.nama_pesantren || DEFAULT_PROFIL_MUBAROKAH.nama_pesantren;
+                    if (inputTahun) inputTahun.value = config.tahun_berdiri || "1983";
+                    if (inputTanggal) inputTanggal.value = formatTanggalIndo(config.tanggal_berdiri) || "12 Desember 1983";
 
                     document.getElementById('input-profil-sejarah').value = config.sejarah || "";
                     document.getElementById('input-profil-visimisi').value = config.visi_misi || "";
@@ -513,12 +540,14 @@
 
                 syncPengurusList(); 
 
+                const inputNama = document.getElementById('input-profil-nama-pesantren');
                 const inputTahun = document.getElementById('input-profil-tahun-berdiri');
                 const inputTanggal = document.getElementById('input-profil-tanggal-berdiri');
 
                 const payload = {
-                    tahun_berdiri: inputTahun ? inputTahun.value.trim() : "1981",
-                    tanggal_berdiri: inputTanggal ? inputTanggal.value.trim() : "5 Desember 1981",
+                    nama_pesantren: inputNama ? inputNama.value.trim() : DEFAULT_PROFIL_MUBAROKAH.nama_pesantren,
+                    tahun_berdiri: inputTahun ? inputTahun.value.trim() : "1983",
+                    tanggal_berdiri: inputTanggal ? formatTanggalIndo(inputTanggal.value.trim()) : "12 Desember 1983",
                     sejarah: document.getElementById('input-profil-sejarah').value,
                     visi_misi: document.getElementById('input-profil-visimisi').value,
                     struktur_kepengurusan: JSON.stringify(adminPengurusList)
@@ -528,6 +557,7 @@
                 if (response.success) {
                     showToast("Profil Lembaga berhasil disimpan!");
                     
+                    window.APP_PROFIL_STATE.nama_pesantren = payload.nama_pesantren;
                     window.APP_PROFIL_STATE.tahun_berdiri = payload.tahun_berdiri;
                     window.APP_PROFIL_STATE.tanggal_berdiri = payload.tanggal_berdiri;
                     window.APP_PROFIL_STATE.sejarah = payload.sejarah;

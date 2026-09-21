@@ -1729,7 +1729,15 @@ function getPengaturanData() {
     for (let i = 1; i < data.length; i++) {
       const key = String(data[i][0]).trim();
       if (key) {
-        let val = String(data[i][1]).trim();
+        let rawVal = data[i][1];
+        let val = "";
+        if (rawVal instanceof Date) {
+          const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+          val = rawVal.getDate() + " " + months[rawVal.getMonth()] + " " + rawVal.getFullYear();
+        } else {
+          val = String(rawVal != null ? rawVal : "").trim();
+        }
+
         if (key === "video_highlight") {
           // Bersihkan dummy playlist rusak atau ubah link youtu.be menjadi embed URL
           if (val.includes("list=PL_XQ")) {
@@ -1775,11 +1783,12 @@ function simpanPengaturan(payload) {
         }
       }
       
+      const valToSet = (k === "tanggal_berdiri") ? ("'" + String(payload[k]).replace(/^'/, "")) : payload[k];
       if (foundRow > 0) {
-        sheet.getRange(foundRow, 2).setValue(payload[k]);
+        sheet.getRange(foundRow, 2).setValue(valToSet);
         sheet.getRange(foundRow, 4).setValue(new Date().toISOString());
       } else {
-        sheet.appendRow([k, payload[k], "", new Date().toISOString()]);
+        sheet.appendRow([k, valToSet, "", new Date().toISOString()]);
       }
     }
     
