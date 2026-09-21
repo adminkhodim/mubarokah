@@ -1161,17 +1161,24 @@ function doGet(e) {
   // ==========================================================
 
   if (!action) {
-
-    return HtmlService
-      .createHtmlOutputFromFile("Index")
-      .setTitle("Mubarokah App")
-      .setXFrameOptionsMode(
-        HtmlService.XFrameOptionsMode.ALLOWALL
-      )
-      .addMetaTag(
-        "viewport",
-        "width=device-width, initial-scale=1"
-      );
+    try {
+      return HtmlService
+        .createHtmlOutputFromFile("Index")
+        .setTitle("Mubarokah App")
+        .setXFrameOptionsMode(
+          HtmlService.XFrameOptionsMode.ALLOWALL
+        )
+        .addMetaTag(
+          "viewport",
+          "width=device-width, initial-scale=1"
+        );
+    } catch (e) {
+      return createJsonResponse({
+        status: "success",
+        message: "Mubarokah Backend API Operational",
+        timestamp: new Date().toISOString()
+      });
+    }
   }
 
   try {

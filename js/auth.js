@@ -98,7 +98,12 @@ const ASN_PHASE2B_AUTH_URL = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.au
     : ""; // __MUBAROKAH_CONFIG_PENDING__
 
 async function authApiPost(action, payload = {}) {
-    const targetUrl = ASN_PHASE2B_AUTH_URL || (typeof WEB_APP_URL !== 'undefined' ? WEB_APP_URL : '');
+    // 1. Prioritaskan serverless proxy Same-Origin jika berjalan di Web/Vercel
+    const isHostedWeb = typeof window !== 'undefined' && window.location && window.location.protocol.startsWith('http');
+    const proxyUrl = isHostedWeb ? `${window.location.origin}/api/auth` : '';
+    const directUrl = ASN_PHASE2B_AUTH_URL || (typeof WEB_APP_URL !== 'undefined' ? WEB_APP_URL : '');
+
+    const targetUrl = proxyUrl || directUrl;
     if (!targetUrl) throw new Error("Endpoint autentikasi belum dikonfigurasi.");
 
     const token = payload.token || 
@@ -119,19 +124,39 @@ async function authApiPost(action, payload = {}) {
         : "mubarokah";
     bodyPayload.tenantId = authoritativeTenantId;
 
-    const response = await fetch(targetUrl, {
-        method: "POST",
-        redirect: "follow",
-        credentials: "omit",
-        headers: {
-            "Content-Type": "text/plain;charset=utf-8",
-            "Accept": "application/json"
-        },
-        body: JSON.stringify(bodyPayload)
-    });
+    try {
+        const response = await fetch(targetUrl, {
+            method: "POST",
+            redirect: "follow",
+            credentials: "omit",
+            headers: {
+                "Content-Type": "text/plain;charset=utf-8",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify(bodyPayload)
+        });
 
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return await response.json();
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.json();
+    } catch (primaryErr) {
+        // Fallback otomatis: Jika proxyUrl gagal (misal 404 pada local server tanpa Vercel CLI), coba directUrl
+        if (targetUrl === proxyUrl && directUrl && directUrl !== proxyUrl) {
+            console.warn('[authApiPost] Proxy failed, falling back to direct Apps Script URL...', primaryErr);
+            const fallbackRes = await fetch(directUrl, {
+                method: "POST",
+                redirect: "follow",
+                credentials: "omit",
+                headers: {
+                    "Content-Type": "text/plain;charset=utf-8",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify(bodyPayload)
+            });
+            if (!fallbackRes.ok) throw new Error(`HTTP ${fallbackRes.status}`);
+            return await fallbackRes.json();
+        }
+        throw primaryErr;
+    }
 }
 
 /**
@@ -1628,6 +1653,34 @@ async function handleAdminVerifyOtp(e) {
     }
 }
 
+/**
+ * Pindah langsung ke form input OTP 6-digit Admin (Fallback jika OTP sudah masuk ke Gmail)
+ */
+function switchToAdminVerifyStep() {
+    const emailInput = document.getElementById('admin-auth-email');
+    const email = (emailInput && emailInput.value.trim().toLowerCase()) || sessionStorage.getItem(ASN_STORAGE_KEYS.TEMP_ADMIN_EMAIL) || '';
+    
+    document.getElementById('form-admin-request-otp').classList.add('hidden');
+    document.getElementById('form-admin-verify-otp').classList.remove('hidden');
+    
+    if (email) {
+        document.getElementById('admin-auth-target-email').innerText = email;
+        sessionStorage.setItem(ASN_STORAGE_KEYS.TEMP_ADMIN_EMAIL, email);
+    } else {
+        document.getElementById('admin-auth-target-email').innerText = 'Email Terdaftar';
+    }
+    
+    const alertBox = document.getElementById('admin-auth-alert');
+    if (alertBox) alertBox.classList.add('hidden');
+    
+    startAdminOtpCooldown(60);
+    const otpInput = document.getElementById('admin-auth-otp');
+    if (otpInput) {
+        otpInput.value = '';
+        setTimeout(() => otpInput.focus(), 150);
+    }
+}
+
 // ----- Parent / Wali Santri Modal Controllers -----
 function openParentAuthModal() {
     const modal = document.getElementById('modal-auth-parent');
@@ -1849,6 +1902,33 @@ async function handleParentVerifyOtp(e) {
     } finally {
         btn.disabled = false;
         btn.innerHTML = `<span>Verifikasi & Masuk Dashboard Wali</span><i class="fa-solid fa-check"></i>`;
+    }
+}
+
+/**
+ * Pindah langsung ke form input OTP 6-digit Wali Santri (Fallback jika OTP sudah masuk ke Gmail)
+ */
+function switchToParentVerifyStep() {
+    const emailInput = document.getElementById('parent-auth-email') || document.getElementById('parent-auth-phone');
+    const email = (emailInput && emailInput.value.trim().toLowerCase()) || sessionStorage.getItem(ASN_STORAGE_KEYS.TEMP_PARENT_EMAIL) || '';
+    
+    document.getElementById('form-parent-request-otp').classList.add('hidden');
+    document.getElementById('form-parent-verify-otp').classList.remove('hidden');
+    
+    if (email) {
+        const targetEl = document.getElementById('parent-auth-target-email') || document.getElementById('parent-auth-target-phone');
+        if (targetEl) targetEl.innerText = email;
+        sessionStorage.setItem(ASN_STORAGE_KEYS.TEMP_PARENT_EMAIL, email);
+    }
+    
+    const alertBox = document.getElementById('parent-auth-alert');
+    if (alertBox) alertBox.classList.add('hidden');
+    
+    startParentOtpCooldown(60);
+    const otpInput = document.getElementById('parent-otp-code');
+    if (otpInput) {
+        otpInput.value = '';
+        setTimeout(() => otpInput.focus(), 150);
     }
 }
 
