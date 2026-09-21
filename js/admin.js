@@ -73,17 +73,111 @@
             }
         }
 
+        // ==================== DASHBOARD ADMIN: ACCORDION NAVIGATION ====================
+        const ADMIN_VIEW_META = {
+            'hub': { group: null, category: '', title: 'Dashboard Utama' },
+            'santri': { group: 'kesiswaan', category: 'Kesiswaan & Akademik', title: 'Data Santri' },
+            'tahfidz': { group: 'kesiswaan', category: 'Kesiswaan & Akademik', title: 'Tahfidz Al-Qur\'an' },
+            'ppdb': { group: 'kesiswaan', category: 'Kesiswaan & Akademik', title: 'Data Pendaftar PPDB' },
+            'program': { group: 'kesiswaan', category: 'Kesiswaan & Akademik', title: 'Manajemen Program' },
+            'unit-kegiatan': { group: 'kesiswaan', category: 'Kesiswaan & Akademik', title: 'Unit Kegiatan Santri (UKS)' },
+            'users': { group: 'sdm', category: 'Pengguna & SDM', title: 'Manajemen Pengguna' },
+            'pegawai': { group: 'sdm', category: 'Pengguna & SDM', title: 'Data Pegawai & Asatidz' },
+            'berita': { group: 'konten', category: 'Konten & Publikasi', title: 'Manajemen Berita' },
+            'banner': { group: 'konten', category: 'Konten & Publikasi', title: 'Banner Slider' },
+            'galeri': { group: 'konten', category: 'Konten & Publikasi', title: 'Manajemen Galeri' },
+            'notifikasi': { group: 'konten', category: 'Konten & Publikasi', title: 'Manajemen Notifikasi' },
+            'profil-lembaga': { group: 'kelembagaan', category: 'Kelembagaan & Pengaturan', title: 'Profil & Kepengurusan' },
+            'pengaturan': { group: 'kelembagaan', category: 'Kelembagaan & Pengaturan', title: 'Tautan & Sosmed' }
+        };
+
+        function toggleAdminAccordion(groupId, forceOpen) {
+            if (adminSidebarCollapsed) {
+                toggleAdminSidebar();
+            }
+
+            if (!groupId) {
+                // Tutup seluruh accordion bila di halaman hub
+                document.querySelectorAll('.admin-submenu').forEach(sub => sub.classList.add('hidden'));
+                document.querySelectorAll('.admin-chevron').forEach(chev => chev.classList.remove('rotate-180'));
+                document.querySelectorAll('.admin-accordion-btn').forEach(btn => {
+                    btn.classList.remove('bg-slate-100/80', 'font-bold', 'text-brand-700');
+                });
+                return;
+            }
+
+            const targetSubmenu = document.getElementById('admin-submenu-' + groupId);
+            const targetChevron = document.getElementById('admin-chevron-' + groupId);
+            const targetHeader = document.getElementById('admin-accordion-header-' + groupId);
+            if (!targetSubmenu) return;
+
+            const isCurrentlyHidden = targetSubmenu.classList.contains('hidden');
+            const shouldOpen = (forceOpen !== undefined) ? forceOpen : isCurrentlyHidden;
+
+            // Tutup grup accordion lain (strict accordion agar sidebar selalu rapi)
+            document.querySelectorAll('.admin-submenu').forEach(sub => {
+                if (sub !== targetSubmenu) sub.classList.add('hidden');
+            });
+            document.querySelectorAll('.admin-chevron').forEach(chev => {
+                if (chev !== targetChevron) chev.classList.remove('rotate-180');
+            });
+            document.querySelectorAll('.admin-accordion-btn').forEach(btn => {
+                if (btn !== targetHeader) {
+                    btn.classList.remove('bg-slate-100/80', 'font-bold', 'text-brand-700');
+                }
+            });
+
+            if (shouldOpen) {
+                targetSubmenu.classList.remove('hidden');
+                if (targetChevron) targetChevron.classList.add('rotate-180');
+                if (targetHeader) targetHeader.classList.add('font-bold', 'text-brand-700');
+            } else {
+                targetSubmenu.classList.add('hidden');
+                if (targetChevron) targetChevron.classList.remove('rotate-180');
+                if (targetHeader) targetHeader.classList.remove('font-bold', 'text-brand-700');
+            }
+        }
+        window.toggleAdminAccordion = toggleAdminAccordion;
+
         function showAdminView(viewName) {
+            const meta = ADMIN_VIEW_META[viewName] || ADMIN_VIEW_META['hub'];
+
             // Update Sidebar Active state
             document.querySelectorAll('.admin-nav-item').forEach(btn => {
                 if (btn.dataset.view === viewName) {
                     btn.classList.add('active', 'text-brand-700', 'bg-brand-50', 'font-bold');
-                    btn.classList.remove('text-slate-500', 'font-semibold');
+                    btn.classList.remove('text-slate-500');
                 } else {
                     btn.classList.remove('active', 'text-brand-700', 'bg-brand-50', 'font-bold');
-                    btn.classList.add('text-slate-500', 'font-semibold');
+                    btn.classList.add('text-slate-500');
                 }
             });
+
+            // Accordion auto-expand & sync
+            if (meta.group) {
+                toggleAdminAccordion(meta.group, true);
+            } else {
+                toggleAdminAccordion(null, false);
+            }
+
+            // Update Breadcrumb Desktop
+            const sep1 = document.getElementById('admin-breadcrumb-sep-1');
+            const catEl = document.getElementById('admin-breadcrumb-category');
+            const sep2 = document.getElementById('admin-breadcrumb-sep-2');
+            const curEl = document.getElementById('admin-breadcrumb-current');
+            if (meta.group && catEl && curEl) {
+                if (sep1) sep1.classList.remove('hidden');
+                catEl.textContent = meta.category;
+                catEl.classList.remove('hidden');
+                if (sep2) sep2.classList.remove('hidden');
+                curEl.textContent = meta.title;
+                curEl.classList.remove('hidden');
+            } else {
+                if (sep1) sep1.classList.add('hidden');
+                if (catEl) catEl.classList.add('hidden');
+                if (sep2) sep2.classList.add('hidden');
+                if (curEl) curEl.classList.add('hidden');
+            }
             
 
             const hubView = document.getElementById('admin-menu-hub');
@@ -181,6 +275,7 @@
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
+        window.showAdminView = showAdminView;
 
         /**
          * Navigasi Kembali Pintar untuk Sub-View Admin:

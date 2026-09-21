@@ -4939,159 +4939,153 @@
 
                     <!-- Menu Navigation -->
                     <div class="flex-1 overflow-y-auto py-4 custom-scrollbar">
-                        <ul class="space-y-1 px-2" id="admin-sidebar-menu">
+                        <ul class="space-y-1.5 px-2" id="admin-sidebar-menu">
+                            <!-- 1. Menu Tunggal: Dashboard Utama -->
                             <li>
                                 <button onclick="showAdminView('hub')" data-view="hub"
-                                    class="admin-nav-item active w-full flex items-center px-3 py-2.5 rounded-lg text-brand-700 bg-brand-50 font-bold transition group relative"
+                                    class="admin-nav-item active w-full flex items-center px-3 py-2.5 rounded-xl text-brand-700 bg-brand-50 font-bold transition group relative"
                                     title="Dashboard Utama">
                                     <i class="fa-solid fa-gauge-high w-5 text-center text-sm"></i>
-                                    <span
-                                        class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Dashboard
-                                        Utama</span>
+                                    <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Dashboard Utama</span>
                                 </button>
                             </li>
-                            <li>
-                                <button onclick="showAdminView('berita')" data-view="berita"
-                                    class="admin-nav-item w-full flex items-center px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-brand-600 font-semibold transition group relative"
-                                    title="Manajemen Berita">
-                                    <i
-                                        class="fa-solid fa-newspaper w-5 text-center text-sm group-hover:text-brand-600 transition-colors"></i>
-                                    <span
-                                        class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Manajemen
-                                        Berita</span>
+
+                            <!-- 2. Accordion Group: Kesiswaan & Akademik -->
+                            <li class="admin-menu-group pt-1">
+                                <button type="button" id="admin-accordion-header-kesiswaan" onclick="toggleAdminAccordion('kesiswaan')"
+                                    class="admin-accordion-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-slate-600 hover:text-cyan-700 hover:bg-cyan-50/60 font-semibold transition group"
+                                    title="Kesiswaan & Akademik">
+                                    <div class="flex items-center overflow-hidden">
+                                        <i class="fa-solid fa-graduation-cap w-5 text-center text-sm text-cyan-600 group-hover:text-cyan-700 transition-colors shrink-0"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Kesiswaan & Akademik</span>
+                                    </div>
+                                    <i id="admin-chevron-kesiswaan" class="admin-chevron fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-cyan-700 transition-transform duration-300 sidebar-text shrink-0"></i>
                                 </button>
+                                <div id="admin-submenu-kesiswaan" class="admin-submenu hidden pl-3 pr-1 py-1 space-y-1 my-1 border-l-2 border-slate-100 ml-5">
+                                    <button onclick="showAdminView('santri')" data-view="santri"
+                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-cyan-700 text-xs font-medium transition group"
+                                        title="Data Santri">
+                                        <i class="fa-solid fa-id-card-clip w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-cyan-600"></i>
+                                        <span class="sidebar-text whitespace-nowrap">Data Santri</span>
+                                    </button>
+                                    <button onclick="showAdminView('tahfidz')" data-view="tahfidz"
+                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-emerald-700 text-xs font-medium transition group"
+                                        title="Tahfidz Al-Qur'an">
+                                        <i class="fa-solid fa-book-quran w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-emerald-600"></i>
+                                        <span class="sidebar-text whitespace-nowrap">Tahfidz Al-Qur'an</span>
+                                    </button>
+                                    <button onclick="showAdminView('ppdb')" data-view="ppdb"
+                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-blue-700 text-xs font-medium transition group"
+                                        title="Data Pendaftar PPDB">
+                                        <i class="fa-solid fa-user-graduate w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-blue-600"></i>
+                                        <span class="sidebar-text whitespace-nowrap">Pendaftar PPDB</span>
+                                    </button>
+                                    <button onclick="showAdminView('program')" data-view="program"
+                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-emerald-700 text-xs font-medium transition group"
+                                        title="Manajemen Program">
+                                        <i class="fa-solid fa-shapes w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-emerald-600"></i>
+                                        <span class="sidebar-text whitespace-nowrap">Program Pesantren</span>
+                                    </button>
+                                    <button onclick="showAdminView('unit-kegiatan')" data-view="unit-kegiatan"
+                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-teal-700 text-xs font-medium transition group"
+                                        title="Unit Kegiatan Santri">
+                                        <i class="fa-solid fa-people-roof w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-teal-600"></i>
+                                        <span class="sidebar-text whitespace-nowrap">Unit Kegiatan (UKS)</span>
+                                    </button>
+                                </div>
                             </li>
-                            <li>
-                                <button onclick="showAdminView('banner')" data-view="banner"
-                                    class="admin-nav-item w-full flex items-center px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-brand-600 font-semibold transition group relative"
-                                    title="Banner Slider">
-                                    <i
-                                        class="fa-solid fa-images w-5 text-center text-sm group-hover:text-brand-600 transition-colors"></i>
-                                    <span
-                                        class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Banner
-                                        Slider</span>
+
+                            <!-- 3. Accordion Group: Pengguna & SDM -->
+                            <li class="admin-menu-group pt-1">
+                                <button type="button" id="admin-accordion-header-sdm" onclick="toggleAdminAccordion('sdm')"
+                                    class="admin-accordion-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-slate-600 hover:text-emerald-700 hover:bg-emerald-50/60 font-semibold transition group"
+                                    title="Pengguna & SDM">
+                                    <div class="flex items-center overflow-hidden">
+                                        <i class="fa-solid fa-users-gear w-5 text-center text-sm text-emerald-600 group-hover:text-emerald-700 transition-colors shrink-0"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Pengguna & SDM</span>
+                                    </div>
+                                    <i id="admin-chevron-sdm" class="admin-chevron fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-emerald-700 transition-transform duration-300 sidebar-text shrink-0"></i>
                                 </button>
+                                <div id="admin-submenu-sdm" class="admin-submenu hidden pl-3 pr-1 py-1 space-y-1 my-1 border-l-2 border-slate-100 ml-5">
+                                    <button onclick="showAdminView('users')" data-view="users"
+                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-emerald-700 text-xs font-medium transition group"
+                                        title="Manajemen Pengguna">
+                                        <i class="fa-solid fa-user-gear w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-emerald-600"></i>
+                                        <span class="sidebar-text whitespace-nowrap">Manajemen Pengguna</span>
+                                    </button>
+                                    <button onclick="showAdminView('pegawai')" data-view="pegawai"
+                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-indigo-700 text-xs font-medium transition group"
+                                        title="Data Pegawai & Asatidz">
+                                        <i class="fa-solid fa-user-tie w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-indigo-600"></i>
+                                        <span class="sidebar-text whitespace-nowrap">Data Pegawai</span>
+                                    </button>
+                                </div>
                             </li>
-                            <li>
-                                <button onclick="showAdminView('notifikasi')" data-view="notifikasi"
-                                    class="admin-nav-item w-full flex items-center px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-brand-600 font-semibold transition group relative"
-                                    title="Manajemen Notifikasi">
-                                    <i
-                                        class="fa-solid fa-bell w-5 text-center text-sm group-hover:text-brand-600 transition-colors"></i>
-                                    <span
-                                        class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Manajemen
-                                        Notifikasi</span>
+
+                            <!-- 4. Accordion Group: Konten & Publikasi -->
+                            <li class="admin-menu-group pt-1">
+                                <button type="button" id="admin-accordion-header-konten" onclick="toggleAdminAccordion('konten')"
+                                    class="admin-accordion-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-slate-600 hover:text-purple-700 hover:bg-purple-50/60 font-semibold transition group"
+                                    title="Konten & Publikasi">
+                                    <div class="flex items-center overflow-hidden">
+                                        <i class="fa-solid fa-newspaper w-5 text-center text-sm text-purple-600 group-hover:text-purple-700 transition-colors shrink-0"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Konten & Publikasi</span>
+                                    </div>
+                                    <i id="admin-chevron-konten" class="admin-chevron fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-purple-700 transition-transform duration-300 sidebar-text shrink-0"></i>
                                 </button>
+                                <div id="admin-submenu-konten" class="admin-submenu hidden pl-3 pr-1 py-1 space-y-1 my-1 border-l-2 border-slate-100 ml-5">
+                                    <button onclick="showAdminView('berita')" data-view="berita"
+                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-brand-700 text-xs font-medium transition group"
+                                        title="Manajemen Berita">
+                                        <i class="fa-solid fa-newspaper w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-brand-600"></i>
+                                        <span class="sidebar-text whitespace-nowrap">Manajemen Berita</span>
+                                    </button>
+                                    <button onclick="showAdminView('banner')" data-view="banner"
+                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-amber-700 text-xs font-medium transition group"
+                                        title="Banner Slider">
+                                        <i class="fa-solid fa-images w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-amber-600"></i>
+                                        <span class="sidebar-text whitespace-nowrap">Banner Slider</span>
+                                    </button>
+                                    <button onclick="showAdminView('galeri')" data-view="galeri"
+                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-purple-700 text-xs font-medium transition group"
+                                        title="Manajemen Galeri">
+                                        <i class="fa-solid fa-camera-retro w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-purple-600"></i>
+                                        <span class="sidebar-text whitespace-nowrap">Manajemen Galeri</span>
+                                    </button>
+                                    <button onclick="showAdminView('notifikasi')" data-view="notifikasi"
+                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-rose-700 text-xs font-medium transition group"
+                                        title="Manajemen Notifikasi">
+                                        <i class="fa-solid fa-bell w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-rose-600"></i>
+                                        <span class="sidebar-text whitespace-nowrap">Notifikasi Broadcast</span>
+                                    </button>
+                                </div>
                             </li>
-                            <li>
-                                <button onclick="showAdminView('galeri')" data-view="galeri"
-                                    class="admin-nav-item w-full flex items-center px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-brand-600 font-semibold transition group relative"
-                                    title="Manajemen Galeri">
-                                    <i
-                                        class="fa-solid fa-camera-retro w-5 text-center text-sm group-hover:text-brand-600 transition-colors"></i>
-                                    <span
-                                        class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Manajemen
-                                        Galeri</span>
+
+                            <!-- 5. Accordion Group: Kelembagaan & Pengaturan -->
+                            <li class="admin-menu-group pt-1">
+                                <button type="button" id="admin-accordion-header-kelembagaan" onclick="toggleAdminAccordion('kelembagaan')"
+                                    class="admin-accordion-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-slate-600 hover:text-indigo-700 hover:bg-indigo-50/60 font-semibold transition group"
+                                    title="Kelembagaan & Pengaturan">
+                                    <div class="flex items-center overflow-hidden">
+                                        <i class="fa-solid fa-building-columns w-5 text-center text-sm text-indigo-600 group-hover:text-indigo-700 transition-colors shrink-0"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Kelembagaan & Pengaturan</span>
+                                    </div>
+                                    <i id="admin-chevron-kelembagaan" class="admin-chevron fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-indigo-700 transition-transform duration-300 sidebar-text shrink-0"></i>
                                 </button>
-                            </li>
-                            <li>
-                                <button onclick="showAdminView('profil-lembaga')" data-view="profil-lembaga"
-                                    class="admin-nav-item w-full flex items-center px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-brand-600 font-semibold transition group relative"
-                                    title="Profil & Kepengurusan">
-                                    <i
-                                        class="fa-solid fa-building-columns w-5 text-center text-sm group-hover:text-brand-600 transition-colors"></i>
-                                    <span
-                                        class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Profil
-                                        & Kepengurusan</span>
-                                </button>
-                            </li>
-                            <li>
-                                <button onclick="showAdminView('pengaturan')" data-view="pengaturan"
-                                    class="admin-nav-item w-full flex items-center px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-brand-600 font-semibold transition group relative"
-                                    title="Tautan & Sosmed">
-                                    <i
-                                        class="fa-solid fa-share-nodes w-5 text-center text-sm group-hover:text-brand-600 transition-colors"></i>
-                                    <span
-                                        class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Tautan
-                                        & Sosmed</span>
-                                </button>
-                            </li>
-                            <li>
-                                <button onclick="showAdminView('users')" data-view="users"
-                                    class="admin-nav-item w-full flex items-center px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-brand-600 font-semibold transition group relative"
-                                    title="Manajemen Pengguna">
-                                    <i
-                                        class="fa-solid fa-users-gear w-5 text-center text-sm group-hover:text-brand-600 transition-colors"></i>
-                                    <span
-                                        class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Manajemen
-                                        Pengguna</span>
-                                </button>
-                            </li>
-                            <li>
-                                <button onclick="showAdminView('santri')" data-view="santri"
-                                    class="admin-nav-item w-full flex items-center px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-brand-600 font-semibold transition group relative"
-                                    title="Data Santri">
-                                    <i
-                                        class="fa-solid fa-id-card-clip w-5 text-center text-sm group-hover:text-brand-600 transition-colors"></i>
-                                    <span
-                                        class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Data
-                                        Santri</span>
-                                </button>
-                            </li>
-                            <li>
-                                <button onclick="showAdminView('pegawai')" data-view="pegawai"
-                                    class="admin-nav-item w-full flex items-center px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-brand-600 font-semibold transition group relative"
-                                    title="Data Pegawai & Asatidz">
-                                    <i
-                                        class="fa-solid fa-user-tie w-5 text-center text-sm group-hover:text-brand-600 transition-colors"></i>
-                                    <span
-                                        class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Data
-                                        Pegawai</span>
-                                </button>
-                            </li>
-                            <li>
-                                <button onclick="showAdminView('tahfidz')" data-view="tahfidz"
-                                    class="admin-nav-item w-full flex items-center px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-brand-600 font-semibold transition group relative"
-                                    title="Tahfidz Al-Qur'an">
-                                    <i
-                                        class="fa-solid fa-book-quran w-5 text-center text-sm group-hover:text-brand-600 transition-colors"></i>
-                                    <span
-                                        class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Tahfidz
-                                        Qur'an</span>
-                                </button>
-                            </li>
-                            <li>
-                                <button onclick="showAdminView('ppdb')" data-view="ppdb"
-                                    class="admin-nav-item w-full flex items-center px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-brand-600 font-semibold transition group relative"
-                                    title="Data Pendaftar PPDB">
-                                    <i
-                                        class="fa-solid fa-user-graduate w-5 text-center text-sm group-hover:text-brand-600 transition-colors"></i>
-                                    <span
-                                        class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Data
-                                        Pendaftar PPDB</span>
-                                </button>
-                            </li>
-                            <li>
-                                <button onclick="showAdminView('program')" data-view="program"
-                                    class="admin-nav-item w-full flex items-center px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-brand-600 font-semibold transition group relative"
-                                    title="Manajemen Program">
-                                    <i
-                                        class="fa-solid fa-graduation-cap w-5 text-center text-sm group-hover:text-brand-600 transition-colors"></i>
-                                    <span
-                                        class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Manajemen
-                                        Program</span>
-                                </button>
-                            </li>
-                            <li>
-                                <button onclick="showAdminView('unit-kegiatan')" data-view="unit-kegiatan"
-                                    class="admin-nav-item w-full flex items-center px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-brand-600 font-semibold transition group relative"
-                                    title="Unit Kegiatan Santri">
-                                    <i
-                                        class="fa-solid fa-people-roof w-5 text-center text-sm group-hover:text-brand-600 transition-colors"></i>
-                                    <span
-                                        class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Unit
-                                        Kegiatan (UKS)</span>
-                                </button>
+                                <div id="admin-submenu-kelembagaan" class="admin-submenu hidden pl-3 pr-1 py-1 space-y-1 my-1 border-l-2 border-slate-100 ml-5">
+                                    <button onclick="showAdminView('profil-lembaga')" data-view="profil-lembaga"
+                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-indigo-700 text-xs font-medium transition group"
+                                        title="Profil & Kepengurusan">
+                                        <i class="fa-solid fa-sitemap w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-indigo-600"></i>
+                                        <span class="sidebar-text whitespace-nowrap">Profil & Kepengurusan</span>
+                                    </button>
+                                    <button onclick="showAdminView('pengaturan')" data-view="pengaturan"
+                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 text-xs font-medium transition group"
+                                        title="Tautan & Sosmed">
+                                        <i class="fa-solid fa-share-nodes w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-slate-600"></i>
+                                        <span class="sidebar-text whitespace-nowrap">Tautan & Sosmed</span>
+                                    </button>
+                                </div>
                             </li>
                         </ul>
                     </div>
@@ -5126,6 +5120,27 @@
                             Kontrol</span>
                     </div>
 
+                    <!-- Desktop Admin Topbar / Breadcrumb Navigation -->
+                    <div id="admin-topbar-breadcrumb"
+                        class="hidden lg:flex items-center justify-between px-6 py-3 bg-white/90 dark:bg-[#15202d]/90 backdrop-blur border-b border-slate-100 dark:border-slate-800 shrink-0 z-20 shadow-xs">
+                        <nav aria-label="Breadcrumb" class="flex items-center space-x-2 text-xs">
+                            <button type="button" onclick="showAdminView('hub')" class="text-slate-500 hover:text-brand-700 font-semibold flex items-center space-x-1.5 transition">
+                                <i class="fa-solid fa-gauge-high text-brand-600"></i>
+                                <span>Dashboard</span>
+                            </button>
+                            <span id="admin-breadcrumb-sep-1" class="text-slate-300 font-light hidden">/</span>
+                            <span id="admin-breadcrumb-category" class="text-slate-500 font-medium hidden"></span>
+                            <span id="admin-breadcrumb-sep-2" class="text-slate-300 font-light hidden">/</span>
+                            <span id="admin-breadcrumb-current" class="text-brand-700 font-bold hidden"></span>
+                        </nav>
+                        <div class="flex items-center space-x-3">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-xs">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
+                                Mode Administrator
+                            </span>
+                        </div>
+                    </div>
+
 
 
                     <!-- Scrollable Views Container -->
@@ -5150,258 +5165,255 @@
                                         ini.</p>
                                 </section>
 
-                                <!-- ICON GRID MENU ADMIN -->
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                                <!-- HUB SECTIONS BERKATEGORI (SESUAI ACCORDION MENU) -->
+                                <div class="space-y-6">
 
-                                    <!-- 1. Tombol Icon Grid: Manajemen Berita -->
-                                    <div onclick="showAdminView('berita')"
-                                        class="bg-white hover:bg-emerald-50/60 p-4 md:p-5 rounded-2xl border border-slate-100 hover:border-brand-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
-                                        <div class="flex justify-between items-start">
-                                            <div
-                                                class="w-12 h-12 bg-emerald-50 text-emerald-700 group-hover:bg-brand-700 group-hover:text-white rounded-2xl flex items-center justify-center text-xl shadow-sm transition-all duration-300">
-                                                <i class="fa-solid fa-newspaper"></i>
+                                    <!-- Kategori 1: Kesiswaan & Akademik -->
+                                    <div class="space-y-3">
+                                        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                                            <div class="flex items-center space-x-2">
+                                                <div class="w-6 h-6 rounded-lg bg-cyan-50 text-cyan-700 flex items-center justify-center text-xs font-bold shadow-xs">
+                                                    <i class="fa-solid fa-graduation-cap"></i>
+                                                </div>
+                                                <h4 class="text-xs md:text-sm font-extrabold text-slate-800 dark:text-slate-200">Kesiswaan & Akademik</h4>
                                             </div>
-                                            <span id="admin-hub-news-count"
-                                                class="text-[9px] font-extrabold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md uppercase">0
-                                                Berita</span>
+                                            <span class="text-[10px] text-slate-400 font-semibold">5 Menu Layanan</span>
                                         </div>
-                                        <div>
-                                            <h4
-                                                class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-brand-700 transition">
-                                                Manajemen Berita</h4>
-                                            <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Tambah, edit,
-                                                dan publikasi
-                                                warta pesantren.</p>
+                                        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+                                            <!-- Data Santri (Master Data) -->
+                                            <div onclick="showAdminView('santri')"
+                                                class="bg-white hover:bg-cyan-50/60 p-4 rounded-2xl border border-slate-100 hover:border-cyan-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
+                                                <div class="flex justify-between items-start">
+                                                    <div class="w-11 h-11 bg-cyan-50 text-cyan-700 group-hover:bg-cyan-700 group-hover:text-white rounded-2xl flex items-center justify-center text-lg shadow-sm transition-all duration-300">
+                                                        <i class="fa-solid fa-id-card-clip"></i>
+                                                    </div>
+                                                    <span id="admin-hub-santri-count" class="text-[9px] font-extrabold bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded-md uppercase">0 Santri</span>
+                                                </div>
+                                                <div>
+                                                    <h4 class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-cyan-700 transition">Data Santri</h4>
+                                                    <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Master santri, NIS, & status.</p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Tahfidz Al-Qur'an -->
+                                            <div onclick="showAdminView('tahfidz')"
+                                                class="bg-white hover:bg-emerald-50/60 p-4 rounded-2xl border border-slate-100 hover:border-emerald-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
+                                                <div class="flex justify-between items-start">
+                                                    <div class="w-11 h-11 bg-emerald-50 text-emerald-700 group-hover:bg-emerald-700 group-hover:text-white rounded-2xl flex items-center justify-center text-lg shadow-sm transition-all duration-300">
+                                                        <i class="fa-solid fa-book-quran"></i>
+                                                    </div>
+                                                    <span id="admin-hub-tahfidz-count" class="text-[9px] font-extrabold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md uppercase">30 Juz</span>
+                                                </div>
+                                                <div>
+                                                    <h4 class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-emerald-700 transition">Tahfidz Qur'an</h4>
+                                                    <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Mutaba'ah & setoran juz.</p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Data Pendaftaran PPDB -->
+                                            <div onclick="showAdminView('ppdb')"
+                                                class="bg-white hover:bg-blue-50/60 p-4 rounded-2xl border border-slate-100 hover:border-blue-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
+                                                <div class="flex justify-between items-start">
+                                                    <div class="w-11 h-11 bg-blue-50 text-blue-700 group-hover:bg-blue-700 group-hover:text-white rounded-2xl flex items-center justify-center text-lg shadow-sm transition-all duration-300">
+                                                        <i class="fa-solid fa-user-graduate"></i>
+                                                    </div>
+                                                    <span id="admin-hub-ppdb-count" class="text-[9px] font-extrabold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md uppercase">0 Pendaftar</span>
+                                                </div>
+                                                <div>
+                                                    <h4 class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-blue-700 transition">Pendaftar PPDB</h4>
+                                                    <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Pantau calon santri baru.</p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Manajemen Program Pesantren -->
+                                            <div onclick="showAdminView('program')"
+                                                class="bg-white hover:bg-emerald-50/60 p-4 rounded-2xl border border-slate-100 hover:border-emerald-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
+                                                <div class="flex justify-between items-start">
+                                                    <div class="w-11 h-11 bg-emerald-50 text-emerald-700 group-hover:bg-emerald-700 group-hover:text-white rounded-2xl flex items-center justify-center text-lg shadow-sm transition-all duration-300">
+                                                        <i class="fa-solid fa-graduation-cap"></i>
+                                                    </div>
+                                                    <span id="admin-hub-program-count" class="text-[9px] font-extrabold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md uppercase">0 Program</span>
+                                                </div>
+                                                <div>
+                                                    <h4 class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-emerald-700 transition">Program Santri</h4>
+                                                    <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Kelola program unggulan.</p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Unit Kegiatan Santri (UKS) -->
+                                            <div onclick="showAdminView('unit-kegiatan')"
+                                                class="bg-white hover:bg-teal-50/60 p-4 rounded-2xl border border-slate-100 hover:border-teal-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
+                                                <div class="flex justify-between items-start">
+                                                    <div class="w-11 h-11 bg-teal-50 text-teal-700 group-hover:bg-teal-700 group-hover:text-white rounded-2xl flex items-center justify-center text-lg shadow-sm transition-all duration-300">
+                                                        <i class="fa-solid fa-people-roof"></i>
+                                                    </div>
+                                                    <span id="admin-hub-unit-kegiatan-count" class="text-[9px] font-extrabold bg-teal-100 text-teal-800 px-2 py-0.5 rounded-md uppercase">0 Unit</span>
+                                                </div>
+                                                <div>
+                                                    <h4 class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-teal-700 transition">Unit Kegiatan (UKS)</h4>
+                                                    <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Ekstrakurikuler & jadwal santri.</p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <!-- 2. Tombol Icon Grid: Pengaturan Banner Slider (MENU BARU) -->
-                                    <div onclick="showAdminView('banner')"
-                                        class="bg-white hover:bg-amber-50/60 p-4 md:p-5 rounded-2xl border border-slate-100 hover:border-amber-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
-                                        <div class="flex justify-between items-start">
-                                            <div
-                                                class="w-12 h-12 bg-amber-50 text-amber-700 group-hover:bg-amber-600 group-hover:text-white rounded-2xl flex items-center justify-center text-xl shadow-sm transition-all duration-300">
-                                                <i class="fa-solid fa-images"></i>
+                                    <!-- Kategori 2: Pengguna & SDM -->
+                                    <div class="space-y-3">
+                                        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                                            <div class="flex items-center space-x-2">
+                                                <div class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center text-xs font-bold shadow-xs">
+                                                    <i class="fa-solid fa-users-gear"></i>
+                                                </div>
+                                                <h4 class="text-xs md:text-sm font-extrabold text-slate-800 dark:text-slate-200">Pengguna & SDM</h4>
                                             </div>
-                                            <span id="admin-hub-banner-count"
-                                                class="text-[9px] font-extrabold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md uppercase">0
-                                                Aktif</span>
+                                            <span class="text-[10px] text-slate-400 font-semibold">2 Menu Layanan</span>
                                         </div>
-                                        <div>
-                                            <h4
-                                                class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-amber-700 transition">
-                                                Banner Slider Beranda</h4>
-                                            <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Atur slide
-                                                gambar banner
-                                                promosi rasio 3:1.</p>
+                                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                                            <!-- Manajemen Pengguna -->
+                                            <div onclick="showAdminView('users')"
+                                                class="bg-white hover:bg-emerald-50/60 p-4 rounded-2xl border border-slate-100 hover:border-emerald-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
+                                                <div class="flex justify-between items-start">
+                                                    <div class="w-11 h-11 bg-emerald-50 text-emerald-700 group-hover:bg-emerald-700 group-hover:text-white rounded-2xl flex items-center justify-center text-lg shadow-sm transition-all duration-300">
+                                                        <i class="fa-solid fa-users-gear"></i>
+                                                    </div>
+                                                    <span id="admin-hub-users-count" class="text-[9px] font-extrabold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md uppercase">0 Pengguna</span>
+                                                </div>
+                                                <div>
+                                                    <h4 class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-emerald-700 transition">Manajemen Pengguna</h4>
+                                                    <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Akun wali santri, admin & peran.</p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Data Pegawai & Asatidz -->
+                                            <div onclick="showAdminView('pegawai')"
+                                                class="bg-white hover:bg-indigo-50/60 p-4 rounded-2xl border border-slate-100 hover:border-indigo-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
+                                                <div class="flex justify-between items-start">
+                                                    <div class="w-11 h-11 bg-indigo-50 text-indigo-700 group-hover:bg-indigo-700 group-hover:text-white rounded-2xl flex items-center justify-center text-lg shadow-sm transition-all duration-300">
+                                                        <i class="fa-solid fa-user-tie"></i>
+                                                    </div>
+                                                    <span id="admin-hub-pegawai-count" class="text-[9px] font-extrabold bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-md uppercase">0 Pegawai</span>
+                                                </div>
+                                                <div>
+                                                    <h4 class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-indigo-700 transition">Data Pegawai & Asatidz</h4>
+                                                    <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Kelola asatidz, muhafiz & NIP.</p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <!-- Manajemen Galeri -->
-                                    <div onclick="showAdminView('galeri')"
-                                        class="bg-white hover:bg-purple-50/60 p-4 md:p-5 rounded-2xl border border-slate-100 hover:border-purple-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
-                                        <div class="flex justify-between items-start">
-                                            <div
-                                                class="w-12 h-12 bg-purple-50 text-purple-700 group-hover:bg-purple-600 group-hover:text-white rounded-2xl flex items-center justify-center text-xl shadow-sm transition-all duration-300">
-                                                <i class="fa-solid fa-camera-retro"></i>
+                                    <!-- Kategori 3: Konten & Publikasi -->
+                                    <div class="space-y-3">
+                                        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                                            <div class="flex items-center space-x-2">
+                                                <div class="w-6 h-6 rounded-lg bg-purple-50 text-purple-700 flex items-center justify-center text-xs font-bold shadow-xs">
+                                                    <i class="fa-solid fa-newspaper"></i>
+                                                </div>
+                                                <h4 class="text-xs md:text-sm font-extrabold text-slate-800 dark:text-slate-200">Konten & Publikasi</h4>
                                             </div>
-                                            <span id="admin-hub-galeri-count"
-                                                class="text-[9px] font-extrabold bg-purple-100 text-purple-800 px-2 py-0.5 rounded-md uppercase">0
-                                                Foto</span>
+                                            <span class="text-[10px] text-slate-400 font-semibold">4 Menu Layanan</span>
                                         </div>
-                                        <div>
-                                            <h4
-                                                class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-purple-700 transition">
-                                                Manajemen Galeri</h4>
-                                            <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Atur foto dan
-                                                dokumentasi
-                                                pesantren.</p>
+                                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                                            <!-- Manajemen Berita -->
+                                            <div onclick="showAdminView('berita')"
+                                                class="bg-white hover:bg-brand-50/60 p-4 rounded-2xl border border-slate-100 hover:border-brand-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
+                                                <div class="flex justify-between items-start">
+                                                    <div class="w-11 h-11 bg-brand-50 text-brand-700 group-hover:bg-brand-700 group-hover:text-white rounded-2xl flex items-center justify-center text-lg shadow-sm transition-all duration-300">
+                                                        <i class="fa-solid fa-newspaper"></i>
+                                                    </div>
+                                                    <span id="admin-hub-news-count" class="text-[9px] font-extrabold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md uppercase">0 Berita</span>
+                                                </div>
+                                                <div>
+                                                    <h4 class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-brand-700 transition">Manajemen Berita</h4>
+                                                    <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Tambah, edit & publikasi warta.</p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Banner Slider -->
+                                            <div onclick="showAdminView('banner')"
+                                                class="bg-white hover:bg-amber-50/60 p-4 rounded-2xl border border-slate-100 hover:border-amber-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
+                                                <div class="flex justify-between items-start">
+                                                    <div class="w-11 h-11 bg-amber-50 text-amber-700 group-hover:bg-amber-600 group-hover:text-white rounded-2xl flex items-center justify-center text-lg shadow-sm transition-all duration-300">
+                                                        <i class="fa-solid fa-images"></i>
+                                                    </div>
+                                                    <span id="admin-hub-banner-count" class="text-[9px] font-extrabold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md uppercase">0 Aktif</span>
+                                                </div>
+                                                <div>
+                                                    <h4 class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-amber-700 transition">Banner Slider</h4>
+                                                    <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Slide gambar promosi rasio 3:1.</p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Manajemen Galeri -->
+                                            <div onclick="showAdminView('galeri')"
+                                                class="bg-white hover:bg-purple-50/60 p-4 rounded-2xl border border-slate-100 hover:border-purple-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
+                                                <div class="flex justify-between items-start">
+                                                    <div class="w-11 h-11 bg-purple-50 text-purple-700 group-hover:bg-purple-600 group-hover:text-white rounded-2xl flex items-center justify-center text-lg shadow-sm transition-all duration-300">
+                                                        <i class="fa-solid fa-camera-retro"></i>
+                                                    </div>
+                                                    <span id="admin-hub-galeri-count" class="text-[9px] font-extrabold bg-purple-100 text-purple-800 px-2 py-0.5 rounded-md uppercase">0 Foto</span>
+                                                </div>
+                                                <div>
+                                                    <h4 class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-purple-700 transition">Manajemen Galeri</h4>
+                                                    <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Dokumentasi & album foto.</p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Manajemen Notifikasi -->
+                                            <div onclick="showAdminView('notifikasi')"
+                                                class="bg-white hover:bg-rose-50/60 p-4 rounded-2xl border border-slate-100 hover:border-rose-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
+                                                <div class="flex justify-between items-start">
+                                                    <div class="w-11 h-11 bg-rose-50 text-rose-700 group-hover:bg-rose-600 group-hover:text-white rounded-2xl flex items-center justify-center text-lg shadow-sm transition-all duration-300">
+                                                        <i class="fa-solid fa-bell"></i>
+                                                    </div>
+                                                    <span id="admin-hub-notifikasi-count" class="text-[9px] font-extrabold bg-rose-100 text-rose-800 px-2 py-0.5 rounded-md uppercase">Broadcast</span>
+                                                </div>
+                                                <div>
+                                                    <h4 class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-rose-700 transition">Notifikasi Broadcast</h4>
+                                                    <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Kirim pengumuman ke wali & santri.</p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <!-- Profil & Kepengurusan -->
-                                    <div onclick="showAdminView('profil-lembaga')"
-                                        class="bg-white hover:bg-indigo-50/60 p-4 md:p-5 rounded-2xl border border-slate-100 hover:border-indigo-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
-                                        <div class="flex justify-between items-start">
-                                            <div
-                                                class="w-12 h-12 bg-indigo-50 text-indigo-700 group-hover:bg-indigo-700 group-hover:text-white rounded-2xl flex items-center justify-center text-xl shadow-sm transition-all duration-300">
-                                                <i class="fa-solid fa-building-columns"></i>
+                                    <!-- Kategori 4: Kelembagaan & Pengaturan -->
+                                    <div class="space-y-3">
+                                        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                                            <div class="flex items-center space-x-2">
+                                                <div class="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center text-xs font-bold shadow-xs">
+                                                    <i class="fa-solid fa-building-columns"></i>
+                                                </div>
+                                                <h4 class="text-xs md:text-sm font-extrabold text-slate-800 dark:text-slate-200">Kelembagaan & Pengaturan</h4>
                                             </div>
+                                            <span class="text-[10px] text-slate-400 font-semibold">2 Menu Layanan</span>
                                         </div>
-                                        <div>
-                                            <h4
-                                                class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-indigo-700 transition">
-                                                Profil & Kepengurusan</h4>
-                                            <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Atur Sejarah,
-                                                Visi Misi, & Struktur.</p>
-                                        </div>
-                                    </div>
+                                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                                            <!-- Profil & Kepengurusan -->
+                                            <div onclick="showAdminView('profil-lembaga')"
+                                                class="bg-white hover:bg-indigo-50/60 p-4 rounded-2xl border border-slate-100 hover:border-indigo-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
+                                                <div class="flex justify-between items-start">
+                                                    <div class="w-11 h-11 bg-indigo-50 text-indigo-700 group-hover:bg-indigo-700 group-hover:text-white rounded-2xl flex items-center justify-center text-lg shadow-sm transition-all duration-300">
+                                                        <i class="fa-solid fa-building-columns"></i>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <h4 class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-indigo-700 transition">Profil & Kepengurusan</h4>
+                                                    <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Nama pesantren, sejarah, visi misi & struktur.</p>
+                                                </div>
+                                            </div>
 
-                                    <!-- Pengaturan Tautan & Sosmed -->
-                                    <div onclick="showAdminView('pengaturan')"
-                                        class="bg-white hover:bg-slate-50/60 p-4 md:p-5 rounded-2xl border border-slate-100 hover:border-slate-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
-                                        <div class="flex justify-between items-start">
-                                            <div
-                                                class="w-12 h-12 bg-slate-50 text-slate-700 group-hover:bg-slate-700 group-hover:text-white rounded-2xl flex items-center justify-center text-xl shadow-sm transition-all duration-300">
-                                                <i class="fa-solid fa-share-nodes"></i>
+                                            <!-- Tautan & Sosmed -->
+                                            <div onclick="showAdminView('pengaturan')"
+                                                class="bg-white hover:bg-slate-50/60 p-4 rounded-2xl border border-slate-100 hover:border-slate-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
+                                                <div class="flex justify-between items-start">
+                                                    <div class="w-11 h-11 bg-slate-50 text-slate-700 group-hover:bg-slate-700 group-hover:text-white rounded-2xl flex items-center justify-center text-lg shadow-sm transition-all duration-300">
+                                                        <i class="fa-solid fa-share-nodes"></i>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <h4 class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-slate-700 transition">Tautan & Sosmed</h4>
+                                                    <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Tautan video profil & sosial media resmi.</p>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div>
-                                            <h4
-                                                class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-slate-700 transition">
-                                                Tautan & Sosmed</h4>
-                                            <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Atur Tautan
-                                                Video & Sosial
-                                                Media.</p>
-                                        </div>
-                                    </div>
-
-                                    <!-- Tombol Icon Grid: Manajemen Pengguna -->
-                                    <div onclick="showAdminView('users')"
-                                        class="bg-white hover:bg-emerald-50/60 p-4 md:p-5 rounded-2xl border border-slate-100 hover:border-emerald-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
-                                        <div class="flex justify-between items-start">
-                                            <div
-                                                class="w-12 h-12 bg-emerald-50 text-emerald-700 group-hover:bg-emerald-700 group-hover:text-white rounded-2xl flex items-center justify-center text-xl shadow-sm transition-all duration-300">
-                                                <i class="fa-solid fa-users-gear"></i>
-                                            </div>
-                                            <span id="admin-hub-users-count"
-                                                class="text-[9px] font-extrabold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md uppercase">0
-                                                Pengguna</span>
-                                        </div>
-                                        <div>
-                                            <h4
-                                                class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-emerald-700 transition">
-                                                Manajemen Pengguna</h4>
-                                            <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Kelola akun
-                                                Wali Santri, Pengasuh, Admin & foto profil.</p>
-                                        </div>
-                                    </div>
-
-                                    <!-- Tombol Icon Grid: Data Santri (Master Data) -->
-                                    <div onclick="showAdminView('santri')"
-                                        class="bg-white hover:bg-cyan-50/60 p-4 md:p-5 rounded-2xl border border-slate-100 hover:border-cyan-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
-                                        <div class="flex justify-between items-start">
-                                            <div
-                                                class="w-12 h-12 bg-cyan-50 text-cyan-700 group-hover:bg-cyan-700 group-hover:text-white rounded-2xl flex items-center justify-center text-xl shadow-sm transition-all duration-300">
-                                                <i class="fa-solid fa-id-card-clip"></i>
-                                            </div>
-                                            <span id="admin-hub-santri-count"
-                                                class="text-[9px] font-extrabold bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded-md uppercase">0
-                                                Santri</span>
-                                        </div>
-                                        <div>
-                                            <h4
-                                                class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-cyan-700 transition">
-                                                Data Santri</h4>
-                                            <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Kelola data
-                                                master santri, NIS, NIK, foto & status.</p>
-                                        </div>
-                                    </div>
-
-                                    <!-- Tombol Icon Grid: Data Pegawai & Asatidz -->
-                                    <div onclick="showAdminView('pegawai')"
-                                        class="bg-white hover:bg-indigo-50/60 p-4 md:p-5 rounded-2xl border border-slate-100 hover:border-indigo-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
-                                        <div class="flex justify-between items-start">
-                                            <div
-                                                class="w-12 h-12 bg-indigo-50 text-indigo-700 group-hover:bg-indigo-700 group-hover:text-white rounded-2xl flex items-center justify-center text-xl shadow-sm transition-all duration-300">
-                                                <i class="fa-solid fa-user-tie"></i>
-                                            </div>
-                                            <span id="admin-hub-pegawai-count"
-                                                class="text-[9px] font-extrabold bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-md uppercase">0
-                                                Pegawai</span>
-                                        </div>
-                                        <div>
-                                            <h4
-                                                class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-indigo-700 transition">
-                                                Data Pegawai</h4>
-                                            <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Kelola asatidz,
-                                                muhafiz, guru, NIP, kontak & hak pembina.</p>
-                                        </div>
-                                    </div>
-
-                                    <!-- Tombol Icon Grid: Tahfidz Al-Qur'an (Mutaba'ah & Setoran) -->
-                                    <div onclick="showAdminView('tahfidz')"
-                                        class="bg-white hover:bg-emerald-50/60 p-4 md:p-5 rounded-2xl border border-slate-100 hover:border-emerald-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
-                                        <div class="flex justify-between items-start">
-                                            <div
-                                                class="w-12 h-12 bg-emerald-50 text-emerald-700 group-hover:bg-emerald-700 group-hover:text-white rounded-2xl flex items-center justify-center text-xl shadow-sm transition-all duration-300">
-                                                <i class="fa-solid fa-book-quran"></i>
-                                            </div>
-                                            <span id="admin-hub-tahfidz-count"
-                                                class="text-[9px] font-extrabold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md uppercase">30
-                                                Juz</span>
-                                        </div>
-                                        <div>
-                                            <h4
-                                                class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-emerald-700 transition">
-                                                Tahfidz Qur'an</h4>
-                                            <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Mutaba'ah
-                                                ziyadah, muraja'ah, halaqah & capaian 30 juz.</p>
-                                        </div>
-                                    </div>
-
-                                    <!-- 3. Tombol Icon Grid: Data Pendaftaran PPDB -->
-                                    <div onclick="showAdminView('ppdb')"
-                                        class="bg-white hover:bg-blue-50/60 p-4 md:p-5 rounded-2xl border border-slate-100 hover:border-blue-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
-                                        <div class="flex justify-between items-start">
-                                            <div
-                                                class="w-12 h-12 bg-blue-50 text-blue-700 group-hover:bg-blue-700 group-hover:text-white rounded-2xl flex items-center justify-center text-xl shadow-sm transition-all duration-300">
-                                                <i class="fa-solid fa-user-graduate"></i>
-                                            </div>
-                                            <span id="admin-hub-ppdb-count"
-                                                class="text-[9px] font-extrabold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md uppercase">0
-                                                Pendaftar</span>
-                                        </div>
-                                        <div>
-                                            <h4
-                                                class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-blue-700 transition">
-                                                Data Pendaftar PPDB</h4>
-                                            <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Kelola dan
-                                                pantau data
-                                                pendaftar PPDB.</p>
-                                        </div>
-                                    </div>
-
-                                    <!-- 4. Tombol Icon Grid: Manajemen Program Pesantren (CMS) -->
-                                    <div onclick="showAdminView('program')"
-                                        class="bg-white hover:bg-emerald-50/60 p-4 md:p-5 rounded-2xl border border-slate-100 hover:border-emerald-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
-                                        <div class="flex justify-between items-start">
-                                            <div
-                                                class="w-12 h-12 bg-emerald-50 text-emerald-700 group-hover:bg-emerald-700 group-hover:text-white rounded-2xl flex items-center justify-center text-xl shadow-sm transition-all duration-300">
-                                                <i class="fa-solid fa-graduation-cap"></i>
-                                            </div>
-                                            <span id="admin-hub-program-count"
-                                                class="text-[9px] font-extrabold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md uppercase">0
-                                                Program</span>
-                                        </div>
-                                        <div>
-                                            <h4
-                                                class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-emerald-700 transition">
-                                                Manajemen Program</h4>
-                                            <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Kelola data
-                                                program unggulan &
-                                                santri.</p>
-                                        </div>
-                                    </div>
-
-                                    <!-- 5. Tombol Icon Grid: Manajemen Unit Kegiatan Santri (UKS) -->
-                                    <div onclick="showAdminView('unit-kegiatan')"
-                                        class="bg-white hover:bg-teal-50/60 p-4 md:p-5 rounded-2xl border border-slate-100 hover:border-teal-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
-                                        <div class="flex justify-between items-start">
-                                            <div
-                                                class="w-12 h-12 bg-teal-50 text-teal-700 group-hover:bg-teal-700 group-hover:text-white rounded-2xl flex items-center justify-center text-xl shadow-sm transition-all duration-300">
-                                                <i class="fa-solid fa-people-roof"></i>
-                                            </div>
-                                            <span id="admin-hub-unit-kegiatan-count"
-                                                class="text-[9px] font-extrabold bg-teal-100 text-teal-800 px-2 py-0.5 rounded-md uppercase">0
-                                                Unit</span>
-                                        </div>
-                                        <div>
-                                            <h4
-                                                class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-teal-700 transition">
-                                                Unit Kegiatan Santri</h4>
-                                            <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Kelola UKS,
-                                                divisi, jadwal & foto kegiatan.</p>
                                         </div>
                                     </div>
 
