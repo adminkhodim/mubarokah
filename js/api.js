@@ -9,9 +9,12 @@
             : "mubarokah";
 
         async function apiGet(action, params = {}) {
-            if (!WEB_APP_URL) throw new Error("WEB_APP_URL belum dikonfigurasi.");
+            const isHostedWeb = typeof window !== 'undefined' && window.location && window.location.protocol.startsWith('http');
+            const proxyBase = isHostedWeb ? `${window.location.origin}/api/auth` : '';
+            const baseUrl = proxyBase || WEB_APP_URL;
+            if (!baseUrl) throw new Error("API URL belum dikonfigurasi.");
 
-            const url = new URL(WEB_APP_URL);
+            const url = new URL(baseUrl);
             url.searchParams.set("action", action);
             Object.entries(params).forEach(([key, value]) => {
                 // Prevent client-side or arbitrary query param from overriding authoritative tenantId
@@ -22,19 +25,44 @@
                 }
             });
 
-            const response = await fetch(url.toString(), {
-                method: "GET",
-                redirect: "follow",
-                credentials: "omit",
-                headers: { "Accept": "application/json" }
-            });
+            try {
+                const response = await fetch(url.toString(), {
+                    method: "GET",
+                    redirect: "follow",
+                    credentials: "omit",
+                    headers: { "Accept": "application/json" }
+                });
 
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            return await response.json();
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.json();
+            } catch (err) {
+                // Fallback ke WEB_APP_URL langsung jika proxy lokal/offline gagal
+                if (baseUrl === proxyBase && WEB_APP_URL && WEB_APP_URL !== proxyBase) {
+                    console.warn(`[apiGet] Proxy ${action} gagal, fallback ke direct Apps Script URL...`, err);
+                    const fallbackUrl = new URL(WEB_APP_URL);
+                    fallbackUrl.searchParams.set("action", action);
+                    Object.entries(params).forEach(([key, value]) => {
+                        if (key === 'tenantId') fallbackUrl.searchParams.set("tenantId", AUTHORITATIVE_TENANT_ID);
+                        else if (value !== undefined && value !== null) fallbackUrl.searchParams.set(key, String(value));
+                    });
+                    const fallbackRes = await fetch(fallbackUrl.toString(), {
+                        method: "GET",
+                        redirect: "follow",
+                        credentials: "omit",
+                        headers: { "Accept": "application/json" }
+                    });
+                    if (!fallbackRes.ok) throw new Error(`HTTP ${fallbackRes.status}`);
+                    return await fallbackRes.json();
+                }
+                throw err;
+            }
         }
 
         async function apiPost(action, payload = {}) {
-            if (!WEB_APP_URL) throw new Error("WEB_APP_URL belum dikonfigurasi.");
+            const isHostedWeb = typeof window !== 'undefined' && window.location && window.location.protocol.startsWith('http');
+            const proxyBase = isHostedWeb ? `${window.location.origin}/api/auth` : '';
+            const targetUrl = proxyBase || WEB_APP_URL;
+            if (!targetUrl) throw new Error("WEB_APP_URL belum dikonfigurasi.");
 
             const storageKeys = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.storage && APP_CONFIG.storage.keys)
                 ? APP_CONFIG.storage.keys
@@ -52,17 +80,35 @@
             // Lock tenantId strictly to authoritative tenant
             bodyPayload.tenantId = AUTHORITATIVE_TENANT_ID;
 
-            const response = await fetch(WEB_APP_URL, {
-                method: "POST",
-                redirect: "follow",
-                credentials: "omit",
-                // text/plain menghindari CORS preflight OPTIONS pada Apps Script Web App.
-                headers: {
-                    "Content-Type": "text/plain;charset=utf-8",
-                    "Accept": "application/json"
-                },
-                body: JSON.stringify(bodyPayload)
-            });
+            let response;
+            try {
+                response = await fetch(targetUrl, {
+                    method: "POST",
+                    redirect: "follow",
+                    credentials: "omit",
+                    headers: {
+                        "Content-Type": "text/plain;charset=utf-8",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify(bodyPayload)
+                });
+            } catch (postErr) {
+                if (targetUrl === proxyBase && WEB_APP_URL && WEB_APP_URL !== proxyBase) {
+                    console.warn(`[apiPost] Proxy ${action} gagal, fallback ke direct Apps Script URL...`, postErr);
+                    response = await fetch(WEB_APP_URL, {
+                        method: "POST",
+                        redirect: "follow",
+                        credentials: "omit",
+                        headers: {
+                            "Content-Type": "text/plain;charset=utf-8",
+                            "Accept": "application/json"
+                        },
+                        body: JSON.stringify(bodyPayload)
+                    });
+                } else {
+                    throw postErr;
+                }
+            }
 
             if (!response.ok) {
                 // Penanganan khusus Google Apps Script macros/echo:
@@ -156,28 +202,18 @@
         }
 
         // ==================== STATE MANAGEMENT DATA ====================
+        // Canonical real seed news data (Mencegah tampilan mock dummy data saat proses fetching)
         let mockNewsData = [
             {
-                news_id: "NEWS_1",
-                slug: "santri-pesantren-sabet-juara-olimpiade-matematika",
-                tanggal: "5 Juli 2026",
-                kategori: "Prestasi",
-                judul: "Santri Pesantren Sabet Juara Olimpiade Matematika",
-                ringkasan: "Alhamdulillah, santri pesantren kembali meraih prestasi membanggakan dengan meraih juara pertama olimpiade matematika...",
-                isi: "Alhamdulillah, santri pesantren kembali meraih prestasi membanggakan dengan meraih juara pertama olimpiade matematika tingkat Provinsi Jawa Tengah.\n\nKeberhasilan ini membuktikan bahwa kurikulum terintegrasi yang menggabungkan khazanah salaf klasik dan sains teknologi mampu bersaing di kancah nasional. Semoga prestasi ini memacu santri lainnya.",
-                penulis: "Humas Pesantren",
-                gambar: "https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=800&auto=format&fit=crop"
-            },
-            {
-                news_id: "NEWS_2",
-                slug: "silahturahmi-tokoh-ulama-nasional-pengarahan-keilmuan",
-                tanggal: "2 Juli 2026",
-                kategori: "Kajian",
-                judul: "Silahturahmi Tokoh Ulama Nasional & Pengarahan Keilmuan",
-                ringkasan: "Pesantren menyambut hangat silaturahmi tokoh ulama nasional yang memberikan wejangan mendalam bagi para santri...",
-                isi: "Pesantren menyambut hangat silaturahmi tokoh ulama nasional di Aula Utama. Beliau memberikan pengarahan keilmuan kepada seluruh santri agar tetap bersemangat menuntut ilmu di tengah derasnya modernitas global.\n\nBeliau menekankan pentingnya penguasaan literatur klasik sebagai akar moderasi beragama.",
-                penulis: "Kesiswaan",
-                gambar: "https://images.unsplash.com/photo-1584286595398-a59f21d313f5?q=80&w=800&auto=format&fit=crop"
+                news_id: "NWS_1789722096909_3sam",
+                slug: "khatam-30-juz-bukan-akhir-pesan-haflah-khotmil-quran-ke-22-roudlotul-mubarokah-dk9t",
+                tanggal: "29 September 2025",
+                kategori: "Kegiatan",
+                judul: "Khatam 30 Juz Bukan Akhir, Pesan Haflah Khotmil Qur’an ke-22 Roudlotul Mubarokah",
+                ringkasan: "Haflah Khotmil Qur’an ke-22 Pondok Pesantren Roudlotul Mubarokah menjadi momentum syukur atas pencapaian 35 peserta sekaligus pengingat bahwa khatam 30 juz bukan akhir perjalanan bersama Al-Qur’an.",
+                isi: "DEMAK — Menyelesaikan hafalan 30 juz Al-Qur'an bukanlah akhir perjalanan seorang penghafal. Dalam Haflah Khotmil Qur'an ke-22 Pondok Pesantren Roudlotul Mubarokah, khatam ditekankan sebagai awal tanggung jawab untuk menjaga hafalan, memahami kandungan Al-Qur'an, dan mengamalkan nilai-nilainya dalam kehidupan.\n\nPesan tersebut mengemuka dalam Haflah Khotmil Qur'an ke-22 Pondok Pesantren Roudlotul Mubarokah, Rimbukidul, Karangawen, Demak, Minggu (28/9/2025). Mengusung tema “Menuju Generasi Qur'ani penuh berkah, mulia dan membawa kedamaian bagi umat”, kegiatan ini diikuti 35 peserta, terdiri atas 10 peserta Bil Hifdhi, 14 peserta Bin Nadhor, dan 11 peserta Juz Amma.",
+                penulis: "Admin",
+                gambar: "https://lh3.googleusercontent.com/d/1teGHXQOypKuqq02-jCMsUV-E06ZY28L4"
             }
         ];
 

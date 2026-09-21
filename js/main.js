@@ -134,16 +134,18 @@
             }
         };
 
-        // Render program, banner & notifikasi secepat kilat sebelum window.onload (Stale-While-Revalidate)
+        // Render program, banner, berita & notifikasi secepat kilat sebelum window.onload (Stale-While-Revalidate)
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
                 if (typeof initializeProgramRuntime === 'function') initializeProgramRuntime();
                 loadBanners();
+                loadNews();
                 loadNotifikasi();
             });
         } else {
             if (typeof initializeProgramRuntime === 'function') initializeProgramRuntime();
             loadBanners();
+            loadNews();
             loadNotifikasi();
         }
 
@@ -602,7 +604,24 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        const NEWS_CACHE_KEY = 'mubarokah_cached_news';
+
         async function loadNews() {
+            // SWR: Tampilkan cache secepat kilat (0ms) agar pengguna langsung melihat data riil tanpa jeda atau dummy mock
+            try {
+                const cached = localStorage.getItem(NEWS_CACHE_KEY);
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        mockNewsData = parsed;
+                        renderAllNewsViews(mockNewsData);
+                        checkPendingNewsRoute();
+                    }
+                }
+            } catch (e) {
+                console.warn('[loadNews] Error parsing local cache:', e);
+            }
+
             if (!isApiConfigured()) {
                 renderAllNewsViews(mockNewsData);
                 checkPendingNewsRoute();
@@ -614,6 +633,9 @@
                 if (response && response.status === "success" &&
                     Array.isArray(response.data) && response.data.length > 0) {
                     mockNewsData = response.data;
+                    try {
+                        localStorage.setItem(NEWS_CACHE_KEY, JSON.stringify(response.data));
+                    } catch (storeErr) {}
                 }
                 renderAllNewsViews(mockNewsData);
                 checkPendingNewsRoute();

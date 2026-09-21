@@ -1013,6 +1013,15 @@
             if (!container) return;
 
             container.innerHTML = "";
+            if (mockNewsData.length === 0) {
+                container.innerHTML = `
+                    <div class="p-8 text-center text-slate-400 text-xs">
+                        <i class="fa-solid fa-newspaper text-2xl mb-2 text-slate-300 dark:text-slate-600 block"></i>
+                        Belum ada berita yang diterbitkan.
+                    </div>
+                `;
+                return;
+            }
             mockNewsData.forEach((news, idx) => {
                 const item = document.createElement('div');
                 item.className = "flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200/70 gap-3";
@@ -1147,7 +1156,12 @@
                     const response = await apiPost("deleteBerita", { token, data: { news_id: id } });
                     if (response && response.success) {
                         showToast("Berita berhasil dihapus.");
-                        loadNews(); // Refresh from backend
+                        // Optimistic update: langsung hapus dari array lokal & sync ke localStorage
+                        mockNewsData = mockNewsData.filter(n => n.news_id !== id && n.slug !== id);
+                        try {
+                            localStorage.setItem('mubarokah_cached_news', JSON.stringify(mockNewsData));
+                        } catch (stErr) {}
+                        renderAllNewsViews(mockNewsData);
                     } else {
                         showToast("❌ Gagal menghapus: " + (response ? response.message : "Error"));
                     }

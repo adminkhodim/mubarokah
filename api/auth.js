@@ -1,6 +1,7 @@
 /**
  * Vercel Serverless Function Proxy for Mubarokah Authentication & Backend API
  * Eliminates browser CORS, 302 redirect blocking, and multi-account Google cookie issues.
+ * Supports both POST (auth/mutations) and GET (kabar/banners with edge caching).
  */
 
 const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwhaT3ODh9d95YkEUOM5IwKYMcnOQWe63nCXzJRdEpWV414N62jscxO1VeT7vvetZzFlQ/exec";
@@ -12,6 +13,35 @@ async function forwardToGoogleAppsScript(scriptUrl, bodyPayload) {
             'Content-Type': 'text/plain;charset=utf-8'
         },
         body: typeof bodyPayload === 'string' ? bodyPayload : JSON.stringify(bodyPayload),
+        redirect: 'manual'
+    });
+
+    if (res.status >= 300 && res.status < 400) {
+        const redirectUrl = res.headers.get('location');
+        if (redirectUrl) {
+            const res2 = await fetch(redirectUrl, {
+                method: 'GET',
+                redirect: 'manual'
+            });
+            const text2 = await res2.text();
+            return { status: res2.status, text: text2 };
+        }
+    }
+
+    const text = await res.text();
+    return { status: res.status, text: text };
+}
+
+async function forwardGetToGoogleAppsScript(scriptUrl, queryParams) {
+    const url = new URL(scriptUrl);
+    if (queryParams) {
+        Object.entries(queryParams).forEach(([k, v]) => {
+            if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
+        });
+    }
+
+    const res = await fetch(url.toString(), {
+        method: 'GET',
         redirect: 'manual'
     });
 
@@ -44,22 +74,33 @@ module.exports = async function handler(req, res) {
     const scriptUrl = process.env.MUBAROKAH_APPS_SCRIPT_URL || DEFAULT_SCRIPT_URL;
 
     try {
-        let payload = req.body;
-        if (typeof payload === 'string') {
-            try {
-                payload = JSON.parse(payload);
-            } catch (e) {
-                // keep as string
+        let result;
+
+        if (req.method === 'GET') {
+            const action = req.query && req.query.action;
+            // Add edge caching for public read data (getKabar, getBanner, getGaleri, etc.)
+            if (action === 'getKabar' || action === 'getBanner' || action === 'getGaleri' || action === 'getUnitKegiatan' || action === 'getNotifikasi') {
+                res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
             }
-        } else if (!payload && req.query) {
-            payload = { ...req.query };
-        }
+            result = await forwardGetToGoogleAppsScript(scriptUrl, req.query);
+        } else {
+            let payload = req.body;
+            if (typeof payload === 'string') {
+                try {
+                    payload = JSON.parse(payload);
+                } catch (e) {
+                    // keep as string
+                }
+            } else if (!payload && req.query) {
+                payload = { ...req.query };
+            }
 
-        if (!payload) {
-            payload = {};
-        }
+            if (!payload) {
+                payload = {};
+            }
 
-        const result = await forwardToGoogleAppsScript(scriptUrl, payload);
+            result = await forwardToGoogleAppsScript(scriptUrl, payload);
+        }
 
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         try {
