@@ -3048,11 +3048,11 @@ function setupPhase2BScriptProperties(forceRegenerate = false) {
  */
 // ==================== SESSION TTL CONFIGURATION (P1-1) ====================
 // Role-specific bounded session lifetimes (Owner-approved policy)
-const SESSION_TTL_ADMIN_HOURS = 8;
-const SESSION_TTL_EDITOR_HOURS = 8;
-const SESSION_TTL_PENGASUH_HOURS = 8;
-const SESSION_TTL_WALI_HOURS = 24;
-const SESSION_TTL_DEFAULT_HOURS = 8;
+const SESSION_TTL_ADMIN_HOURS = 24 * 30; // 30 Hari
+const SESSION_TTL_EDITOR_HOURS = 24 * 30; // 30 Hari
+const SESSION_TTL_PENGASUH_HOURS = 24 * 90; // 90 Hari
+const SESSION_TTL_WALI_HOURS = 24 * 90; // 90 Hari (3 Bulan)
+const SESSION_TTL_DEFAULT_HOURS = 24 * 30;
 
 function getSessionTtlHoursForRole(role) {
   const r = String(role || "").trim().toUpperCase();
@@ -4914,10 +4914,10 @@ const RELATIONSHIP_ENUM = Object.freeze({
 });
 
 const AUTH_SHEET_SCHEMAS = Object.freeze({
-  [SHEET_USERS]: ["user_id", "email", "phone", "name", "role", "photo_url", "status", "created_at", "last_login_at"],
-  [SHEET_ADMIN_IDENTITIES]: ["identity_id", "email", "name", "role", "status", "created_at", "photo_url"],
-  [SHEET_WALI_IDENTITIES]: ["identity_id", "email", "phone", "name", "role", "status", "created_at", "photo_url"],
-  [SHEET_PENGASUH_IDENTITIES]: ["identity_id", "email", "phone", "title_name", "role", "status", "created_at", "photo_url"],
+  [SHEET_USERS]: ["user_id", "email", "phone", "name", "role", "photo_url", "status", "created_at", "last_login_at", "password_hash"],
+  [SHEET_ADMIN_IDENTITIES]: ["identity_id", "email", "name", "role", "status", "created_at", "photo_url", "password_hash"],
+  [SHEET_WALI_IDENTITIES]: ["identity_id", "email", "phone", "name", "role", "status", "created_at", "photo_url", "password_hash"],
+  [SHEET_PENGASUH_IDENTITIES]: ["identity_id", "email", "phone", "title_name", "role", "status", "created_at", "photo_url", "password_hash"],
   [SHEET_STUDENTS]: ["student_id", "nis", "nik", "name", "gender", "birth_date", "photo_url", "program", "status", "created_at", "qr_code"],
   [SHEET_WALI_SANTRI_MAP]: ["map_id", "wali_id", "student_id", "relationship", "status", "created_at"],
   [SHEET_OTP_CHALLENGES]: ["challenge_id", "identity_id", "channel", "identifier_hash", "otp_hash", "attempts", "max_attempts", "expires_at", "status", "created_at", "consumed_at", "request_id"],
@@ -5083,6 +5083,7 @@ function standardizeUsersSheet(ss) {
     const statusIdx = firstRow.indexOf("status");
     const createdIdx = firstRow.indexOf("created_at") !== -1 ? firstRow.indexOf("created_at") : firstRow.indexOf("dibuat_pada");
     const lastLoginIdx = firstRow.indexOf("last_login_at");
+    const passwordHashIdx = firstRow.indexOf("password_hash") !== -1 ? firstRow.indexOf("password_hash") : firstRow.indexOf("password");
 
     const standardizedRows = [];
     const seenEmails = new Set();
@@ -5100,6 +5101,7 @@ function standardizeUsersSheet(ss) {
       const status = statusIdx !== -1 && data[r][statusIdx] ? String(data[r][statusIdx]).trim().toUpperCase() : "ACTIVE";
       const createdAt = createdIdx !== -1 && data[r][createdIdx] ? String(data[r][createdIdx]) : new Date().toISOString();
       const lastLoginAt = lastLoginIdx !== -1 ? String(data[r][lastLoginIdx] || "") : "";
+      const passwordHash = passwordHashIdx !== -1 ? String(data[r][passwordHashIdx] || "") : "";
 
       standardizedRows.push([
         rawId || ("USR_" + Utilities.getUuid().substring(0, 8)),
@@ -5110,7 +5112,8 @@ function standardizeUsersSheet(ss) {
         photoUrl,
         status,
         createdAt,
-        lastLoginAt
+        lastLoginAt,
+        passwordHash
       ]);
 
       if (email) seenEmails.add(email);
@@ -5800,6 +5803,86 @@ function getAuthSheet(ss, targetName) {
   return targetSheet;
 }
 
+/**
+ * Simpan atau perbarui hash password pengguna secara aman di Sheet Users dan Sheet Role
+ */
+function setUserPasswordHash(identifier, plainPassword) {
+  if (!identifier || !plainPassword) return false;
+  const target = String(identifier).trim().toLowerCase();
+  const passHash = hashPassword(plainPassword);
+  const ss = getDatabaseSpreadsheet();
+  if (!ss) return false;
+
+  let updated = false;
+
+  // 1. Update di Sheet Users
+  const usersSheet = getAuthSheet(ss, SHEET_USERS);
+  if (usersSheet) {
+    const data = usersSheet.getDataRange().getValues();
+    if (data && data.length >= 2) {
+      const header = data[0].map(h => String(h || "").trim().toLowerCase());
+      const idIdx = header.indexOf("user_id");
+      const emailIdx = header.indexOf("email");
+      const phoneIdx = header.indexOf("phone");
+      let passIdx = header.indexOf("password_hash");
+      if (passIdx === -1) passIdx = header.indexOf("password");
+
+      if (passIdx === -1) {
+        passIdx = header.length;
+        usersSheet.getRange(1, passIdx + 1).setValue("password_hash").setFontWeight("bold").setBackground("#dcfce7");
+      }
+
+      for (let i = 1; i < data.length; i++) {
+        const rowId = idIdx !== -1 ? String(data[i][idIdx] || "").trim().toLowerCase() : "";
+        const rowEmail = emailIdx !== -1 ? String(data[i][emailIdx] || "").trim().toLowerCase() : "";
+        const rowPhone = phoneIdx !== -1 ? String(data[i][phoneIdx] || "").replace(/[^0-9]/g, "") : "";
+        const cleanTarget = target.replace(/[^0-9]/g, "");
+
+        if (rowEmail === target || rowId === target || (cleanTarget && cleanTarget.length >= 8 && rowPhone.endsWith(cleanTarget.slice(-8)))) {
+          usersSheet.getRange(i + 1, passIdx + 1).setValue(passHash);
+          updated = true;
+          break;
+        }
+      }
+    }
+  }
+
+  // 2. Update di Sheet Role (Admin_Identities, Wali_Identities, Pengasuh_Identities)
+  const roleSheets = [SHEET_WALI_IDENTITIES, SHEET_ADMIN_IDENTITIES, SHEET_PENGASUH_IDENTITIES];
+  roleSheets.forEach(sheetName => {
+    const rSheet = getAuthSheet(ss, sheetName);
+    if (!rSheet) return;
+    const rData = rSheet.getDataRange().getValues();
+    if (!rData || rData.length < 2) return;
+    const rHeader = rData[0].map(h => String(h || "").trim().toLowerCase());
+    const idIdx = rHeader.indexOf("identity_id");
+    const emailIdx = rHeader.indexOf("email");
+    const phoneIdx = rHeader.indexOf("phone");
+    let passIdx = rHeader.indexOf("password_hash");
+    if (passIdx === -1) passIdx = rHeader.indexOf("password");
+
+    if (passIdx === -1) {
+      passIdx = rHeader.length;
+      rSheet.getRange(1, passIdx + 1).setValue("password_hash").setFontWeight("bold").setBackground("#dcfce7");
+    }
+
+    for (let j = 1; j < rData.length; j++) {
+      const rowId = idIdx !== -1 ? String(rData[j][idIdx] || "").trim().toLowerCase() : "";
+      const rowEmail = emailIdx !== -1 ? String(rData[j][emailIdx] || "").trim().toLowerCase() : "";
+      const rowPhone = phoneIdx !== -1 ? String(rData[j][phoneIdx] || "").replace(/[^0-9]/g, "") : "";
+      const cleanTarget = target.replace(/[^0-9]/g, "");
+
+      if (rowEmail === target || rowId === target || (cleanTarget && cleanTarget.length >= 8 && rowPhone.endsWith(cleanTarget.slice(-8)))) {
+        rSheet.getRange(j + 1, passIdx + 1).setValue(passHash);
+        updated = true;
+        break;
+      }
+    }
+  });
+
+  return updated;
+}
+
 function getAdminIdentityByEmail(email) {
   const normalized = String(email || "").trim().toLowerCase();
   if (!normalized) return null;
@@ -5819,6 +5902,8 @@ function getAdminIdentityByEmail(email) {
       let photoIdx = header.indexOf("photo_url");
       if (photoIdx === -1) photoIdx = header.indexOf("foto_profil");
       if (photoIdx === -1) photoIdx = header.indexOf("foto");
+      let passIdx = header.indexOf("password_hash");
+      if (passIdx === -1) passIdx = header.indexOf("password");
 
       if (idIdx === -1) idIdx = 0;
       if (emailIdx === -1) emailIdx = 1;
@@ -5839,6 +5924,7 @@ function getAdminIdentityByEmail(email) {
             status: String(data[i][statusIdx] || "").trim().toUpperCase(),
             photoUrl: rawPhoto,
             photo_url: rawPhoto,
+            passwordHash: passIdx !== -1 ? String(data[i][passIdx] || "") : "",
             createdAt: String(data[i][createdAtIdx] || "")
           };
         }
@@ -5859,6 +5945,8 @@ function getAdminIdentityByEmail(email) {
       const uPhoneIdx = uHeader.indexOf("phone") !== -1 ? uHeader.indexOf("phone") : 2;
       const uStatusIdx = uHeader.indexOf("status") !== -1 ? uHeader.indexOf("status") : 6;
       const uPhotoIdx = uHeader.indexOf("photo_url") !== -1 ? uHeader.indexOf("photo_url") : (uHeader.indexOf("foto_profil") !== -1 ? uHeader.indexOf("foto_profil") : -1);
+      let uPassIdx = uHeader.indexOf("password_hash");
+      if (uPassIdx === -1) uPassIdx = uHeader.indexOf("password");
 
       for (let j = 1; j < uData.length; j++) {
         const uEmail = uEmailIdx !== -1 ? String(uData[j][uEmailIdx] || "").trim().toLowerCase() : "";
@@ -5882,6 +5970,7 @@ function getAdminIdentityByEmail(email) {
             status: status,
             photoUrl: photo,
             photo_url: photo,
+            passwordHash: uPassIdx !== -1 ? String(uData[j][uPassIdx] || "") : "",
             createdAt: ""
           };
         }
@@ -5910,6 +5999,8 @@ function getAdminIdentityById(identityId) {
       let photoIdx = header.indexOf("photo_url");
       if (photoIdx === -1) photoIdx = header.indexOf("foto_profil");
       if (photoIdx === -1) photoIdx = header.indexOf("foto");
+      let passIdx = header.indexOf("password_hash");
+      if (passIdx === -1) passIdx = header.indexOf("password");
 
       if (idIdx === -1) idIdx = 0;
       if (emailIdx === -1) emailIdx = 1;
@@ -5927,7 +6018,8 @@ function getAdminIdentityById(identityId) {
             role: String(data[i][roleIdx] || "ADMIN"),
             status: String(data[i][statusIdx] || "").trim().toUpperCase(),
             photoUrl: rawPhoto,
-            photo_url: rawPhoto
+            photo_url: rawPhoto,
+            passwordHash: passIdx !== -1 ? String(data[i][passIdx] || "") : ""
           };
         }
       }
@@ -5946,6 +6038,8 @@ function getAdminIdentityById(identityId) {
       const uNameIdx = uHeader.indexOf("name");
       const uStatusIdx = uHeader.indexOf("status");
       const uPhotoIdx = uHeader.indexOf("photo_url");
+      let uPassIdx = uHeader.indexOf("password_hash");
+      if (uPassIdx === -1) uPassIdx = uHeader.indexOf("password");
 
       for (let j = 1; j < uData.length; j++) {
         if (String(uData[j][uIdIdx] || "").trim() === targetId) {
@@ -5959,7 +6053,8 @@ function getAdminIdentityById(identityId) {
               role: uRole,
               status: uStatusIdx !== -1 ? String(uData[j][uStatusIdx] || "").trim().toUpperCase() : "ACTIVE",
               photoUrl: rawPhoto,
-              photo_url: rawPhoto
+              photo_url: rawPhoto,
+              passwordHash: uPassIdx !== -1 ? String(uData[j][uPassIdx] || "") : ""
             };
           }
         }
@@ -5992,6 +6087,8 @@ function getWaliIdentityByEmail(email) {
       let photoIdx = header.indexOf("photo_url");
       if (photoIdx === -1) photoIdx = header.indexOf("foto_profil");
       if (photoIdx === -1) photoIdx = header.indexOf("foto");
+      let passIdx = header.indexOf("password_hash");
+      if (passIdx === -1) passIdx = header.indexOf("password");
 
       if (idIdx === -1) idIdx = 0;
       if (emailIdx === -1) emailIdx = 1;
@@ -6012,7 +6109,8 @@ function getWaliIdentityByEmail(email) {
             role: roleIdx !== -1 ? String(data[i][roleIdx] || "WALI_SANTRI") : "WALI_SANTRI",
             status: statusIdx !== -1 ? String(data[i][statusIdx] || "").trim().toUpperCase() : "ACTIVE",
             photoUrl: rawPhoto,
-            photo_url: rawPhoto
+            photo_url: rawPhoto,
+            passwordHash: passIdx !== -1 ? String(data[i][passIdx] || "") : ""
           };
         }
       }
@@ -6032,6 +6130,8 @@ function getWaliIdentityByEmail(email) {
       const uPhoneIdx = uHeader.indexOf("phone") !== -1 ? uHeader.indexOf("phone") : 2;
       const uStatusIdx = uHeader.indexOf("status") !== -1 ? uHeader.indexOf("status") : 6;
       const uPhotoIdx = uHeader.indexOf("photo_url") !== -1 ? uHeader.indexOf("photo_url") : (uHeader.indexOf("foto_profil") !== -1 ? uHeader.indexOf("foto_profil") : -1);
+      let uPassIdx = uHeader.indexOf("password_hash");
+      if (uPassIdx === -1) uPassIdx = uHeader.indexOf("password");
 
       for (let j = 1; j < uData.length; j++) {
         const uEmail = uEmailIdx !== -1 ? String(uData[j][uEmailIdx] || "").trim().toLowerCase() : "";
@@ -6058,7 +6158,8 @@ function getWaliIdentityByEmail(email) {
             role: "WALI_SANTRI",
             status: status,
             photoUrl: photo,
-            photo_url: photo
+            photo_url: photo,
+            passwordHash: uPassIdx !== -1 ? String(uData[j][uPassIdx] || "") : ""
           };
         }
       }
@@ -6090,6 +6191,8 @@ function getWaliIdentityByPhone(phone) {
       let photoIdx = header.indexOf("photo_url");
       if (photoIdx === -1) photoIdx = header.indexOf("foto_profil");
       if (photoIdx === -1) photoIdx = header.indexOf("foto");
+      let passIdx = header.indexOf("password_hash");
+      if (passIdx === -1) passIdx = header.indexOf("password");
 
       if (idIdx === -1) idIdx = 0;
       if (phoneIdx === -1) phoneIdx = 1;
@@ -6109,7 +6212,8 @@ function getWaliIdentityByPhone(phone) {
             role: String(data[i][roleIdx] || "WALI_SANTRI"),
             status: String(data[i][statusIdx] || "").trim().toUpperCase(),
             photoUrl: rawPhoto,
-            photo_url: rawPhoto
+            photo_url: rawPhoto,
+            passwordHash: passIdx !== -1 ? String(data[i][passIdx] || "") : ""
           };
         }
       }
@@ -6129,6 +6233,8 @@ function getWaliIdentityByPhone(phone) {
       const uRoleIdx = uHeader.indexOf("role");
       const uStatusIdx = uHeader.indexOf("status");
       const uPhotoIdx = uHeader.indexOf("photo_url");
+      let uPassIdx = uHeader.indexOf("password_hash");
+      if (uPassIdx === -1) uPassIdx = uHeader.indexOf("password");
 
       for (let j = 1; j < uData.length; j++) {
         const rowPhone = uPhoneIdx !== -1 ? String(uData[j][uPhoneIdx] || "").replace(/[^0-9]/g, "") : "";
@@ -6143,7 +6249,8 @@ function getWaliIdentityByPhone(phone) {
             role: uRoleIdx !== -1 ? String(uData[j][uRoleIdx] || "WALI_SANTRI") : "WALI_SANTRI",
             status: uStatusIdx !== -1 ? String(uData[j][uStatusIdx] || "").trim().toUpperCase() : "ACTIVE",
             photoUrl: rawPhoto,
-            photo_url: rawPhoto
+            photo_url: rawPhoto,
+            passwordHash: uPassIdx !== -1 ? String(uData[j][uPassIdx] || "") : ""
           };
         }
       }
@@ -6172,6 +6279,8 @@ function getWaliIdentityById(identityId) {
       let photoIdx = header.indexOf("photo_url");
       if (photoIdx === -1) photoIdx = header.indexOf("foto_profil");
       if (photoIdx === -1) photoIdx = header.indexOf("foto");
+      let passIdx = header.indexOf("password_hash");
+      if (passIdx === -1) passIdx = header.indexOf("password");
 
       if (idIdx === -1) idIdx = 0;
       if (phoneIdx === -1) phoneIdx = 1;
@@ -6190,7 +6299,8 @@ function getWaliIdentityById(identityId) {
             role: String(data[i][roleIdx] || "WALI_SANTRI"),
             status: String(data[i][statusIdx] || "").trim().toUpperCase(),
             photoUrl: rawPhoto,
-            photo_url: rawPhoto
+            photo_url: rawPhoto,
+            passwordHash: passIdx !== -1 ? String(data[i][passIdx] || "") : ""
           };
         }
       }
@@ -6210,6 +6320,8 @@ function getWaliIdentityById(identityId) {
       const uRoleIdx = uHeader.indexOf("role");
       const uStatusIdx = uHeader.indexOf("status");
       const uPhotoIdx = uHeader.indexOf("photo_url");
+      let uPassIdx = uHeader.indexOf("password_hash");
+      if (uPassIdx === -1) uPassIdx = uHeader.indexOf("password");
 
       for (let j = 1; j < uData.length; j++) {
         if (String(uData[j][uIdIdx] || "").trim() === targetId) {
@@ -6224,7 +6336,8 @@ function getWaliIdentityById(identityId) {
               role: "WALI_SANTRI",
               status: uStatusIdx !== -1 ? String(uData[j][uStatusIdx] || "").trim().toUpperCase() : "ACTIVE",
               photoUrl: rawPhoto,
-              photo_url: rawPhoto
+              photo_url: rawPhoto,
+              passwordHash: uPassIdx !== -1 ? String(uData[j][uPassIdx] || "") : ""
             };
           }
         }
@@ -6445,6 +6558,8 @@ function getUserIdentityByEmail(email) {
       const roleIdx = header.indexOf("role");
       const photoIdx = header.indexOf("photo_url");
       const statusIdx = header.indexOf("status");
+      let passIdx = header.indexOf("password_hash");
+      if (passIdx === -1) passIdx = header.indexOf("password");
 
       for (let i = 1; i < data.length; i++) {
         if (emailIdx !== -1 && String(data[i][emailIdx] || "").trim().toLowerCase() === normalized) {
@@ -6459,7 +6574,8 @@ function getUserIdentityByEmail(email) {
             role: roleIdx !== -1 ? String(data[i][roleIdx] || "WALI_SANTRI").toUpperCase() : "WALI_SANTRI",
             status: statusIdx !== -1 ? String(data[i][statusIdx] || "").trim().toUpperCase() : "ACTIVE",
             photoUrl: photo,
-            photo_url: photo
+            photo_url: photo,
+            passwordHash: passIdx !== -1 ? String(data[i][passIdx] || "") : ""
           };
         }
       }
@@ -6490,6 +6606,8 @@ function getUserIdentityById(userId) {
       const roleIdx = header.indexOf("role");
       const photoIdx = header.indexOf("photo_url");
       const statusIdx = header.indexOf("status");
+      let passIdx = header.indexOf("password_hash");
+      if (passIdx === -1) passIdx = header.indexOf("password");
 
       for (let i = 1; i < data.length; i++) {
         if (idIdx !== -1 && String(data[i][idIdx] || "").trim().toLowerCase() === targetId) {
@@ -6504,7 +6622,8 @@ function getUserIdentityById(userId) {
             role: roleIdx !== -1 ? String(data[i][roleIdx] || "WALI_SANTRI").toUpperCase() : "WALI_SANTRI",
             status: statusIdx !== -1 ? String(data[i][statusIdx] || "").trim().toUpperCase() : "ACTIVE",
             photoUrl: photo,
-            photo_url: photo
+            photo_url: photo,
+            passwordHash: passIdx !== -1 ? String(data[i][passIdx] || "") : ""
           };
         }
       }
@@ -8259,6 +8378,133 @@ function handleAuthApiAction(action, payload, e) {
 
   try {
     // ----------------------------------------------------
+    // 0A. ADMIN LOGIN WITH PASSWORD / PIN
+    // ----------------------------------------------------
+    if (action === "auth.admin.loginWithPassword") {
+      return withAuthScriptLock(() => {
+        const email = String(payload.email || "").trim().toLowerCase();
+        const password = String(payload.password || "").trim();
+
+        if (!email || !password) {
+          return createJsonResponse({
+            success: false,
+            message: "Email dan Kata Sandi / PIN wajib diisi."
+          });
+        }
+
+        const admin = getAdminIdentityByEmail(email);
+        if (!admin || admin.status !== "ACTIVE") {
+          writeAuthAuditLog("PASSWORD_LOGIN_REJECTED", "ANONYMOUS", "", "PASSWORD", false, requestId, { email: email });
+          return createJsonResponse({
+            success: false,
+            message: "Akun pengelola tidak ditemukan atau dinonaktifkan."
+          });
+        }
+
+        if (!admin.passwordHash) {
+          return createJsonResponse({
+            success: false,
+            requireSetup: true,
+            message: "Akun Anda belum memiliki Kata Sandi / PIN. Silakan masuk via 'Kode OTP' terlebih dahulu untuk membuat sandi baru."
+          });
+        }
+
+        if (!verifyPassword(password, admin.passwordHash)) {
+          writeAuthAuditLog("PASSWORD_LOGIN_FAIL", admin.identityId, "", "PASSWORD", false, requestId, { email: email });
+          return createJsonResponse({
+            success: false,
+            message: "Kata Sandi / PIN yang Anda masukkan salah."
+          });
+        }
+
+        const ttlHours = getSessionTtlHoursForRole(admin.role);
+        const session = createAuthSessionRecord(admin.identityId, admin.role, ttlHours);
+        const tokenData = generateSessionToken(admin.email, admin.role, ttlHours, session.sessionId, admin.identityId);
+
+        writeAuthAuditLog("PASSWORD_LOGIN_SUCCESS", admin.identityId, session.sessionId, "PASSWORD", true, requestId, { role: admin.role });
+
+        return createJsonResponse({
+          success: true,
+          token: tokenData.token,
+          data: {
+            token: tokenData.token,
+            role: admin.role,
+            admin: {
+              identityId: admin.identityId,
+              name: admin.name,
+              email: admin.email,
+              role: admin.role
+            }
+          },
+          identity: {
+            identityId: admin.identityId,
+            name: admin.name,
+            email: admin.email,
+            role: admin.role
+          },
+          requestId: requestId
+        });
+      });
+    }
+
+    // ----------------------------------------------------
+    // 0B. ADMIN SET / UPDATE PASSWORD
+    // ----------------------------------------------------
+    if (action === "auth.admin.setPassword") {
+      return withAuthScriptLock(() => {
+        const password = String(payload.password || "").trim();
+        const email = String(payload.email || "").trim().toLowerCase();
+        const token = payload.token || "";
+
+        if (!password || password.length < 6) {
+          return createJsonResponse({
+            success: false,
+            message: "Kata Sandi / PIN minimal 6 karakter."
+          });
+        }
+
+        let adminId = "";
+        let adminEmail = email;
+
+        if (token) {
+          try {
+            const actor = authenticateSession(token);
+            if (actor && actor.identityId) {
+              adminId = actor.identityId;
+              if (actor.identity && actor.identity.email) adminEmail = actor.identity.email;
+            }
+          } catch (e) {}
+        }
+
+        if (!adminId && adminEmail) {
+          const admin = getAdminIdentityByEmail(adminEmail);
+          if (admin) adminId = admin.identityId;
+        }
+
+        if (!adminId && !adminEmail) {
+          return createJsonResponse({
+            success: false,
+            message: "Identitas akun admin tidak valid untuk perubahan kata sandi."
+          });
+        }
+
+        const success = setUserPasswordHash(adminId || adminEmail, password);
+        if (success) {
+          writeAuthAuditLog("PASSWORD_SET_SUCCESS", adminId, "", "PASSWORD", true, requestId, {});
+          return createJsonResponse({
+            success: true,
+            message: "Kata Sandi / PIN Admin berhasil disimpan."
+          });
+        }
+
+        return createJsonResponse({
+          success: false,
+          message: "Gagal menyimpan Kata Sandi / PIN di database."
+        });
+      });
+    }
+
+    // ----------------------------------------------------
     // 1. ADMIN REQUEST OTP
     // ----------------------------------------------------
     if (action === "auth.admin.requestOtp") {
@@ -8283,7 +8529,7 @@ function handleAuthApiAction(action, payload, e) {
         // Cek challenge pending berumur < 60 detik (cooldown check)
         const pending = findPendingOtpChallenge("EMAIL", idHash);
         if (pending && !pending.isExpired) {
-          const elapsed = (new Date().getTime() - new Date(pending.expiresAt.getTime() - 300000).getTime()) / 1000;
+          const elapsed = (new Date().getTime() - new Date(pending.expiresAt.getTime() - 1800000).getTime()) / 1000;
           if (elapsed < 60) {
             return createJsonResponse({
               success: true,
@@ -8302,7 +8548,7 @@ function handleAuthApiAction(action, payload, e) {
         const otpHash = hashOtpCode(otpCode);
         const challengeId = "CHL_" + Utilities.getUuid().replace(/-/g, "").substring(0, 16);
         const now = new Date();
-        const expiresAt = new Date(now.getTime() + 300000).toISOString();
+        const expiresAt = new Date(now.getTime() + 1800000).toISOString();
 
         const ss = getDatabaseSpreadsheet();
         const otpSheet = getAuthSheet(ss, SHEET_OTP_CHALLENGES);
@@ -8432,6 +8678,151 @@ function handleAuthApiAction(action, payload, e) {
     }
 
     // ----------------------------------------------------
+    // 2B. WALI SANTRI LOGIN WITH PASSWORD / PIN
+    // ----------------------------------------------------
+    if (action === "auth.parent.loginWithPassword" || action === "auth.wali.loginWithPassword") {
+      return withAuthScriptLock(() => {
+        const identifier = String(payload.identifier || payload.email || payload.phone || "").trim();
+        const password = String(payload.password || "").trim();
+
+        if (!identifier || !password) {
+          return createJsonResponse({
+            success: false,
+            message: "Email / No. WhatsApp dan Kata Sandi / PIN wajib diisi."
+          });
+        }
+
+        let wali = null;
+        if (identifier.includes("@")) {
+          wali = getWaliIdentityByEmail(identifier) || getUserIdentityByEmail(identifier);
+        } else {
+          wali = getWaliIdentityByPhone(identifier);
+        }
+
+        if (!wali || (wali.status && !["AKTIF", "ACTIVE"].includes(wali.status.toUpperCase()))) {
+          writeAuthAuditLog("PASSWORD_LOGIN_REJECTED", "ANONYMOUS", "", "PASSWORD", false, requestId, { identifier: identifier });
+          return createJsonResponse({
+            success: false,
+            message: "Akun Wali Santri tidak ditemukan atau belum aktif. Silakan lakukan Aktivasi Akun terlebih dahulu."
+          });
+        }
+
+        if (!wali.passwordHash) {
+          return createJsonResponse({
+            success: false,
+            requireSetup: true,
+            message: "Akun Anda belum memiliki Kata Sandi / PIN. Silakan masuk via 'Kode OTP' atau lakukan Aktivasi Akun untuk membuat kata sandi baru."
+          });
+        }
+
+        if (!verifyPassword(password, wali.passwordHash)) {
+          writeAuthAuditLog("PASSWORD_LOGIN_FAIL", wali.identityId || wali.userId, "", "PASSWORD", false, requestId, { identifier: identifier });
+          return createJsonResponse({
+            success: false,
+            message: "Kata Sandi / PIN yang Anda masukkan salah."
+          });
+        }
+
+        const waliId = wali.identityId || wali.userId;
+        const ttlHours = getSessionTtlHoursForRole("WALI_SANTRI");
+        const session = createAuthSessionRecord(waliId, "WALI_SANTRI", ttlHours);
+        const tokenData = generateSessionToken(wali.email, "WALI_SANTRI", ttlHours, session.sessionId, waliId);
+        const students = getLinkedStudentsForWali(waliId);
+
+        writeAuthAuditLog("PASSWORD_LOGIN_SUCCESS", waliId, session.sessionId, "PASSWORD", true, requestId, { role: "WALI_SANTRI" });
+
+        return createJsonResponse({
+          success: true,
+          token: tokenData.token,
+          data: {
+            token: tokenData.token,
+            role: "WALI_SANTRI",
+            parent: {
+              identityId: waliId,
+              name: wali.name,
+              email: wali.email,
+              phone: wali.phone
+            },
+            students: students
+          },
+          identity: {
+            identityId: waliId,
+            name: wali.name,
+            email: wali.email,
+            phone: wali.phone,
+            role: "WALI_SANTRI"
+          },
+          students: students,
+          requestId: requestId
+        });
+      });
+    }
+
+    // ----------------------------------------------------
+    // 2C. WALI SANTRI SET / UPDATE PASSWORD
+    // ----------------------------------------------------
+    if (action === "auth.parent.setPassword" || action === "auth.wali.setPassword") {
+      return withAuthScriptLock(() => {
+        const password = String(payload.password || "").trim();
+        const identifier = String(payload.identifier || payload.email || payload.phone || "").trim();
+        const token = payload.token || "";
+
+        if (!password || password.length < 6) {
+          return createJsonResponse({
+            success: false,
+            message: "Kata Sandi / PIN minimal 6 karakter."
+          });
+        }
+
+        let waliId = "";
+        let waliEmail = identifier;
+
+        if (token) {
+          try {
+            const actor = authenticateSession(token);
+            if (actor && actor.identityId) {
+              waliId = actor.identityId;
+              if (actor.identity && actor.identity.email) waliEmail = actor.identity.email;
+            }
+          } catch (e) {}
+        }
+
+        if (!waliId && waliEmail) {
+          let wali = null;
+          if (waliEmail.includes("@")) {
+            wali = getWaliIdentityByEmail(waliEmail) || getUserIdentityByEmail(waliEmail);
+          } else {
+            wali = getWaliIdentityByPhone(waliEmail);
+          }
+          if (wali) {
+            waliId = wali.identityId || wali.userId;
+          }
+        }
+
+        if (!waliId && !waliEmail) {
+          return createJsonResponse({
+            success: false,
+            message: "Identitas akun Wali Santri tidak valid untuk perubahan kata sandi."
+          });
+        }
+
+        const success = setUserPasswordHash(waliId || waliEmail, password);
+        if (success) {
+          writeAuthAuditLog("PASSWORD_SET_SUCCESS", waliId, "", "PASSWORD", true, requestId, {});
+          return createJsonResponse({
+            success: true,
+            message: "Kata Sandi / PIN Wali Santri berhasil disimpan."
+          });
+        }
+
+        return createJsonResponse({
+          success: false,
+          message: "Gagal menyimpan Kata Sandi / PIN di database."
+        });
+      });
+    }
+
+    // ----------------------------------------------------
     // 3. WALI REQUEST OTP (Email OTP - Phase 2B)
     // ----------------------------------------------------
     if (action === "auth.parent.requestOtp" || action === "auth.wali.requestOtp") {
@@ -8454,7 +8845,7 @@ function handleAuthApiAction(action, payload, e) {
 
         const pending = findPendingOtpChallenge("EMAIL", idHash);
         if (pending && !pending.isExpired) {
-          const elapsed = (new Date().getTime() - new Date(pending.expiresAt.getTime() - 300000).getTime()) / 1000;
+          const elapsed = (new Date().getTime() - new Date(pending.expiresAt.getTime() - 1800000).getTime()) / 1000;
           if (elapsed < 60) {
             return createJsonResponse({
               success: true,
@@ -8471,7 +8862,7 @@ function handleAuthApiAction(action, payload, e) {
         const otpHash = hashOtpCode(otpCode);
         const challengeId = "CHL_" + Utilities.getUuid().replace(/-/g, "").substring(0, 16);
         const now = new Date();
-        const expiresAt = new Date(now.getTime() + 300000).toISOString();
+        const expiresAt = new Date(now.getTime() + 1800000).toISOString();
 
         const ss = getDatabaseSpreadsheet();
         const otpSheet = getAuthSheet(ss, SHEET_OTP_CHALLENGES);
@@ -8804,7 +9195,7 @@ function handleAuthApiAction(action, payload, e) {
         const idHash = hashIdentifier(waliEmail);
         const pending = findPendingOtpChallenge("EMAIL_ACTIVATION", idHash);
         if (pending && !pending.isExpired) {
-          const elapsed = (new Date().getTime() - new Date(pending.expiresAt.getTime() - 300000).getTime()) / 1000;
+          const elapsed = (new Date().getTime() - new Date(pending.expiresAt.getTime() - 1800000).getTime()) / 1000;
           if (elapsed < 60) {
             return createJsonResponse({
               success: true,
@@ -8821,7 +9212,7 @@ function handleAuthApiAction(action, payload, e) {
         const otpHash = hashOtpCode(otpCode);
         const challengeId = "CHL_" + Utilities.getUuid().replace(/-/g, "").substring(0, 16);
         const now = new Date();
-        const expiresAt = new Date(now.getTime() + 300000).toISOString();
+        const expiresAt = new Date(now.getTime() + 1800000).toISOString();
 
         const ss = getDatabaseSpreadsheet();
         const otpSheet = getAuthSheet(ss, SHEET_OTP_CHALLENGES);
@@ -8853,7 +9244,7 @@ function handleAuthApiAction(action, payload, e) {
             MailApp.sendEmail({
               to: waliEmail,
               subject: "Kode OTP Aktivasi Akun Wali Santri",
-              body: `Assalamu'alaikum,\n\nKode OTP aktivasi akun Anda adalah: ${otpCode}\n\nBerlaku selama 5 menit.\n\nTim Pesantren`
+              body: `Assalamu'alaikum,\n\nKode OTP aktivasi akun Anda adalah: ${otpCode}\n\nBerlaku selama 30 menit.\n\nTim Pesantren`
             });
             emailSuccess = true;
           } catch (mErr2) {
@@ -8902,6 +9293,7 @@ function handleAuthApiAction(action, payload, e) {
         const waliName = String(payload.waliName || "").trim();
         const waliPhone = String(payload.waliPhone || "").trim();
         const relationship = String(payload.relationship || "GUARDIAN").trim().toUpperCase();
+        const newPassword = String(payload.password || "").trim();
 
         if (!nis || !waliEmail || !otp) {
           return createJsonResponse({ success: false, message: "NIS, Email, dan Kode OTP wajib diisi." });
@@ -8998,6 +9390,12 @@ function handleAuthApiAction(action, payload, e) {
           if (!wali.phone && waliPhone) wali.phone = waliPhone;
         }
 
+        // Simpan Kata Sandi / PIN baru jika diset oleh Wali Santri
+        if (newPassword && newPassword.length >= 6) {
+          setUserPasswordHash(wali.userId || wali.identityId, newPassword);
+          wali.passwordHash = hashPassword(newPassword);
+        }
+
         // Pastikan identitas tersinkronisasi penuh ke Wali_Identities
         try {
           syncUserToRoleIdentitySheet(
@@ -9039,7 +9437,7 @@ function handleAuthApiAction(action, payload, e) {
           }
         }
 
-        // Buat Sesi Bounded TTL (P1-1)
+        // Buat Sesi Bounded TTL (Stay Logged In)
         const ttlHours = getSessionTtlHoursForRole("WALI_SANTRI");
         const session = createAuthSessionRecord(wali.userId || wali.identityId, "WALI_SANTRI", ttlHours);
         const tokenData = generateSessionToken(wali.email, "WALI_SANTRI", ttlHours, session.sessionId, wali.userId || wali.identityId);
@@ -9057,7 +9455,7 @@ function handleAuthApiAction(action, payload, e) {
           parent: wali,
           identity: wali,
           students: students,
-          message: `Aktivasi akun berhasil! Anda terhubung dengan santri ${student.name}.`,
+          message: newPassword ? `Aktivasi berhasil & Kata Sandi tersimpan! Anda terhubung dengan santri ${student.name}.` : `Aktivasi akun berhasil! Anda terhubung dengan santri ${student.name}.`,
           requestId: requestId
         });
       });
