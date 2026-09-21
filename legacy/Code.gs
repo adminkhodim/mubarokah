@@ -5011,6 +5011,9 @@ function setupAuthSystemSheets() {
   // 2. Migrasikan akun-akun lama ke sheet Users jika belum ada
   migrateIdentitiesToUsersSheet(ss);
 
+  // 3. Sinkronisasikan akun dari sheet Users ke masing-masing sheet role (Wali_Identities, Admin_Identities, Pengasuh_Identities)
+  syncAllUsersToRoleSheets(ss);
+
   return { status: "success", message: "Tabel autentikasi Phase 2B & Pengasuh terverifikasi dan siap digunakan." };
 }
 
@@ -5214,6 +5217,205 @@ function migrateIdentitiesToUsersSheet(ss) {
     }
   } catch (err) {
     console.error("[MIGRATION TO USERS ERROR]", err);
+  }
+}
+
+/**
+ * Sinkronisasi satu identitas pengguna ke sheet role spesifik
+ * (Wali_Identities, Admin_Identities, atau Pengasuh_Identities)
+ */
+function syncUserToRoleIdentitySheet(ss, userId, email, phone, name, role, status = "ACTIVE", photoUrl = "") {
+  try {
+    if (!ss) ss = getDatabaseSpreadsheet();
+    if (!ss || !userId || !email) return;
+
+    const normalizedRole = String(role || "").trim().toUpperCase();
+    const cleanEmail = String(email || "").trim().toLowerCase();
+    const cleanId = String(userId || "").trim();
+    const cleanStatus = String(status || "ACTIVE").trim().toUpperCase();
+    const cleanName = String(name || "").trim();
+    const cleanPhone = String(phone || "").trim();
+    const nowIso = new Date().toISOString();
+
+    if (normalizedRole === "WALI_SANTRI" || normalizedRole === "PARENT") {
+      const sheet = getAuthSheet(ss, SHEET_WALI_IDENTITIES);
+      if (!sheet) return;
+      const data = sheet.getDataRange().getValues();
+      const headers = data && data.length > 0 ? data[0].map(h => String(h || "").trim().toLowerCase()) : AUTH_SHEET_SCHEMAS[SHEET_WALI_IDENTITIES];
+      let idIdx = headers.indexOf("identity_id");
+      let emailIdx = headers.indexOf("email");
+      let phoneIdx = headers.indexOf("phone");
+      let nameIdx = headers.indexOf("name");
+      let roleIdx = headers.indexOf("role");
+      let statusIdx = headers.indexOf("status");
+      let photoIdx = headers.indexOf("photo_url");
+      if (photoIdx === -1) photoIdx = headers.indexOf("foto_profil");
+      if (photoIdx === -1) photoIdx = headers.indexOf("foto");
+
+      let foundRow = -1;
+      if (data && data.length >= 2) {
+        for (let i = 1; i < data.length; i++) {
+          const rowId = idIdx !== -1 ? String(data[i][idIdx] || "").trim() : "";
+          const rowEmail = emailIdx !== -1 ? String(data[i][emailIdx] || "").trim().toLowerCase() : "";
+          if ((cleanId && rowId === cleanId) || (cleanEmail && rowEmail === cleanEmail)) {
+            foundRow = i + 1;
+            break;
+          }
+        }
+      }
+
+      if (foundRow !== -1) {
+        if (nameIdx !== -1 && cleanName) sheet.getRange(foundRow, nameIdx + 1).setValue(cleanName);
+        if (phoneIdx !== -1 && cleanPhone) sheet.getRange(foundRow, phoneIdx + 1).setValue(cleanPhone);
+        if (emailIdx !== -1 && cleanEmail) sheet.getRange(foundRow, emailIdx + 1).setValue(cleanEmail);
+        if (roleIdx !== -1) sheet.getRange(foundRow, roleIdx + 1).setValue("WALI_SANTRI");
+        if (statusIdx !== -1) sheet.getRange(foundRow, statusIdx + 1).setValue(cleanStatus);
+        if (photoIdx !== -1 && photoUrl) sheet.getRange(foundRow, photoIdx + 1).setValue(photoUrl);
+      } else {
+        // Schema: ["identity_id", "email", "phone", "name", "role", "status", "created_at", "photo_url"]
+        sheet.appendRow([
+          cleanId,
+          cleanEmail,
+          cleanPhone,
+          cleanName || "Wali Santri",
+          "WALI_SANTRI",
+          cleanStatus,
+          nowIso,
+          photoUrl || ""
+        ]);
+      }
+    } else if (normalizedRole === "ADMIN" || normalizedRole === "EDITOR") {
+      const sheet = getAuthSheet(ss, SHEET_ADMIN_IDENTITIES);
+      if (!sheet) return;
+      const data = sheet.getDataRange().getValues();
+      const headers = data && data.length > 0 ? data[0].map(h => String(h || "").trim().toLowerCase()) : AUTH_SHEET_SCHEMAS[SHEET_ADMIN_IDENTITIES];
+      let idIdx = headers.indexOf("identity_id");
+      let emailIdx = headers.indexOf("email");
+      let nameIdx = headers.indexOf("name");
+      let roleIdx = headers.indexOf("role");
+      let statusIdx = headers.indexOf("status");
+      let photoIdx = headers.indexOf("photo_url");
+
+      let foundRow = -1;
+      if (data && data.length >= 2) {
+        for (let i = 1; i < data.length; i++) {
+          const rowId = idIdx !== -1 ? String(data[i][idIdx] || "").trim() : "";
+          const rowEmail = emailIdx !== -1 ? String(data[i][emailIdx] || "").trim().toLowerCase() : "";
+          if ((cleanId && rowId === cleanId) || (cleanEmail && rowEmail === cleanEmail)) {
+            foundRow = i + 1;
+            break;
+          }
+        }
+      }
+
+      if (foundRow !== -1) {
+        if (nameIdx !== -1 && cleanName) sheet.getRange(foundRow, nameIdx + 1).setValue(cleanName);
+        if (emailIdx !== -1 && cleanEmail) sheet.getRange(foundRow, emailIdx + 1).setValue(cleanEmail);
+        if (roleIdx !== -1) sheet.getRange(foundRow, roleIdx + 1).setValue(normalizedRole);
+        if (statusIdx !== -1) sheet.getRange(foundRow, statusIdx + 1).setValue(cleanStatus);
+        if (photoIdx !== -1 && photoUrl) sheet.getRange(foundRow, photoIdx + 1).setValue(photoUrl);
+      } else {
+        // Schema: ["identity_id", "email", "name", "role", "status", "created_at", "photo_url"]
+        sheet.appendRow([
+          cleanId,
+          cleanEmail,
+          cleanName || "Administrator",
+          normalizedRole,
+          cleanStatus,
+          nowIso,
+          photoUrl || ""
+        ]);
+      }
+    } else if (normalizedRole === "PENGASUH") {
+      const sheet = getAuthSheet(ss, SHEET_PENGASUH_IDENTITIES);
+      if (!sheet) return;
+      const data = sheet.getDataRange().getValues();
+      const headers = data && data.length > 0 ? data[0].map(h => String(h || "").trim().toLowerCase()) : AUTH_SHEET_SCHEMAS[SHEET_PENGASUH_IDENTITIES];
+      let idIdx = headers.indexOf("identity_id");
+      let emailIdx = headers.indexOf("email");
+      let phoneIdx = headers.indexOf("phone");
+      let nameIdx = headers.indexOf("title_name");
+      if (nameIdx === -1) nameIdx = headers.indexOf("name");
+      let roleIdx = headers.indexOf("role");
+      let statusIdx = headers.indexOf("status");
+      let photoIdx = headers.indexOf("photo_url");
+
+      let foundRow = -1;
+      if (data && data.length >= 2) {
+        for (let i = 1; i < data.length; i++) {
+          const rowId = idIdx !== -1 ? String(data[i][idIdx] || "").trim() : "";
+          const rowEmail = emailIdx !== -1 ? String(data[i][emailIdx] || "").trim().toLowerCase() : "";
+          if ((cleanId && rowId === cleanId) || (cleanEmail && rowEmail === cleanEmail)) {
+            foundRow = i + 1;
+            break;
+          }
+        }
+      }
+
+      if (foundRow !== -1) {
+        if (nameIdx !== -1 && cleanName) sheet.getRange(foundRow, nameIdx + 1).setValue(cleanName);
+        if (emailIdx !== -1 && cleanEmail) sheet.getRange(foundRow, emailIdx + 1).setValue(cleanEmail);
+        if (phoneIdx !== -1 && cleanPhone) sheet.getRange(foundRow, phoneIdx + 1).setValue(cleanPhone);
+        if (roleIdx !== -1) sheet.getRange(foundRow, roleIdx + 1).setValue("PENGASUH");
+        if (statusIdx !== -1) sheet.getRange(foundRow, statusIdx + 1).setValue(cleanStatus);
+        if (photoIdx !== -1 && photoUrl) sheet.getRange(foundRow, photoIdx + 1).setValue(photoUrl);
+      } else {
+        // Schema: ["identity_id", "email", "phone", "title_name", "role", "status", "created_at", "photo_url"]
+        sheet.appendRow([
+          cleanId,
+          cleanEmail,
+          cleanPhone,
+          cleanName || "Pengasuh",
+          "PENGASUH",
+          cleanStatus,
+          nowIso,
+          photoUrl || ""
+        ]);
+      }
+    }
+  } catch (err) {
+    console.error("[SYNC USER TO ROLE SHEET ERROR]", err);
+  }
+}
+
+/**
+ * Sinkronisasi massal seluruh akun dari sheet Users ke role-based identity sheets
+ */
+function syncAllUsersToRoleSheets(ss) {
+  try {
+    if (!ss) ss = getDatabaseSpreadsheet();
+    if (!ss) return;
+    const usersSheet = getAuthSheet(ss, SHEET_USERS);
+    if (!usersSheet) return;
+
+    const usersData = usersSheet.getDataRange().getValues();
+    if (!usersData || usersData.length < 2) return;
+
+    const uHeaders = usersData[0].map(h => String(h || "").trim().toLowerCase());
+    const idIdx = uHeaders.indexOf("user_id");
+    const emailIdx = uHeaders.indexOf("email");
+    const phoneIdx = uHeaders.indexOf("phone");
+    const nameIdx = uHeaders.indexOf("name");
+    const roleIdx = uHeaders.indexOf("role");
+    const photoIdx = uHeaders.indexOf("photo_url");
+    const statusIdx = uHeaders.indexOf("status");
+
+    for (let i = 1; i < usersData.length; i++) {
+      const id = idIdx !== -1 ? String(usersData[i][idIdx] || "").trim() : "";
+      const email = emailIdx !== -1 ? String(usersData[i][emailIdx] || "").trim().toLowerCase() : "";
+      const phone = phoneIdx !== -1 ? String(usersData[i][phoneIdx] || "").trim() : "";
+      const name = nameIdx !== -1 ? String(usersData[i][nameIdx] || "").trim() : "";
+      const role = roleIdx !== -1 ? String(usersData[i][roleIdx] || "WALI_SANTRI").trim().toUpperCase() : "WALI_SANTRI";
+      const photo = photoIdx !== -1 ? String(usersData[i][photoIdx] || "").trim() : "";
+      const status = statusIdx !== -1 ? String(usersData[i][statusIdx] || "ACTIVE").trim().toUpperCase() : "ACTIVE";
+
+      if (id && email) {
+        syncUserToRoleIdentitySheet(ss, id, email, phone, name, role, status, photo);
+      }
+    }
+    Logger.log("[SYNC ALL USERS] Seluruh akun dari sheet Users tersinkronisasi ke role sheets.");
+  } catch (err) {
+    console.warn("[SYNC ALL USERS WARN]", err);
   }
 }
 
@@ -5588,45 +5790,89 @@ function getAdminIdentityByEmail(email) {
 
   const ss = getDatabaseSpreadsheet();
   const sheet = getAuthSheet(ss, SHEET_ADMIN_IDENTITIES);
-  if (!sheet) return null;
+  if (sheet) {
+    const data = sheet.getDataRange().getValues();
+    if (data && data.length >= 2) {
+      const header = data[0].map(h => String(h || "").trim().toLowerCase());
+      let idIdx = header.indexOf("identity_id");
+      let emailIdx = header.indexOf("email");
+      let nameIdx = header.indexOf("name");
+      let roleIdx = header.indexOf("role");
+      let statusIdx = header.indexOf("status");
+      let createdAtIdx = header.indexOf("created_at");
+      let photoIdx = header.indexOf("photo_url");
+      if (photoIdx === -1) photoIdx = header.indexOf("foto_profil");
+      if (photoIdx === -1) photoIdx = header.indexOf("foto");
 
-  const data = sheet.getDataRange().getValues();
-  if (!data || data.length < 2) return null;
+      if (idIdx === -1) idIdx = 0;
+      if (emailIdx === -1) emailIdx = 1;
+      if (nameIdx === -1) nameIdx = 2;
+      if (roleIdx === -1) roleIdx = 3;
+      if (statusIdx === -1) statusIdx = 4;
+      if (createdAtIdx === -1) createdAtIdx = 5;
 
-  const header = data[0].map(h => String(h || "").trim().toLowerCase());
-  let idIdx = header.indexOf("identity_id");
-  let emailIdx = header.indexOf("email");
-  let nameIdx = header.indexOf("name");
-  let roleIdx = header.indexOf("role");
-  let statusIdx = header.indexOf("status");
-  let createdAtIdx = header.indexOf("created_at");
-  let photoIdx = header.indexOf("photo_url");
-  if (photoIdx === -1) photoIdx = header.indexOf("foto_profil");
-  if (photoIdx === -1) photoIdx = header.indexOf("foto");
-
-  if (idIdx === -1) idIdx = 0;
-  if (emailIdx === -1) emailIdx = 1;
-  if (nameIdx === -1) nameIdx = 2;
-  if (roleIdx === -1) roleIdx = 3;
-  if (statusIdx === -1) statusIdx = 4;
-  if (createdAtIdx === -1) createdAtIdx = 5;
-
-  for (let i = 1; i < data.length; i++) {
-    const rowEmail = String(data[i][emailIdx] || "").trim().toLowerCase();
-    if (rowEmail === normalized) {
-      const rawPhoto = photoIdx !== -1 ? String(data[i][photoIdx] || "").trim() : "";
-      return {
-        identityId: String(data[i][idIdx] || ""),
-        email: String(data[i][emailIdx] || ""),
-        name: String(data[i][nameIdx] || ""),
-        role: String(data[i][roleIdx] || "ADMIN"),
-        status: String(data[i][statusIdx] || "").trim().toUpperCase(),
-        photoUrl: rawPhoto,
-        photo_url: rawPhoto,
-        createdAt: String(data[i][createdAtIdx] || "")
-      };
+      for (let i = 1; i < data.length; i++) {
+        const rowEmail = String(data[i][emailIdx] || "").trim().toLowerCase();
+        if (rowEmail === normalized) {
+          const rawPhoto = photoIdx !== -1 ? String(data[i][photoIdx] || "").trim() : "";
+          return {
+            identityId: String(data[i][idIdx] || ""),
+            email: String(data[i][emailIdx] || ""),
+            name: String(data[i][nameIdx] || ""),
+            role: String(data[i][roleIdx] || "ADMIN"),
+            status: String(data[i][statusIdx] || "").trim().toUpperCase(),
+            photoUrl: rawPhoto,
+            photo_url: rawPhoto,
+            createdAt: String(data[i][createdAtIdx] || "")
+          };
+        }
+      }
     }
   }
+
+  // Fallback: cek ke sheet Users jika akun dibuat via Manajemen Pengguna Admin
+  const usersSheet = getAuthSheet(ss, SHEET_USERS);
+  if (usersSheet) {
+    const uData = usersSheet.getDataRange().getValues();
+    if (uData && uData.length >= 2) {
+      const uHeader = uData[0].map(h => String(h || "").trim().toLowerCase());
+      const uEmailIdx = uHeader.indexOf("email");
+      const uRoleIdx = uHeader.indexOf("role");
+      const uIdIdx = uHeader.indexOf("user_id") !== -1 ? uHeader.indexOf("user_id") : 0;
+      const uNameIdx = uHeader.indexOf("name") !== -1 ? uHeader.indexOf("name") : 3;
+      const uPhoneIdx = uHeader.indexOf("phone") !== -1 ? uHeader.indexOf("phone") : 2;
+      const uStatusIdx = uHeader.indexOf("status") !== -1 ? uHeader.indexOf("status") : 6;
+      const uPhotoIdx = uHeader.indexOf("photo_url") !== -1 ? uHeader.indexOf("photo_url") : (uHeader.indexOf("foto_profil") !== -1 ? uHeader.indexOf("foto_profil") : -1);
+
+      for (let j = 1; j < uData.length; j++) {
+        const uEmail = uEmailIdx !== -1 ? String(uData[j][uEmailIdx] || "").trim().toLowerCase() : "";
+        const uRole = uRoleIdx !== -1 ? String(uData[j][uRoleIdx] || "").trim().toUpperCase() : "";
+        if (uEmail === normalized && (uRole === "ADMIN" || uRole === "EDITOR")) {
+          const id = String(uData[j][uIdIdx] || "");
+          const name = String(uData[j][uNameIdx] || "");
+          const status = String(uData[j][uStatusIdx] || "ACTIVE").trim().toUpperCase();
+          const photo = uPhotoIdx !== -1 ? String(uData[j][uPhotoIdx] || "").trim() : "";
+          const phone = uPhoneIdx !== -1 ? String(uData[j][uPhoneIdx] || "").trim() : "";
+          try {
+            syncUserToRoleIdentitySheet(ss, id, uEmail, phone, name, uRole, status, photo);
+          } catch (e) {
+            console.warn("[SYNC ERROR in getAdminIdentityByEmail]", e);
+          }
+          return {
+            identityId: id,
+            email: uEmail,
+            name: name,
+            role: uRole,
+            status: status,
+            photoUrl: photo,
+            photo_url: photo,
+            createdAt: ""
+          };
+        }
+      }
+    }
+  }
+
   return null;
 }
 
@@ -5636,41 +5882,75 @@ function getAdminIdentityById(identityId) {
 
   const ss = getDatabaseSpreadsheet();
   const sheet = getAuthSheet(ss, SHEET_ADMIN_IDENTITIES);
-  if (!sheet) return null;
+  if (sheet) {
+    const data = sheet.getDataRange().getValues();
+    if (data && data.length >= 2) {
+      const header = data[0].map(h => String(h || "").trim().toLowerCase());
+      let idIdx = header.indexOf("identity_id");
+      let emailIdx = header.indexOf("email");
+      let nameIdx = header.indexOf("name");
+      let roleIdx = header.indexOf("role");
+      let statusIdx = header.indexOf("status");
+      let photoIdx = header.indexOf("photo_url");
+      if (photoIdx === -1) photoIdx = header.indexOf("foto_profil");
+      if (photoIdx === -1) photoIdx = header.indexOf("foto");
 
-  const data = sheet.getDataRange().getValues();
-  if (!data || data.length < 2) return null;
+      if (idIdx === -1) idIdx = 0;
+      if (emailIdx === -1) emailIdx = 1;
+      if (nameIdx === -1) nameIdx = 2;
+      if (roleIdx === -1) roleIdx = 3;
+      if (statusIdx === -1) statusIdx = 4;
 
-  const header = data[0].map(h => String(h || "").trim().toLowerCase());
-  let idIdx = header.indexOf("identity_id");
-  let emailIdx = header.indexOf("email");
-  let nameIdx = header.indexOf("name");
-  let roleIdx = header.indexOf("role");
-  let statusIdx = header.indexOf("status");
-  let photoIdx = header.indexOf("photo_url");
-  if (photoIdx === -1) photoIdx = header.indexOf("foto_profil");
-  if (photoIdx === -1) photoIdx = header.indexOf("foto");
-
-  if (idIdx === -1) idIdx = 0;
-  if (emailIdx === -1) emailIdx = 1;
-  if (nameIdx === -1) nameIdx = 2;
-  if (roleIdx === -1) roleIdx = 3;
-  if (statusIdx === -1) statusIdx = 4;
-
-  for (let i = 1; i < data.length; i++) {
-    if (String(data[i][idIdx] || "").trim() === targetId) {
-      const rawPhoto = photoIdx !== -1 ? String(data[i][photoIdx] || "").trim() : "";
-      return {
-        identityId: String(data[i][idIdx] || ""),
-        email: String(data[i][emailIdx] || ""),
-        name: String(data[i][nameIdx] || ""),
-        role: String(data[i][roleIdx] || "ADMIN"),
-        status: String(data[i][statusIdx] || "").trim().toUpperCase(),
-        photoUrl: rawPhoto,
-        photo_url: rawPhoto
-      };
+      for (let i = 1; i < data.length; i++) {
+        if (String(data[i][idIdx] || "").trim() === targetId) {
+          const rawPhoto = photoIdx !== -1 ? String(data[i][photoIdx] || "").trim() : "";
+          return {
+            identityId: String(data[i][idIdx] || ""),
+            email: String(data[i][emailIdx] || ""),
+            name: String(data[i][nameIdx] || ""),
+            role: String(data[i][roleIdx] || "ADMIN"),
+            status: String(data[i][statusIdx] || "").trim().toUpperCase(),
+            photoUrl: rawPhoto,
+            photo_url: rawPhoto
+          };
+        }
+      }
     }
   }
+
+  // Fallback: cek ke sheet Users
+  const usersSheet = getAuthSheet(ss, SHEET_USERS);
+  if (usersSheet) {
+    const uData = usersSheet.getDataRange().getValues();
+    if (uData && uData.length >= 2) {
+      const uHeader = uData[0].map(h => String(h || "").trim().toLowerCase());
+      const uIdIdx = uHeader.indexOf("user_id") !== -1 ? uHeader.indexOf("user_id") : 0;
+      const uRoleIdx = uHeader.indexOf("role");
+      const uEmailIdx = uHeader.indexOf("email");
+      const uNameIdx = uHeader.indexOf("name");
+      const uStatusIdx = uHeader.indexOf("status");
+      const uPhotoIdx = uHeader.indexOf("photo_url");
+
+      for (let j = 1; j < uData.length; j++) {
+        if (String(uData[j][uIdIdx] || "").trim() === targetId) {
+          const uRole = uRoleIdx !== -1 ? String(uData[j][uRoleIdx] || "").trim().toUpperCase() : "";
+          if (uRole === "ADMIN" || uRole === "EDITOR") {
+            const rawPhoto = uPhotoIdx !== -1 ? String(uData[j][uPhotoIdx] || "").trim() : "";
+            return {
+              identityId: targetId,
+              email: uEmailIdx !== -1 ? String(uData[j][uEmailIdx] || "").trim().toLowerCase() : "",
+              name: uNameIdx !== -1 ? String(uData[j][uNameIdx] || "").trim() : "",
+              role: uRole,
+              status: uStatusIdx !== -1 ? String(uData[j][uStatusIdx] || "").trim().toUpperCase() : "ACTIVE",
+              photoUrl: rawPhoto,
+              photo_url: rawPhoto
+            };
+          }
+        }
+      }
+    }
+  }
+
   return null;
 }
 
@@ -5683,45 +5963,92 @@ function getWaliIdentityByEmail(email) {
 
   const ss = getDatabaseSpreadsheet();
   const sheet = getAuthSheet(ss, SHEET_WALI_IDENTITIES);
-  if (!sheet) return null;
+  if (sheet) {
+    const data = sheet.getDataRange().getValues();
+    if (data && data.length >= 2) {
+      const header = data[0].map(h => String(h || "").trim().toLowerCase());
+      let idIdx = header.indexOf("identity_id");
+      let emailIdx = header.indexOf("email");
+      let phoneIdx = header.indexOf("phone");
+      let nameIdx = header.indexOf("name");
+      let roleIdx = header.indexOf("role");
+      let statusIdx = header.indexOf("status");
+      let photoIdx = header.indexOf("photo_url");
+      if (photoIdx === -1) photoIdx = header.indexOf("foto_profil");
+      if (photoIdx === -1) photoIdx = header.indexOf("foto");
 
-  const data = sheet.getDataRange().getValues();
-  if (!data || data.length < 2) return null;
+      if (idIdx === -1) idIdx = 0;
+      if (emailIdx === -1) emailIdx = 1;
+      if (phoneIdx === -1) phoneIdx = 2;
+      if (nameIdx === -1) nameIdx = 3;
+      if (roleIdx === -1) roleIdx = 4;
+      if (statusIdx === -1) statusIdx = 5;
 
-  const header = data[0].map(h => String(h || "").trim().toLowerCase());
-  let idIdx = header.indexOf("identity_id");
-  let emailIdx = header.indexOf("email");
-  let phoneIdx = header.indexOf("phone");
-  let nameIdx = header.indexOf("name");
-  let roleIdx = header.indexOf("role");
-  let statusIdx = header.indexOf("status");
-  let photoIdx = header.indexOf("photo_url");
-  if (photoIdx === -1) photoIdx = header.indexOf("foto_profil");
-  if (photoIdx === -1) photoIdx = header.indexOf("foto");
-
-  if (idIdx === -1) idIdx = 0;
-  if (emailIdx === -1) emailIdx = 1;
-  if (phoneIdx === -1) phoneIdx = 2;
-  if (nameIdx === -1) nameIdx = 3;
-  if (roleIdx === -1) roleIdx = 4;
-  if (statusIdx === -1) statusIdx = 5;
-
-  for (let i = 1; i < data.length; i++) {
-    const storedEmail = String(data[i][emailIdx] || "").trim().toLowerCase();
-    if (storedEmail === normalized) {
-      const rawPhoto = photoIdx !== -1 ? String(data[i][photoIdx] || "").trim() : "";
-      return {
-        identityId: String(data[i][idIdx] || ""),
-        email: storedEmail,
-        phone: phoneIdx !== -1 ? String(data[i][phoneIdx] || "") : "",
-        name: nameIdx !== -1 ? String(data[i][nameIdx] || "") : "",
-        role: roleIdx !== -1 ? String(data[i][roleIdx] || "WALI_SANTRI") : "WALI_SANTRI",
-        status: statusIdx !== -1 ? String(data[i][statusIdx] || "").trim().toUpperCase() : "ACTIVE",
-        photoUrl: rawPhoto,
-        photo_url: rawPhoto
-      };
+      for (let i = 1; i < data.length; i++) {
+        const storedEmail = String(data[i][emailIdx] || "").trim().toLowerCase();
+        if (storedEmail === normalized) {
+          const rawPhoto = photoIdx !== -1 ? String(data[i][photoIdx] || "").trim() : "";
+          return {
+            identityId: String(data[i][idIdx] || ""),
+            email: storedEmail,
+            phone: phoneIdx !== -1 ? String(data[i][phoneIdx] || "") : "",
+            name: nameIdx !== -1 ? String(data[i][nameIdx] || "") : "",
+            role: roleIdx !== -1 ? String(data[i][roleIdx] || "WALI_SANTRI") : "WALI_SANTRI",
+            status: statusIdx !== -1 ? String(data[i][statusIdx] || "").trim().toUpperCase() : "ACTIVE",
+            photoUrl: rawPhoto,
+            photo_url: rawPhoto
+          };
+        }
+      }
     }
   }
+
+  // Fallback: cek ke sheet Users jika akun dibuat via Manajemen Pengguna Admin
+  const usersSheet = getAuthSheet(ss, SHEET_USERS);
+  if (usersSheet) {
+    const uData = usersSheet.getDataRange().getValues();
+    if (uData && uData.length >= 2) {
+      const uHeader = uData[0].map(h => String(h || "").trim().toLowerCase());
+      const uEmailIdx = uHeader.indexOf("email");
+      const uRoleIdx = uHeader.indexOf("role");
+      const uIdIdx = uHeader.indexOf("user_id") !== -1 ? uHeader.indexOf("user_id") : 0;
+      const uNameIdx = uHeader.indexOf("name") !== -1 ? uHeader.indexOf("name") : 3;
+      const uPhoneIdx = uHeader.indexOf("phone") !== -1 ? uHeader.indexOf("phone") : 2;
+      const uStatusIdx = uHeader.indexOf("status") !== -1 ? uHeader.indexOf("status") : 6;
+      const uPhotoIdx = uHeader.indexOf("photo_url") !== -1 ? uHeader.indexOf("photo_url") : (uHeader.indexOf("foto_profil") !== -1 ? uHeader.indexOf("foto_profil") : -1);
+
+      for (let j = 1; j < uData.length; j++) {
+        const uEmail = uEmailIdx !== -1 ? String(uData[j][uEmailIdx] || "").trim().toLowerCase() : "";
+        const uRole = uRoleIdx !== -1 ? String(uData[j][uRoleIdx] || "").trim().toUpperCase() : "";
+        if (uEmail === normalized && (uRole === "WALI_SANTRI" || uRole === "WALI" || !uRole)) {
+          const id = String(uData[j][uIdIdx] || "");
+          const name = String(uData[j][uNameIdx] || "");
+          const status = String(uData[j][uStatusIdx] || "ACTIVE").trim().toUpperCase();
+          const photo = uPhotoIdx !== -1 ? String(uData[j][uPhotoIdx] || "").trim() : "";
+          const phone = uPhoneIdx !== -1 ? String(uData[j][uPhoneIdx] || "").trim() : "";
+
+          // Auto-sync ke Wali_Identities
+          try {
+            syncUserToRoleIdentitySheet(ss, id, uEmail, phone, name, "WALI_SANTRI", status, photo);
+          } catch (e) {
+            console.warn("[SYNC ERROR in getWaliIdentityByEmail]", e);
+          }
+
+          return {
+            identityId: id,
+            email: uEmail,
+            phone: phone,
+            name: name,
+            role: "WALI_SANTRI",
+            status: status,
+            photoUrl: photo,
+            photo_url: photo
+          };
+        }
+      }
+    }
+  }
+
   return null;
 }
 
@@ -5734,44 +6061,79 @@ function getWaliIdentityByPhone(phone) {
 
   const ss = getDatabaseSpreadsheet();
   const sheet = getAuthSheet(ss, SHEET_WALI_IDENTITIES);
-  if (!sheet) return null;
+  if (sheet) {
+    const data = sheet.getDataRange().getValues();
+    if (data && data.length >= 2) {
+      const header = data[0].map(h => String(h || "").trim().toLowerCase());
+      let idIdx = header.indexOf("identity_id");
+      let emailIdx = header.indexOf("email");
+      let phoneIdx = header.indexOf("phone");
+      let nameIdx = header.indexOf("name");
+      let roleIdx = header.indexOf("role");
+      let statusIdx = header.indexOf("status");
+      let photoIdx = header.indexOf("photo_url");
+      if (photoIdx === -1) photoIdx = header.indexOf("foto_profil");
+      if (photoIdx === -1) photoIdx = header.indexOf("foto");
 
-  const data = sheet.getDataRange().getValues();
-  if (!data || data.length < 2) return null;
+      if (idIdx === -1) idIdx = 0;
+      if (phoneIdx === -1) phoneIdx = 1;
+      if (nameIdx === -1) nameIdx = 2;
+      if (roleIdx === -1) roleIdx = 3;
+      if (statusIdx === -1) statusIdx = 4;
 
-  const header = data[0].map(h => String(h || "").trim().toLowerCase());
-  let idIdx = header.indexOf("identity_id");
-  let emailIdx = header.indexOf("email");
-  let phoneIdx = header.indexOf("phone");
-  let nameIdx = header.indexOf("name");
-  let roleIdx = header.indexOf("role");
-  let statusIdx = header.indexOf("status");
-  let photoIdx = header.indexOf("photo_url");
-  if (photoIdx === -1) photoIdx = header.indexOf("foto_profil");
-  if (photoIdx === -1) photoIdx = header.indexOf("foto");
-
-  if (idIdx === -1) idIdx = 0;
-  if (phoneIdx === -1) phoneIdx = 1;
-  if (nameIdx === -1) nameIdx = 2;
-  if (roleIdx === -1) roleIdx = 3;
-  if (statusIdx === -1) statusIdx = 4;
-
-  for (let i = 1; i < data.length; i++) {
-    const storedPhone = String(data[i][phoneIdx] || "").replace(/[^0-9]/g, "");
-    if (storedPhone === normalized) {
-      const rawPhoto = photoIdx !== -1 ? String(data[i][photoIdx] || "").trim() : "";
-      return {
-        identityId: String(data[i][idIdx] || ""),
-        email: emailIdx !== -1 ? String(data[i][emailIdx] || "").trim().toLowerCase() : "",
-        phone: String(data[i][phoneIdx] || ""),
-        name: String(data[i][nameIdx] || ""),
-        role: String(data[i][roleIdx] || "WALI_SANTRI"),
-        status: String(data[i][statusIdx] || "").trim().toUpperCase(),
-        photoUrl: rawPhoto,
-        photo_url: rawPhoto
-      };
+      for (let i = 1; i < data.length; i++) {
+        const storedPhone = String(data[i][phoneIdx] || "").replace(/[^0-9]/g, "");
+        if (storedPhone === normalized) {
+          const rawPhoto = photoIdx !== -1 ? String(data[i][photoIdx] || "").trim() : "";
+          return {
+            identityId: String(data[i][idIdx] || ""),
+            email: emailIdx !== -1 ? String(data[i][emailIdx] || "").trim().toLowerCase() : "",
+            phone: String(data[i][phoneIdx] || ""),
+            name: String(data[i][nameIdx] || ""),
+            role: String(data[i][roleIdx] || "WALI_SANTRI"),
+            status: String(data[i][statusIdx] || "").trim().toUpperCase(),
+            photoUrl: rawPhoto,
+            photo_url: rawPhoto
+          };
+        }
+      }
     }
   }
+
+  // Fallback ke sheet Users
+  const usersSheet = getAuthSheet(ss, SHEET_USERS);
+  if (usersSheet) {
+    const uData = usersSheet.getDataRange().getValues();
+    if (uData && uData.length >= 2) {
+      const uHeader = uData[0].map(h => String(h || "").trim().toLowerCase());
+      const uPhoneIdx = uHeader.indexOf("phone");
+      const uIdIdx = uHeader.indexOf("user_id") !== -1 ? uHeader.indexOf("user_id") : 0;
+      const uEmailIdx = uHeader.indexOf("email");
+      const uNameIdx = uHeader.indexOf("name");
+      const uRoleIdx = uHeader.indexOf("role");
+      const uStatusIdx = uHeader.indexOf("status");
+      const uPhotoIdx = uHeader.indexOf("photo_url");
+
+      for (let j = 1; j < uData.length; j++) {
+        const rowPhone = uPhoneIdx !== -1 ? String(uData[j][uPhoneIdx] || "").replace(/[^0-9]/g, "") : "";
+        const uNorm = rowPhone.startsWith("62") ? rowPhone : rowPhone.startsWith("0") ? "62" + rowPhone.slice(1) : "62" + rowPhone;
+        if (uNorm === normalized && rowPhone.length > 5) {
+          const rawPhoto = uPhotoIdx !== -1 ? String(uData[j][uPhotoIdx] || "").trim() : "";
+          return {
+            identityId: String(uData[j][uIdIdx] || ""),
+            email: uEmailIdx !== -1 ? String(uData[j][uEmailIdx] || "").trim().toLowerCase() : "",
+            phone: String(uData[j][uPhoneIdx] || ""),
+            name: uNameIdx !== -1 ? String(uData[j][uNameIdx] || "") : "",
+            role: uRoleIdx !== -1 ? String(uData[j][uRoleIdx] || "WALI_SANTRI") : "WALI_SANTRI",
+            status: uStatusIdx !== -1 ? String(uData[j][uStatusIdx] || "").trim().toUpperCase() : "ACTIVE",
+            photoUrl: rawPhoto,
+            photo_url: rawPhoto
+          };
+        }
+      }
+    }
+  }
+
   return null;
 }
 
@@ -5781,43 +6143,79 @@ function getWaliIdentityById(identityId) {
 
   const ss = getDatabaseSpreadsheet();
   const sheet = getAuthSheet(ss, SHEET_WALI_IDENTITIES);
-  if (!sheet) return null;
+  if (sheet) {
+    const data = sheet.getDataRange().getValues();
+    if (data && data.length >= 2) {
+      const header = data[0].map(h => String(h || "").trim().toLowerCase());
+      let idIdx = header.indexOf("identity_id");
+      let emailIdx = header.indexOf("email");
+      let phoneIdx = header.indexOf("phone");
+      let nameIdx = header.indexOf("name");
+      let roleIdx = header.indexOf("role");
+      let statusIdx = header.indexOf("status");
+      let photoIdx = header.indexOf("photo_url");
+      if (photoIdx === -1) photoIdx = header.indexOf("foto_profil");
+      if (photoIdx === -1) photoIdx = header.indexOf("foto");
 
-  const data = sheet.getDataRange().getValues();
-  if (!data || data.length < 2) return null;
+      if (idIdx === -1) idIdx = 0;
+      if (phoneIdx === -1) phoneIdx = 1;
+      if (nameIdx === -1) nameIdx = 2;
+      if (roleIdx === -1) roleIdx = 3;
+      if (statusIdx === -1) statusIdx = 4;
 
-  const header = data[0].map(h => String(h || "").trim().toLowerCase());
-  let idIdx = header.indexOf("identity_id");
-  let emailIdx = header.indexOf("email");
-  let phoneIdx = header.indexOf("phone");
-  let nameIdx = header.indexOf("name");
-  let roleIdx = header.indexOf("role");
-  let statusIdx = header.indexOf("status");
-  let photoIdx = header.indexOf("photo_url");
-  if (photoIdx === -1) photoIdx = header.indexOf("foto_profil");
-  if (photoIdx === -1) photoIdx = header.indexOf("foto");
-
-  if (idIdx === -1) idIdx = 0;
-  if (phoneIdx === -1) phoneIdx = 1;
-  if (nameIdx === -1) nameIdx = 2;
-  if (roleIdx === -1) roleIdx = 3;
-  if (statusIdx === -1) statusIdx = 4;
-
-  for (let i = 1; i < data.length; i++) {
-    if (String(data[i][idIdx] || "").trim() === targetId) {
-      const rawPhoto = photoIdx !== -1 ? String(data[i][photoIdx] || "").trim() : "";
-      return {
-        identityId: String(data[i][idIdx] || ""),
-        email: emailIdx !== -1 ? String(data[i][emailIdx] || "").trim().toLowerCase() : "",
-        phone: String(data[i][phoneIdx] || ""),
-        name: String(data[i][nameIdx] || ""),
-        role: String(data[i][roleIdx] || "WALI_SANTRI"),
-        status: String(data[i][statusIdx] || "").trim().toUpperCase(),
-        photoUrl: rawPhoto,
-        photo_url: rawPhoto
-      };
+      for (let i = 1; i < data.length; i++) {
+        if (String(data[i][idIdx] || "").trim() === targetId) {
+          const rawPhoto = photoIdx !== -1 ? String(data[i][photoIdx] || "").trim() : "";
+          return {
+            identityId: String(data[i][idIdx] || ""),
+            email: emailIdx !== -1 ? String(data[i][emailIdx] || "").trim().toLowerCase() : "",
+            phone: String(data[i][phoneIdx] || ""),
+            name: String(data[i][nameIdx] || ""),
+            role: String(data[i][roleIdx] || "WALI_SANTRI"),
+            status: String(data[i][statusIdx] || "").trim().toUpperCase(),
+            photoUrl: rawPhoto,
+            photo_url: rawPhoto
+          };
+        }
+      }
     }
   }
+
+  // Fallback: cek ke sheet Users
+  const usersSheet = getAuthSheet(ss, SHEET_USERS);
+  if (usersSheet) {
+    const uData = usersSheet.getDataRange().getValues();
+    if (uData && uData.length >= 2) {
+      const uHeader = uData[0].map(h => String(h || "").trim().toLowerCase());
+      const uIdIdx = uHeader.indexOf("user_id") !== -1 ? uHeader.indexOf("user_id") : 0;
+      const uEmailIdx = uHeader.indexOf("email");
+      const uPhoneIdx = uHeader.indexOf("phone");
+      const uNameIdx = uHeader.indexOf("name");
+      const uRoleIdx = uHeader.indexOf("role");
+      const uStatusIdx = uHeader.indexOf("status");
+      const uPhotoIdx = uHeader.indexOf("photo_url");
+
+      for (let j = 1; j < uData.length; j++) {
+        if (String(uData[j][uIdIdx] || "").trim() === targetId) {
+          const uRole = uRoleIdx !== -1 ? String(uData[j][uRoleIdx] || "").trim().toUpperCase() : "";
+          if (uRole === "WALI_SANTRI" || uRole === "WALI" || !uRole) {
+            const rawPhoto = uPhotoIdx !== -1 ? String(uData[j][uPhotoIdx] || "").trim() : "";
+            return {
+              identityId: targetId,
+              email: uEmailIdx !== -1 ? String(uData[j][uEmailIdx] || "").trim().toLowerCase() : "",
+              phone: uPhoneIdx !== -1 ? String(uData[j][uPhoneIdx] || "") : "",
+              name: uNameIdx !== -1 ? String(uData[j][uNameIdx] || "") : "",
+              role: "WALI_SANTRI",
+              status: uStatusIdx !== -1 ? String(uData[j][uStatusIdx] || "").trim().toUpperCase() : "ACTIVE",
+              photoUrl: rawPhoto,
+              photo_url: rawPhoto
+            };
+          }
+        }
+      }
+    }
+  }
+
   return null;
 }
 
@@ -5830,47 +6228,95 @@ function getPengasuhIdentityByEmail(email) {
 
   const ss = getDatabaseSpreadsheet();
   const sheet = getAuthSheet(ss, SHEET_PENGASUH_IDENTITIES);
-  if (!sheet) return null;
+  if (sheet) {
+    const data = sheet.getDataRange().getValues();
+    if (data && data.length >= 2) {
+      const header = data[0].map(h => String(h || "").trim().toLowerCase());
+      let idIdx = header.indexOf("identity_id");
+      let emailIdx = header.indexOf("email");
+      let phoneIdx = header.indexOf("phone");
+      let nameIdx = header.indexOf("title_name");
+      if (nameIdx === -1) nameIdx = header.indexOf("name");
+      let roleIdx = header.indexOf("role");
+      let statusIdx = header.indexOf("status");
+      let photoIdx = header.indexOf("photo_url");
+      if (photoIdx === -1) photoIdx = header.indexOf("foto_profil");
+      if (photoIdx === -1) photoIdx = header.indexOf("foto");
 
-  const data = sheet.getDataRange().getValues();
-  if (!data || data.length < 2) return null;
+      if (idIdx === -1) idIdx = 0;
+      if (emailIdx === -1) emailIdx = 1;
+      if (phoneIdx === -1) phoneIdx = 2;
+      if (nameIdx === -1) nameIdx = 3;
+      if (roleIdx === -1) roleIdx = 4;
+      if (statusIdx === -1) statusIdx = 5;
 
-  const header = data[0].map(h => String(h || "").trim().toLowerCase());
-  let idIdx = header.indexOf("identity_id");
-  let emailIdx = header.indexOf("email");
-  let phoneIdx = header.indexOf("phone");
-  let nameIdx = header.indexOf("title_name");
-  if (nameIdx === -1) nameIdx = header.indexOf("name");
-  let roleIdx = header.indexOf("role");
-  let statusIdx = header.indexOf("status");
-  let photoIdx = header.indexOf("photo_url");
-  if (photoIdx === -1) photoIdx = header.indexOf("foto_profil");
-  if (photoIdx === -1) photoIdx = header.indexOf("foto");
-
-  if (idIdx === -1) idIdx = 0;
-  if (emailIdx === -1) emailIdx = 1;
-  if (phoneIdx === -1) phoneIdx = 2;
-  if (nameIdx === -1) nameIdx = 3;
-  if (roleIdx === -1) roleIdx = 4;
-  if (statusIdx === -1) statusIdx = 5;
-
-  for (let i = 1; i < data.length; i++) {
-    const storedEmail = String(data[i][emailIdx] || "").trim().toLowerCase();
-    if (storedEmail === normalized) {
-      const rawPhoto = photoIdx !== -1 ? String(data[i][photoIdx] || "").trim() : "";
-      return {
-        identityId: String(data[i][idIdx] || ""),
-        email: storedEmail,
-        phone: phoneIdx !== -1 ? String(data[i][phoneIdx] || "") : "",
-        name: nameIdx !== -1 ? String(data[i][nameIdx] || "") : "Pengasuh",
-        titleName: nameIdx !== -1 ? String(data[i][nameIdx] || "") : "Pengasuh",
-        role: roleIdx !== -1 ? String(data[i][roleIdx] || "PENGASUH") : "PENGASUH",
-        status: statusIdx !== -1 ? String(data[i][statusIdx] || "").trim().toUpperCase() : "ACTIVE",
-        photoUrl: rawPhoto,
-        photo_url: rawPhoto
-      };
+      for (let i = 1; i < data.length; i++) {
+        const storedEmail = String(data[i][emailIdx] || "").trim().toLowerCase();
+        if (storedEmail === normalized) {
+          const rawPhoto = photoIdx !== -1 ? String(data[i][photoIdx] || "").trim() : "";
+          return {
+            identityId: String(data[i][idIdx] || ""),
+            email: storedEmail,
+            phone: phoneIdx !== -1 ? String(data[i][phoneIdx] || "") : "",
+            name: nameIdx !== -1 ? String(data[i][nameIdx] || "") : "Pengasuh",
+            titleName: nameIdx !== -1 ? String(data[i][nameIdx] || "") : "Pengasuh",
+            role: roleIdx !== -1 ? String(data[i][roleIdx] || "PENGASUH") : "PENGASUH",
+            status: statusIdx !== -1 ? String(data[i][statusIdx] || "").trim().toUpperCase() : "ACTIVE",
+            photoUrl: rawPhoto,
+            photo_url: rawPhoto
+          };
+        }
+      }
     }
   }
+
+  // Fallback: cek ke sheet Users jika belum ada di Pengasuh_Identities
+  const usersSheet = getAuthSheet(ss, SHEET_USERS);
+  if (usersSheet) {
+    const uData = usersSheet.getDataRange().getValues();
+    if (uData && uData.length >= 2) {
+      const uHeader = uData[0].map(h => String(h || "").trim().toLowerCase());
+      const uEmailIdx = uHeader.indexOf("email");
+      const uRoleIdx = uHeader.indexOf("role");
+      const uIdIdx = uHeader.indexOf("user_id") !== -1 ? uHeader.indexOf("user_id") : 0;
+      const uNameIdx = uHeader.indexOf("name") !== -1 ? uHeader.indexOf("name") : 3;
+      const uPhoneIdx = uHeader.indexOf("phone") !== -1 ? uHeader.indexOf("phone") : 2;
+      const uStatusIdx = uHeader.indexOf("status") !== -1 ? uHeader.indexOf("status") : 6;
+      const uPhotoIdx = uHeader.indexOf("photo_url") !== -1 ? uHeader.indexOf("photo_url") : (uHeader.indexOf("foto_profil") !== -1 ? uHeader.indexOf("foto_profil") : -1);
+
+      for (let j = 1; j < uData.length; j++) {
+        const uEmail = uEmailIdx !== -1 ? String(uData[j][uEmailIdx] || "").trim().toLowerCase() : "";
+        const uRole = uRoleIdx !== -1 ? String(uData[j][uRoleIdx] || "").trim().toUpperCase() : "";
+        if (uEmail === normalized && uRole === "PENGASUH") {
+          const id = String(uData[j][uIdIdx] || "");
+          const name = String(uData[j][uNameIdx] || "");
+          const status = String(uData[j][uStatusIdx] || "ACTIVE").trim().toUpperCase();
+          const photo = uPhotoIdx !== -1 ? String(uData[j][uPhotoIdx] || "").trim() : "";
+          const phone = uPhoneIdx !== -1 ? String(uData[j][uPhoneIdx] || "").trim() : "";
+
+          // Auto-sync ke Pengasuh_Identities
+          try {
+            syncUserToRoleIdentitySheet(ss, id, uEmail, phone, name, "PENGASUH", status, photo);
+          } catch (e) {
+            console.warn("[SYNC ERROR in getPengasuhIdentityByEmail]", e);
+          }
+
+          return {
+            identityId: id,
+            email: uEmail,
+            phone: phone,
+            name: name || "Pengasuh",
+            titleName: name || "Pengasuh",
+            role: "PENGASUH",
+            status: status,
+            photoUrl: photo,
+            photo_url: photo
+          };
+        }
+      }
+    }
+  }
+
   return null;
 }
 
@@ -5883,46 +6329,83 @@ function getPengasuhIdentityById(identityId) {
 
   const ss = getDatabaseSpreadsheet();
   const sheet = getAuthSheet(ss, SHEET_PENGASUH_IDENTITIES);
-  if (!sheet) return null;
+  if (sheet) {
+    const data = sheet.getDataRange().getValues();
+    if (data && data.length >= 2) {
+      const header = data[0].map(h => String(h || "").trim().toLowerCase());
+      let idIdx = header.indexOf("identity_id");
+      let emailIdx = header.indexOf("email");
+      let phoneIdx = header.indexOf("phone");
+      let nameIdx = header.indexOf("title_name");
+      if (nameIdx === -1) nameIdx = header.indexOf("name");
+      let roleIdx = header.indexOf("role");
+      let statusIdx = header.indexOf("status");
+      let photoIdx = header.indexOf("photo_url");
+      if (photoIdx === -1) photoIdx = header.indexOf("foto_profil");
+      if (photoIdx === -1) photoIdx = header.indexOf("foto");
 
-  const data = sheet.getDataRange().getValues();
-  if (!data || data.length < 2) return null;
+      if (idIdx === -1) idIdx = 0;
+      if (emailIdx === -1) emailIdx = 1;
+      if (phoneIdx === -1) phoneIdx = 2;
+      if (nameIdx === -1) nameIdx = 3;
+      if (roleIdx === -1) roleIdx = 4;
+      if (statusIdx === -1) statusIdx = 5;
 
-  const header = data[0].map(h => String(h || "").trim().toLowerCase());
-  let idIdx = header.indexOf("identity_id");
-  let emailIdx = header.indexOf("email");
-  let phoneIdx = header.indexOf("phone");
-  let nameIdx = header.indexOf("title_name");
-  if (nameIdx === -1) nameIdx = header.indexOf("name");
-  let roleIdx = header.indexOf("role");
-  let statusIdx = header.indexOf("status");
-  let photoIdx = header.indexOf("photo_url");
-  if (photoIdx === -1) photoIdx = header.indexOf("foto_profil");
-  if (photoIdx === -1) photoIdx = header.indexOf("foto");
-
-  if (idIdx === -1) idIdx = 0;
-  if (emailIdx === -1) emailIdx = 1;
-  if (phoneIdx === -1) phoneIdx = 2;
-  if (nameIdx === -1) nameIdx = 3;
-  if (roleIdx === -1) roleIdx = 4;
-  if (statusIdx === -1) statusIdx = 5;
-
-  for (let i = 1; i < data.length; i++) {
-    if (String(data[i][idIdx] || "").trim() === targetId) {
-      const rawPhoto = photoIdx !== -1 ? String(data[i][photoIdx] || "").trim() : "";
-      return {
-        identityId: String(data[i][idIdx] || ""),
-        email: emailIdx !== -1 ? String(data[i][emailIdx] || "").trim().toLowerCase() : "",
-        phone: phoneIdx !== -1 ? String(data[i][phoneIdx] || "") : "",
-        name: nameIdx !== -1 ? String(data[i][nameIdx] || "") : "Pengasuh",
-        titleName: nameIdx !== -1 ? String(data[i][nameIdx] || "") : "Pengasuh",
-        role: roleIdx !== -1 ? String(data[i][roleIdx] || "PENGASUH") : "PENGASUH",
-        status: statusIdx !== -1 ? String(data[i][statusIdx] || "").trim().toUpperCase() : "ACTIVE",
-        photoUrl: rawPhoto,
-        photo_url: rawPhoto
-      };
+      for (let i = 1; i < data.length; i++) {
+        if (String(data[i][idIdx] || "").trim() === targetId) {
+          const rawPhoto = photoIdx !== -1 ? String(data[i][photoIdx] || "").trim() : "";
+          return {
+            identityId: String(data[i][idIdx] || ""),
+            email: emailIdx !== -1 ? String(data[i][emailIdx] || "").trim().toLowerCase() : "",
+            phone: phoneIdx !== -1 ? String(data[i][phoneIdx] || "") : "",
+            name: nameIdx !== -1 ? String(data[i][nameIdx] || "") : "Pengasuh",
+            titleName: nameIdx !== -1 ? String(data[i][nameIdx] || "") : "Pengasuh",
+            role: roleIdx !== -1 ? String(data[i][roleIdx] || "PENGASUH") : "PENGASUH",
+            status: statusIdx !== -1 ? String(data[i][statusIdx] || "").trim().toUpperCase() : "ACTIVE",
+            photoUrl: rawPhoto,
+            photo_url: rawPhoto
+          };
+        }
+      }
     }
   }
+
+  // Fallback: cek ke sheet Users
+  const usersSheet = getAuthSheet(ss, SHEET_USERS);
+  if (usersSheet) {
+    const uData = usersSheet.getDataRange().getValues();
+    if (uData && uData.length >= 2) {
+      const uHeader = uData[0].map(h => String(h || "").trim().toLowerCase());
+      const uIdIdx = uHeader.indexOf("user_id") !== -1 ? uHeader.indexOf("user_id") : 0;
+      const uEmailIdx = uHeader.indexOf("email");
+      const uPhoneIdx = uHeader.indexOf("phone");
+      const uNameIdx = uHeader.indexOf("name");
+      const uRoleIdx = uHeader.indexOf("role");
+      const uStatusIdx = uHeader.indexOf("status");
+      const uPhotoIdx = uHeader.indexOf("photo_url");
+
+      for (let j = 1; j < uData.length; j++) {
+        if (String(uData[j][uIdIdx] || "").trim() === targetId) {
+          const uRole = uRoleIdx !== -1 ? String(uData[j][uRoleIdx] || "").trim().toUpperCase() : "";
+          if (uRole === "PENGASUH") {
+            const rawPhoto = uPhotoIdx !== -1 ? String(uData[j][uPhotoIdx] || "").trim() : "";
+            return {
+              identityId: targetId,
+              email: uEmailIdx !== -1 ? String(uData[j][uEmailIdx] || "").trim().toLowerCase() : "",
+              phone: uPhoneIdx !== -1 ? String(uData[j][uPhoneIdx] || "") : "",
+              name: uNameIdx !== -1 ? String(uData[j][uNameIdx] || "") : "Pengasuh",
+              titleName: uNameIdx !== -1 ? String(uData[j][uNameIdx] || "") : "Pengasuh",
+              role: "PENGASUH",
+              status: uStatusIdx !== -1 ? String(uData[j][uStatusIdx] || "").trim().toUpperCase() : "ACTIVE",
+              photoUrl: rawPhoto,
+              photo_url: rawPhoto
+            };
+          }
+        }
+      }
+    }
+  }
+
   return null;
 }
 
@@ -6650,6 +7133,13 @@ function saveAdminUserData(payload, token) {
       }
     }
 
+    // Sinkronisasi otomatis ke role identity sheet terkait (Wali_Identities, Admin_Identities, Pengasuh_Identities)
+    try {
+      syncUserToRoleIdentitySheet(ss, actualUserId, email, phone, name, role, status, userData.photoUrl || "");
+    } catch (syncErr) {
+      console.warn("[SYNC ERROR in saveAdminUserData]", syncErr);
+    }
+
     return {
       success: true,
       status: "success",
@@ -6692,12 +7182,29 @@ function toggleUserStatus(payload, token) {
     const uHeaders = data[0].map(h => String(h || "").trim().toLowerCase());
     const idIdx = uHeaders.indexOf("user_id");
     const statusIdx = uHeaders.indexOf("status");
+    const emailIdx = uHeaders.indexOf("email");
+    const phoneIdx = uHeaders.indexOf("phone");
+    const nameIdx = uHeaders.indexOf("name");
+    const roleIdx = uHeaders.indexOf("role");
+    const photoIdx = uHeaders.indexOf("photo_url");
 
     for (let i = 1; i < data.length; i++) {
       if (idIdx !== -1 && String(data[i][idIdx] || "").trim() === userId) {
         const currentStatus = statusIdx !== -1 ? String(data[i][statusIdx] || "").trim().toUpperCase() : "ACTIVE";
         const newStatus = currentStatus === "ACTIVE" ? "SUSPENDED" : "ACTIVE";
         usersSheet.getRange(i + 1, statusIdx + 1).setValue(newStatus);
+
+        const email = emailIdx !== -1 ? String(data[i][emailIdx] || "").trim() : "";
+        const phone = phoneIdx !== -1 ? String(data[i][phoneIdx] || "").trim() : "";
+        const name = nameIdx !== -1 ? String(data[i][nameIdx] || "").trim() : "";
+        const role = roleIdx !== -1 ? String(data[i][roleIdx] || "").trim() : "";
+        const photo = photoIdx !== -1 ? String(data[i][photoIdx] || "").trim() : "";
+        try {
+          syncUserToRoleIdentitySheet(ss, userId, email, phone, name, role, newStatus, photo);
+        } catch (syncErr) {
+          console.warn("[SYNC ERROR in toggleUserStatus]", syncErr);
+        }
+
         return {
           success: true,
           status: "success",
@@ -6710,6 +7217,34 @@ function toggleUserStatus(payload, token) {
     return { success: false, message: "Pengguna tidak ditemukan." };
   } catch (err) {
     return { success: false, message: "Gagal mengubah status: " + err.message };
+  }
+}
+
+/**
+ * Sinkronisasi manual seluruh data sheet Users ke sheet role identitas
+ */
+function adminSyncAllRoleSheets(token) {
+  try {
+    if (token) {
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "EDITOR"]);
+      } catch (authErr) {
+        verifySessionToken(token);
+      }
+    }
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) return { success: false, message: "Spreadsheet database tidak dapat diakses." };
+    setupAuthSystemSheets();
+    const result = syncAllUsersToRoleSheets(ss);
+    return {
+      success: true,
+      status: "success",
+      message: "Seluruh identitas pengguna berhasil disinkronkan ke sheet Wali_Identities, Admin_Identities, dan Pengasuh_Identities.",
+      details: result
+    };
+  } catch (e) {
+    return { success: false, status: "error", message: "Gagal menyinkronkan data: " + e.message };
   }
 }
 
@@ -8447,6 +8982,22 @@ function handleAuthApiAction(action, payload, e) {
           if (!wali.phone && waliPhone) wali.phone = waliPhone;
         }
 
+        // Pastikan identitas tersinkronisasi penuh ke Wali_Identities
+        try {
+          syncUserToRoleIdentitySheet(
+            ss,
+            wali.userId || wali.identityId,
+            waliEmail,
+            wali.phone || waliPhone,
+            wali.name || waliName,
+            "WALI_SANTRI",
+            wali.status || "ACTIVE",
+            wali.photoUrl || wali.photo_url || ""
+          );
+        } catch (syncErr) {
+          console.warn("[SYNC ERROR in verifyActivation]", syncErr);
+        }
+
         // Cek / Hubungkan santri di Wali_Santri_Map
         const mapSheet = getAuthSheet(ss, SHEET_WALI_SANTRI_MAP);
         let alreadyMapped = false;
@@ -8545,6 +9096,11 @@ function handleAuthApiAction(action, payload, e) {
     if (action === "auth.admin.userToggleStatus" || action === "admin.users.toggleStatus" || action === "admin.userToggleStatus") {
       const token = payload.token || (payload.data && payload.data.token) || "";
       return createJsonResponse(toggleUserStatus(payload.data || payload, token));
+    }
+
+    if (action === "auth.admin.syncRoleSheets" || action === "admin.syncRoleSheets" || action === "admin.users.syncSheets") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(adminSyncAllRoleSheets(token));
     }
 
     // ----------------------------------------------------

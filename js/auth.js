@@ -943,9 +943,9 @@ const ASNIdentity = {
 
                     <!-- Header Kartu: Logo Brand di Kiri, QR NIS Minimalis Seukuran Logo di Kanan -->
                     <div class="flex items-center justify-between relative z-10">
-                        <div class="flex items-center space-x-2">
-                            <div class="h-7 sm:h-8 px-2 flex items-center bg-white/10 rounded text-[10px] font-bold text-white uppercase tracking-wider">Mubarokah</div>
-                            <div class="leading-none pl-1.5">
+                        <div class="flex items-center space-x-2.5">
+                            <img src="assets/img/header-logo.png" alt="PP. Roudlotul Mubarokah" class="h-7 sm:h-8 w-auto object-contain drop-shadow-sm">
+                            <div class="leading-none pl-2 border-l border-emerald-400/30">
                                 <span class="text-[9px] font-extrabold text-amber-300 tracking-wider block uppercase">KTS Digital</span>
                                 <span class="text-[8px] text-emerald-200/80 block">Madrasah & Tahfidz</span>
                             </div>
@@ -1416,6 +1416,11 @@ function closeAdminAuthModal() {
     const content = document.getElementById('modal-auth-admin-content');
     if (!modal || !content) return;
 
+    if (adminOtpCooldownTimer) {
+        clearInterval(adminOtpCooldownTimer);
+        adminOtpCooldownTimer = null;
+    }
+
     content.classList.add('scale-95', 'opacity-0');
     setTimeout(() => {
         modal.classList.add('hidden');
@@ -1428,6 +1433,17 @@ function closeAdminAuthModal() {
 }
 
 function resetAdminAuthStep() {
+    if (adminOtpCooldownTimer) {
+        clearInterval(adminOtpCooldownTimer);
+        adminOtpCooldownTimer = null;
+    }
+    adminOtpCooldownSeconds = 0;
+    const cooldownEl = document.getElementById('admin-otp-cooldown');
+    if (cooldownEl) {
+        cooldownEl.className = 'text-slate-400';
+        cooldownEl.innerHTML = 'Kirim ulang dalam 60s';
+    }
+
     const formReq = document.getElementById('form-admin-request-otp');
     const formVer = document.getElementById('form-admin-verify-otp');
     const alertBox = document.getElementById('admin-auth-alert');
@@ -1438,6 +1454,84 @@ function resetAdminAuthStep() {
 
     const otpInput = document.getElementById('admin-auth-otp');
     if (otpInput) otpInput.value = '';
+}
+
+// Admin OTP Cooldown & Resend Controller
+let adminOtpCooldownTimer = null;
+let adminOtpCooldownSeconds = 0;
+
+function startAdminOtpCooldown(seconds = 60) {
+    if (adminOtpCooldownTimer) {
+        clearInterval(adminOtpCooldownTimer);
+        adminOtpCooldownTimer = null;
+    }
+    adminOtpCooldownSeconds = seconds;
+    renderAdminOtpCooldown();
+
+    adminOtpCooldownTimer = setInterval(() => {
+        adminOtpCooldownSeconds--;
+        if (adminOtpCooldownSeconds <= 0) {
+            clearInterval(adminOtpCooldownTimer);
+            adminOtpCooldownTimer = null;
+            renderAdminOtpCooldown();
+        } else {
+            renderAdminOtpCooldown();
+        }
+    }, 1000);
+}
+
+function renderAdminOtpCooldown() {
+    const el = document.getElementById('admin-otp-cooldown');
+    if (!el) return;
+    if (adminOtpCooldownSeconds > 0) {
+        el.className = 'text-slate-400';
+        el.innerHTML = `Kirim ulang dalam ${adminOtpCooldownSeconds}s`;
+    } else {
+        el.className = 'text-brand-700 dark:text-emerald-400 font-semibold';
+        el.innerHTML = `<button type="button" onclick="handleAdminResendOtp()" class="hover:underline">Kirim ulang OTP</button>`;
+    }
+}
+
+async function handleAdminResendOtp() {
+    const email = sessionStorage.getItem(ASN_STORAGE_KEYS.TEMP_ADMIN_EMAIL);
+    if (!email) {
+        resetAdminAuthStep();
+        return;
+    }
+
+    const el = document.getElementById('admin-otp-cooldown');
+    if (el) {
+        el.className = 'text-slate-400';
+        el.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i>Mengirim...`;
+    }
+
+    const alertBox = document.getElementById('admin-auth-alert');
+    const alertText = document.getElementById('admin-auth-alert-text');
+    if (alertBox) alertBox.classList.add('hidden');
+
+    try {
+        const result = await ASNAuthAPI.requestAdminOtp(email);
+        if (result.success) {
+            if (typeof showToast === 'function') {
+                showToast('Kode OTP baru telah dikirimkan.');
+            }
+            startAdminOtpCooldown(result.cooldownSeconds || 60);
+        } else {
+            if (alertBox && alertText) {
+                alertText.innerText = result.message || 'Gagal mengirim ulang OTP.';
+                alertBox.classList.remove('hidden');
+            }
+            adminOtpCooldownSeconds = 0;
+            renderAdminOtpCooldown();
+        }
+    } catch (err) {
+        if (alertBox && alertText) {
+            alertText.innerText = 'Terjadi kesalahan sistem saat meminta kirim ulang OTP.';
+            alertBox.classList.remove('hidden');
+        }
+        adminOtpCooldownSeconds = 0;
+        renderAdminOtpCooldown();
+    }
 }
 
 async function handleAdminRequestOtp(e) {
@@ -1463,6 +1557,8 @@ async function handleAdminRequestOtp(e) {
             document.getElementById('form-admin-verify-otp').classList.remove('hidden');
             document.getElementById('admin-auth-target-email').innerText = email;
             sessionStorage.setItem(ASN_STORAGE_KEYS.TEMP_ADMIN_EMAIL, email);
+
+            startAdminOtpCooldown(result.cooldownSeconds || 60);
 
             const otpInput = document.getElementById('admin-auth-otp');
             if (otpInput) {
@@ -1553,6 +1649,11 @@ function closeParentAuthModal() {
     const content = document.getElementById('modal-auth-parent-content');
     if (!modal || !content) return;
 
+    if (parentOtpCooldownTimer) {
+        clearInterval(parentOtpCooldownTimer);
+        parentOtpCooldownTimer = null;
+    }
+
     content.classList.add('scale-95', 'opacity-0');
     setTimeout(() => {
         modal.classList.add('hidden');
@@ -1560,6 +1661,17 @@ function closeParentAuthModal() {
 }
 
 function resetParentAuthStep() {
+    if (parentOtpCooldownTimer) {
+        clearInterval(parentOtpCooldownTimer);
+        parentOtpCooldownTimer = null;
+    }
+    parentOtpCooldownSeconds = 0;
+    const cooldownEl = document.getElementById('parent-otp-cooldown');
+    if (cooldownEl) {
+        cooldownEl.className = 'text-slate-400';
+        cooldownEl.innerHTML = 'Kirim ulang dalam 60s';
+    }
+
     const formReq = document.getElementById('form-parent-request-otp');
     const formVer = document.getElementById('form-parent-verify-otp');
     const alertBox = document.getElementById('parent-auth-alert');
@@ -1570,6 +1682,84 @@ function resetParentAuthStep() {
 
     const otpInput = document.getElementById('parent-otp-code');
     if (otpInput) otpInput.value = '';
+}
+
+// Wali Santri OTP Cooldown & Resend Controller
+let parentOtpCooldownTimer = null;
+let parentOtpCooldownSeconds = 0;
+
+function startParentOtpCooldown(seconds = 60) {
+    if (parentOtpCooldownTimer) {
+        clearInterval(parentOtpCooldownTimer);
+        parentOtpCooldownTimer = null;
+    }
+    parentOtpCooldownSeconds = seconds;
+    renderParentOtpCooldown();
+
+    parentOtpCooldownTimer = setInterval(() => {
+        parentOtpCooldownSeconds--;
+        if (parentOtpCooldownSeconds <= 0) {
+            clearInterval(parentOtpCooldownTimer);
+            parentOtpCooldownTimer = null;
+            renderParentOtpCooldown();
+        } else {
+            renderParentOtpCooldown();
+        }
+    }, 1000);
+}
+
+function renderParentOtpCooldown() {
+    const el = document.getElementById('parent-otp-cooldown');
+    if (!el) return;
+    if (parentOtpCooldownSeconds > 0) {
+        el.className = 'text-slate-400';
+        el.innerHTML = `Kirim ulang dalam ${parentOtpCooldownSeconds}s`;
+    } else {
+        el.className = 'text-emerald-600 dark:text-emerald-400 font-semibold';
+        el.innerHTML = `<button type="button" onclick="handleParentResendOtp()" class="hover:underline">Kirim ulang OTP</button>`;
+    }
+}
+
+async function handleParentResendOtp() {
+    const email = sessionStorage.getItem(ASN_STORAGE_KEYS.TEMP_PARENT_EMAIL);
+    if (!email) {
+        resetParentAuthStep();
+        return;
+    }
+
+    const el = document.getElementById('parent-otp-cooldown');
+    if (el) {
+        el.className = 'text-slate-400';
+        el.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i>Mengirim...`;
+    }
+
+    const alertBox = document.getElementById('parent-auth-alert');
+    const alertText = document.getElementById('parent-auth-alert-text');
+    if (alertBox) alertBox.classList.add('hidden');
+
+    try {
+        const result = await ASNAuthAPI.requestParentOtp(email);
+        if (result.success) {
+            if (typeof showToast === 'function') {
+                showToast('Kode OTP baru telah dikirimkan ke email.');
+            }
+            startParentOtpCooldown(result.cooldownSeconds || 60);
+        } else {
+            if (alertBox && alertText) {
+                alertText.innerText = result.message || 'Gagal mengirim ulang OTP.';
+                alertBox.classList.remove('hidden');
+            }
+            parentOtpCooldownSeconds = 0;
+            renderParentOtpCooldown();
+        }
+    } catch (err) {
+        if (alertBox && alertText) {
+            alertText.innerText = 'Terjadi kesalahan sistem saat meminta kirim ulang OTP.';
+            alertBox.classList.remove('hidden');
+        }
+        parentOtpCooldownSeconds = 0;
+        renderParentOtpCooldown();
+    }
 }
 
 async function handleParentRequestOtp(e) {
@@ -1595,6 +1785,8 @@ async function handleParentRequestOtp(e) {
             const targetEl = document.getElementById('parent-auth-target-email') || document.getElementById('parent-auth-target-phone');
             if (targetEl) targetEl.innerText = email;
             sessionStorage.setItem(ASN_STORAGE_KEYS.TEMP_PARENT_EMAIL, email);
+
+            startParentOtpCooldown(result.cooldownSeconds || 60);
 
             const otpInput = document.getElementById('parent-otp-code');
             if (otpInput) {
