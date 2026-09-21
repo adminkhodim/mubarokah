@@ -1,6 +1,8 @@
         // ==================== DASHBOARD ADMIN: CORE & NAVIGASI ====================
         function openAdminLoginModal() {
-            if (isAdminLoggedIn) {
+            const isUserAdmin = (typeof checkIsAdminLoggedIn === 'function') ? checkIsAdminLoggedIn() : isAdminLoggedIn;
+            if (isUserAdmin) {
+                if (typeof isAdminLoggedIn !== 'undefined') isAdminLoggedIn = true;
                 switchTab('admin');
                 showAdminView('hub');
                 renderAdminNewsList();
@@ -25,7 +27,8 @@
                 closeAdminAuthModal();
             }
             const activeTabEl = document.querySelector('.tab-content:not(.hidden)');
-            if (activeTabEl && activeTabEl.id === 'page-admin' && !isAdminLoggedIn) {
+            const isUserAdmin = (typeof checkIsAdminLoggedIn === 'function') ? checkIsAdminLoggedIn() : isAdminLoggedIn;
+            if (activeTabEl && activeTabEl.id === 'page-admin' && !isUserAdmin) {
                 switchTab('beranda');
             }
         }
@@ -3553,6 +3556,9 @@
 
                     // Update Dropdown Filter Program secara dinamis
                     populateAdminStudentProgramFilter();
+                    fetchAdminProgramsList().then(() => {
+                        populateAdminStudentProgramFilter();
+                    });
 
                     // Filter & Render
                     filterAdminStudentsList();
@@ -3571,7 +3577,108 @@
         }
 
         /**
-         * Isi dropdown filter program dari list santri
+         * Mengambil daftar program dari Tab Sheet "Programs" (kolom B: name)
+         */
+        async function fetchAdminProgramsList() {
+            if (Array.isArray(adminProgramData) && adminProgramData.length > 0) {
+                return adminProgramData;
+            }
+            if (typeof RUNTIME_PROGRAM_DATA !== 'undefined' && Array.isArray(RUNTIME_PROGRAM_DATA) && RUNTIME_PROGRAM_DATA.length > 0) {
+                return RUNTIME_PROGRAM_DATA;
+            }
+            try {
+                const cachedRaw = localStorage.getItem('mubarokah_programs_cache_v3') || localStorage.getItem('mubarokah_programs_cache_v2');
+                if (cachedRaw) {
+                    const cached = JSON.parse(cachedRaw);
+                    if (Array.isArray(cached) && cached.length > 0) {
+                        return cached;
+                    }
+                }
+            } catch (e) {}
+
+            try {
+                const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(ADMIN_TOKEN_KEY)) || "";
+                if (token && typeof apiPost === 'function') {
+                    const res = await apiPost("program.list", { token });
+                    if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+                        adminProgramData = res.data;
+                        return adminProgramData;
+                    }
+                }
+                if (typeof apiGet === 'function') {
+                    const res = await apiGet("program.listPublished");
+                    if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+                        return res.data;
+                    }
+                }
+            } catch (err) {
+                console.warn("fetchAdminProgramsList error:", err);
+            }
+
+            if (typeof PROGRAM_DATA !== 'undefined' && Array.isArray(PROGRAM_DATA)) {
+                return PROGRAM_DATA;
+            }
+            return [];
+        }
+
+        /**
+         * Mengisi pilihan dropdown Program Pesantren pada modal Tambah / Edit Santri
+         * Mengambil data dari Tab Sheet "Programs" (kolom B: name)
+         */
+        async function populateAdminStudentProgramDropdown(selectedProgram = "") {
+            const selectEl = document.getElementById('admin-student-form-program');
+            if (!selectEl) return;
+
+            const renderOptions = (programsList) => {
+                const programNames = new Set();
+
+                // Ambil nilai nama (kolom B: name) dari Tab Sheet Programs
+                if (Array.isArray(programsList)) {
+                    programsList.forEach(p => {
+                        const name = (p && (p.name || p.title)) ? String(p.name || p.title).trim() : "";
+                        if (name) programNames.add(name);
+                    });
+                }
+
+                // Jika sedang edit data santri yang memiliki program lama/custom, pertahankan agar tidak hilang
+                if (selectedProgram && selectedProgram.trim()) {
+                    programNames.add(selectedProgram.trim());
+                }
+
+                let html = '<option value="" disabled' + (!selectedProgram ? ' selected' : '') + '>-- Pilih Program Pesantren --</option>';
+                Array.from(programNames).forEach(progName => {
+                    const isSelected = selectedProgram && selectedProgram.trim().toLowerCase() === progName.trim().toLowerCase();
+                    html += `<option value="${escapeHtml(progName)}"${isSelected ? ' selected' : ''}>${escapeHtml(progName)}</option>`;
+                });
+
+                selectEl.innerHTML = html;
+                if (selectedProgram) {
+                    selectEl.value = selectedProgram;
+                }
+            };
+
+            // Render cepat dari memori / cache terlebih dahulu
+            let currentList = (Array.isArray(adminProgramData) && adminProgramData.length > 0)
+                ? adminProgramData
+                : ((typeof RUNTIME_PROGRAM_DATA !== 'undefined' && RUNTIME_PROGRAM_DATA.length > 0)
+                    ? RUNTIME_PROGRAM_DATA
+                    : (typeof PROGRAM_DATA !== 'undefined' ? PROGRAM_DATA : []));
+
+            renderOptions(currentList);
+
+            // Jika belum ter-cache di adminProgramData, lakukan fetch async ke server
+            if (!adminProgramData || adminProgramData.length === 0) {
+                const freshList = await fetchAdminProgramsList();
+                if (Array.isArray(freshList) && freshList.length > 0) {
+                    const currentVal = selectEl.value || selectedProgram;
+                    renderOptions(freshList);
+                    if (currentVal) selectEl.value = currentVal;
+                }
+            }
+        }
+
+        /**
+         * Isi dropdown filter program dari Tab Sheet "Programs" dan list santri
          */
         function populateAdminStudentProgramFilter() {
             const selectEl = document.getElementById('admin-student-filter-program');
@@ -3579,6 +3686,20 @@
 
             const currentVal = selectEl.value;
             const programs = new Set();
+
+            // Sertakan program dari Tab Sheet Programs (kolom B: name)
+            const programSources = (Array.isArray(adminProgramData) && adminProgramData.length > 0)
+                ? adminProgramData
+                : ((typeof RUNTIME_PROGRAM_DATA !== 'undefined' && RUNTIME_PROGRAM_DATA.length > 0)
+                    ? RUNTIME_PROGRAM_DATA
+                    : (typeof PROGRAM_DATA !== 'undefined' ? PROGRAM_DATA : []));
+
+            programSources.forEach(p => {
+                const name = (p && (p.name || p.title)) ? String(p.name || p.title).trim() : "";
+                if (name) programs.add(name);
+            });
+
+            // Sertakan juga nama program santri yang sudah terdaftar
             adminStudentsData.forEach(s => {
                 if (s.program && s.program.trim()) {
                     programs.add(s.program.trim());
@@ -3818,9 +3939,10 @@
                 document.getElementById('admin-student-form-name').value = student.name || '';
                 document.getElementById('admin-student-form-gender').value = (student.gender || 'L').toUpperCase() === 'P' ? 'P' : 'L';
                 document.getElementById('admin-student-form-birthdate').value = student.birthDate || student.birth_date || '';
-                document.getElementById('admin-student-form-program').value = student.program || 'Reguler';
                 document.getElementById('admin-student-form-status').value = (student.status || 'ACTIVE').toUpperCase() === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE';
                 
+                populateAdminStudentProgramDropdown(student.program || '');
+
                 const photoUrl = student.photoUrl || student.photo_url || '';
                 document.getElementById('admin-student-form-photo-url').value = photoUrl;
 
@@ -3842,8 +3964,9 @@
                 document.getElementById('admin-student-form-id').value = '';
                 document.getElementById('admin-student-form-photo-url').value = '';
                 document.getElementById('admin-student-form-gender').value = 'L';
-                document.getElementById('admin-student-form-program').value = 'Reguler';
                 document.getElementById('admin-student-form-status').value = 'ACTIVE';
+
+                populateAdminStudentProgramDropdown("");
 
                 if (previewImg) previewImg.classList.add('hidden');
                 if (placeholder) placeholder.classList.remove('hidden');
@@ -3936,12 +4059,17 @@
             const name = (document.getElementById('admin-student-form-name')?.value || '').trim();
             const gender = document.getElementById('admin-student-form-gender')?.value || 'L';
             const birthDate = document.getElementById('admin-student-form-birthdate')?.value || '';
-            const program = (document.getElementById('admin-student-form-program')?.value || '').trim() || 'Reguler';
+            const program = (document.getElementById('admin-student-form-program')?.value || '').trim();
             const status = document.getElementById('admin-student-form-status')?.value || 'ACTIVE';
             let photoUrl = document.getElementById('admin-student-form-photo-url')?.value || '';
 
             if (!nis || !name) {
                 if (typeof showToast === 'function') showToast("⚠️ NIS dan Nama Santri wajib diisi!");
+                return;
+            }
+
+            if (!program) {
+                if (typeof showToast === 'function') showToast("⚠️ Silakan pilih Program Pesantren!");
                 return;
             }
 

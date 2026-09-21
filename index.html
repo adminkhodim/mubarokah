@@ -8608,16 +8608,10 @@
                             <label class="block font-bold text-slate-700 dark:text-slate-300 text-xs mb-1">
                                 Program Pesantren <span class="text-rose-500">*</span>
                             </label>
-                            <input type="text" id="admin-student-form-program" required
-                                list="admin-student-program-list" placeholder="Contoh: Tahfidz Al-Qur'an"
-                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white transition">
-                            <datalist id="admin-student-program-list">
-                                <option value="Tahfidz Anak"></option>
-                                <option value="Tahfidz Al-Qur'an"></option>
-                                <option value="Kitab Kuning"></option>
-                                <option value="Madrasah Diniyah"></option>
-                                <option value="Reguler"></option>
-                            </datalist>
+                            <select id="admin-student-form-program" required
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-semibold focus:ring-2 focus:ring-cyan-500 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white transition">
+                                <option value="" disabled selected>-- Pilih Program Pesantren --</option>
+                            </select>
                         </div>
 
                         <!-- Status Santri -->

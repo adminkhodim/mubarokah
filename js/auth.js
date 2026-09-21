@@ -447,6 +447,7 @@ const ASNIdentity = {
                 const savedData = sessionStorage.getItem(ASN_STORAGE_KEYS.ADMIN_DATA) || localStorage.getItem(ASN_STORAGE_KEYS.ADMIN_DATA);
                 this.currentUser = savedData ? JSON.parse(savedData) : { name: 'Administrator Pesantren', email: '', role: savedRole || 'ADMIN' };
             } catch (e) {}
+            if (typeof isAdminLoggedIn !== 'undefined') isAdminLoggedIn = true;
         } else if (parentToken) {
             this.currentRole = ASN_ROLES.WALI_SANTRI;
             this.currentState = ASN_STATES.PARENT_AUTH_ACTIVE;
@@ -1389,6 +1390,13 @@ function closeStudentQrModal() {
 
 // ----- Admin Modal Controllers -----
 function openAdminAuthModal() {
+    if (typeof checkIsAdminLoggedIn === 'function' && checkIsAdminLoggedIn()) {
+        return;
+    }
+    if (typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn) {
+        return;
+    }
+
     const modal = document.getElementById('modal-auth-admin');
     const content = document.getElementById('modal-auth-admin-content');
     if (!modal || !content) return;
@@ -1412,7 +1420,8 @@ function closeAdminAuthModal() {
     setTimeout(() => {
         modal.classList.add('hidden');
         const activeTabEl = document.querySelector('.tab-content:not(.hidden)');
-        if (activeTabEl && activeTabEl.id === 'page-admin' && (typeof isAdminLoggedIn === 'undefined' || !isAdminLoggedIn)) {
+        const isStillAdmin = (typeof checkIsAdminLoggedIn === 'function') ? checkIsAdminLoggedIn() : (typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn);
+        if (activeTabEl && activeTabEl.id === 'page-admin' && !isStillAdmin) {
             if (typeof switchTab === 'function') switchTab('beranda');
         }
     }, 250);

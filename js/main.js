@@ -203,7 +203,9 @@
                 }
             } else if (path === '/pengaturan') {
                 const isMobile = window.innerWidth < 768;
-                const isAdmin = (typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn) || (typeof ASNIdentity !== 'undefined' && (ASNIdentity.currentRole === 'admin' || ASNIdentity.currentRole === 'editor'));
+                const isAdmin = (typeof checkIsAdminLoggedIn === 'function')
+                    ? checkIsAdminLoggedIn()
+                    : ((typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn) || (typeof ASNIdentity !== 'undefined' && (ASNIdentity.currentRole === 'admin' || ASNIdentity.currentRole === 'editor')));
                 if (isMobile) {
                     window.history.replaceState({ tab: 'pengaturan' }, '', '/');
                     switchTab('pengaturan', false);
@@ -328,7 +330,9 @@
                 }
             } else if (path === '/pengaturan') {
                 const isMobile = window.innerWidth < 768;
-                const isAdmin = (typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn) || (typeof ASNIdentity !== 'undefined' && (ASNIdentity.currentRole === 'admin' || ASNIdentity.currentRole === 'editor'));
+                const isAdmin = (typeof checkIsAdminLoggedIn === 'function')
+                    ? checkIsAdminLoggedIn()
+                    : ((typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn) || (typeof ASNIdentity !== 'undefined' && (ASNIdentity.currentRole === 'admin' || ASNIdentity.currentRole === 'editor')));
                 if (isMobile) {
                     window.history.replaceState({ tab: 'pengaturan' }, '', '/');
                     switchTab('pengaturan', false);
@@ -355,7 +359,11 @@
         }
 
         function switchTab(tabId, updateUrl = true, customUrl = null) {
-            if (tabId === 'admin' && window.innerWidth < 768 && (typeof isAdminLoggedIn === 'undefined' || !isAdminLoggedIn)) {
+            const isUserAdmin = (typeof checkIsAdminLoggedIn === 'function')
+                ? checkIsAdminLoggedIn()
+                : ((typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn) || (typeof ASNIdentity !== 'undefined' && (ASNIdentity.currentRole === 'admin' || ASNIdentity.currentRole === 'editor')));
+
+            if (tabId === 'admin' && window.innerWidth < 768 && !isUserAdmin) {
                 if (updateUrl) {
                     window.history.replaceState({ tab: 'pengaturan' }, '', '/');
                 }
@@ -364,8 +372,7 @@
             }
 
             if (tabId === 'pengaturan' && window.innerWidth >= 768) {
-                const isAdmin = (typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn) || (typeof ASNIdentity !== 'undefined' && (ASNIdentity.currentRole === 'admin' || ASNIdentity.currentRole === 'editor'));
-                if (isAdmin) {
+                if (isUserAdmin) {
                     switchTab('admin', updateUrl);
                     return;
                 }
@@ -455,14 +462,26 @@
                 if (deskActionMenu) deskActionMenu.classList.add('hidden');
                 if (mobileBottomNav) mobileBottomNav.classList.add('hidden');
                 if (mainFooter) mainFooter.classList.add('hidden');
-                if (!isAdminLoggedIn) {
+
+                const isUserAdmin = (typeof checkIsAdminLoggedIn === 'function')
+                    ? checkIsAdminLoggedIn()
+                    : ((typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn) || (typeof ASNIdentity !== 'undefined' && (ASNIdentity.currentRole === 'admin' || ASNIdentity.currentRole === 'editor')));
+
+                if (!isUserAdmin) {
                     setTimeout(() => {
-                        if (typeof openAdminAuthModal === 'function') {
-                            openAdminAuthModal();
-                        } else if (typeof openAdminLoginModal === 'function') {
-                            openAdminLoginModal();
+                        const stillAdmin = (typeof checkIsAdminLoggedIn === 'function')
+                            ? checkIsAdminLoggedIn()
+                            : ((typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn) || (typeof ASNIdentity !== 'undefined' && (ASNIdentity.currentRole === 'admin' || ASNIdentity.currentRole === 'editor')));
+                        if (!stillAdmin) {
+                            if (typeof openAdminAuthModal === 'function') {
+                                openAdminAuthModal();
+                            } else if (typeof openAdminLoginModal === 'function') {
+                                openAdminLoginModal();
+                            }
                         }
                     }, 100);
+                } else {
+                    if (typeof isAdminLoggedIn !== 'undefined') isAdminLoggedIn = true;
                 }
             } else {
                 if (deskNavMenu) deskNavMenu.classList.remove('hidden');
