@@ -9680,6 +9680,32 @@ function getOrCreateTahfidzSheet(ss, sheetName, defaultHeaders, headerBgColor) {
 }
 
 /**
+ * Normalisasi dan deteksi indeks kolom tab Tahfidz_Halaqah secara tangguh.
+ * Menghindari bug jika header spreadsheet memiliki spasi, garis bawah, atau perbedaan penamaan.
+ */
+function getHalaqahColumnIndexes(headerRow) {
+  if (!headerRow || !headerRow.length) return { id: -1, nama: -1, kategori: -1, muhafiz: -1, target: -1, studentIds: -1, createdAt: -1 };
+  const normalized = headerRow.map(x => String(x || "").trim().toLowerCase().replace(/[\s\-_]+/g, ""));
+  const find = (keywords) => {
+    for (let i = 0; i < keywords.length; i++) {
+      const cleanK = keywords[i].replace(/[\s\-_]+/g, "");
+      const idx = normalized.indexOf(cleanK);
+      if (idx !== -1) return idx;
+    }
+    return -1;
+  };
+  return {
+    id: find(["halaqah_id", "halaqahid", "id_halaqah", "idhalaqah", "id", "kode_halaqah", "kode"]),
+    nama: find(["nama_halaqah", "namahalaqah", "nama", "halaqah", "nama_kelompok", "kelompok"]),
+    kategori: find(["kategori", "category", "program"]),
+    muhafiz: find(["muhafiz", "muhafidz", "pembina", "ustadz", "guru"]),
+    target: find(["target_kurikulum", "targetkurikulum", "target", "kurikulum"]),
+    studentIds: find(["student_ids", "studentids", "anggota", "santri_ids", "santri", "siswa"]),
+    createdAt: find(["created_at", "createdat", "tanggal", "waktu"])
+  };
+}
+
+/**
  * FUNGSI UTAMA INISIALISASI TAB SHEET TAHFIDZ
  * Dapat dijalankan langsung dari menu Run Apps Script Editor (pilih: initTahfidzSheets)
  * Atau dipanggil via API Frontend / Web App.
@@ -9916,40 +9942,38 @@ function getTahfidzDashboard(token) {
     const halaqahList = [];
     const studentHalaqahMap = {};
     if (halaqahData && halaqahData.length > 1) {
-      const hHal = halaqahData[0].map(h => String(h || "").trim().toLowerCase());
+      const colMap = getHalaqahColumnIndexes(halaqahData[0]);
       for (let i = 1; i < halaqahData.length; i++) {
-        const hid = String(halaqahData[i][hHal.indexOf("halaqah_id")] || "").trim();
-        const hname = String(halaqahData[i][hHal.indexOf("nama_halaqah")] || "").trim();
-        const hkat = String(halaqahData[i][hHal.indexOf("kategori")] || "Tahfidz Dewasa").trim();
-        const hmuh = String(halaqahData[i][hHal.indexOf("muhafiz")] || "").trim();
-        const hkur = String(halaqahData[i][hHal.indexOf("target_kurikulum")] || "").trim();
-        const stIds = String(halaqahData[i][hHal.indexOf("student_ids")] || "").split(",").map(x => x.trim()).filter(Boolean);
+        const r = halaqahData[i];
+        const rawId = colMap.id !== -1 ? String(r[colMap.id] || "").trim() : "";
+        const rawName = colMap.nama !== -1 ? String(r[colMap.nama] || "").trim() : "";
+        if (!rawId && !rawName) continue;
 
-        if (hid) {
-          // Abaikan data dummy fiktif bawaan template lama
-          const isLegacyDummy = (hid === "HLQ-01" || hid === "HLQ-02") && 
-            (hname === "Halaqah Abu Ubaidah" || hname === "Halaqah Utsman bin Affan") && 
-            stIds.length === 0;
-          if (isLegacyDummy) continue;
+        const hid = rawId || ("HLQ-" + (i < 10 ? "0" + i : i));
+        const hname = rawName || `Halaqah ${i}`;
+        const hkat = colMap.kategori !== -1 ? String(r[colMap.kategori] || "Tahfidz Dewasa").trim() : "Tahfidz Dewasa";
+        const hmuh = colMap.muhafiz !== -1 ? String(r[colMap.muhafiz] || "").trim() : "";
+        const hkur = colMap.target !== -1 ? String(r[colMap.target] || "").trim() : "";
+        const stIds = colMap.studentIds !== -1 ? String(r[colMap.studentIds] || "").split(",").map(x => x.trim()).filter(Boolean) : [];
 
-          halaqahList.push({
+        halaqahList.push({
+          halaqahId: hid,
+          namaHalaqah: hname,
+          kategori: hkat,
+          muhafiz: hmuh,
+          targetKurikulum: hkur,
+          studentIds: stIds,
+          studentCount: stIds.length
+        });
+
+        stIds.forEach(id => {
+          studentHalaqahMap[id] = {
             halaqahId: hid,
             namaHalaqah: hname,
             kategori: hkat,
-            muhafiz: hmuh,
-            targetKurikulum: hkur,
-            studentCount: stIds.length
-          });
-
-          stIds.forEach(id => {
-            studentHalaqahMap[id] = {
-              halaqahId: hid,
-              namaHalaqah: hname,
-              kategori: hkat,
-              muhafiz: hmuh
-            };
-          });
-        }
+            muhafiz: hmuh
+          };
+        });
       }
     }
 
@@ -10709,24 +10733,23 @@ function getTahfidzHalaqahList(token) {
     const data = sheet.getDataRange().getValues();
     const list = [];
     if (data && data.length > 1) {
-      const h = data[0].map(x => String(x || "").trim().toLowerCase());
+      const colMap = getHalaqahColumnIndexes(data[0]);
       for (let i = 1; i < data.length; i++) {
-        const id = String(data[i][h.indexOf("halaqah_id")] || "").trim();
-        if (!id) continue;
-        const hName = String(data[i][h.indexOf("nama_halaqah")] || "");
-        const stIds = String(data[i][h.indexOf("student_ids")] || "").split(",").map(s => s.trim()).filter(Boolean);
-        
-        // Abaikan data dummy fiktif lama
-        const isLegacyDummy = (id === "HLQ-01" || id === "HLQ-02") && 
-          (hName === "Halaqah Abu Ubaidah" || hName === "Halaqah Utsman bin Affan") && 
-          stIds.length === 0;
-        if (isLegacyDummy) continue;
+        const r = data[i];
+        const rawId = colMap.id !== -1 ? String(r[colMap.id] || "").trim() : "";
+        const rawName = colMap.nama !== -1 ? String(r[colMap.nama] || "").trim() : "";
+        if (!rawId && !rawName) continue;
+
+        const id = rawId || ("HLQ-" + (i < 10 ? "0" + i : i));
+        const hName = rawName || `Halaqah ${i}`;
+        const stIds = colMap.studentIds !== -1 ? String(r[colMap.studentIds] || "").split(",").map(s => s.trim()).filter(Boolean) : [];
+
         list.push({
           halaqahId: id,
-          namaHalaqah: String(data[i][h.indexOf("nama_halaqah")] || ""),
-          kategori: String(data[i][h.indexOf("kategori")] || "Tahfidz Dewasa"),
-          muhafiz: String(data[i][h.indexOf("muhafiz")] || ""),
-          targetKurikulum: String(data[i][h.indexOf("target_kurikulum")] || ""),
+          namaHalaqah: hName,
+          kategori: colMap.kategori !== -1 ? String(r[colMap.kategori] || "Tahfidz Dewasa") : "Tahfidz Dewasa",
+          muhafiz: colMap.muhafiz !== -1 ? String(r[colMap.muhafiz] || "") : "",
+          targetKurikulum: colMap.target !== -1 ? String(r[colMap.target] || "") : "",
           studentIds: stIds,
           studentCount: stIds.length
         });
@@ -10757,7 +10780,7 @@ function saveTahfidzHalaqah(payload, token) {
       }
     }
 
-    const nama = String(payload.namaHalaqah || payload.nama_halaqah || "").trim();
+    const nama = String(payload.namaHalaqah || payload.nama_halaqah || payload.nama || "").trim();
     if (!nama) throw new Error("Nama halaqah wajib diisi.");
 
     const ss = getDatabaseSpreadsheet();
@@ -10765,7 +10788,7 @@ function saveTahfidzHalaqah(payload, token) {
       "halaqah_id", "nama_halaqah", "kategori", "muhafiz", "target_kurikulum", "student_ids", "created_at"
     ]);
 
-    const halaqahId = payload.halaqahId || payload.halaqah_id || ("HLQ-" + Utilities.formatDate(new Date(), "GMT+7", "yyyyMMdd-HHmm"));
+    const halaqahId = payload.halaqahId || payload.halaqah_id || ("HLQ-" + Utilities.formatDate(new Date(), "GMT+7", "yyyyMMdd-HHmmss") + "-" + Math.floor(100 + Math.random() * 900));
     const kategori = String(payload.kategori || "Tahfidz Dewasa").trim();
     const muhafiz = String(payload.muhafiz || "").trim();
     const targetKurikulum = String(payload.targetKurikulum || payload.target_kurikulum || "").trim();
@@ -10773,18 +10796,28 @@ function saveTahfidzHalaqah(payload, token) {
     const createdAt = new Date().toISOString();
 
     const data = sheet.getDataRange().getValues();
-    const headers = data[0].map(h => String(h || "").trim().toLowerCase());
-    const idIdx = headers.indexOf("halaqah_id");
-    let foundRow = -1;
+    const colMap = getHalaqahColumnIndexes(data[0]);
 
-    for (let i = 1; i < data.length; i++) {
-      if (String(data[i][idIdx] || "").trim() === halaqahId) {
-        foundRow = i + 1;
-        break;
+    let foundRow = -1;
+    if (colMap.id !== -1) {
+      for (let i = 1; i < data.length; i++) {
+        if (String(data[i][colMap.id] || "").trim() === halaqahId) {
+          foundRow = i + 1;
+          break;
+        }
       }
     }
 
-    const rowValues = [halaqahId, nama, kategori, muhafiz, targetKurikulum, studentIds, createdAt];
+    const headersCount = Math.max(data[0].length, 7);
+    const rowValues = new Array(headersCount).fill("");
+
+    if (colMap.id !== -1) rowValues[colMap.id] = halaqahId;
+    if (colMap.nama !== -1) rowValues[colMap.nama] = nama;
+    if (colMap.kategori !== -1) rowValues[colMap.kategori] = kategori;
+    if (colMap.muhafiz !== -1) rowValues[colMap.muhafiz] = muhafiz;
+    if (colMap.target !== -1) rowValues[colMap.target] = targetKurikulum;
+    if (colMap.studentIds !== -1) rowValues[colMap.studentIds] = studentIds;
+    if (colMap.createdAt !== -1) rowValues[colMap.createdAt] = createdAt;
 
     if (foundRow > 0) {
       sheet.getRange(foundRow, 1, 1, rowValues.length).setValues([rowValues]);
@@ -10838,13 +10871,14 @@ function saveTahfidzPlotting(payload, token) {
     const data = sheet.getDataRange().getValues();
     if (data.length <= 1) throw new Error("Data halaqah tidak ditemukan.");
 
-    const headers = data[0].map(h => String(h || "").trim().toLowerCase());
-    const idIdx = headers.indexOf("halaqah_id");
-    const stIdsIdx = headers.indexOf("student_ids");
+    const colMap = getHalaqahColumnIndexes(data[0]);
+    if (colMap.id === -1 || colMap.studentIds === -1) {
+      throw new Error("Struktur kolom sheet halaqah tidak valid.");
+    }
 
     let foundRow = -1;
     for (let i = 1; i < data.length; i++) {
-      if (String(data[i][idIdx] || "").trim() === halaqahId) {
+      if (String(data[i][colMap.id] || "").trim() === halaqahId) {
         foundRow = i + 1;
         break;
       }
@@ -10852,7 +10886,7 @@ function saveTahfidzPlotting(payload, token) {
 
     if (foundRow <= 0) throw new Error("Halaqah ID '" + halaqahId + "' tidak ditemukan.");
 
-    sheet.getRange(foundRow, stIdsIdx + 1).setValue(cleanStudentIds.join(","));
+    sheet.getRange(foundRow, colMap.studentIds + 1).setValue(cleanStudentIds.join(","));
 
     return {
       status: "success",
@@ -10894,14 +10928,15 @@ function deleteTahfidzHalaqah(halaqahId, token) {
     const data = sheet.getDataRange().getValues();
     if (data.length <= 1) return { status: "error", success: false, message: "Halaqah tidak ditemukan." };
 
-    const headers = data[0].map(h => String(h || "").trim().toLowerCase());
-    const idIdx = headers.indexOf("halaqah_id");
+    const colMap = getHalaqahColumnIndexes(data[0]);
     let foundRow = -1;
 
-    for (let i = 1; i < data.length; i++) {
-      if (String(data[i][idIdx] || "").trim() === cleanId) {
-        foundRow = i + 1;
-        break;
+    if (colMap.id !== -1) {
+      for (let i = 1; i < data.length; i++) {
+        if (String(data[i][colMap.id] || "").trim() === cleanId) {
+          foundRow = i + 1;
+          break;
+        }
       }
     }
 

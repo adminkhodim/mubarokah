@@ -162,6 +162,7 @@ async function loadAdminTahfidzData(forceRefresh = false) {
             populateTahfidzFilters();
             renderTahfidzStudentTable();
             updateHubTahfidzBadge();
+            renderTahfidzHalaqahCards();
             hasRenderedFromCache = true;
 
             if (emptyState && ASNTahfidz.filteredStudents.length > 0) {
@@ -181,6 +182,18 @@ async function loadAdminTahfidzData(forceRefresh = false) {
         const response = await apiPost("getTahfidzDashboard", { token });
 
         if (response && (response.success || response.status === "success")) {
+            // Gabungkan halaqah lokal jika ada halaqah baru yang belum terangkum
+            if (Array.isArray(response.halaqahs)) {
+                const currentHalaqahs = ASNTahfidz.data?.halaqahs || [];
+                const mergedHalaqahs = [...response.halaqahs];
+                currentHalaqahs.forEach(loc => {
+                    if (loc && loc.halaqahId && !mergedHalaqahs.some(s => s.halaqahId === loc.halaqahId)) {
+                        mergedHalaqahs.push(loc);
+                    }
+                });
+                response.halaqahs = mergedHalaqahs;
+            }
+
             ASNTahfidz.data = response;
             ASNTahfidz.cache = response;
             try {
@@ -198,6 +211,9 @@ async function loadAdminTahfidzData(forceRefresh = false) {
             populateTahfidzFilters();
             renderTahfidzStudentTable();
             updateHubTahfidzBadge();
+            renderTahfidzHalaqahCards();
+            populatePlottingHalaqahSelector();
+            renderTahfidzMatriksBeban();
 
             if (forceRefresh && typeof showToast === 'function') {
                 showToast("✅ Data Tahfidz berhasil diperbarui.");
@@ -2486,10 +2502,25 @@ async function deleteTahfidzHalaqahConfirm(halaqahId, namaHalaqah) {
             if (ASNTahfidz.data.halaqahs) {
                 ASNTahfidz.data.halaqahs = ASNTahfidz.data.halaqahs.filter(h => h.halaqahId !== halaqahId);
             }
+            try {
+                sessionStorage.setItem(TAHFIDZ_CACHE_KEY, JSON.stringify({
+                    data: ASNTahfidz.data,
+                    timestamp: Date.now()
+                }));
+            } catch (e) {
+                console.warn("Gagal simpan cache:", e);
+            }
+
             renderTahfidzHalaqahCards();
             populatePlottingHalaqahSelector();
             renderTahfidzMatriksBeban();
-            loadAdminTahfidzData(true);
+            populateTahfidzFilters();
+
+            await loadAdminTahfidzData(true);
+            renderTahfidzHalaqahCards();
+            populatePlottingHalaqahSelector();
+            renderTahfidzMatriksBeban();
+            populateTahfidzFilters();
         } else {
             if (typeof showToast === 'function') showToast("❌ Gagal menghapus halaqah: " + ((res && res.message) || "Terjadi kesalahan"));
         }
@@ -2533,23 +2564,48 @@ async function submitNewHalaqah(e) {
             if (document.getElementById('input-halaqah-nama')) document.getElementById('input-halaqah-nama').value = '';
             if (document.getElementById('input-halaqah-target')) document.getElementById('input-halaqah-target').value = '';
             
-            // Tambahkan halaqah lokal ke state
-            if (!ASNTahfidz.data.halaqahs) ASNTahfidz.data.halaqahs = [];
-            ASNTahfidz.data.halaqahs.push({
+            const newHalaqah = {
                 halaqahId: res.halaqahId || ("HLQ-" + Date.now()),
                 namaHalaqah: nama,
                 kategori: kat,
                 muhafiz: muh,
                 targetKurikulum: target,
                 studentCount: 0
-            });
+            };
 
+            // Tambahkan halaqah lokal ke state
+            if (!ASNTahfidz.data.halaqahs) ASNTahfidz.data.halaqahs = [];
+            const existingIdx = ASNTahfidz.data.halaqahs.findIndex(h => h.halaqahId === newHalaqah.halaqahId);
+            if (existingIdx !== -1) {
+                ASNTahfidz.data.halaqahs[existingIdx] = newHalaqah;
+            } else {
+                ASNTahfidz.data.halaqahs.push(newHalaqah);
+            }
+
+            // Segera sinkronkan cache browser agar state baru tidak hilang
+            try {
+                sessionStorage.setItem(TAHFIDZ_CACHE_KEY, JSON.stringify({
+                    data: ASNTahfidz.data,
+                    timestamp: Date.now()
+                }));
+            } catch (e) {
+                console.warn("Gagal simpan cache:", e);
+            }
+
+            // Segera render tampilan kartu, selector plotting, matriks dan dropdown filter dashboard
             renderTahfidzHalaqahCards();
             populatePlottingHalaqahSelector();
             renderTahfidzMatriksBeban();
+            populateTahfidzFilters();
 
             // Sinkronisasi data di latar belakang
-            loadAdminTahfidzData(true);
+            await loadAdminTahfidzData(true);
+
+            // Re-render sekali lagi untuk memastikan keselarasan data server
+            renderTahfidzHalaqahCards();
+            populatePlottingHalaqahSelector();
+            renderTahfidzMatriksBeban();
+            populateTahfidzFilters();
         } else {
             if (typeof showToast === 'function') showToast("❌ Gagal membuat halaqah: " + ((res && res.message) || "Terjadi kesalahan"));
         }
