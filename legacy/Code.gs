@@ -12682,6 +12682,8 @@ function deleteTPQSesi(sesiId, token) {
 const SHEET_SOROGAN_LOGS = "Sorogan_Logs";
 const SHEET_SOROGAN_CAPAIAN = "Sorogan_Capaian";
 const SHEET_SOROGAN_HALAQAH = "Sorogan_Halaqah";
+const SHEET_SOROGAN_TARGET = "Sorogan_Target";
+const SHEET_SOROGAN_SESI = "Sorogan_Sesi";
 
 function getOrCreateSoroganSheet(ss, sheetName, headers, bgHeaderColor) {
   let sheet = ss.getSheetByName(sheetName);
@@ -12777,29 +12779,77 @@ function getSoroganDashboard(token) {
     const ss = getDatabaseSpreadsheet();
     if (!ss) throw new Error("Spreadsheet tidak ditemukan.");
 
-    // 1. Ambil data master Santri
-    const studentsSheet = ss.getSheetByName(SHEET_STUDENTS);
-    const students = [];
+    let actor = null;
+    if (token) {
+      try {
+        actor = authenticateSession(token);
+      } catch (authErr) {
+        verifySessionToken(token);
+      }
+    }
+
+    // 0. Auto-ensure SEMUA sheet Sorogan Al-Qur'an tersedia di database
+    const headersLogs = ["log_id", "student_id", "nis", "student_name", "gender", "tanggal", "sesi", "juz", "halaman_list", "total_halaman", "status_setoran", "nilai", "muallim", "catatan", "created_at"];
+    const headersCapaian = ["student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_khatam", "status_terakhir", "halaqah_id", "nama_halaqah", "muallim_pengampu", "updated_at"];
+    const headersHalaqah = ["halaqah_id", "nama_halaqah", "muallim", "jadwal_sesi", "student_ids", "created_at"];
+    const headersTarget = ["student_id", "target_juz", "target_halaman_sesi", "target_halaman_pekan", "updated_at"];
+    const headersSesi = ["sesi_id", "nama_sesi", "jenis_sesi", "status", "jam_mulai", "jam_selesai", "hari_list", "created_at"];
+
+    // Pastikan Sorogan_Logs dan seluruh tab Sorogan terbentuk
+    getOrCreateSoroganSheet(ss, SHEET_SOROGAN_LOGS, headersLogs, "#0369a1");
+    const capaianSheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_CAPAIAN, headersCapaian, "#0f766e");
+    const halaqahSheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_HALAQAH, headersHalaqah, "#4338ca");
+    const targetSheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_TARGET, headersTarget, "#f59e0b");
+    const sesiSheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_SESI, headersSesi, "#0284c7");
+
+    const nowIso = new Date().toISOString();
+
+    // Auto-seed default Halaqah jika sheet baru dibuat / kosong
+    if (halaqahSheet.getLastRow() < 2) {
+      const defaultHalaqah = [
+        ["SRG-HLQ-01", "Halaqah Sorogan Putra (Mushaf Besar)", "Kyai / Ustadz Yusuf", "Ba'da Subuh & Maghrib", "[]", nowIso],
+        ["SRG-HLQ-02", "Halaqah Sorogan Putri (Mushaf Besar)", "Nyai / Ustadzah Maryam", "Ba'da Ashar & Isya'", "[]", nowIso]
+      ];
+      halaqahSheet.getRange(2, 1, defaultHalaqah.length, headersHalaqah.length).setValues(defaultHalaqah);
+    }
+
+    // Auto-seed default Sesi jika sheet baru dibuat / kosong
+    if (sesiSheet.getLastRow() < 2) {
+      const defaultSesi = [
+        ["SRG-SESI-01", "Pagi (Ba'da Subuh)", "Sorogan Binnazhar Reguler", "Aktif Digunakan", "05:15", "06:30", "Sen,Sel,Rab,Kam,Sab,Min", nowIso],
+        ["SRG-SESI-02", "Sore (Ba'da Ashar)", "Sorogan Privat / I'adah", "Aktif Digunakan", "16:00", "17:15", "Sen,Sel,Kam,Sab", nowIso],
+        ["SRG-SESI-03", "Malam (Ba'da Isya)", "Khataman / Ujian Akhir Juz", "Aktif Digunakan", "20:00", "21:30", "Kam", nowIso]
+      ];
+      sesiSheet.getRange(2, 1, defaultSesi.length, headersSesi.length).setValues(defaultSesi);
+    }
+
+    // 1. Ambil data master Santri secara resilien (identik dengan Tahfidz)
+    let students = [];
+    const studentsSheet = (typeof getAuthSheet === "function" ? getAuthSheet(ss, SHEET_STUDENTS) : null) || ss.getSheetByName(SHEET_STUDENTS);
     if (studentsSheet) {
       const sData = studentsSheet.getDataRange().getValues();
-      if (sData.length >= 2) {
-        const sHead = sData[0].map(h => String(h || "").trim().toLowerCase());
-        const idIdx = sHead.indexOf("student_id");
-        const nisIdx = sHead.indexOf("nis");
-        const nameIdx = sHead.indexOf("name");
-        const genderIdx = sHead.indexOf("gender");
-        const statusIdx = sHead.indexOf("status");
-        const photoIdx = sHead.indexOf("photo_url");
+      if (sData && sData.length > 1) {
+        const sHeaders = sData[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s\-_]+/g, ""));
+        const sIdIdx = sHeaders.findIndex(h => h === "studentid" || h === "id");
+        const sNisIdx = sHeaders.findIndex(h => h === "nis" || h === "nisn");
+        const sNameIdx = sHeaders.findIndex(h => h === "name" || h === "nama");
+        const sGenderIdx = sHeaders.findIndex(h => h === "gender" || h === "jeniskelamin" || h === "jenis");
+        const sPhotoIdx = sHeaders.findIndex(h => h.includes("photo") || h.includes("foto"));
+        const sStatusIdx = sHeaders.findIndex(h => h === "status");
 
         for (let i = 1; i < sData.length; i++) {
-          const stStatus = statusIdx !== -1 ? String(sData[i][statusIdx] || "").trim().toUpperCase() : "AKTIF";
+          const row = sData[i];
+          const stStatus = sStatusIdx !== -1 ? String(row[sStatusIdx] || "").trim().toUpperCase() : "AKTIF";
           if (["AKTIF", "ACTIVE", ""].includes(stStatus)) {
+            const stId = sIdIdx !== -1 ? String(row[sIdIdx] || "").trim() : "";
+            const stName = sNameIdx !== -1 ? String(row[sNameIdx] || "").trim() : "";
+            if (!stId && !stName) continue;
             students.push({
-              studentId: String(sData[i][idIdx] || "").trim(),
-              nis: String(sData[i][nisIdx] || "").trim(),
-              name: String(sData[i][nameIdx] || "").trim(),
-              gender: String(sData[i][genderIdx] || "L").trim().toUpperCase(),
-              photoUrl: photoIdx !== -1 ? String(sData[i][photoIdx] || "").trim() : "",
+              studentId: stId || ("STD-" + i),
+              nis: sNisIdx !== -1 ? String(row[sNisIdx] || "").trim() : "",
+              name: stName,
+              gender: sGenderIdx !== -1 ? String(row[sGenderIdx] || "L").trim().toUpperCase() : "L",
+              photoUrl: sPhotoIdx !== -1 ? String(row[sPhotoIdx] || "").trim() : "",
               status: "AKTIF"
             });
           }
@@ -12807,9 +12857,35 @@ function getSoroganDashboard(token) {
       }
     }
 
+    if (students.length === 0 && typeof getAllStudentsData === "function") {
+      try {
+        const studentsRes = getAllStudentsData(token);
+        const rawList = (studentsRes && studentsRes.data) || [];
+        students = rawList.map((st, idx) => ({
+          studentId: String(st.studentId || st.student_id || st.id || ("STD-" + (idx + 1))).trim(),
+          nis: String(st.nis || "").trim(),
+          name: String(st.name || st.nama || "").trim(),
+          gender: String(st.gender || st.jenis_kelamin || "L").trim().toUpperCase(),
+          photoUrl: String(st.photoUrl || st.photo_url || st.foto || "").trim(),
+          status: "AKTIF"
+        })).filter(s => s.studentId || s.name);
+      } catch (e) {
+        console.warn("[FALLBACK SOROGAN STUDENTS ERROR]", e);
+      }
+    }
+
+    // Filter khusus jika role WALI_SANTRI
+    if (actor && actor.role === "WALI_SANTRI") {
+      const linked = (typeof getLinkedStudentsForWali === "function") ? getLinkedStudentsForWali(actor.identityId) : [];
+      const allowedIds = (linked || []).map(s => String(s.studentId || s.student_id || s.id || s.nis || "").trim().toLowerCase());
+      students = students.filter(st => {
+        const sId = String(st.studentId || "").toLowerCase();
+        const sNis = String(st.nis || "").toLowerCase();
+        return allowedIds.includes(sId) || allowedIds.includes(sNis);
+      });
+    }
+
     // 2. Ambil data Capaian Sorogan
-    const headersCapaian = ["student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_khatam", "status_terakhir", "halaqah_id", "nama_halaqah", "muallim_pengampu", "updated_at"];
-    const capaianSheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_CAPAIAN, headersCapaian, "#0f766e");
     const capaianMap = {};
     const cData = capaianSheet.getDataRange().getValues();
     if (cData.length >= 2) {
@@ -12842,8 +12918,6 @@ function getSoroganDashboard(token) {
     }
 
     // 3. Ambil data Halaqah Sorogan
-    const headersHalaqah = ["halaqah_id", "nama_halaqah", "muallim", "jadwal_sesi", "student_ids", "created_at"];
-    const halaqahSheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_HALAQAH, headersHalaqah, "#4338ca");
     const halaqahs = [];
     const hData = halaqahSheet.getDataRange().getValues();
     if (hData.length >= 2) {
@@ -12868,8 +12942,6 @@ function getSoroganDashboard(token) {
     }
 
     // 4. Ambil data Target Sorogan
-    const headersTarget = ["student_id", "target_juz", "target_halaman_sesi", "target_halaman_pekan", "updated_at"];
-    const targetSheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_TARGET, headersTarget, "#f59e0b");
     const targetMap = {};
     const tData = targetSheet.getDataRange().getValues();
     if (tData.length >= 2) {
@@ -12892,8 +12964,6 @@ function getSoroganDashboard(token) {
     }
 
     // 5. Ambil data Jadwal Sesi Sorogan
-    const headersSesi = ["sesi_id", "nama_sesi", "jenis_sesi", "status", "jam_mulai", "jam_selesai", "hari_list", "created_at"];
-    const sesiSheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_SESI, headersSesi, "#0284c7");
     const sesiList = [];
     const sesiData = sesiSheet.getDataRange().getValues();
     if (sesiData.length >= 2) {

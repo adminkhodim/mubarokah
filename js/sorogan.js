@@ -108,8 +108,10 @@ async function loadAdminSoroganData(forceRefresh = false) {
     const emptyState = document.getElementById('admin-sorogan-empty');
     const refreshIcon = document.getElementById('btn-refresh-sorogan-icon');
 
-    if (refreshIcon && forceRefresh) {
-        refreshIcon.classList.add('fa-spin');
+    if (forceRefresh) {
+        if (refreshIcon) refreshIcon.classList.add('fa-spin');
+        try { sessionStorage.removeItem(SOROGAN_CACHE_KEY); } catch (e) {}
+        ASNSorogan.cache = null;
     }
 
     let hasRenderedFromCache = false;
@@ -164,6 +166,8 @@ async function loadAdminSoroganData(forceRefresh = false) {
             renderSoroganSummaryCards();
             populateSoroganFilters();
             filterSoroganList();
+        } else if (response && (response.message || response.error)) {
+            console.warn("Respon Sorogan gagal:", response.message || response.error);
         }
     } catch (err) {
         console.error("Gagal sinkronisasi data Sorogan:", err);
