@@ -343,6 +343,168 @@ function doPost(e) {
     }
 
     // ========================================================
+    // TPQ YANBU'A ACTIONS (doPost)
+    // ========================================================
+    if (action === "getTPQDashboard" || action === "tpq.dashboard") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      return createJsonResponse(getTPQDashboard(token));
+    }
+
+    if (action === "saveTPQLog" || action === "tpq.saveLog") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      return createJsonResponse(saveTPQLog(payload.data || payload, token));
+    }
+
+    if (action === "deleteTPQLog" || action === "tpq.deleteLog") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      const logId = payload.logId || payload.log_id || (payload.data && (payload.data.logId || payload.data.log_id));
+      return createJsonResponse(deleteTPQLog(logId, token));
+    }
+
+    if (action === "saveTPQCapaian" || action === "tpq.saveCapaian") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "EDITOR"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      return createJsonResponse(saveTPQCapaian(payload.data || payload, token));
+    }
+
+    if (action === "getTPQKelasList" || action === "tpq.getKelas") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      return createJsonResponse(getTPQKelasList(token));
+    }
+
+    if (action === "saveTPQKelas" || action === "tpq.saveKelas") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "EDITOR"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      return createJsonResponse(saveTPQKelas(payload.data || payload, token));
+    }
+
+    if (action === "deleteTPQKelas" || action === "tpq.deleteKelas") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "EDITOR"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      const kId = payload.kelasId || (payload.data && payload.data.kelasId) || "";
+      return createJsonResponse(deleteTPQKelas(kId, token));
+    }
+
+    if (action === "initTPQSheets" || action === "tpq.initSheets") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      return createJsonResponse(initTPQSheets(token));
+    }
+
+    // ========================================================
+    // SOROGAN AL-QUR'AN ACTIONS (doPost)
+    // ========================================================
+    if (action === "getSoroganDashboard" || action === "sorogan.dashboard") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      return createJsonResponse(getSoroganDashboard(token));
+    }
+
+    if (action === "saveSoroganLog" || action === "sorogan.saveLog") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      return createJsonResponse(saveSoroganLog(payload.data || payload, token));
+    }
+
+    if (action === "deleteSoroganLog" || action === "sorogan.deleteLog") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      const logId = payload.logId || payload.log_id || (payload.data && (payload.data.logId || payload.data.log_id));
+      return createJsonResponse(deleteSoroganLog(logId, token));
+    }
+
+    if (action === "saveSoroganCapaian" || action === "sorogan.saveCapaian") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "EDITOR"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      return createJsonResponse(saveSoroganCapaian(payload.data || payload, token));
+    }
+
+    if (action === "getSoroganHalaqahList" || action === "sorogan.getHalaqah") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      return createJsonResponse(getSoroganHalaqahList(token));
+    }
+
+    if (action === "saveSoroganHalaqah" || action === "sorogan.saveHalaqah") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "EDITOR"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      return createJsonResponse(saveSoroganHalaqah(payload.data || payload, token));
+    }
+
+    if (action === "deleteSoroganHalaqah" || action === "sorogan.deleteHalaqah") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "EDITOR"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      const hId = payload.halaqahId || (payload.data && payload.data.halaqahId) || "";
+      return createJsonResponse(deleteSoroganHalaqah(hId, token));
+    }
+
+    if (action === "initSoroganSheets" || action === "sorogan.initSheets") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      return createJsonResponse(initSoroganSheets(token));
+    }
+
+    // ========================================================
     // DATA PEGAWAI (ASATIDZ & KARYAWAN) ACTIONS (doPost)
     // ========================================================
     if (action === "getEmployees" || action === "employee.list") {
@@ -1285,6 +1447,26 @@ function doGet(e) {
     if (action === "getTahfidzHalaqahList" || action === "tahfidz.getHalaqah") {
       const token = e.parameter.token || null;
       return createJsonResponse(getTahfidzHalaqahList(token));
+    }
+
+    if (action === "getTPQDashboard" || action === "tpq.dashboard") {
+      const token = e.parameter.token || null;
+      return createJsonResponse(getTPQDashboard(token));
+    }
+
+    if (action === "getTPQKelasList" || action === "tpq.getKelas") {
+      const token = e.parameter.token || null;
+      return createJsonResponse(getTPQKelasList(token));
+    }
+
+    if (action === "getSoroganDashboard" || action === "sorogan.dashboard") {
+      const token = e.parameter.token || null;
+      return createJsonResponse(getSoroganDashboard(token));
+    }
+
+    if (action === "getSoroganHalaqahList" || action === "sorogan.getHalaqah") {
+      const token = e.parameter.token || null;
+      return createJsonResponse(getSoroganHalaqahList(token));
     }
 
     if (action === "getEmployees" || action === "employee.list") {
@@ -11572,5 +11754,1040 @@ function deleteEmployeeData(employeeId, token) {
   }
 }
 
+// ====================================================================
+// MODUL BACKEND: TPQ (TAMAN PENDIDIKAN AL-QUR'AN - METODE YANBU'A 1-7)
+// ====================================================================
+const SHEET_TPQ_LOGS = "TPQ_Logs";
+const SHEET_TPQ_CAPAIAN = "TPQ_Capaian";
+const SHEET_TPQ_KELAS = "TPQ_Kelas";
+
+function getOrCreateTPQSheet(ss, sheetName, headers, bgHeaderColor) {
+  let sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.getRange(1, 1, 1, headers.length)
+      .setFontWeight("bold")
+      .setBackground(bgHeaderColor || "#059669")
+      .setFontColor("#ffffff");
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function initTPQSheets(token) {
+  try {
+    if (token) {
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN"]);
+      } catch (authErr) {
+        verifySessionToken(token);
+      }
+    }
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error("Database Spreadsheet tidak ditemukan.");
+
+    const headersLogs = ["log_id", "student_id", "nis", "student_name", "gender", "tanggal", "sesi", "jilid", "halaman", "status_setoran", "nilai", "ustadz", "catatan", "created_at"];
+    const headersCapaian = ["student_id", "student_name", "jilid_aktif", "halaman_aktif", "status_terakhir", "kelas_id", "nama_kelas", "ustadz_pengampu", "updated_at"];
+    const headersKelas = ["kelas_id", "nama_kelas", "ustadz_pengampu", "jadwal_sesi", "student_ids", "created_at"];
+
+    const created = [];
+    const existing = [];
+
+    [
+      { name: SHEET_TPQ_LOGS, headers: headersLogs, color: "#059669" },
+      { name: SHEET_TPQ_CAPAIAN, headers: headersCapaian, color: "#0d9488" },
+      { name: SHEET_TPQ_KELAS, headers: headersKelas, color: "#0284c7" }
+    ].forEach(item => {
+      let s = ss.getSheetByName(item.name);
+      if (!s) {
+        s = ss.insertSheet(item.name);
+        s.getRange(1, 1, 1, item.headers.length).setValues([item.headers]);
+        s.getRange(1, 1, 1, item.headers.length).setFontWeight("bold").setBackground(item.color).setFontColor("#ffffff");
+        s.setFrozenRows(1);
+        created.push(item.name);
+      } else {
+        existing.push(item.name);
+      }
+    });
+
+    // Buat contoh default kelas jika TPQ_Kelas baru dibuat
+    if (created.includes(SHEET_TPQ_KELAS)) {
+      const kSheet = ss.getSheetByName(SHEET_TPQ_KELAS);
+      const nowIso = new Date().toISOString();
+      const defaultKelas = [
+        ["KLS-01", "TPQ Yanbu'a A (Jilid 1-2)", "Ustadzah Fatimah", "Sore (15:45 - 17:00)", "[]", nowIso],
+        ["KLS-02", "TPQ Yanbu'a B (Jilid 3-5)", "Ustadz Hasan", "Sore (15:45 - 17:00)", "[]", nowIso],
+        ["KLS-03", "TPQ Yanbu'a C (Jilid 6-7)", "Ustadz Ahmad", "Sore (15:45 - 17:00)", "[]", nowIso]
+      ];
+      kSheet.getRange(2, 1, defaultKelas.length, headersKelas.length).setValues(defaultKelas);
+    }
+
+    return {
+      status: "success",
+      success: true,
+      message: "Database TPQ Yanbu'a berhasil disiapkan.",
+      createdSheets: created,
+      existingSheets: existing
+    };
+  } catch (err) {
+    console.error("[INIT TPQ SHEETS ERROR]", err);
+    return { status: "error", success: false, message: "Gagal menyiapkan tabel TPQ: " + err.message };
+  }
+}
+
+function getTPQDashboard(token) {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error("Spreadsheet tidak ditemukan.");
+
+    // 1. Ambil data master Santri
+    const studentsSheet = ss.getSheetByName(SHEET_STUDENTS);
+    const students = [];
+    if (studentsSheet) {
+      const sData = studentsSheet.getDataRange().getValues();
+      if (sData.length >= 2) {
+        const sHead = sData[0].map(h => String(h || "").trim().toLowerCase());
+        const idIdx = sHead.indexOf("student_id");
+        const nisIdx = sHead.indexOf("nis");
+        const nameIdx = sHead.indexOf("name");
+        const genderIdx = sHead.indexOf("gender");
+        const statusIdx = sHead.indexOf("status");
+        const photoIdx = sHead.indexOf("photo_url");
+
+        for (let i = 1; i < sData.length; i++) {
+          const stStatus = statusIdx !== -1 ? String(sData[i][statusIdx] || "").trim().toUpperCase() : "AKTIF";
+          if (["AKTIF", "ACTIVE", ""].includes(stStatus)) {
+            students.push({
+              studentId: String(sData[i][idIdx] || "").trim(),
+              nis: String(sData[i][nisIdx] || "").trim(),
+              name: String(sData[i][nameIdx] || "").trim(),
+              gender: String(sData[i][genderIdx] || "L").trim().toUpperCase(),
+              photoUrl: photoIdx !== -1 ? String(sData[i][photoIdx] || "").trim() : "",
+              status: "AKTIF"
+            });
+          }
+        }
+      }
+    }
+
+    // 2. Ambil data Capaian Terkini
+    const headersCapaian = ["student_id", "student_name", "jilid_aktif", "halaman_aktif", "status_terakhir", "kelas_id", "nama_kelas", "ustadz_pengampu", "updated_at"];
+    const capaianSheet = getOrCreateTPQSheet(ss, SHEET_TPQ_CAPAIAN, headersCapaian, "#0d9488");
+    const capaianMap = {};
+    const cData = capaianSheet.getDataRange().getValues();
+    if (cData.length >= 2) {
+      const cHead = cData[0].map(h => String(h || "").trim().toLowerCase());
+      const sIdIdx = cHead.indexOf("student_id");
+      const jilidIdx = cHead.indexOf("jilid_aktif");
+      const halIdx = cHead.indexOf("halaman_aktif");
+      const stIdx = cHead.indexOf("status_terakhir");
+      const kIdIdx = cHead.indexOf("kelas_id");
+      const kNameIdx = cHead.indexOf("nama_kelas");
+      const ustadzIdx = cHead.indexOf("ustadz_pengampu");
+      const upIdx = cHead.indexOf("updated_at");
+
+      for (let i = 1; i < cData.length; i++) {
+        const sid = String(cData[i][sIdIdx] || "").trim();
+        if (sid) {
+          capaianMap[sid] = {
+            jilidAktif: Number(cData[i][jilidIdx]) || 1,
+            halamanAktif: Number(cData[i][halIdx]) || 1,
+            statusTerakhir: String(cData[i][stIdx] || "LANJUT").trim().toUpperCase(),
+            kelasId: String(cData[i][kIdIdx] || "").trim(),
+            namaKelas: String(cData[i][kNameIdx] || "").trim(),
+            ustadzPengampu: String(cData[i][ustadzIdx] || "").trim(),
+            updatedAt: String(cData[i][upIdx] || "").trim()
+          };
+        }
+      }
+    }
+
+    // 3. Ambil data Kelas TPQ
+    const headersKelas = ["kelas_id", "nama_kelas", "ustadz_pengampu", "jadwal_sesi", "student_ids", "created_at"];
+    const kelasSheet = getOrCreateTPQSheet(ss, SHEET_TPQ_KELAS, headersKelas, "#0284c7");
+    const kelasList = [];
+    const kData = kelasSheet.getDataRange().getValues();
+    if (kData.length >= 2) {
+      const kHead = kData[0].map(h => String(h || "").trim().toLowerCase());
+      const idIdx = kHead.indexOf("kelas_id");
+      const nameIdx = kHead.indexOf("nama_kelas");
+      const uIdx = kHead.indexOf("ustadz_pengampu");
+      const jIdx = kHead.indexOf("jadwal_sesi");
+      const sidsIdx = kHead.indexOf("student_ids");
+
+      for (let i = 1; i < kData.length; i++) {
+        let sids = [];
+        try {
+          sids = JSON.parse(String(kData[i][sidsIdx] || "[]"));
+        } catch (e) {
+          sids = [];
+        }
+        kelasList.push({
+          kelasId: String(kData[i][idIdx] || "").trim(),
+          namaKelas: String(kData[i][nameIdx] || "").trim(),
+          ustadzPengampu: String(kData[i][uIdx] || "").trim(),
+          jadwalSesi: String(kData[i][jIdx] || "").trim(),
+          studentIds: sids
+        });
+      }
+    }
+
+    // Gabungkan status capaian ke setiap siswa & hitung statistik
+    const perJilidCount = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0 };
+    let totalLanjut = 0;
+    let totalUlang = 0;
+    const ustadzSet = new Set();
+
+    const enrichedStudents = students.map(st => {
+      const cp = capaianMap[st.studentId] || {
+        jilidAktif: 1,
+        halamanAktif: 1,
+        statusTerakhir: "LANJUT",
+        kelasId: "",
+        namaKelas: "Belum Ditentukan",
+        ustadzPengampu: "-",
+        updatedAt: ""
+      };
+
+      // Cari kelas berdasarkan studentIds jika kelasId di capaian belum ada
+      if (!cp.kelasId) {
+        const foundK = kelasList.find(k => Array.isArray(k.studentIds) && (k.studentIds.includes(st.studentId) || k.studentIds.includes(st.nis)));
+        if (foundK) {
+          cp.kelasId = foundK.kelasId;
+          cp.namaKelas = foundK.namaKelas;
+          cp.ustadzPengampu = foundK.ustadzPengampu;
+        }
+      }
+
+      const jld = Math.max(1, Math.min(7, cp.jilidAktif));
+      perJilidCount[jld] = (perJilidCount[jld] || 0) + 1;
+      if (cp.statusTerakhir === "ULANG") totalUlang++;
+      else totalLanjut++;
+
+      if (cp.ustadzPengampu && cp.ustadzPengampu !== "-") {
+        ustadzSet.add(cp.ustadzPengampu);
+      }
+
+      return {
+        ...st,
+        jilidAktif: jld,
+        halamanAktif: cp.halamanAktif,
+        statusTerakhir: cp.statusTerakhir,
+        kelasId: cp.kelasId,
+        namaKelas: cp.namaKelas,
+        ustadzPengampu: cp.ustadzPengampu,
+        updatedAt: cp.updatedAt
+      };
+    });
+
+    return {
+      status: "success",
+      success: true,
+      summary: {
+        totalSantri: enrichedStudents.length,
+        totalLanjut: totalLanjut,
+        totalUlang: totalUlang,
+        persentaseLanjut: enrichedStudents.length > 0 ? Math.round((totalLanjut / enrichedStudents.length) * 100) : 100,
+        distribusiJilid: perJilidCount
+      },
+      students: enrichedStudents,
+      kelasList: kelasList,
+      ustadzList: Array.from(ustadzSet)
+    };
+  } catch (err) {
+    console.error("[GET TPQ DASHBOARD ERROR]", err);
+    return { status: "error", success: false, message: "Gagal memuat dashboard TPQ: " + err.message };
+  }
+}
+
+function saveTPQLog(data, token) {
+  return withScriptLock(() => {
+    try {
+      const studentId = String(data.studentId || data.student_id || "").trim();
+      const studentName = String(data.studentName || data.student_name || "").trim();
+      const nis = String(data.nis || "").trim();
+      const gender = String(data.gender || "L").trim().toUpperCase();
+      const jilid = Number(data.jilid) || 1;
+      const halaman = Number(data.halaman) || 1;
+      const statusSetoran = String(data.statusSetoran || data.status_setoran || "LANJUT").trim().toUpperCase();
+      const nilai = String(data.nilai || "MUMTAZ").trim().toUpperCase();
+      const ustadz = String(data.ustadz || "Ustadz/Ustadzah").trim();
+      const catatan = String(data.catatan || "").trim();
+      const tanggal = String(data.tanggal || new Date().toISOString().substring(0, 10)).trim();
+      const sesi = String(data.sesi || "Sore").trim();
+      const nowIso = new Date().toISOString();
+
+      if (!studentId && !nis) throw new Error("Identitas santri wajib diisi.");
+
+      const ss = getDatabaseSpreadsheet();
+      const headersLogs = ["log_id", "student_id", "nis", "student_name", "gender", "tanggal", "sesi", "jilid", "halaman", "status_setoran", "nilai", "ustadz", "catatan", "created_at"];
+      const logsSheet = getOrCreateTPQSheet(ss, SHEET_TPQ_LOGS, headersLogs, "#059669");
+
+      const logId = "TPQ_LOG_" + Utilities.getUuid().replace(/-/g, "").substring(0, 12);
+      logsSheet.appendRow([
+        logId, studentId, nis, studentName, gender, tanggal, sesi, jilid, halaman, statusSetoran, nilai, ustadz, catatan, nowIso
+      ]);
+
+      // Perbarui posisi Capaian Santri
+      let nextJilid = jilid;
+      let nextHalaman = halaman;
+
+      if (statusSetoran === "LANJUT") {
+        nextHalaman = halaman + 1;
+      } else if (statusSetoran === "NAIK_JILID") {
+        nextJilid = Math.min(7, jilid + 1);
+        nextHalaman = 1;
+      } else if (statusSetoran === "KHATAM_YANBUA") {
+        nextJilid = 7;
+        nextHalaman = 44; // Halaman akhir jilid 7
+      } else {
+        // ULANG
+        nextHalaman = halaman;
+      }
+
+      const headersCapaian = ["student_id", "student_name", "jilid_aktif", "halaman_aktif", "status_terakhir", "kelas_id", "nama_kelas", "ustadz_pengampu", "updated_at"];
+      const capaianSheet = getOrCreateTPQSheet(ss, SHEET_TPQ_CAPAIAN, headersCapaian, "#0d9488");
+      const cData = capaianSheet.getDataRange().getValues();
+      let rowIndex = -1;
+
+      if (cData.length >= 2) {
+        const sIdIdx = cData[0].map(h => String(h).toLowerCase()).indexOf("student_id");
+        for (let i = 1; i < cData.length; i++) {
+          if (String(cData[i][sIdIdx] || "").trim() === studentId) {
+            rowIndex = i + 1;
+            break;
+          }
+        }
+      }
+
+      if (rowIndex !== -1) {
+        capaianSheet.getRange(rowIndex, 2).setValue(studentName);
+        capaianSheet.getRange(rowIndex, 3).setValue(nextJilid);
+        capaianSheet.getRange(rowIndex, 4).setValue(nextHalaman);
+        capaianSheet.getRange(rowIndex, 5).setValue(statusSetoran);
+        if (ustadz && ustadz !== "-") capaianSheet.getRange(rowIndex, 8).setValue(ustadz);
+        capaianSheet.getRange(rowIndex, 9).setValue(nowIso);
+      } else {
+        capaianSheet.appendRow([
+          studentId, studentName, nextJilid, nextHalaman, statusSetoran, "", "Belum Ditentukan", ustadz, nowIso
+        ]);
+      }
+
+      return {
+        status: "success",
+        success: true,
+        message: `Bimbingan Yanbu'a santri ${studentName} berhasil dicatat. Status: ${statusSetoran}`,
+        logId: logId,
+        nextJilid: nextJilid,
+        nextHalaman: nextHalaman
+      };
+    } catch (err) {
+      console.error("[SAVE TPQ LOG ERROR]", err);
+      return { status: "error", success: false, message: "Gagal mencatat bimbingan TPQ: " + err.message };
+    }
+  });
+}
+
+function deleteTPQLog(logId, token) {
+  return withScriptLock(() => {
+    try {
+      if (!logId) throw new Error("ID Log wajib disertakan.");
+      const ss = getDatabaseSpreadsheet();
+      const sheet = ss.getSheetByName(SHEET_TPQ_LOGS);
+      if (!sheet) throw new Error("Sheet TPQ_Logs tidak ditemukan.");
+
+      const data = sheet.getDataRange().getValues();
+      const idIdx = data[0].map(h => String(h).toLowerCase()).indexOf("log_id");
+
+      for (let i = 1; i < data.length; i++) {
+        if (String(data[i][idIdx] || "").trim() === String(logId).trim()) {
+          sheet.deleteRow(i + 1);
+          return { status: "success", success: true, message: "Log bimbingan TPQ berhasil dihapus." };
+        }
+      }
+      return { status: "error", success: false, message: "Log TPQ tidak ditemukan." };
+    } catch (err) {
+      return { status: "error", success: false, message: "Gagal menghapus log TPQ: " + err.message };
+    }
+  });
+}
+
+function saveTPQCapaian(data, token) {
+  return withScriptLock(() => {
+    try {
+      const studentId = String(data.studentId || data.student_id || "").trim();
+      const studentName = String(data.studentName || data.student_name || "").trim();
+      const jilid = Number(data.jilidAktif || data.jilid) || 1;
+      const halaman = Number(data.halamanAktif || data.halaman) || 1;
+      const kelasId = String(data.kelasId || "").trim();
+      const namaKelas = String(data.namaKelas || "").trim();
+      const ustadz = String(data.ustadz || "").trim();
+      const nowIso = new Date().toISOString();
+
+      if (!studentId) throw new Error("ID Santri wajib disertakan.");
+
+      const ss = getDatabaseSpreadsheet();
+      const headersCapaian = ["student_id", "student_name", "jilid_aktif", "halaman_aktif", "status_terakhir", "kelas_id", "nama_kelas", "ustadz_pengampu", "updated_at"];
+      const sheet = getOrCreateTPQSheet(ss, SHEET_TPQ_CAPAIAN, headersCapaian, "#0d9488");
+
+      const cData = sheet.getDataRange().getValues();
+      let rowIndex = -1;
+      if (cData.length >= 2) {
+        const idIdx = cData[0].map(h => String(h).toLowerCase()).indexOf("student_id");
+        for (let i = 1; i < cData.length; i++) {
+          if (String(cData[i][idIdx] || "").trim() === studentId) {
+            rowIndex = i + 1;
+            break;
+          }
+        }
+      }
+
+      if (rowIndex !== -1) {
+        sheet.getRange(rowIndex, 2).setValue(studentName);
+        sheet.getRange(rowIndex, 3).setValue(jilid);
+        sheet.getRange(rowIndex, 4).setValue(halaman);
+        if (kelasId) sheet.getRange(rowIndex, 6).setValue(kelasId);
+        if (namaKelas) sheet.getRange(rowIndex, 7).setValue(namaKelas);
+        if (ustadz) sheet.getRange(rowIndex, 8).setValue(ustadz);
+        sheet.getRange(rowIndex, 9).setValue(nowIso);
+      } else {
+        sheet.appendRow([studentId, studentName, jilid, halaman, "LANJUT", kelasId, namaKelas, ustadz, nowIso]);
+      }
+
+      return { status: "success", success: true, message: `Posisi capaian santri ${studentName} berhasil diperbarui.` };
+    } catch (err) {
+      return { status: "error", success: false, message: "Gagal menyimpan capaian: " + err.message };
+    }
+  });
+}
+
+function getTPQKelasList(token) {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    const headersKelas = ["kelas_id", "nama_kelas", "ustadz_pengampu", "jadwal_sesi", "student_ids", "created_at"];
+    const sheet = getOrCreateTPQSheet(ss, SHEET_TPQ_KELAS, headersKelas, "#0284c7");
+    const data = sheet.getDataRange().getValues();
+    const list = [];
+
+    if (data.length >= 2) {
+      const head = data[0].map(h => String(h).toLowerCase());
+      const idIdx = head.indexOf("kelas_id");
+      const nameIdx = head.indexOf("nama_kelas");
+      const uIdx = head.indexOf("ustadz_pengampu");
+      const jIdx = head.indexOf("jadwal_sesi");
+      const sidsIdx = head.indexOf("student_ids");
+
+      for (let i = 1; i < data.length; i++) {
+        let sids = [];
+        try { sids = JSON.parse(String(data[i][sidsIdx] || "[]")); } catch (e) { sids = []; }
+        list.push({
+          kelasId: String(data[i][idIdx] || "").trim(),
+          namaKelas: String(data[i][nameIdx] || "").trim(),
+          ustadzPengampu: String(data[i][uIdx] || "").trim(),
+          jadwalSesi: String(data[i][jIdx] || "").trim(),
+          studentIds: sids
+        });
+      }
+    }
+    return { status: "success", success: true, kelasList: list };
+  } catch (err) {
+    return { status: "error", success: false, message: err.message };
+  }
+}
+
+function saveTPQKelas(data, token) {
+  return withScriptLock(() => {
+    try {
+      const namaKelas = String(data.namaKelas || data.nama_kelas || "").trim();
+      const ustadz = String(data.ustadzPengampu || data.ustadz || "").trim();
+      const jadwal = String(data.jadwalSesi || data.jadwal || "Sore (15:45 - 17:00)").trim();
+      const studentIds = Array.isArray(data.studentIds) ? data.studentIds : [];
+      let kelasId = String(data.kelasId || data.id || "").trim();
+      const nowIso = new Date().toISOString();
+
+      if (!namaKelas) throw new Error("Nama kelas wajib diisi.");
+
+      const ss = getDatabaseSpreadsheet();
+      const headersKelas = ["kelas_id", "nama_kelas", "ustadz_pengampu", "jadwal_sesi", "student_ids", "created_at"];
+      const sheet = getOrCreateTPQSheet(ss, SHEET_TPQ_KELAS, headersKelas, "#0284c7");
+
+      const kData = sheet.getDataRange().getValues();
+      let rowIndex = -1;
+
+      if (kelasId && kData.length >= 2) {
+        const idIdx = kData[0].map(h => String(h).toLowerCase()).indexOf("kelas_id");
+        for (let i = 1; i < kData.length; i++) {
+          if (String(kData[i][idIdx] || "").trim() === kelasId) {
+            rowIndex = i + 1;
+            break;
+          }
+        }
+      }
+
+      if (rowIndex !== -1) {
+        sheet.getRange(rowIndex, 2).setValue(namaKelas);
+        sheet.getRange(rowIndex, 3).setValue(ustadz);
+        sheet.getRange(rowIndex, 4).setValue(jadwal);
+        sheet.getRange(rowIndex, 5).setValue(JSON.stringify(studentIds));
+      } else {
+        if (!kelasId) kelasId = "KLS-" + Utilities.getUuid().replace(/-/g, "").substring(0, 8).toUpperCase();
+        sheet.appendRow([kelasId, namaKelas, ustadz, jadwal, JSON.stringify(studentIds), nowIso]);
+      }
+
+      return { status: "success", success: true, message: `Kelas ${namaKelas} berhasil disimpan.`, kelasId: kelasId };
+    } catch (err) {
+      return { status: "error", success: false, message: "Gagal menyimpan kelas TPQ: " + err.message };
+    }
+  });
+}
+
+function deleteTPQKelas(kelasId, token) {
+  return withScriptLock(() => {
+    try {
+      if (!kelasId) throw new Error("ID Kelas wajib disertakan.");
+      const ss = getDatabaseSpreadsheet();
+      const sheet = ss.getSheetByName(SHEET_TPQ_KELAS);
+      if (!sheet) throw new Error("Sheet TPQ_Kelas tidak ditemukan.");
+
+      const data = sheet.getDataRange().getValues();
+      const idIdx = data[0].map(h => String(h).toLowerCase()).indexOf("kelas_id");
+
+      for (let i = 1; i < data.length; i++) {
+        if (String(data[i][idIdx] || "").trim() === String(kelasId).trim()) {
+          sheet.deleteRow(i + 1);
+          return { status: "success", success: true, message: "Kelas TPQ berhasil dihapus." };
+        }
+      }
+      return { status: "error", success: false, message: "Kelas TPQ tidak ditemukan." };
+    } catch (err) {
+      return { status: "error", success: false, message: err.message };
+    }
+  });
+}
 
 
+// ====================================================================
+// MODUL BACKEND: SOROGAN AL-QUR'AN (BINNAZHAR MUSHAF POJOK 20 HAL/JUZ)
+// ====================================================================
+const SHEET_SOROGAN_LOGS = "Sorogan_Logs";
+const SHEET_SOROGAN_CAPAIAN = "Sorogan_Capaian";
+const SHEET_SOROGAN_HALAQAH = "Sorogan_Halaqah";
+
+function getOrCreateSoroganSheet(ss, sheetName, headers, bgHeaderColor) {
+  let sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.getRange(1, 1, 1, headers.length)
+      .setFontWeight("bold")
+      .setBackground(bgHeaderColor || "#0284c7")
+      .setFontColor("#ffffff");
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function initSoroganSheets(token) {
+  try {
+    if (token) {
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN"]);
+      } catch (authErr) {
+        verifySessionToken(token);
+      }
+    }
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error("Database Spreadsheet tidak ditemukan.");
+
+    const headersLogs = ["log_id", "student_id", "nis", "student_name", "gender", "tanggal", "sesi", "juz", "halaman_list", "total_halaman", "status_setoran", "nilai", "muallim", "catatan", "created_at"];
+    const headersCapaian = ["student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_khatam", "status_terakhir", "halaqah_id", "nama_halaqah", "muallim_pengampu", "updated_at"];
+    const headersHalaqah = ["halaqah_id", "nama_halaqah", "muallim", "jadwal_sesi", "student_ids", "created_at"];
+
+    const created = [];
+    const existing = [];
+
+    [
+      { name: SHEET_SOROGAN_LOGS, headers: headersLogs, color: "#0369a1" },
+      { name: SHEET_SOROGAN_CAPAIAN, headers: headersCapaian, color: "#0f766e" },
+      { name: SHEET_SOROGAN_HALAQAH, headers: headersHalaqah, color: "#4338ca" }
+    ].forEach(item => {
+      let s = ss.getSheetByName(item.name);
+      if (!s) {
+        s = ss.insertSheet(item.name);
+        s.getRange(1, 1, 1, item.headers.length).setValues([item.headers]);
+        s.getRange(1, 1, 1, item.headers.length).setFontWeight("bold").setBackground(item.color).setFontColor("#ffffff");
+        s.setFrozenRows(1);
+        created.push(item.name);
+      } else {
+        existing.push(item.name);
+      }
+    });
+
+    if (created.includes(SHEET_SOROGAN_HALAQAH)) {
+      const hSheet = ss.getSheetByName(SHEET_SOROGAN_HALAQAH);
+      const nowIso = new Date().toISOString();
+      const defaultHalaqah = [
+        ["SRG-HLQ-01", "Halaqah Sorogan Putra (Mushaf Besar)", "Kyai / Ustadz Yusuf", "Ba'da Subuh & Maghrib", "[]", nowIso],
+        ["SRG-HLQ-02", "Halaqah Sorogan Putri (Mushaf Besar)", "Nyai / Ustadzah Maryam", "Ba'da Ashar & Isya'", "[]", nowIso]
+      ];
+      hSheet.getRange(2, 1, defaultHalaqah.length, headersHalaqah.length).setValues(defaultHalaqah);
+    }
+
+    return {
+      status: "success",
+      success: true,
+      message: "Database Sorogan Al-Qur'an berhasil disiapkan.",
+      createdSheets: created,
+      existingSheets: existing
+    };
+  } catch (err) {
+    console.error("[INIT SOROGAN SHEETS ERROR]", err);
+    return { status: "error", success: false, message: "Gagal menyiapkan tabel Sorogan: " + err.message };
+  }
+}
+
+function getSoroganDashboard(token) {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error("Spreadsheet tidak ditemukan.");
+
+    // 1. Ambil data master Santri
+    const studentsSheet = ss.getSheetByName(SHEET_STUDENTS);
+    const students = [];
+    if (studentsSheet) {
+      const sData = studentsSheet.getDataRange().getValues();
+      if (sData.length >= 2) {
+        const sHead = sData[0].map(h => String(h || "").trim().toLowerCase());
+        const idIdx = sHead.indexOf("student_id");
+        const nisIdx = sHead.indexOf("nis");
+        const nameIdx = sHead.indexOf("name");
+        const genderIdx = sHead.indexOf("gender");
+        const statusIdx = sHead.indexOf("status");
+        const photoIdx = sHead.indexOf("photo_url");
+
+        for (let i = 1; i < sData.length; i++) {
+          const stStatus = statusIdx !== -1 ? String(sData[i][statusIdx] || "").trim().toUpperCase() : "AKTIF";
+          if (["AKTIF", "ACTIVE", ""].includes(stStatus)) {
+            students.push({
+              studentId: String(sData[i][idIdx] || "").trim(),
+              nis: String(sData[i][nisIdx] || "").trim(),
+              name: String(sData[i][nameIdx] || "").trim(),
+              gender: String(sData[i][genderIdx] || "L").trim().toUpperCase(),
+              photoUrl: photoIdx !== -1 ? String(sData[i][photoIdx] || "").trim() : "",
+              status: "AKTIF"
+            });
+          }
+        }
+      }
+    }
+
+    // 2. Ambil data Capaian Sorogan
+    const headersCapaian = ["student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_khatam", "status_terakhir", "halaqah_id", "nama_halaqah", "muallim_pengampu", "updated_at"];
+    const capaianSheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_CAPAIAN, headersCapaian, "#0f766e");
+    const capaianMap = {};
+    const cData = capaianSheet.getDataRange().getValues();
+    if (cData.length >= 2) {
+      const cHead = cData[0].map(h => String(h || "").trim().toLowerCase());
+      const sIdIdx = cHead.indexOf("student_id");
+      const juzIdx = cHead.indexOf("juz_aktif");
+      const halIdx = cHead.indexOf("halaman_terakhir");
+      const totIdx = cHead.indexOf("total_halaman_khatam");
+      const stIdx = cHead.indexOf("status_terakhir");
+      const hIdIdx = cHead.indexOf("halaqah_id");
+      const hNameIdx = cHead.indexOf("nama_halaqah");
+      const mIdx = cHead.indexOf("muallim_pengampu");
+      const upIdx = cHead.indexOf("updated_at");
+
+      for (let i = 1; i < cData.length; i++) {
+        const sid = String(cData[i][sIdIdx] || "").trim();
+        if (sid) {
+          capaianMap[sid] = {
+            juzAktif: Number(cData[i][juzIdx]) || 1,
+            halamanTerakhir: Number(cData[i][halIdx]) || 1,
+            totalHalamanKhatam: Number(cData[i][totIdx]) || 0,
+            statusTerakhir: String(cData[i][stIdx] || "LANJUT").trim().toUpperCase(),
+            halaqahId: String(cData[i][hIdIdx] || "").trim(),
+            namaHalaqah: String(cData[i][hNameIdx] || "").trim(),
+            muallimPengampu: String(cData[i][mIdx] || "").trim(),
+            updatedAt: String(cData[i][upIdx] || "").trim()
+          };
+        }
+      }
+    }
+
+    // 3. Ambil data Halaqah Sorogan
+    const headersHalaqah = ["halaqah_id", "nama_halaqah", "muallim", "jadwal_sesi", "student_ids", "created_at"];
+    const halaqahSheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_HALAQAH, headersHalaqah, "#4338ca");
+    const halaqahs = [];
+    const hData = halaqahSheet.getDataRange().getValues();
+    if (hData.length >= 2) {
+      const hHead = hData[0].map(h => String(h || "").trim().toLowerCase());
+      const idIdx = hHead.indexOf("halaqah_id");
+      const nameIdx = hHead.indexOf("nama_halaqah");
+      const mIdx = hHead.indexOf("muallim");
+      const jIdx = hHead.indexOf("jadwal_sesi");
+      const sidsIdx = hHead.indexOf("student_ids");
+
+      for (let i = 1; i < hData.length; i++) {
+        let sids = [];
+        try { sids = JSON.parse(String(hData[i][sidsIdx] || "[]")); } catch (e) { sids = []; }
+        halaqahs.push({
+          halaqahId: String(hData[i][idIdx] || "").trim(),
+          namaHalaqah: String(hData[i][nameIdx] || "").trim(),
+          muallim: String(hData[i][mIdx] || "").trim(),
+          jadwalSesi: String(hData[i][jIdx] || "").trim(),
+          studentIds: sids
+        });
+      }
+    }
+
+    // Gabungkan data capaian & hitung ringkasan
+    let totalJuzSum = 0;
+    let khatam30Juz = 0;
+    let totalLanjut = 0;
+    let totalUlang = 0;
+    const muallimSet = new Set();
+
+    const enrichedStudents = students.map(st => {
+      const cp = capaianMap[st.studentId] || {
+        juzAktif: 1,
+        halamanTerakhir: 1,
+        totalHalamanKhatam: 0,
+        statusTerakhir: "LANJUT",
+        halaqahId: "",
+        namaHalaqah: "Belum Ditentukan",
+        muallimPengampu: "-",
+        updatedAt: ""
+      };
+
+      if (!cp.halaqahId) {
+        const foundH = halaqahs.find(h => Array.isArray(h.studentIds) && (h.studentIds.includes(st.studentId) || h.studentIds.includes(st.nis)));
+        if (foundH) {
+          cp.halaqahId = foundH.halaqahId;
+          cp.namaHalaqah = foundH.namaHalaqah;
+          cp.muallimPengampu = foundH.muallim;
+        }
+      }
+
+      const juz = Math.max(1, Math.min(30, cp.juzAktif));
+      totalJuzSum += juz;
+      if (juz === 30 && cp.halamanTerakhir >= 20) khatam30Juz++;
+
+      if (cp.statusTerakhir === "ULANG") totalUlang++;
+      else totalLanjut++;
+
+      if (cp.muallimPengampu && cp.muallimPengampu !== "-") {
+        muallimSet.add(cp.muallimPengampu);
+      }
+
+      return {
+        ...st,
+        juzAktif: juz,
+        halamanTerakhir: cp.halamanTerakhir,
+        totalHalamanKhatam: cp.totalHalamanKhatam,
+        statusTerakhir: cp.statusTerakhir,
+        halaqahId: cp.halaqahId,
+        namaHalaqah: cp.namaHalaqah,
+        muallimPengampu: cp.muallimPengampu,
+        updatedAt: cp.updatedAt
+      };
+    });
+
+    const avgJuz = enrichedStudents.length > 0 ? (totalJuzSum / enrichedStudents.length).toFixed(1) : "1.0";
+
+    return {
+      status: "success",
+      success: true,
+      summary: {
+        totalSantri: enrichedStudents.length,
+        rataRataJuz: avgJuz,
+        khatam30Juz: khatam30Juz,
+        totalLanjut: totalLanjut,
+        totalUlang: totalUlang,
+        persentaseLanjut: enrichedStudents.length > 0 ? Math.round((totalLanjut / enrichedStudents.length) * 100) : 100
+      },
+      students: enrichedStudents,
+      halaqahs: halaqahs,
+      muallimList: Array.from(muallimSet)
+    };
+  } catch (err) {
+    console.error("[GET SOROGAN DASHBOARD ERROR]", err);
+    return { status: "error", success: false, message: "Gagal memuat dashboard Sorogan: " + err.message };
+  }
+}
+
+function saveSoroganLog(data, token) {
+  return withScriptLock(() => {
+    try {
+      const studentId = String(data.studentId || data.student_id || "").trim();
+      const studentName = String(data.studentName || data.student_name || "").trim();
+      const nis = String(data.nis || "").trim();
+      const gender = String(data.gender || "L").trim().toUpperCase();
+      const juz = Number(data.juz) || 1;
+      const halamanList = Array.isArray(data.halamanList) ? data.halamanList : (data.halaman ? [Number(data.halaman)] : [1]);
+      const totalHalaman = Number(data.totalHalaman) || halamanList.length || 1;
+      const statusSetoran = String(data.statusSetoran || data.status_setoran || "LANJUT").trim().toUpperCase();
+      const nilai = String(data.nilai || "MUMTAZ").trim().toUpperCase();
+      const muallim = String(data.muallim || data.ustadz || "Guru Sorogan").trim();
+      const catatan = String(data.catatan || "").trim();
+      const tanggal = String(data.tanggal || new Date().toISOString().substring(0, 10)).trim();
+      const sesi = String(data.sesi || "Pagi (Ba'da Subuh)").trim();
+      const nowIso = new Date().toISOString();
+
+      if (!studentId && !nis) throw new Error("Identitas santri wajib diisi.");
+
+      const ss = getDatabaseSpreadsheet();
+      const headersLogs = ["log_id", "student_id", "nis", "student_name", "gender", "tanggal", "sesi", "juz", "halaman_list", "total_halaman", "status_setoran", "nilai", "muallim", "catatan", "created_at"];
+      const logsSheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_LOGS, headersLogs, "#0369a1");
+
+      const logId = "SRG_LOG_" + Utilities.getUuid().replace(/-/g, "").substring(0, 12);
+      logsSheet.appendRow([
+        logId, studentId, nis, studentName, gender, tanggal, sesi, juz, JSON.stringify(halamanList), totalHalaman, statusSetoran, nilai, muallim, catatan, nowIso
+      ]);
+
+      // Perbarui posisi Capaian Sorogan (Mushaf 20 Halaman per Juz)
+      const lastPage = halamanList.length > 0 ? Math.max(...halamanList) : 1;
+      let nextJuz = juz;
+      let nextHalaman = lastPage;
+
+      if (statusSetoran === "LANJUT") {
+        if (lastPage >= 20) {
+          // Lanjut ke juz berikutnya jika halaman 20 sudah selesai
+          nextJuz = Math.min(30, juz + 1);
+          nextHalaman = (juz === 30 && lastPage >= 20) ? 20 : 1;
+        } else {
+          nextHalaman = lastPage + 1;
+        }
+      } else if (statusSetoran === "KHATAM_30JUZ") {
+        nextJuz = 30;
+        nextHalaman = 20;
+      }
+
+      const headersCapaian = ["student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_khatam", "status_terakhir", "halaqah_id", "nama_halaqah", "muallim_pengampu", "updated_at"];
+      const capaianSheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_CAPAIAN, headersCapaian, "#0f766e");
+      const cData = capaianSheet.getDataRange().getValues();
+      let rowIndex = -1;
+      let prevTotal = 0;
+
+      if (cData.length >= 2) {
+        const sIdIdx = cData[0].map(h => String(h).toLowerCase()).indexOf("student_id");
+        const totIdx = cData[0].map(h => String(h).toLowerCase()).indexOf("total_halaman_khatam");
+        for (let i = 1; i < cData.length; i++) {
+          if (String(cData[i][sIdIdx] || "").trim() === studentId) {
+            rowIndex = i + 1;
+            prevTotal = Number(cData[i][totIdx]) || 0;
+            break;
+          }
+        }
+      }
+
+      const updatedTotal = statusSetoran === "LANJUT" ? (prevTotal + totalHalaman) : prevTotal;
+
+      if (rowIndex !== -1) {
+        capaianSheet.getRange(rowIndex, 2).setValue(studentName);
+        capaianSheet.getRange(rowIndex, 3).setValue(nextJuz);
+        capaianSheet.getRange(rowIndex, 4).setValue(nextHalaman);
+        capaianSheet.getRange(rowIndex, 5).setValue(updatedTotal);
+        capaianSheet.getRange(rowIndex, 6).setValue(statusSetoran);
+        if (muallim && muallim !== "-") capaianSheet.getRange(rowIndex, 9).setValue(muallim);
+        capaianSheet.getRange(rowIndex, 10).setValue(nowIso);
+      } else {
+        capaianSheet.appendRow([
+          studentId, studentName, nextJuz, nextHalaman, updatedTotal, statusSetoran, "", "Belum Ditentukan", muallim, nowIso
+        ]);
+      }
+
+      return {
+        status: "success",
+        success: true,
+        message: `Sorogan santri ${studentName} berhasil dicatat. Juz ${juz} Hal ${halamanList.join(", ")} (${statusSetoran})`,
+        logId: logId,
+        nextJuz: nextJuz,
+        nextHalaman: nextHalaman
+      };
+    } catch (err) {
+      console.error("[SAVE SOROGAN LOG ERROR]", err);
+      return { status: "error", success: false, message: "Gagal mencatat sorogan: " + err.message };
+    }
+  });
+}
+
+function deleteSoroganLog(logId, token) {
+  return withScriptLock(() => {
+    try {
+      if (!logId) throw new Error("ID Log wajib disertakan.");
+      const ss = getDatabaseSpreadsheet();
+      const sheet = ss.getSheetByName(SHEET_SOROGAN_LOGS);
+      if (!sheet) throw new Error("Sheet Sorogan_Logs tidak ditemukan.");
+
+      const data = sheet.getDataRange().getValues();
+      const idIdx = data[0].map(h => String(h).toLowerCase()).indexOf("log_id");
+
+      for (let i = 1; i < data.length; i++) {
+        if (String(data[i][idIdx] || "").trim() === String(logId).trim()) {
+          sheet.deleteRow(i + 1);
+          return { status: "success", success: true, message: "Log sorogan berhasil dihapus." };
+        }
+      }
+      return { status: "error", success: false, message: "Log sorogan tidak ditemukan." };
+    } catch (err) {
+      return { status: "error", success: false, message: "Gagal menghapus log sorogan: " + err.message };
+    }
+  });
+}
+
+function saveSoroganCapaian(data, token) {
+  return withScriptLock(() => {
+    try {
+      const studentId = String(data.studentId || data.student_id || "").trim();
+      const studentName = String(data.studentName || data.student_name || "").trim();
+      const juz = Number(data.juzAktif || data.juz) || 1;
+      const halaman = Number(data.halamanTerakhir || data.halaman) || 1;
+      const halaqahId = String(data.halaqahId || "").trim();
+      const namaHalaqah = String(data.namaHalaqah || "").trim();
+      const muallim = String(data.muallim || "").trim();
+      const nowIso = new Date().toISOString();
+
+      if (!studentId) throw new Error("ID Santri wajib disertakan.");
+
+      const ss = getDatabaseSpreadsheet();
+      const headersCapaian = ["student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_khatam", "status_terakhir", "halaqah_id", "nama_halaqah", "muallim_pengampu", "updated_at"];
+      const sheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_CAPAIAN, headersCapaian, "#0f766e");
+
+      const cData = sheet.getDataRange().getValues();
+      let rowIndex = -1;
+      if (cData.length >= 2) {
+        const idIdx = cData[0].map(h => String(h).toLowerCase()).indexOf("student_id");
+        for (let i = 1; i < cData.length; i++) {
+          if (String(cData[i][idIdx] || "").trim() === studentId) {
+            rowIndex = i + 1;
+            break;
+          }
+        }
+      }
+
+      if (rowIndex !== -1) {
+        sheet.getRange(rowIndex, 2).setValue(studentName);
+        sheet.getRange(rowIndex, 3).setValue(juz);
+        sheet.getRange(rowIndex, 4).setValue(halaman);
+        if (halaqahId) sheet.getRange(rowIndex, 7).setValue(halaqahId);
+        if (namaHalaqah) sheet.getRange(rowIndex, 8).setValue(namaHalaqah);
+        if (muallim) sheet.getRange(rowIndex, 9).setValue(muallim);
+        sheet.getRange(rowIndex, 10).setValue(nowIso);
+      } else {
+        sheet.appendRow([studentId, studentName, juz, halaman, 0, "LANJUT", halaqahId, namaHalaqah, muallim, nowIso]);
+      }
+
+      return { status: "success", success: true, message: `Posisi Sorogan santri ${studentName} berhasil disesuaikan.` };
+    } catch (err) {
+      return { status: "error", success: false, message: "Gagal menyimpan capaian sorogan: " + err.message };
+    }
+  });
+}
+
+function getSoroganHalaqahList(token) {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    const headersHalaqah = ["halaqah_id", "nama_halaqah", "muallim", "jadwal_sesi", "student_ids", "created_at"];
+    const sheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_HALAQAH, headersHalaqah, "#4338ca");
+    const data = sheet.getDataRange().getValues();
+    const list = [];
+
+    if (data.length >= 2) {
+      const head = data[0].map(h => String(h).toLowerCase());
+      const idIdx = head.indexOf("halaqah_id");
+      const nameIdx = head.indexOf("nama_halaqah");
+      const mIdx = head.indexOf("muallim");
+      const jIdx = head.indexOf("jadwal_sesi");
+      const sidsIdx = head.indexOf("student_ids");
+
+      for (let i = 1; i < data.length; i++) {
+        let sids = [];
+        try { sids = JSON.parse(String(data[i][sidsIdx] || "[]")); } catch (e) { sids = []; }
+        list.push({
+          halaqahId: String(data[i][idIdx] || "").trim(),
+          namaHalaqah: String(data[i][nameIdx] || "").trim(),
+          muallim: String(data[i][mIdx] || "").trim(),
+          jadwalSesi: String(data[i][jIdx] || "").trim(),
+          studentIds: sids
+        });
+      }
+    }
+    return { status: "success", success: true, halaqahs: list };
+  } catch (err) {
+    return { status: "error", success: false, message: err.message };
+  }
+}
+
+function saveSoroganHalaqah(data, token) {
+  return withScriptLock(() => {
+    try {
+      const namaHalaqah = String(data.namaHalaqah || data.nama_halaqah || "").trim();
+      const muallim = String(data.muallim || "").trim();
+      const jadwal = String(data.jadwalSesi || data.jadwal || "Ba'da Subuh & Maghrib").trim();
+      const studentIds = Array.isArray(data.studentIds) ? data.studentIds : [];
+      let halaqahId = String(data.halaqahId || data.id || "").trim();
+      const nowIso = new Date().toISOString();
+
+      if (!namaHalaqah) throw new Error("Nama halaqah sorogan wajib diisi.");
+
+      const ss = getDatabaseSpreadsheet();
+      const headersHalaqah = ["halaqah_id", "nama_halaqah", "muallim", "jadwal_sesi", "student_ids", "created_at"];
+      const sheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_HALAQAH, headersHalaqah, "#4338ca");
+
+      const hData = sheet.getDataRange().getValues();
+      let rowIndex = -1;
+
+      if (halaqahId && hData.length >= 2) {
+        const idIdx = hData[0].map(h => String(h).toLowerCase()).indexOf("halaqah_id");
+        for (let i = 1; i < hData.length; i++) {
+          if (String(hData[i][idIdx] || "").trim() === halaqahId) {
+            rowIndex = i + 1;
+            break;
+          }
+        }
+      }
+
+      if (rowIndex !== -1) {
+        sheet.getRange(rowIndex, 2).setValue(namaHalaqah);
+        sheet.getRange(rowIndex, 3).setValue(muallim);
+        sheet.getRange(rowIndex, 4).setValue(jadwal);
+        sheet.getRange(rowIndex, 5).setValue(JSON.stringify(studentIds));
+      } else {
+        if (!halaqahId) halaqahId = "SRG-HLQ-" + Utilities.getUuid().replace(/-/g, "").substring(0, 8).toUpperCase();
+        sheet.appendRow([halaqahId, namaHalaqah, muallim, jadwal, JSON.stringify(studentIds), nowIso]);
+      }
+
+      return { status: "success", success: true, message: `Halaqah ${namaHalaqah} berhasil disimpan.`, halaqahId: halaqahId };
+    } catch (err) {
+      return { status: "error", success: false, message: "Gagal menyimpan halaqah sorogan: " + err.message };
+    }
+  });
+}
+
+function deleteSoroganHalaqah(halaqahId, token) {
+  return withScriptLock(() => {
+    try {
+      if (!halaqahId) throw new Error("ID Halaqah wajib disertakan.");
+      const ss = getDatabaseSpreadsheet();
+      const sheet = ss.getSheetByName(SHEET_SOROGAN_HALAQAH);
+      if (!sheet) throw new Error("Sheet Sorogan_Halaqah tidak ditemukan.");
+
+      const data = sheet.getDataRange().getValues();
+      const idIdx = data[0].map(h => String(h).toLowerCase()).indexOf("halaqah_id");
+
+      for (let i = 1; i < data.length; i++) {
+        if (String(data[i][idIdx] || "").trim() === String(halaqahId).trim()) {
+          sheet.deleteRow(i + 1);
+          return { status: "success", success: true, message: "Halaqah sorogan berhasil dihapus." };
+        }
+      }
+      return { status: "error", success: false, message: "Halaqah sorogan tidak ditemukan." };
+    } catch (err) {
+      return { status: "error", success: false, message: err.message };
+    }
+  });
+}

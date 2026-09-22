@@ -60,7 +60,13 @@ var AUTHORITATIVE_SCHEMAS_ = {
   "Tahfidz_Halaqah": ["halaqah_id", "nama_halaqah", "kategori", "muhafiz", "target_kurikulum", "student_ids", "created_at"],
   "Tahfidz_Jadwal_Sesi": ["sesi_id", "nama_sesi", "jenis_sesi", "status", "jam_mulai", "jam_selesai", "hari_list", "created_at"],
   "Pegawai": ["employee_id", "nama", "nip", "gender", "jabatan", "spesialisasi", "telepon", "email", "status", "created_at"],
-  "Programs": ["id", "name", "badge", "image", "description", "highlights_json", "detail_json", "status", "sort_order", "created_at", "updated_at", "created_by", "updated_by", "published_at", "published_by", "version"]
+  "Programs": ["id", "name", "badge", "image", "description", "highlights_json", "detail_json", "status", "sort_order", "created_at", "updated_at", "created_by", "updated_by", "published_at", "published_by", "version"],
+  "TPQ_Logs": ["log_id", "student_id", "nis", "student_name", "gender", "tanggal", "sesi", "jilid", "halaman", "status_setoran", "nilai", "ustadz", "catatan", "created_at"],
+  "TPQ_Capaian": ["student_id", "student_name", "jilid_aktif", "halaman_aktif", "status_terakhir", "kelas_id", "nama_kelas", "ustadz_pengampu", "updated_at"],
+  "TPQ_Kelas": ["kelas_id", "nama_kelas", "ustadz_pengampu", "jadwal_sesi", "student_ids", "created_at"],
+  "Sorogan_Logs": ["log_id", "student_id", "nis", "student_name", "gender", "tanggal", "sesi", "juz", "halaman_list", "total_halaman", "status_setoran", "nilai", "muallim", "catatan", "created_at"],
+  "Sorogan_Capaian": ["student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_khatam", "status_terakhir", "halaqah_id", "nama_halaqah", "muallim_pengampu", "updated_at"],
+  "Sorogan_Halaqah": ["halaqah_id", "nama_halaqah", "muallim", "jadwal_sesi", "student_ids", "created_at"]
 };
 
 // ============================================================

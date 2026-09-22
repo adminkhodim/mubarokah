@@ -78,6 +78,8 @@
             'hub': { group: null, category: '', title: 'Dashboard Utama' },
             'santri': { group: 'kesiswaan', category: 'Kesiswaan & Akademik', title: 'Data Santri' },
             'tahfidz': { group: 'kesiswaan', category: 'Kesiswaan & Akademik', title: 'Tahfidz Al-Qur\'an' },
+            'tpq': { group: 'kesiswaan', category: 'Kesiswaan & Akademik', title: 'TPQ Yanbu\'a' },
+            'sorogan': { group: 'kesiswaan', category: 'Kesiswaan & Akademik', title: 'Sorogan Al-Qur\'an' },
             'ppdb': { group: 'kesiswaan', category: 'Kesiswaan & Akademik', title: 'Data Pendaftar PPDB' },
             'program': { group: 'kesiswaan', category: 'Kesiswaan & Akademik', title: 'Manajemen Program' },
             'unit-kegiatan': { group: 'kesiswaan', category: 'Kesiswaan & Akademik', title: 'Unit Kegiatan Santri (UKS)' },
@@ -185,6 +187,8 @@
             const bannerView = document.getElementById('admin-view-banner');
             const santriView = document.getElementById('admin-view-santri');
             const tahfidzView = document.getElementById('admin-view-tahfidz');
+            const tpqView = document.getElementById('admin-view-tpq');
+            const soroganView = document.getElementById('admin-view-sorogan');
             const ppdbView = document.getElementById('admin-view-ppdb');
             const programView = document.getElementById('admin-view-program');
             const galeriView = document.getElementById('admin-view-galeri');
@@ -202,6 +206,8 @@
             bannerView.classList.add('hidden');
             if (santriView) santriView.classList.add('hidden');
             if (tahfidzView) tahfidzView.classList.add('hidden');
+            if (tpqView) tpqView.classList.add('hidden');
+            if (soroganView) soroganView.classList.add('hidden');
             if (ppdbView) ppdbView.classList.add('hidden');
             if (programView) programView.classList.add('hidden');
             if (galeriView) galeriView.classList.add('hidden');
@@ -238,6 +244,16 @@
                 document.querySelectorAll('.tahfidz-admin-action').forEach(el => {
                     el.style.display = isPengasuh ? 'none' : '';
                 });
+            } else if (viewName === 'tpq') {
+                if (tpqView) tpqView.classList.remove('hidden');
+                if (typeof loadAdminTPQData === 'function') {
+                    loadAdminTPQData();
+                }
+            } else if (viewName === 'sorogan') {
+                if (soroganView) soroganView.classList.remove('hidden');
+                if (typeof loadAdminSoroganData === 'function') {
+                    loadAdminSoroganData();
+                }
             } else if (viewName === 'notifikasi') {
                 if (notifikasiView) notifikasiView.classList.remove('hidden');
                 loadAdminNotifikasi();
