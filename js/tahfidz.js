@@ -34,6 +34,7 @@ const ASNTahfidz = {
     },
     filteredStudents: [],
     activeStudentDetail: null,
+    cache: null,
     catatState: {
         studentId: "",
         juz: 1,
@@ -53,6 +54,33 @@ const ASNTahfidz = {
     detailActiveTab: 1,
     detailFilterTipe: "ALL"
 };
+
+const TAHFIDZ_CACHE_KEY = 'mubarokah_tahfidz_dashboard_cache';
+const TAHFIDZ_CACHE_TTL_MS = 5 * 60 * 1000; // 5 menit
+
+/**
+ * Helper untuk mengatur status loading visual (icon spinner berputar + teks) pada tombol simpan/aksi
+ */
+function setTahfidzButtonLoading(btnOrId, isLoading, loadingText = "Menyimpan...") {
+    const btn = typeof btnOrId === 'string' ? document.getElementById(btnOrId) : btnOrId;
+    if (!btn) return;
+
+    if (isLoading) {
+        if (!btn.dataset.originalHtml) {
+            btn.dataset.originalHtml = btn.innerHTML;
+        }
+        btn.disabled = true;
+        btn.classList.add('opacity-75', 'cursor-not-allowed');
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i><span>${escapeHtml(loadingText)}</span>`;
+    } else {
+        btn.disabled = false;
+        btn.classList.remove('opacity-75', 'cursor-not-allowed');
+        if (btn.dataset.originalHtml) {
+            btn.innerHTML = btn.dataset.originalHtml;
+            delete btn.dataset.originalHtml;
+        }
+    }
+}
 
 // Referensi Surah Awal per Juz untuk Standar Mushaf 30 Juz
 const SURAH_JUZ_REFERENCE = {
@@ -93,15 +121,60 @@ const SURAH_JUZ_REFERENCE = {
 // ====================================================================
 
 /**
- * Muat data lengkap dashboard Tahfidz dari Google Apps Script
+ * Muat data lengkap dashboard Tahfidz dengan pola SWR (Stale-While-Revalidate).
+ * Jika data sudah ada di cache browser, langsung render instan (0 detik!),
+ * lalu sinkronkan dengan server di latar belakang.
  */
-async function loadAdminTahfidzData() {
+async function loadAdminTahfidzData(forceRefresh = false) {
     const loader = document.getElementById('admin-tahfidz-loader');
     const tableBody = document.getElementById('admin-tahfidz-table-body');
     const emptyState = document.getElementById('admin-tahfidz-empty');
+    const refreshIcon = document.getElementById('btn-refresh-tahfidz-icon');
 
-    if (loader) loader.classList.remove('hidden');
-    if (emptyState) emptyState.classList.add('hidden');
+    if (refreshIcon && forceRefresh) {
+        refreshIcon.classList.add('fa-spin');
+    }
+
+    // 1. Cek cache lokal (Memory atau SessionStorage)
+    let hasRenderedFromCache = false;
+    if (!forceRefresh) {
+        let cached = ASNTahfidz.cache;
+        if (!cached) {
+            try {
+                const stored = sessionStorage.getItem(TAHFIDZ_CACHE_KEY);
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    if (parsed && parsed.data && (Date.now() - (parsed.timestamp || 0) < TAHFIDZ_CACHE_TTL_MS)) {
+                        cached = parsed.data;
+                        ASNTahfidz.cache = cached;
+                    }
+                }
+            } catch (e) {
+                console.warn("Gagal membaca cache Tahfidz:", e);
+            }
+        }
+
+        if (cached && (cached.success || cached.status === "success") && Array.isArray(cached.students)) {
+            ASNTahfidz.data = cached;
+            ASNTahfidz.filteredStudents = [...(cached.students || [])];
+
+            renderTahfidzSummaryCards();
+            populateTahfidzFilters();
+            renderTahfidzStudentTable();
+            updateHubTahfidzBadge();
+            hasRenderedFromCache = true;
+
+            if (emptyState && ASNTahfidz.filteredStudents.length > 0) {
+                emptyState.classList.add('hidden');
+            }
+        }
+    }
+
+    // Hanya tampilkan loader penuh jika TIDAK ada data cache sebelumnya
+    if (!hasRenderedFromCache) {
+        if (loader) loader.classList.remove('hidden');
+        if (emptyState) emptyState.classList.add('hidden');
+    }
 
     try {
         const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TAHFIDZ_STORAGE_KEYS.adminToken)) || "";
@@ -109,25 +182,40 @@ async function loadAdminTahfidzData() {
 
         if (response && (response.success || response.status === "success")) {
             ASNTahfidz.data = response;
+            ASNTahfidz.cache = response;
+            try {
+                sessionStorage.setItem(TAHFIDZ_CACHE_KEY, JSON.stringify({
+                    data: response,
+                    timestamp: Date.now()
+                }));
+            } catch (e) {
+                console.warn("Gagal menyimpan cache Tahfidz:", e);
+            }
+
             ASNTahfidz.filteredStudents = [...(response.students || [])];
 
             renderTahfidzSummaryCards();
             populateTahfidzFilters();
             renderTahfidzStudentTable();
             updateHubTahfidzBadge();
+
+            if (forceRefresh && typeof showToast === 'function') {
+                showToast("✅ Data Tahfidz berhasil diperbarui.");
+            }
         } else {
             console.warn("Gagal memuat tahfidz dashboard:", response);
-            if (typeof showToast === 'function') {
+            if (!hasRenderedFromCache && typeof showToast === 'function') {
                 showToast("⚠️ " + ((response && response.message) || "Gagal memuat data Tahfidz."));
             }
         }
     } catch (err) {
         console.error("Error loadAdminTahfidzData:", err);
-        if (typeof showToast === 'function') {
+        if (!hasRenderedFromCache && typeof showToast === 'function') {
             showToast("❌ Terjadi kendala saat memuat data Tahfidz.");
         }
     } finally {
         if (loader) loader.classList.add('hidden');
+        if (refreshIcon) refreshIcon.classList.remove('fa-spin');
     }
 }
 
@@ -678,11 +766,7 @@ async function submitTahfidzCatat(e) {
     const totalHalaman = selectedPages.length;
 
     const btn = document.getElementById('btn-submit-tahfidz-catat');
-    const origText = btn ? btn.innerHTML : '';
-    if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Menyimpan...`;
-    }
+    setTahfidzButtonLoading(btn, true, "Menyimpan Setoran...");
 
     try {
         const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TAHFIDZ_STORAGE_KEYS.adminToken)) || "";
@@ -711,10 +795,43 @@ async function submitTahfidzCatat(e) {
 
         if (response && (response.success || response.status === "success")) {
             if (typeof showToast === 'function') {
-                showToast(response.message || "Setoran tahfidz santri berhasil disimpan!");
+                showToast(response.message || "✅ Setoran tahfidz santri berhasil disimpan!");
             }
+
+            // Optimistic update pada data santri di memori lokal
+            const updateStudentData = (st) => {
+                if (!st) return;
+                st.setoranTerakhir = {
+                    juz: juz,
+                    surah: SURAH_JUZ_REFERENCE[juz] || `Juz ${juz}`,
+                    halaman: `Halaman ${halamanList}`,
+                    totalHalaman: totalHalaman,
+                    tanggal: tanggal,
+                    sesi: sesi,
+                    tipe: ASNTahfidz.catatState.tipe,
+                    nilai: nilai,
+                    muhafiz: muhafiz || (st.halaqah?.muhafiz || "Ustadz Pembina")
+                };
+                if (!st.progress) st.progress = {};
+                if (juz > (st.progress.currentJuz || 0)) {
+                    st.progress.currentJuz = juz;
+                    st.progress.percent = Math.min(100, Math.round((juz / 30) * 100));
+                }
+                st.progress.onTrackStatus = "On-Track (Baru Setor)";
+                st.totalSetoran = (st.totalSetoran || 0) + 1;
+            };
+
+            const targetStudent = (ASNTahfidz.data.students || []).find(s => (s.studentId === studentId || s.nis === studentId));
+            updateStudentData(targetStudent);
+            const targetFiltered = (ASNTahfidz.filteredStudents || []).find(s => (s.studentId === studentId || s.nis === studentId));
+            updateStudentData(targetFiltered);
+
+            // Re-render tabel instan tanpa menunggu reload dari server
+            renderTahfidzStudentTable();
             closeTahfidzCatatModal();
-            await loadAdminTahfidzData();
+
+            // Sinkronisasi data lengkap di latar belakang (tanpa menutup layar dengan spinner)
+            loadAdminTahfidzData(true);
         } else {
             const msg = (response && response.message) || "Gagal menyimpan setoran.";
             if (typeof showToast === 'function') showToast("❌ " + msg);
@@ -723,10 +840,7 @@ async function submitTahfidzCatat(e) {
         console.error("Gagal submitTahfidzCatat:", err);
         if (typeof showToast === 'function') showToast("❌ Terjadi kendala: " + err.message);
     } finally {
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = origText;
-        }
+        setTahfidzButtonLoading(btn, false);
     }
 }
 
@@ -1086,7 +1200,7 @@ async function deleteTahfidzLogEntry(logId) {
             if (ASNTahfidz.activeStudentDetail?.student?.studentId) {
                 openTahfidzStudentDetail(ASNTahfidz.activeStudentDetail.student.studentId);
             }
-            loadAdminTahfidzData();
+            loadAdminTahfidzData(true);
         } else {
             if (typeof showToast === 'function') showToast("❌ Gagal menghapus catatan.");
         }
@@ -1343,7 +1457,7 @@ async function submitTahfidzTarget() {
     const { zPekanTotal, mPekanTotal } = recalculateTahfidzTargetWeekly();
 
     const btn = document.getElementById('btn-save-tahfidz-target');
-    if (btn) btn.disabled = true;
+    setTahfidzButtonLoading(btn, true, "Menyimpan Target...");
 
     try {
         const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TAHFIDZ_STORAGE_KEYS.adminToken)) || "";
@@ -1359,16 +1473,28 @@ async function submitTahfidzTarget() {
         if (response && (response.success || response.status === "success")) {
             if (typeof showToast === 'function') showToast("✅ Target santri berhasil diperbarui!");
             // Update local student target in memory
-            const st = (ASNTahfidz.data.students || []).find(s => s.studentId === studentId || s.nis === studentId);
-            if (st) {
+            const updateTargetInStudent = (st) => {
+                if (!st) return;
                 if (!st.target) st.target = {};
                 st.target.ziyadahSesi = zSesi;
                 st.target.ziyadahPekan = zPekanTotal;
+                st.target.ziyadahBulan = zPekanTotal * 4;
                 st.target.murajaahSesi = mSesi;
                 st.target.murajaahPekan = mPekanTotal;
-            }
+                st.target.murajaahBulan = mPekanTotal * 4;
+            };
+
+            const st = (ASNTahfidz.data.students || []).find(s => s.studentId === studentId || s.nis === studentId);
+            updateTargetInStudent(st);
+            const stFiltered = (ASNTahfidz.filteredStudents || []).find(s => s.studentId === studentId || s.nis === studentId);
+            updateTargetInStudent(stFiltered);
+
+            // Re-render tabel instan dengan target baru
+            renderTahfidzStudentTable();
             closeTahfidzTargetModal();
-            loadAdminTahfidzData();
+
+            // Sinkronisasi data di latar belakang
+            loadAdminTahfidzData(true);
         } else {
             if (typeof showToast === 'function') showToast("❌ " + ((response && response.message) || "Gagal menyimpan target."));
         }
@@ -1376,7 +1502,7 @@ async function submitTahfidzTarget() {
         console.error(err);
         if (typeof showToast === 'function') showToast("❌ Terjadi kesalahan saat menyimpan target: " + (err.message || err));
     } finally {
-        if (btn) btn.disabled = false;
+        setTahfidzButtonLoading(btn, false);
     }
 }
 
@@ -1826,11 +1952,7 @@ async function submitTahfidzPlotting() {
     const studentIds = ASNTahfidz.activePlottingStudentIds || [];
 
     const btnSubmit = document.getElementById('tab2-btn-save-plotting') || document.getElementById('btn-save-tahfidz-plotting');
-    const origText = btnSubmit ? btnSubmit.innerHTML : '';
-    if (btnSubmit) {
-        btnSubmit.disabled = true;
-        btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...`;
-    }
+    setTahfidzButtonLoading(btnSubmit, true, "Menyimpan Plotting...");
 
     try {
         const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TAHFIDZ_STORAGE_KEYS.adminToken)) || "";
@@ -1844,10 +1966,16 @@ async function submitTahfidzPlotting() {
             if (typeof showToast === 'function') {
                 showToast(`✅ Berhasil mengatur ${studentIds.length} santri binaan ke ${ASNTahfidz.activePlottingHalaqah.namaHalaqah}!`);
             }
-            await loadAdminTahfidzData();
+            // Update jumlah santri di halaqah lokal
+            if (ASNTahfidz.activePlottingHalaqah) {
+                ASNTahfidz.activePlottingHalaqah.studentCount = studentIds.length;
+            }
             renderTahfidzHalaqahCards();
             populatePlottingHalaqahSelector();
             renderTahfidzMatriksBeban();
+
+            // Sinkronisasi data di latar belakang
+            loadAdminTahfidzData(true);
         } else {
             if (typeof showToast === 'function') {
                 showToast("❌ Gagal menyimpan plotting: " + ((res && res.message) || "Terjadi kesalahan"));
@@ -1857,10 +1985,7 @@ async function submitTahfidzPlotting() {
         console.error(err);
         if (typeof showToast === 'function') showToast("❌ Terjadi kendala jaringan saat menyimpan plotting.");
     } finally {
-        if (btnSubmit) {
-            btnSubmit.disabled = false;
-            btnSubmit.innerHTML = origText;
-        }
+        setTahfidzButtonLoading(btnSubmit, false);
     }
 }
 
@@ -2074,9 +2199,7 @@ async function submitTahfidzSesi(e) {
     };
 
     const btn = document.getElementById('btn-submit-sesi');
-    const btnText = document.getElementById('btn-submit-sesi-text');
-    if (btn) btn.disabled = true;
-    if (btnText) btnText.innerText = "Menyimpan...";
+    setTahfidzButtonLoading(btn, true, isEdit ? "Memperbarui Sesi..." : "Menyimpan Sesi...");
 
     try {
         const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TAHFIDZ_STORAGE_KEYS.adminToken)) || "";
@@ -2100,7 +2223,7 @@ async function submitTahfidzSesi(e) {
 
             resetTahfidzSesiForm();
             renderTahfidzSesiCards();
-            loadAdminTahfidzData();
+            loadAdminTahfidzData(true);
         } else {
             if (typeof showToast === 'function') showToast("❌ Gagal menyimpan sesi: " + ((res && res.message) || "Terjadi kesalahan"));
         }
@@ -2108,8 +2231,7 @@ async function submitTahfidzSesi(e) {
         console.error(err);
         if (typeof showToast === 'function') showToast("❌ Terjadi kendala saat menyimpan jadwal sesi: " + (err.message || err));
     } finally {
-        if (btn) btn.disabled = false;
-        if (btnText && (!idInput || !idInput.value)) btnText.innerText = "Simpan Sesi";
+        setTahfidzButtonLoading(btn, false);
     }
 }
 
@@ -2178,7 +2300,7 @@ async function deleteTahfidzSesiConfirm(sesiId, namaSesi) {
             }
             resetTahfidzSesiForm();
             renderTahfidzSesiCards();
-            loadAdminTahfidzData();
+            loadAdminTahfidzData(true);
         } else {
             if (typeof showToast === 'function') showToast("❌ Gagal menghapus sesi: " + ((res && res.message) || "Terjadi kesalahan"));
         }
@@ -2193,7 +2315,7 @@ async function deleteTahfidzSesiConfirm(sesiId, namaSesi) {
  */
 async function saveAllHalaqahChanges() {
     if (typeof showToast === 'function') showToast("⏳ Menyimpan seluruh perubahan & menyinkronkan data...");
-    await loadAdminTahfidzData();
+    await loadAdminTahfidzData(true);
     if (typeof showToast === 'function') showToast("✅ Data halaqah, plotting & sesi berhasil disinkronkan.");
     closeTahfidzHalaqahModal();
 }
@@ -2213,10 +2335,13 @@ async function deleteTahfidzHalaqahConfirm(halaqahId, namaHalaqah) {
 
         if (res && (res.success || res.status === "success")) {
             if (typeof showToast === 'function') showToast("🗑️ Halaqah berhasil dihapus!");
-            await loadAdminTahfidzData();
+            if (ASNTahfidz.data.halaqahs) {
+                ASNTahfidz.data.halaqahs = ASNTahfidz.data.halaqahs.filter(h => h.halaqahId !== halaqahId);
+            }
             renderTahfidzHalaqahCards();
             populatePlottingHalaqahSelector();
             renderTahfidzMatriksBeban();
+            loadAdminTahfidzData(true);
         } else {
             if (typeof showToast === 'function') showToast("❌ Gagal menghapus halaqah: " + ((res && res.message) || "Terjadi kesalahan"));
         }
@@ -2242,6 +2367,9 @@ async function submitNewHalaqah(e) {
         return;
     }
 
+    const btn = document.getElementById('btn-submit-tahfidz-halaqah');
+    setTahfidzButtonLoading(btn, true, "Menyimpan Halaqah...");
+
     try {
         const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TAHFIDZ_STORAGE_KEYS.adminToken)) || "";
         const res = await apiPost("saveTahfidzHalaqah", {
@@ -2256,16 +2384,32 @@ async function submitNewHalaqah(e) {
             if (typeof showToast === 'function') showToast("✅ Halaqah baru berhasil dibuat!");
             if (document.getElementById('input-halaqah-nama')) document.getElementById('input-halaqah-nama').value = '';
             if (document.getElementById('input-halaqah-target')) document.getElementById('input-halaqah-target').value = '';
-            await loadAdminTahfidzData();
+            
+            // Tambahkan halaqah lokal ke state
+            if (!ASNTahfidz.data.halaqahs) ASNTahfidz.data.halaqahs = [];
+            ASNTahfidz.data.halaqahs.push({
+                halaqahId: res.halaqahId || ("HLQ-" + Date.now()),
+                namaHalaqah: nama,
+                kategori: kat,
+                muhafiz: muh,
+                targetKurikulum: target,
+                studentCount: 0
+            });
+
             renderTahfidzHalaqahCards();
             populatePlottingHalaqahSelector();
             renderTahfidzMatriksBeban();
+
+            // Sinkronisasi data di latar belakang
+            loadAdminTahfidzData(true);
         } else {
             if (typeof showToast === 'function') showToast("❌ Gagal membuat halaqah: " + ((res && res.message) || "Terjadi kesalahan"));
         }
     } catch (err) {
         console.error(err);
         if (typeof showToast === 'function') showToast("❌ Gagal menghubungi server.");
+    } finally {
+        setTahfidzButtonLoading(btn, false);
     }
 }
 
