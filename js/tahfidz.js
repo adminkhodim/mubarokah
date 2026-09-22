@@ -50,6 +50,13 @@ const ASNTahfidz = {
         murajaahSesi: 2,
         murajaahPekan: 10
     },
+    selectedStudentIds: new Set(),
+    bulkTargetState: {
+        scope: 'ALL',
+        halaqahId: '',
+        kategori: '',
+        studentIds: []
+    },
     halaqahActiveTab: 1,
     detailActiveTab: 1,
     detailFilterTipe: "ALL"
@@ -418,8 +425,15 @@ function renderTahfidzStudentTable() {
             const onTrackStatus = st.progress?.onTrackStatus || 'Belum Setor';
             const isOnTrack = onTrackStatus.includes('On-Track');
 
+            const isSelected = ASNTahfidz.selectedStudentIds && ASNTahfidz.selectedStudentIds.has(st.studentId);
+
             return `
-            <tr class="hover:bg-slate-50/80 dark:hover:bg-[#1c2836]/60 transition border-b border-slate-100 dark:border-[#253447]">
+            <tr class="hover:bg-slate-50/80 dark:hover:bg-[#1c2836]/60 transition border-b border-slate-100 dark:border-[#253447] ${isSelected ? 'bg-amber-50/40 dark:bg-amber-950/20' : ''}">
+                <!-- 0. CHECKBOX SELECTION -->
+                <td class="py-2.5 px-3 w-10 text-center">
+                    <input type="checkbox" onchange="toggleSelectTahfidzStudent('${st.studentId}', this.checked)" ${isSelected ? 'checked' : ''} class="tahfidz-row-checkbox rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer" title="Pilih ${escapeHtml(st.name || '')}">
+                </td>
+
                 <!-- 1. SANTRI & HALAQAH -->
                 <td class="px-3.5 py-2.5">
                     <div class="flex items-center space-x-2.5">
@@ -552,11 +566,13 @@ function renderTahfidzStudentTable() {
             const percent = st.progress?.percent || 3;
             const targetZ = st.target?.ziyadahSesi || 1;
             const targetM = st.target?.murajaahSesi || 2;
+            const isSelected = ASNTahfidz.selectedStudentIds && ASNTahfidz.selectedStudentIds.has(st.studentId);
 
             return `
-            <div class="p-3 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm space-y-2.5">
+            <div class="p-3 bg-white dark:bg-[#15202d] rounded-2xl border ${isSelected ? 'border-amber-400 dark:border-amber-600 bg-amber-50/20' : 'border-slate-100 dark:border-[#253447]'} shadow-sm space-y-2.5">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-2.5 min-w-0">
+                        <input type="checkbox" onchange="toggleSelectTahfidzStudent('${st.studentId}', this.checked)" ${isSelected ? 'checked' : ''} class="tahfidz-row-checkbox rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer shrink-0" title="Pilih ${escapeHtml(st.name || '')}">
                         <div class="w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-extrabold flex items-center justify-center text-xs shrink-0">
                             ${st.photoUrl ? `<img src="${escapeHtml(st.photoUrl)}" class="w-full h-full object-cover rounded-full">` : initials}
                         </div>
@@ -601,6 +617,9 @@ function renderTahfidzStudentTable() {
             `;
         }).join('');
     }
+
+    // Update Bulk Selection Action Bar
+    updateTahfidzBulkSelectionBar();
 }
 
 // ====================================================================
@@ -1671,6 +1690,413 @@ async function submitTahfidzTarget() {
     } catch (err) {
         console.error(err);
         if (typeof showToast === 'function') showToast("❌ Terjadi kesalahan saat menyimpan target: " + (err.message || err));
+    } finally {
+        setTahfidzButtonLoading(btn, false);
+    }
+}
+
+// ====================================================================
+// 4B. MANAJEMEN SELEKSI & TARGET MASSAL (BULK EDIT TARGET)
+// ====================================================================
+
+/**
+ * Update UI floating bulk selection action bar dan checkbox check-all
+ */
+function updateTahfidzBulkSelectionBar() {
+    const bar = document.getElementById('tahfidz-bulk-selection-bar');
+    const text = document.getElementById('tahfidz-selected-count-text');
+    const checkAll = document.getElementById('tahfidz-check-all');
+    const count = ASNTahfidz.selectedStudentIds ? ASNTahfidz.selectedStudentIds.size : 0;
+
+    if (bar) {
+        if (count > 0) {
+            bar.classList.remove('hidden');
+        } else {
+            bar.classList.add('hidden');
+        }
+    }
+    if (text) {
+        text.innerText = `${count} santri dipilih`;
+    }
+
+    const currentStudents = (ASNTahfidz.filteredStudents && ASNTahfidz.filteredStudents.length > 0)
+        ? ASNTahfidz.filteredStudents
+        : (ASNTahfidz.data.students || []);
+
+    if (checkAll && currentStudents.length > 0) {
+        const allChecked = count > 0 && currentStudents.every(st => ASNTahfidz.selectedStudentIds.has(st.studentId));
+        checkAll.checked = allChecked;
+        checkAll.indeterminate = count > 0 && !allChecked;
+    } else if (checkAll) {
+        checkAll.checked = false;
+        checkAll.indeterminate = false;
+    }
+}
+
+/**
+ * Toggle checklist seluruh santri pada tabel mutaba'ah
+ */
+function toggleSelectAllTahfidzStudents(checked) {
+    if (!ASNTahfidz.selectedStudentIds) {
+        ASNTahfidz.selectedStudentIds = new Set();
+    }
+    const currentStudents = (ASNTahfidz.filteredStudents && ASNTahfidz.filteredStudents.length > 0)
+        ? ASNTahfidz.filteredStudents
+        : (ASNTahfidz.data.students || []);
+
+    currentStudents.forEach(st => {
+        if (st && st.studentId) {
+            if (checked) {
+                ASNTahfidz.selectedStudentIds.add(st.studentId);
+            } else {
+                ASNTahfidz.selectedStudentIds.delete(st.studentId);
+            }
+        }
+    });
+
+    document.querySelectorAll('.tahfidz-row-checkbox').forEach(cb => {
+        cb.checked = checked;
+    });
+
+    updateTahfidzBulkSelectionBar();
+}
+
+/**
+ * Toggle checklist perorangan santri
+ */
+function toggleSelectTahfidzStudent(studentId, checked) {
+    if (!ASNTahfidz.selectedStudentIds) {
+        ASNTahfidz.selectedStudentIds = new Set();
+    }
+    if (checked) {
+        ASNTahfidz.selectedStudentIds.add(studentId);
+    } else {
+        ASNTahfidz.selectedStudentIds.delete(studentId);
+    }
+    updateTahfidzBulkSelectionBar();
+}
+
+/**
+ * Batalkan seluruh pilihan santri
+ */
+function clearTahfidzSelectedStudents() {
+    if (ASNTahfidz.selectedStudentIds) {
+        ASNTahfidz.selectedStudentIds.clear();
+    }
+    document.querySelectorAll('.tahfidz-row-checkbox').forEach(cb => {
+        cb.checked = false;
+    });
+    const checkAll = document.getElementById('tahfidz-check-all');
+    if (checkAll) {
+        checkAll.checked = false;
+        checkAll.indeterminate = false;
+    }
+    updateTahfidzBulkSelectionBar();
+}
+
+/**
+ * Buka modal atur target massal
+ */
+function openTahfidzBulkTargetModal(initialScope = 'ALL') {
+    const modal = document.getElementById('modal-tahfidz-target-bulk');
+    if (!modal) return;
+
+    // Populate Halaqah Dropdown
+    const selHalaqah = document.getElementById('bulk-target-select-halaqah');
+    if (selHalaqah) {
+        const halaqahs = ASNTahfidz.data.halaqahs || [];
+        selHalaqah.innerHTML = halaqahs.length > 0
+            ? halaqahs.map(h => `<option value="${escapeHtml(h.id || h.halaqahId || h.namaHalaqah)}">${escapeHtml(h.namaHalaqah || h.nama)}</option>`).join('')
+            : '<option value="">(Belum ada halaqah)</option>';
+    }
+
+    // Populate Kategori Dropdown
+    const selKategori = document.getElementById('bulk-target-select-kategori');
+    if (selKategori) {
+        const categories = (ASNTahfidz.data.categories || []).filter(c => c && c !== 'Semua Kategori');
+        selKategori.innerHTML = categories.length > 0
+            ? categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')
+            : '<option value="">(Belum ada program)</option>';
+    }
+
+    // Update Session Badges
+    const counts = getTahfidzActiveWeeklySessionCounts();
+    const badgeZ = document.getElementById('bulk-target-badge-ziyadah');
+    const badgeM = document.getElementById('bulk-target-badge-murajaah');
+    if (badgeZ) badgeZ.innerText = `${counts.ziyadahWeeklySessions} Sesi Ziyadah/Pekan`;
+    if (badgeM) badgeM.innerText = `${counts.murajaahWeeklySessions} Sesi Muroja'ah/Pekan`;
+
+    // Tentukan scope awal
+    const selCount = ASNTahfidz.selectedStudentIds ? ASNTahfidz.selectedStudentIds.size : 0;
+    const scopeToUse = (initialScope === 'SELECTED' && selCount === 0) ? 'ALL' : initialScope;
+    setBulkTargetScope(scopeToUse);
+
+    // Hitung target otomatis
+    recalculateBulkTargetWeekly();
+
+    modal.classList.remove('hidden');
+}
+
+/**
+ * Tutup modal target massal
+ */
+function closeTahfidzBulkTargetModal() {
+    const modal = document.getElementById('modal-tahfidz-target-bulk');
+    if (modal) modal.classList.add('hidden');
+}
+
+/**
+ * Set target scope (ALL, HALAQAH, KATEGORI, SELECTED)
+ */
+function setBulkTargetScope(scope) {
+    if (!ASNTahfidz.bulkTargetState) {
+        ASNTahfidz.bulkTargetState = { scope: 'ALL', halaqahId: '', kategori: '', studentIds: [] };
+    }
+    ASNTahfidz.bulkTargetState.scope = scope;
+
+    const scopes = ['ALL', 'HALAQAH', 'KATEGORI', 'SELECTED'];
+    scopes.forEach(s => {
+        const btn = document.getElementById(`btn-scope-${s.toLowerCase()}`);
+        if (!btn) return;
+        if (s === scope) {
+            btn.className = 'px-3 py-2 rounded-xl font-bold text-xs border text-center transition flex flex-col items-center gap-1 bg-white dark:bg-[#15202d] border-emerald-500 text-emerald-700 dark:text-emerald-300 shadow-sm ring-2 ring-emerald-500/20';
+        } else {
+            btn.className = 'px-3 py-2 rounded-xl font-bold text-xs border text-center transition flex flex-col items-center gap-1 bg-white dark:bg-[#15202d] border-slate-200 dark:border-[#283a4e] text-slate-600 dark:text-slate-300 hover:border-amber-400';
+        }
+    });
+
+    const subContainer = document.getElementById('bulk-target-subselect-container');
+    const halaqahWrap = document.getElementById('bulk-target-halaqah-wrapper');
+    const kategoriWrap = document.getElementById('bulk-target-kategori-wrapper');
+
+    if (subContainer) {
+        if (scope === 'HALAQAH' || scope === 'KATEGORI') {
+            subContainer.classList.remove('hidden');
+        } else {
+            subContainer.classList.add('hidden');
+        }
+    }
+
+    if (halaqahWrap) {
+        if (scope === 'HALAQAH') halaqahWrap.classList.remove('hidden');
+        else halaqahWrap.classList.add('hidden');
+    }
+
+    if (kategoriWrap) {
+        if (scope === 'KATEGORI') kategoriWrap.classList.remove('hidden');
+        else kategoriWrap.classList.add('hidden');
+    }
+
+    onBulkTargetScopeChange();
+}
+
+/**
+ * Filter santri sasaran berdasarkan scope aktif
+ */
+function onBulkTargetScopeChange() {
+    if (!ASNTahfidz.bulkTargetState) {
+        ASNTahfidz.bulkTargetState = { scope: 'ALL', halaqahId: '', kategori: '', studentIds: [] };
+    }
+    const scope = ASNTahfidz.bulkTargetState.scope || 'ALL';
+    const allStudents = ASNTahfidz.data.students || [];
+
+    let targetStudents = [];
+    let summaryText = "";
+
+    if (scope === 'ALL') {
+        targetStudents = allStudents;
+        summaryText = `Target akan diterapkan ke seluruh santri aktif (${targetStudents.length} santri)`;
+    } else if (scope === 'HALAQAH') {
+        const selHalaqah = document.getElementById('bulk-target-select-halaqah');
+        const halaqahVal = selHalaqah ? selHalaqah.value : "";
+        const halaqahObj = (ASNTahfidz.data.halaqahs || []).find(h => (h.id || h.halaqahId || h.namaHalaqah) === halaqahVal);
+        const halaqahName = halaqahObj ? (halaqahObj.namaHalaqah || halaqahObj.nama) : halaqahVal;
+
+        targetStudents = allStudents.filter(st => {
+            const hid = st.halaqahId || (st.halaqah && (st.halaqah.halaqahId || st.halaqah.id || st.halaqah.namaHalaqah));
+            const hname = st.halaqah?.namaHalaqah || st.halaqahName || "";
+            return (hid && hid === halaqahVal) || (hname && hname === halaqahName);
+        });
+        summaryText = `Target diterapkan ke santri kelompok: ${halaqahName || 'Halaqah terpilih'} (${targetStudents.length} santri)`;
+    } else if (scope === 'KATEGORI') {
+        const selKategori = document.getElementById('bulk-target-select-kategori');
+        const kategoriVal = selKategori ? selKategori.value : "";
+
+        targetStudents = allStudents.filter(st => {
+            return (st.kategori && st.kategori === kategoriVal) || (st.program && st.program === kategoriVal);
+        });
+        summaryText = `Target diterapkan ke program: ${kategoriVal || 'Program terpilih'} (${targetStudents.length} santri)`;
+    } else if (scope === 'SELECTED') {
+        const selSet = ASNTahfidz.selectedStudentIds || new Set();
+        targetStudents = allStudents.filter(st => selSet.has(st.studentId));
+        summaryText = `Target diterapkan ke santri yang dicentang (${targetStudents.length} santri)`;
+    }
+
+    const targetIds = targetStudents.map(st => st.studentId).filter(Boolean);
+    ASNTahfidz.bulkTargetState.studentIds = targetIds;
+
+    const badge = document.getElementById('bulk-target-recipient-badge');
+    const summaryEl = document.getElementById('bulk-target-summary-text');
+    const previewEl = document.getElementById('bulk-target-student-preview');
+
+    if (badge) {
+        badge.innerText = `${targetIds.length} Santri Sasaran`;
+        if (targetIds.length > 0) {
+            badge.className = 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300';
+        } else {
+            badge.className = 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300';
+        }
+    }
+    if (summaryEl) summaryEl.innerText = summaryText;
+
+    if (previewEl) {
+        if (targetStudents.length === 0) {
+            previewEl.innerText = 'Tidak ada santri yang cocok';
+        } else if (targetStudents.length <= 3) {
+            previewEl.innerText = targetStudents.map(s => s.name).join(', ');
+        } else {
+            const firstThree = targetStudents.slice(0, 3).map(s => s.name).join(', ');
+            previewEl.innerText = `${firstThree}, dan ${targetStudents.length - 3} lainnya`;
+        }
+    }
+}
+
+/**
+ * Hitung otomatis Target Mingguan & Bulanan pada form massal
+ */
+function recalculateBulkTargetWeekly() {
+    const counts = getTahfidzActiveWeeklySessionCounts();
+
+    const elZSesi = document.getElementById('input-bulk-target-ziyadah-sesi');
+    const elZPekan = document.getElementById('input-bulk-target-ziyadah-pekan');
+    const elZBulan = document.getElementById('input-bulk-target-ziyadah-bulan');
+
+    const elMSesi = document.getElementById('input-bulk-target-murajaah-sesi');
+    const elMPekan = document.getElementById('input-bulk-target-murajaah-pekan');
+    const elMBulan = document.getElementById('input-bulk-target-murajaah-bulan');
+
+    const zSesi = Math.max(0.5, parseFloat(elZSesi?.value) || 1);
+    const mSesi = Math.max(0.5, parseFloat(elMSesi?.value) || 2);
+
+    const zPekanTotal = Number((zSesi * counts.ziyadahWeeklySessions).toFixed(1));
+    const zBulanTotal = Number((zPekanTotal * 4).toFixed(1));
+
+    const mPekanTotal = Number((mSesi * counts.murajaahWeeklySessions).toFixed(1));
+    const mBulanTotal = Number((mPekanTotal * 4).toFixed(1));
+
+    const formatHal = (n) => (Number.isInteger(n) ? n.toString() : n.toFixed(1));
+
+    if (elZPekan) {
+        const lembar = formatHal(Number((zPekanTotal / 2).toFixed(1)));
+        const juz = formatHal(Number((zPekanTotal / 20).toFixed(1)));
+        elZPekan.value = `${formatHal(zPekanTotal)} Halaman (${lembar} Lembar / ~${juz} Juz / Pekan)`;
+    }
+
+    if (elZBulan) {
+        const lembar = formatHal(Number((zBulanTotal / 2).toFixed(1)));
+        const juz = formatHal(Number((zBulanTotal / 20).toFixed(1)));
+        elZBulan.value = `${formatHal(zBulanTotal)} Halaman (${lembar} Lembar / ~${juz} Juz / Bulan)`;
+    }
+
+    if (elMPekan) {
+        const lembar = formatHal(Number((mPekanTotal / 2).toFixed(1)));
+        const juz = formatHal(Number((mPekanTotal / 20).toFixed(1)));
+        elMPekan.value = `${formatHal(mPekanTotal)} Halaman (${lembar} Lembar / ~${juz} Juz / Pekan)`;
+    }
+
+    if (elMBulan) {
+        const lembar = formatHal(Number((mBulanTotal / 2).toFixed(1)));
+        const juz = formatHal(Number((mBulanTotal / 20).toFixed(1)));
+        elMBulan.value = `${formatHal(mBulanTotal)} Halaman (${lembar} Lembar / ~${juz} Juz / Bulan)`;
+    }
+
+    return { zSesi, zPekanTotal, zBulanTotal, mSesi, mPekanTotal, mBulanTotal };
+}
+
+/**
+ * Quick chip target massal
+ */
+function setTahfidzBulkTargetChip(type, val) {
+    if (type === 'ZIYADAH') {
+        const el = document.getElementById('input-bulk-target-ziyadah-sesi');
+        if (el) el.value = val;
+    } else {
+        const el = document.getElementById('input-bulk-target-murajaah-sesi');
+        if (el) el.value = val;
+    }
+    recalculateBulkTargetWeekly();
+}
+
+/**
+ * Simpan target massal santri
+ */
+async function submitTahfidzBulkTarget() {
+    const studentIds = ASNTahfidz.bulkTargetState?.studentIds || [];
+    if (!studentIds || studentIds.length === 0) {
+        if (typeof showToast === 'function') {
+            showToast("⚠️ Tidak ada santri sasaran yang dipilih.");
+        } else {
+            alert("Tidak ada santri sasaran yang dipilih.");
+        }
+        return;
+    }
+
+    const { zSesi, zPekanTotal, mSesi, mPekanTotal } = recalculateBulkTargetWeekly();
+
+    const btn = document.getElementById('btn-save-tahfidz-target-bulk');
+    setTahfidzButtonLoading(btn, true, "Menerapkan Massal...");
+
+    try {
+        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TAHFIDZ_STORAGE_KEYS.adminToken)) || "";
+        const response = await apiPost("saveBulkTahfidzTarget", {
+            token,
+            studentIds,
+            targetZiyadahSesi: zSesi,
+            targetZiyadahPekan: zPekanTotal,
+            targetMurajaahSesi: mSesi,
+            targetMurajaahPekan: mPekanTotal
+        });
+
+        if (response && (response.success || response.status === "success")) {
+            if (typeof showToast === 'function') {
+                showToast(`✅ Berhasil menerapkan target untuk ${studentIds.length} santri!`);
+            }
+
+            // Update local memory
+            const idSet = new Set(studentIds);
+            const updateStudentTarget = (st) => {
+                if (!st || !idSet.has(st.studentId)) return;
+                if (!st.target) st.target = {};
+                st.target.ziyadahSesi = zSesi;
+                st.target.ziyadahPekan = zPekanTotal;
+                st.target.ziyadahBulan = zPekanTotal * 4;
+                st.target.murajaahSesi = mSesi;
+                st.target.murajaahPekan = mPekanTotal;
+                st.target.murajaahBulan = mPekanTotal * 4;
+            };
+
+            (ASNTahfidz.data.students || []).forEach(updateStudentTarget);
+            (ASNTahfidz.filteredStudents || []).forEach(updateStudentTarget);
+
+            // Re-render tabel instan
+            renderTahfidzStudentTable();
+
+            // Clear pilihan & tutup modal
+            clearTahfidzSelectedStudents();
+            closeTahfidzBulkTargetModal();
+
+            // Sinkronisasi data latar belakang
+            loadAdminTahfidzData(true);
+        } else {
+            if (typeof showToast === 'function') {
+                showToast("❌ " + ((response && response.message) || "Gagal menyimpan target massal."));
+            }
+        }
+    } catch (err) {
+        console.error("Error submitTahfidzBulkTarget:", err);
+        if (typeof showToast === 'function') {
+            showToast("❌ Terjadi kesalahan saat menyimpan target: " + (err.message || err));
+        }
     } finally {
         setTahfidzButtonLoading(btn, false);
     }
@@ -2892,4 +3318,15 @@ window.recalculateTahfidzTargetWeekly = recalculateTahfidzTargetWeekly;
 window.renderTahfidzTargetModalSessions = renderTahfidzTargetModalSessions;
 window.getTahfidzActiveWeeklySessionCounts = getTahfidzActiveWeeklySessionCounts;
 
-
+// Bulk Target & Selection Functions
+window.updateTahfidzBulkSelectionBar = updateTahfidzBulkSelectionBar;
+window.toggleSelectAllTahfidzStudents = toggleSelectAllTahfidzStudents;
+window.toggleSelectTahfidzStudent = toggleSelectTahfidzStudent;
+window.clearTahfidzSelectedStudents = clearTahfidzSelectedStudents;
+window.openTahfidzBulkTargetModal = openTahfidzBulkTargetModal;
+window.closeTahfidzBulkTargetModal = closeTahfidzBulkTargetModal;
+window.setBulkTargetScope = setBulkTargetScope;
+window.onBulkTargetScopeChange = onBulkTargetScopeChange;
+window.recalculateBulkTargetWeekly = recalculateBulkTargetWeekly;
+window.setTahfidzBulkTargetChip = setTahfidzBulkTargetChip;
+window.submitTahfidzBulkTarget = submitTahfidzBulkTarget;

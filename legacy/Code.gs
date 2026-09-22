@@ -253,6 +253,17 @@ function doPost(e) {
       return createJsonResponse(saveTahfidzTarget(payload.data || payload, token));
     }
 
+    if (action === "saveBulkTahfidzTarget" || action === "tahfidz.saveBulkTarget" || action === "saveTahfidzTargetBulk") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PENGASUH"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      return createJsonResponse(saveBulkTahfidzTarget(payload.data || payload, token));
+    }
+
     if (action === "getTahfidzHalaqahList" || action === "tahfidz.getHalaqah") {
       const token = payload.token || (payload.data && payload.data.token) || null;
       return createJsonResponse(getTahfidzHalaqahList(token));
@@ -9572,6 +9583,11 @@ function handleAuthApiAction(action, payload, e) {
       return createJsonResponse(saveTahfidzTarget(payload.data || payload, token));
     }
 
+    if (action === "auth.tahfidz.saveBulkTarget" || action === "tahfidz.saveBulkTarget" || action === "saveBulkTahfidzTarget" || action === "saveTahfidzTargetBulk") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(saveBulkTahfidzTarget(payload.data || payload, token));
+    }
+
     if (action === "auth.tahfidz.getHalaqah" || action === "tahfidz.getHalaqah" || action === "getTahfidzHalaqahList") {
       const token = payload.token || (payload.data && payload.data.token) || "";
       return createJsonResponse(getTahfidzHalaqahList(token));
@@ -10828,6 +10844,112 @@ function saveTahfidzTarget(payload, token) {
       status: "error",
       success: false,
       message: "Gagal menyimpan target: " + err.message
+    };
+  }
+}
+
+/**
+ * 5b. Simpan / Perbarui Target Santri Secara Massal (Bulk Edit Target)
+ * Menerima:
+ * - studentIds: Array of string (misal: ["STD_001", "STD_002", ...])
+ * - targetZiyadahSesi, targetZiyadahPekan, targetMurajaahSesi, targetMurajaahPekan
+ */
+function saveBulkTahfidzTarget(payload, token) {
+  try {
+    if (token) {
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PENGASUH"]);
+      } catch (authErr) {
+        verifySessionToken(token);
+      }
+    }
+
+    const studentIds = Array.isArray(payload.studentIds) 
+      ? payload.studentIds.map(id => String(id || "").trim()).filter(Boolean)
+      : (payload.studentId ? [String(payload.studentId).trim()] : []);
+
+    if (studentIds.length === 0) {
+      throw new Error("Daftar ID Santri sasaran tidak boleh kosong.");
+    }
+
+    const ss = getDatabaseSpreadsheet();
+    const sheet = ss.getSheetByName(SHEET_TAHFIDZ_TARGET) || getOrCreateTahfidzSheet(ss, SHEET_TAHFIDZ_TARGET, [
+      "student_id", "target_ziyadah_sesi", "target_ziyadah_pekan", "target_murajaah_sesi", "target_murajaah_pekan", "updated_at"
+    ]);
+
+    const zSesi = Number(payload.targetZiyadahSesi || payload.target_ziyadah_sesi || 1);
+    const zPekan = Number(payload.targetZiyadahPekan || payload.target_ziyadah_pekan || (zSesi * 10));
+    const mSesi = Number(payload.targetMurajaahSesi || payload.target_murajaah_sesi || 2);
+    const mPekan = Number(payload.targetMurajaahPekan || payload.target_murajaah_pekan || (mSesi * 5));
+    const updatedAt = new Date().toISOString();
+
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s\-_]+/g, ""));
+    const idIdx = headers.findIndex(h => h === "studentid" || h === "id");
+    const zSesiIdx = headers.findIndex(h => h.includes("ziyadah") && h.includes("sesi"));
+    const zPekanIdx = headers.findIndex(h => h.includes("ziyadah") && h.includes("pekan"));
+    const mSesiIdx = headers.findIndex(h => h.includes("murajaah") && h.includes("sesi"));
+    const mPekanIdx = headers.findIndex(h => h.includes("murajaah") && h.includes("pekan"));
+    const updatedIdx = headers.findIndex(h => h.includes("updated") || h.includes("tanggal"));
+
+    // Map existing rows: studentId -> rowIndex (0-based in data array)
+    const existingRowMap = new Map();
+    for (let i = 1; i < data.length; i++) {
+      const sId = String(data[i][idIdx !== -1 ? idIdx : 0] || "").trim();
+      if (sId) {
+        existingRowMap.set(sId, i);
+      }
+    }
+
+    const newRowsToAppend = [];
+    const updatedStudentIds = new Set();
+
+    studentIds.forEach(stId => {
+      if (existingRowMap.has(stId)) {
+        const rowIdx = existingRowMap.get(stId);
+        if (zSesiIdx !== -1) data[rowIdx][zSesiIdx] = zSesi;
+        if (zPekanIdx !== -1) data[rowIdx][zPekanIdx] = zPekan;
+        if (mSesiIdx !== -1) data[rowIdx][mSesiIdx] = mSesi;
+        if (mPekanIdx !== -1) data[rowIdx][mPekanIdx] = mPekan;
+        if (updatedIdx !== -1) data[rowIdx][updatedIdx] = updatedAt;
+        updatedStudentIds.add(stId);
+      } else {
+        newRowsToAppend.push([stId, zSesi, zPekan, mSesi, mPekan, updatedAt]);
+        updatedStudentIds.add(stId);
+      }
+    });
+
+    // Batch update existing data range
+    if (data.length > 1) {
+      sheet.getRange(1, 1, data.length, data[0].length).setValues(data);
+    }
+
+    // Batch append new rows if any
+    if (newRowsToAppend.length > 0) {
+      const startRow = sheet.getLastRow() + 1;
+      sheet.getRange(startRow, 1, newRowsToAppend.length, newRowsToAppend[0].length).setValues(newRowsToAppend);
+    }
+
+    return {
+      status: "success",
+      success: true,
+      message: `Target mutaba'ah untuk ${updatedStudentIds.size} santri berhasil diperbarui secara massal.`,
+      updatedCount: updatedStudentIds.size,
+      studentIds: Array.from(updatedStudentIds),
+      target: {
+        ziyadahSesi: zSesi,
+        ziyadahPekan: zPekan,
+        murajaahSesi: mSesi,
+        murajaahPekan: mPekan
+      }
+    };
+  } catch (err) {
+    console.error("[SAVE BULK TAHFIDZ TARGET ERROR]", err);
+    return {
+      status: "error",
+      success: false,
+      message: "Gagal menyimpan target massal: " + err.message
     };
   }
 }

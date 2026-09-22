@@ -6915,6 +6915,12 @@
                                             <i class="fa-regular fa-clock text-xs"></i>
                                             <span>Jadwal & Sesi</span>
                                         </button>
+                                        <button type="button" onclick="openTahfidzBulkTargetModal()"
+                                            class="tahfidz-admin-action px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 dark:text-amber-300 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 border border-amber-200 dark:border-amber-800/60 active:scale-95"
+                                            title="Atur Target Capaian Santri Secara Massal">
+                                            <i class="fa-solid fa-bullseye text-xs text-amber-600"></i>
+                                            <span>Target Massal</span>
+                                        </button>
                                     </div>
                                 </div>
 
@@ -6933,12 +6939,35 @@
                                             Santri</span>
                                     </div>
 
+                                    <!-- FLOATING BULK SELECTION ACTION BAR -->
+                                    <div id="tahfidz-bulk-selection-bar"
+                                        class="hidden p-2.5 bg-amber-50/90 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-800/60 flex items-center justify-between text-xs transition">
+                                        <div class="flex items-center gap-2 text-amber-900 dark:text-amber-200 font-bold">
+                                            <i class="fa-solid fa-square-check text-amber-600"></i>
+                                            <span id="tahfidz-selected-count-text">0 santri dipilih</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <button type="button" onclick="openTahfidzBulkTargetModal('SELECTED')"
+                                                class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1.5 transition active:scale-95">
+                                                <i class="fa-solid fa-bullseye"></i> Atur Target Santri Ini
+                                            </button>
+                                            <button type="button" onclick="clearTahfidzSelectedStudents()"
+                                                class="px-2 py-1 text-slate-500 hover:text-slate-700 dark:text-slate-400 text-xs font-semibold">
+                                                Batal
+                                            </button>
+                                        </div>
+                                    </div>
+
                                     <!-- DESKTOP TABLE -->
                                     <div class="hidden md:block overflow-x-auto">
                                         <table class="w-full text-left border-collapse text-xs">
                                             <thead>
                                                 <tr
                                                     class="bg-slate-50 dark:bg-[#1c2836] text-slate-500 dark:text-slate-400 uppercase text-[10px] font-bold border-b border-slate-100 dark:border-[#253447]">
+                                                    <th class="py-2.5 px-3 w-10 text-center">
+                                                        <input type="checkbox" id="tahfidz-check-all" onchange="toggleSelectAllTahfidzStudents(this.checked)"
+                                                            class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer" title="Pilih Semua Santri">
+                                                    </th>
                                                     <th class="py-2.5 px-3.5">Santri & Halaqah</th>
                                                     <th class="py-2.5 px-3.5">Target Capaian</th>
                                                     <th class="py-2.5 px-3.5">Setoran Terakhir</th>
@@ -9666,6 +9695,214 @@
                         class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5 active:scale-95">
                         <i class="fa-solid fa-lock"></i>
                         <span>Simpan Target Santri</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL 3B: EDIT TARGET CAPAIAN MASSAL (BULK TARGET) ==================== -->
+    <div id="modal-tahfidz-target-bulk"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 md:p-4 hidden">
+        <div
+            class="bg-white dark:bg-[#15202d] w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-[#253447] flex flex-col max-h-[92vh] transform transition-all">
+            <!-- Modal Header -->
+            <div
+                class="px-5 py-4 bg-slate-50 dark:bg-[#1c2836] border-b border-slate-100 dark:border-[#253447] flex justify-between items-center shrink-0">
+                <div class="flex items-center space-x-2.5">
+                    <div
+                        class="w-9 h-9 bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 rounded-xl flex items-center justify-center text-base font-bold">
+                        <i class="fa-solid fa-bullseye"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-black text-slate-800 dark:text-slate-100">Atur Target Capaian Massal (Bulk Edit)</h3>
+                        <p class="text-[10px] text-slate-400">Terapkan target Ziyadah & Muroja'ah serentak ke beberapa santri atau kelompok</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeTahfidzBulkTargetModal()"
+                    class="w-8 h-8 rounded-full bg-slate-200/60 dark:bg-slate-700 hover:bg-slate-300 text-slate-500 dark:text-slate-300 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content Body -->
+            <div class="p-5 overflow-y-auto space-y-4 custom-scrollbar text-xs">
+                <!-- 1. PILIH SASARAN PENERAPAN TARGET -->
+                <div class="p-3.5 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200/80 dark:border-[#283a4e] space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="font-extrabold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                            <i class="fa-solid fa-users text-amber-600"></i> 1. PILIH SASARAN PENERAPAN TARGET
+                        </span>
+                        <span id="bulk-target-recipient-badge" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                            0 Santri Sasaran
+                        </span>
+                    </div>
+
+                    <!-- Scope Selector Chips/Buttons -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <button type="button" onclick="setBulkTargetScope('ALL')" id="btn-scope-all"
+                            class="px-3 py-2 rounded-xl font-bold text-xs border text-center transition flex flex-col items-center gap-1 bg-white dark:bg-[#15202d] border-emerald-500 text-emerald-700 dark:text-emerald-300 shadow-sm ring-2 ring-emerald-500/20">
+                            <i class="fa-solid fa-user-group text-sm"></i>
+                            <span>Semua Santri</span>
+                        </button>
+                        <button type="button" onclick="setBulkTargetScope('HALAQAH')" id="btn-scope-halaqah"
+                            class="px-3 py-2 rounded-xl font-bold text-xs border text-center transition flex flex-col items-center gap-1 bg-white dark:bg-[#15202d] border-slate-200 dark:border-[#283a4e] text-slate-600 dark:text-slate-300 hover:border-amber-400">
+                            <i class="fa-solid fa-layer-group text-sm"></i>
+                            <span>Per Halaqah</span>
+                        </button>
+                        <button type="button" onclick="setBulkTargetScope('KATEGORI')" id="btn-scope-kategori"
+                            class="px-3 py-2 rounded-xl font-bold text-xs border text-center transition flex flex-col items-center gap-1 bg-white dark:bg-[#15202d] border-slate-200 dark:border-[#283a4e] text-slate-600 dark:text-slate-300 hover:border-amber-400">
+                            <i class="fa-solid fa-graduation-cap text-sm"></i>
+                            <span>Per Program</span>
+                        </button>
+                        <button type="button" onclick="setBulkTargetScope('SELECTED')" id="btn-scope-selected"
+                            class="px-3 py-2 rounded-xl font-bold text-xs border text-center transition flex flex-col items-center gap-1 bg-white dark:bg-[#15202d] border-slate-200 dark:border-[#283a4e] text-slate-600 dark:text-slate-300 hover:border-amber-400">
+                            <i class="fa-solid fa-square-check text-sm"></i>
+                            <span>Santri Dicentang</span>
+                        </button>
+                    </div>
+
+                    <!-- Dynamic Sub-Selector for Scope -->
+                    <div id="bulk-target-subselect-container" class="space-y-2 pt-1 hidden">
+                        <!-- Halaqah Dropdown -->
+                        <div id="bulk-target-halaqah-wrapper" class="hidden">
+                            <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Pilih Kelompok Halaqah:</label>
+                            <select id="bulk-target-select-halaqah" onchange="onBulkTargetScopeChange()"
+                                class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-semibold bg-white dark:bg-[#15202d] text-slate-800 dark:text-slate-100">
+                            </select>
+                        </div>
+                        <!-- Kategori Dropdown -->
+                        <div id="bulk-target-kategori-wrapper" class="hidden">
+                            <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Pilih Program / Kategori:</label>
+                            <select id="bulk-target-select-kategori" onchange="onBulkTargetScopeChange()"
+                                class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-semibold bg-white dark:bg-[#15202d] text-slate-800 dark:text-slate-100">
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Summary Notification Box -->
+                    <div class="p-2.5 bg-emerald-50/70 dark:bg-emerald-950/40 rounded-xl border border-emerald-200/80 dark:border-emerald-800/60 flex items-center justify-between text-[11px]">
+                        <span class="text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5 font-bold">
+                            <i class="fa-solid fa-circle-info text-emerald-600"></i>
+                            <span id="bulk-target-summary-text">Target akan diterapkan ke seluruh santri aktif</span>
+                        </span>
+                        <span class="text-slate-400 text-[10px]" id="bulk-target-student-preview">0 santri</span>
+                    </div>
+                </div>
+
+                <!-- 2. JADWAL SESI WAKTU AKTIF TENANT (INFO RUMUS) -->
+                <div class="p-3 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200/80 dark:border-[#283a4e] flex flex-wrap items-center justify-between gap-2 text-[10px]">
+                    <div class="flex items-center gap-2">
+                        <span class="font-extrabold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                            <i class="fa-regular fa-clock text-amber-600"></i> Waktu Sesi Aktif:
+                        </span>
+                        <span id="bulk-target-badge-ziyadah" class="font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 px-2 py-0.5 rounded-full">10 Sesi Ziyadah/Pekan</span>
+                        <span id="bulk-target-badge-murajaah" class="font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 px-2 py-0.5 rounded-full">5 Sesi Muroja'ah/Pekan</span>
+                    </div>
+                    <span class="text-slate-400">Standar Mushaf Madinah: 2 Halaman = 1 Lembar • 20 Halaman = 1 Juz</span>
+                </div>
+
+                <!-- 3. FORM TARGET ZIYADAH & MUROJA'AH -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    <!-- KOLOM 1: TARGET ZIYADAH -->
+                    <div class="p-4 bg-emerald-50/40 dark:bg-emerald-950/20 rounded-2xl border border-emerald-200/80 dark:border-emerald-900/40 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="font-black text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                                <i class="fa-solid fa-circle-plus"></i> TARGET ZIYADAH (HAFALAN BARU)
+                            </span>
+                            <span class="text-[9px] font-bold text-emerald-700 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded">Ziyadah</span>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="font-bold text-slate-700 dark:text-slate-300 block">Target per Sesi / Setor <span class="text-rose-500">*</span></label>
+                            <input type="number" id="input-bulk-target-ziyadah-sesi"
+                                oninput="recalculateBulkTargetWeekly()" value="1" min="0.5" step="0.5"
+                                placeholder="1 Halaman / Setor"
+                                class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-bold bg-white dark:bg-[#1c2836] outline-none focus:ring-2 focus:ring-emerald-500">
+                            <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+                                <button type="button" onclick="setTahfidzBulkTargetChip('ZIYADAH', 0.5)"
+                                    class="px-2 py-1 bg-white dark:bg-[#1c2836] font-bold rounded-lg border border-slate-200 dark:border-[#283a4e] text-[10px] hover:bg-emerald-50 transition">+ 0,5 Hlm</button>
+                                <button type="button" onclick="setTahfidzBulkTargetChip('ZIYADAH', 1)"
+                                    class="px-2 py-1 bg-white dark:bg-[#1c2836] font-bold rounded-lg border border-slate-200 dark:border-[#283a4e] text-[10px] hover:bg-emerald-50 transition">+ 1 Hlm</button>
+                                <button type="button" onclick="setTahfidzBulkTargetChip('ZIYADAH', 2)"
+                                    class="px-2 py-1 bg-white dark:bg-[#1c2836] font-bold rounded-lg border border-slate-200 dark:border-[#283a4e] text-[10px] hover:bg-emerald-50 transition">+ 2 Hlm</button>
+                                <button type="button" onclick="setTahfidzBulkTargetChip('ZIYADAH', 3)"
+                                    class="px-2 py-1 bg-white dark:bg-[#1c2836] font-bold rounded-lg border border-slate-200 dark:border-[#283a4e] text-[10px] hover:bg-emerald-50 transition">+ 3 Hlm</button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 pt-1 border-t border-emerald-200/60 dark:border-emerald-900/40">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-0.5">Target Pekanan:</label>
+                                <input type="text" id="input-bulk-target-ziyadah-pekan" readonly value="10 Halaman"
+                                    class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#253447] text-[11px] font-bold bg-white/80 dark:bg-[#15202d] text-slate-700 dark:text-slate-200">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-0.5">Target Bulanan:</label>
+                                <input type="text" id="input-bulk-target-ziyadah-bulan" readonly value="40 Hlm (~2 Juz)"
+                                    class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#253447] text-[11px] font-bold bg-white/80 dark:bg-[#15202d] text-slate-700 dark:text-slate-200">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- KOLOM 2: TARGET MUROJA'AH -->
+                    <div class="p-4 bg-amber-50/40 dark:bg-amber-950/20 rounded-2xl border border-amber-200/80 dark:border-amber-900/40 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="font-black text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                                <i class="fa-solid fa-rotate"></i> TARGET MUROJA'AH (PENGULANGAN)
+                            </span>
+                            <span class="text-[9px] font-bold text-amber-700 bg-amber-100 dark:bg-amber-950 px-2 py-0.5 rounded">Muroja'ah</span>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="font-bold text-slate-700 dark:text-slate-300 block">Target per Sesi / Setor <span class="text-rose-500">*</span></label>
+                            <input type="number" id="input-bulk-target-murajaah-sesi"
+                                oninput="recalculateBulkTargetWeekly()" value="2" min="0.5" step="0.5"
+                                placeholder="2 Halaman / Setor"
+                                class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-bold bg-white dark:bg-[#1c2836] outline-none focus:ring-2 focus:ring-amber-500">
+                            <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+                                <button type="button" onclick="setTahfidzBulkTargetChip('MURAJAAH', 1)"
+                                    class="px-2 py-1 bg-white dark:bg-[#1c2836] font-bold rounded-lg border border-slate-200 dark:border-[#283a4e] text-[10px] hover:bg-amber-50 transition">+ 1 Hlm</button>
+                                <button type="button" onclick="setTahfidzBulkTargetChip('MURAJAAH', 2)"
+                                    class="px-2 py-1 bg-white dark:bg-[#1c2836] font-bold rounded-lg border border-slate-200 dark:border-[#283a4e] text-[10px] hover:bg-amber-50 transition">+ 2 Hlm</button>
+                                <button type="button" onclick="setTahfidzBulkTargetChip('MURAJAAH', 5)"
+                                    class="px-2 py-1 bg-white dark:bg-[#1c2836] font-bold rounded-lg border border-slate-200 dark:border-[#283a4e] text-[10px] hover:bg-amber-50 transition">+ 5 Hlm</button>
+                                <button type="button" onclick="setTahfidzBulkTargetChip('MURAJAAH', 10)"
+                                    class="px-2 py-1 bg-white dark:bg-[#1c2836] font-bold rounded-lg border border-slate-200 dark:border-[#283a4e] text-[10px] hover:bg-amber-50 transition">+ 10 Hlm</button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 pt-1 border-t border-amber-200/60 dark:border-amber-900/40">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-0.5">Target Pekanan:</label>
+                                <input type="text" id="input-bulk-target-murajaah-pekan" readonly value="10 Halaman"
+                                    class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#253447] text-[11px] font-bold bg-white/80 dark:bg-[#15202d] text-slate-700 dark:text-slate-200">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-0.5">Target Bulanan:</label>
+                                <input type="text" id="input-bulk-target-murajaah-bulan" readonly value="40 Hlm (~2 Juz)"
+                                    class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#253447] text-[11px] font-bold bg-white/80 dark:bg-[#15202d] text-slate-700 dark:text-slate-200">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-5 py-3.5 bg-slate-50 dark:bg-[#1c2836] border-t border-slate-100 dark:border-[#253447] flex items-center justify-between gap-3 shrink-0">
+                <span class="text-[10px] text-slate-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-bolt text-amber-500"></i>
+                    <span>Tersimpan massal ke database Sheet Tahfidz_Target</span>
+                </span>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="closeTahfidzBulkTargetModal()"
+                        class="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-[#253447] text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition">
+                        Batal
+                    </button>
+                    <button type="button" id="btn-save-tahfidz-target-bulk" onclick="submitTahfidzBulkTarget()"
+                        class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5 active:scale-95">
+                        <i id="btn-save-bulk-target-icon" class="fa-solid fa-bullseye"></i>
+                        <span id="btn-save-bulk-target-text">Terapkan Target Massal</span>
                     </button>
                 </div>
             </div>
