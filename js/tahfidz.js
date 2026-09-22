@@ -169,6 +169,8 @@ async function loadAdminTahfidzData(forceRefresh = false) {
             filterTahfidzList();
             updateHubTahfidzBadge();
             renderTahfidzHalaqahCards();
+            populatePlottingHalaqahSelector();
+            renderTahfidzMatriksBeban();
             hasRenderedFromCache = true;
 
             if (emptyState && ASNTahfidz.filteredStudents.length > 0) {
@@ -177,7 +179,7 @@ async function loadAdminTahfidzData(forceRefresh = false) {
         }
     }
 
-    // Hanya tampilkan loader penuh jika TIDAK ada data cache sebelumnya
+    // Hanya tampilkan loader jika TIDAK ada data di cache sebelumnya
     if (!hasRenderedFromCache) {
         if (loader) loader.classList.remove('hidden');
         if (emptyState) emptyState.classList.add('hidden');
@@ -185,13 +187,7 @@ async function loadAdminTahfidzData(forceRefresh = false) {
 
     try {
         const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TAHFIDZ_STORAGE_KEYS.adminToken)) || "";
-        let response;
-        try {
-            response = await apiPost("getTahfidzDashboard", { token });
-        } catch (apiErr) {
-            console.warn("Percobaan pertama getTahfidzDashboard gagal, mencoba fallback...", apiErr);
-            response = await apiPost("getTahfidzDashboard", {});
-        }
+        const response = await apiPost("getTahfidzDashboard", token ? { token } : {});
 
         if (response && (response.success || response.status === "success")) {
             // Gabungkan halaqah lokal jika ada halaqah baru yang belum terangkum

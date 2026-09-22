@@ -10202,25 +10202,17 @@ function getTahfidzDashboard(token) {
     }
 
     const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error("Spreadsheet database tidak ditemukan.");
 
-    // 1. Inisialisasi Sheet jika belum ada (sekaligus auto-tambah header jika ada kolom baru seperti status_setoran)
-    const logsSheet = getOrCreateTahfidzSheet(ss, SHEET_TAHFIDZ_LOGS, [
-      "log_id", "student_id", "nis", "student_name", "gender",
-      "tanggal", "sesi", "tipe", "juz", "surah",
-      "halaman_list", "total_halaman", "nilai", "muhafiz", "catatan", "status_setoran", "created_at"
-    ]);
+    // 1. Dapatkan referensi sheet langsung tanpa remote RPC auto-schema check
+    const logsSheet = ss.getSheetByName(SHEET_TAHFIDZ_LOGS);
+    const targetSheet = ss.getSheetByName(SHEET_TAHFIDZ_TARGET);
+    const halaqahSheet = ss.getSheetByName(SHEET_TAHFIDZ_HALAQAH);
+    const sesiSheet = ss.getSheetByName(SHEET_TAHFIDZ_SESI);
+    const studentSheet = ss.getSheetByName(SHEET_STUDENTS);
 
-    const targetSheet = getOrCreateTahfidzSheet(ss, SHEET_TAHFIDZ_TARGET, [
-      "student_id", "target_ziyadah_sesi", "target_ziyadah_pekan", "target_murajaah_sesi", "target_murajaah_pekan", "updated_at"
-    ]);
-
-    const halaqahSheet = getOrCreateTahfidzSheet(ss, SHEET_TAHFIDZ_HALAQAH, [
-      "halaqah_id", "nama_halaqah", "kategori", "muhafiz", "target_kurikulum", "student_ids", "created_at"
-    ]);
-
-    // 2. Ambil data master Santri langsung dari spreadsheet terbuka (Super Cepat < 1s)
+    // 2. Ambil data master Santri secara langsung (< 50ms)
     let allStudents = [];
-    const studentSheet = ss.getSheetByName(SHEET_STUDENTS) || (typeof getAuthSheet === "function" ? getAuthSheet(ss, SHEET_STUDENTS) : null);
     if (studentSheet) {
       const sData = studentSheet.getDataRange().getValues();
       if (sData && sData.length > 1) {
@@ -10251,7 +10243,6 @@ function getTahfidzDashboard(token) {
       }
     }
 
-    // Fallback jika pembacaan langsung kosong
     if (allStudents.length === 0 && typeof getAllStudentsData === "function") {
       try {
         const studentsRes = getAllStudentsData(token);
@@ -10273,159 +10264,181 @@ function getTahfidzDashboard(token) {
       });
     }
 
-    // 3. Baca Data Logs
-    const logsData = logsSheet.getDataRange().getValues();
-    const logRows = [];
-    if (logsData && logsData.length > 1) {
-      const hLogs = logsData[0].map(h => String(h || "").trim().toLowerCase());
-      const statusIdx = hLogs.indexOf("status_setoran");
-      for (let i = 1; i < logsData.length; i++) {
-        const r = logsData[i];
-        const logId = String(r[hLogs.indexOf("log_id")] || "").trim();
-        if (!logId) continue;
-        const nilai = String(r[hLogs.indexOf("nilai")] || "MUMTAZ").trim().toUpperCase();
-        const rawStatus = statusIdx !== -1 ? String(r[statusIdx] || "").trim().toUpperCase() : "";
-        const statusSetoran = rawStatus || (nilai === "DHAIF" ? "ULANG" : "LANJUT");
-
-        logRows.push({
-          logId: logId,
-          studentId: String(r[hLogs.indexOf("student_id")] || "").trim(),
-          nis: String(r[hLogs.indexOf("nis")] || "").trim(),
-          studentName: String(r[hLogs.indexOf("student_name")] || "").trim(),
-          gender: String(r[hLogs.indexOf("gender")] || "L").toUpperCase(),
-          tanggal: normalizeDateString(r[hLogs.indexOf("tanggal")]),
-          sesi: String(r[hLogs.indexOf("sesi")] || "Pagi (Ba'da Subuh)").trim(),
-          tipe: String(r[hLogs.indexOf("tipe")] || "ZIYADAH").trim().toUpperCase(),
-          juz: Number(r[hLogs.indexOf("juz")] || 1),
-          surah: String(r[hLogs.indexOf("surah")] || "").trim(),
-          halamanList: String(r[hLogs.indexOf("halaman_list")] || "1").trim(),
-          totalHalaman: Number(r[hLogs.indexOf("total_halaman")] || 1),
-          nilai: nilai,
-          statusSetoran: statusSetoran,
-          muhafiz: String(r[hLogs.indexOf("muhafiz")] || "").trim(),
-          catatan: String(r[hLogs.indexOf("catatan")] || "").trim(),
-          createdAt: String(r[hLogs.indexOf("created_at")] || "")
-        });
-      }
-    }
-
-    // 4. Baca Data Target Santri
-    const targetData = targetSheet.getDataRange().getValues();
+    // 3. Baca Data Target Santri
     const targetMap = {};
-    if (targetData && targetData.length > 1) {
-      const hTarget = targetData[0].map(h => String(h || "").trim().toLowerCase());
-      for (let i = 1; i < targetData.length; i++) {
-        const sId = String(targetData[i][hTarget.indexOf("student_id")] || "").trim();
-        if (!sId) continue;
-        targetMap[sId] = {
-          targetZiyadahSesi: Number(targetData[i][hTarget.indexOf("target_ziyadah_sesi")] || 1),
-          targetZiyadahPekan: Number(targetData[i][hTarget.indexOf("target_ziyadah_pekan")] || 10),
-          targetMurajaahSesi: Number(targetData[i][hTarget.indexOf("target_murajaah_sesi")] || 2),
-          targetMurajaahPekan: Number(targetData[i][hTarget.indexOf("target_murajaah_pekan")] || 10)
-        };
+    if (targetSheet) {
+      const targetData = targetSheet.getDataRange().getValues();
+      if (targetData && targetData.length > 1) {
+        const hTarget = targetData[0].map(h => String(h || "").trim().toLowerCase());
+        const sIdIdx = hTarget.indexOf("student_id");
+        const zSesiIdx = hTarget.indexOf("target_ziyadah_sesi");
+        const zPekanIdx = hTarget.indexOf("target_ziyadah_pekan");
+        const mSesiIdx = hTarget.indexOf("target_murajaah_sesi");
+        const mPekanIdx = hTarget.indexOf("target_murajaah_pekan");
+
+        for (let i = 1; i < targetData.length; i++) {
+          const sId = sIdIdx !== -1 ? String(targetData[i][sIdIdx] || "").trim() : "";
+          if (!sId) continue;
+          targetMap[sId] = {
+            targetZiyadahSesi: zSesiIdx !== -1 ? (Number(targetData[i][zSesiIdx]) || 1) : 1,
+            targetZiyadahPekan: zPekanIdx !== -1 ? (Number(targetData[i][zPekanIdx]) || 10) : 10,
+            targetMurajaahSesi: mSesiIdx !== -1 ? (Number(targetData[i][mSesiIdx]) || 2) : 2,
+            targetMurajaahPekan: mPekanIdx !== -1 ? (Number(targetData[i][mPekanIdx]) || 10) : 10
+          };
+        }
       }
     }
 
-    // 5. Baca Data Halaqah
-    const halaqahData = halaqahSheet.getDataRange().getValues();
+    // 4. Baca Data Halaqah
     const halaqahList = [];
     const studentHalaqahMap = {};
-    if (halaqahData && halaqahData.length > 1) {
-      const colMap = getHalaqahColumnIndexes(halaqahData[0]);
-      for (let i = 1; i < halaqahData.length; i++) {
-        const r = halaqahData[i];
-        const rawId = colMap.id !== -1 ? String(r[colMap.id] || "").trim() : "";
-        const rawName = colMap.nama !== -1 ? String(r[colMap.nama] || "").trim() : "";
-        if (!rawId && !rawName) continue;
+    if (halaqahSheet) {
+      const halaqahData = halaqahSheet.getDataRange().getValues();
+      if (halaqahData && halaqahData.length > 1) {
+        const colMap = getHalaqahColumnIndexes(halaqahData[0]);
+        for (let i = 1; i < halaqahData.length; i++) {
+          const r = halaqahData[i];
+          const rawId = colMap.id !== -1 ? String(r[colMap.id] || "").trim() : "";
+          const rawName = colMap.nama !== -1 ? String(r[colMap.nama] || "").trim() : "";
+          if (!rawId && !rawName) continue;
 
-        const hid = rawId || ("HLQ-" + (i < 10 ? "0" + i : i));
-        const hname = rawName || `Halaqah ${i}`;
-        const hkat = colMap.kategori !== -1 ? String(r[colMap.kategori] || "Tahfidz Dewasa").trim() : "Tahfidz Dewasa";
-        const hmuh = colMap.muhafiz !== -1 ? String(r[colMap.muhafiz] || "").trim() : "";
-        const hkur = colMap.target !== -1 ? String(r[colMap.target] || "").trim() : "";
-        const stIds = colMap.studentIds !== -1 ? String(r[colMap.studentIds] || "").split(",").map(x => x.trim()).filter(Boolean) : [];
+          const hid = rawId || ("HLQ-" + (i < 10 ? "0" + i : i));
+          const hname = rawName || `Halaqah ${i}`;
+          const hkat = colMap.kategori !== -1 ? String(r[colMap.kategori] || "Tahfidz Dewasa").trim() : "Tahfidz Dewasa";
+          const hmuh = colMap.muhafiz !== -1 ? String(r[colMap.muhafiz] || "").trim() : "";
+          const hkur = colMap.target !== -1 ? String(r[colMap.target] || "").trim() : "";
+          const stIds = colMap.studentIds !== -1 ? String(r[colMap.studentIds] || "").split(",").map(x => x.trim()).filter(Boolean) : [];
 
-        halaqahList.push({
-          halaqahId: hid,
-          namaHalaqah: hname,
-          kategori: hkat,
-          muhafiz: hmuh,
-          targetKurikulum: hkur,
-          studentIds: stIds,
-          studentCount: stIds.length
-        });
-
-        stIds.forEach(id => {
-          const idClean = String(id).trim();
-          const idLower = idClean.toLowerCase();
-          const halaqahObj = {
+          halaqahList.push({
             halaqahId: hid,
             namaHalaqah: hname,
             kategori: hkat,
-            muhafiz: hmuh
-          };
-          studentHalaqahMap[idClean] = halaqahObj;
-          studentHalaqahMap[idLower] = halaqahObj;
-        });
+            muhafiz: hmuh,
+            targetKurikulum: hkur,
+            studentIds: stIds,
+            studentCount: stIds.length
+          });
+
+          stIds.forEach(id => {
+            const idClean = String(id).trim();
+            const idLower = idClean.toLowerCase();
+            const halaqahObj = {
+              halaqahId: hid,
+              namaHalaqah: hname,
+              kategori: hkat,
+              muhafiz: hmuh
+            };
+            studentHalaqahMap[idClean] = halaqahObj;
+            studentHalaqahMap[idLower] = halaqahObj;
+          });
+        }
       }
     }
 
-    // 6. Kelompokkan Logs per Santri
-    const logsByStudent = {};
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    // 5. Agregasi Riwayat Logs Super Cepat (Single-pass O(N) Reverse Scan)
+    // Mengeliminasi in-memory sorting ribuan log per santri
+    const latestLogMap = {};
+    const maxJuzMap = {};
+    const setoranCountMap = {};
+    const setoranPekanIniMap = {};
     let weeklyZiyadahCount = 0;
     let weeklyMurajaahCount = 0;
+    const oneWeekAgoMs = Date.now() - (7 * 24 * 60 * 60 * 1000);
 
-    logRows.forEach(l => {
-      const sKey = l.studentId || l.nis;
-      if (!logsByStudent[sKey]) logsByStudent[sKey] = [];
-      logsByStudent[sKey].push(l);
+    if (logsSheet) {
+      const logsData = logsSheet.getDataRange().getValues();
+      if (logsData && logsData.length > 1) {
+        const hLogs = logsData[0].map(h => String(h || "").trim().toLowerCase());
+        const idIdx = hLogs.indexOf("student_id");
+        const nisIdx = hLogs.indexOf("nis");
+        const statusIdx = hLogs.indexOf("status_setoran");
+        const nilaiIdx = hLogs.indexOf("nilai");
+        const juzIdx = hLogs.indexOf("juz");
+        const tglIdx = hLogs.indexOf("tanggal");
+        const createdIdx = hLogs.indexOf("created_at");
+        const tipeIdx = hLogs.indexOf("tipe");
+        const surahIdx = hLogs.indexOf("surah");
+        const halIdx = hLogs.indexOf("halaman_list");
+        const totHalIdx = hLogs.indexOf("total_halaman");
+        const sesiIdx = hLogs.indexOf("sesi");
+        const muhIdx = hLogs.indexOf("muhafiz");
 
-      // Hitung aktivitas pekan ini
-      const logDate = new Date(l.tanggal || l.createdAt);
-      if (logDate >= oneWeekAgo) {
-        if (l.tipe === "ZIYADAH") weeklyZiyadahCount++;
-        else if (l.tipe === "MURAJAAH" || l.tipe === "TASMI") weeklyMurajaahCount++;
+        // Scan dari baris paling bawah ke atas (log terbaru ada di baris bawah)
+        for (let i = logsData.length - 1; i >= 1; i--) {
+          const r = logsData[i];
+          const sId = idIdx !== -1 ? String(r[idIdx] || "").trim() : "";
+          const sNis = nisIdx !== -1 ? String(r[nisIdx] || "").trim() : "";
+          if (!sId && !sNis) continue;
+
+          const sKeys = [sId, sNis].filter(Boolean);
+          const nilai = nilaiIdx !== -1 ? String(r[nilaiIdx] || "MUMTAZ").trim().toUpperCase() : "MUMTAZ";
+          const rawStatus = statusIdx !== -1 ? String(r[statusIdx] || "").trim().toUpperCase() : "";
+          const statusSetoran = rawStatus || (nilai === "DHAIF" ? "ULANG" : "LANJUT");
+          const juz = juzIdx !== -1 ? (Number(r[juzIdx]) || 1) : 1;
+          const rawTgl = tglIdx !== -1 ? r[tglIdx] : "";
+          const rawCreated = createdIdx !== -1 ? r[createdIdx] : "";
+          const d = new Date(rawTgl || rawCreated);
+          const isRecent = !isNaN(d.getTime()) && d.getTime() >= oneWeekAgoMs;
+          const tipe = tipeIdx !== -1 ? String(r[tipeIdx] || "ZIYADAH").trim().toUpperCase() : "ZIYADAH";
+
+          if (isRecent) {
+            if (tipe === "ZIYADAH") weeklyZiyadahCount++;
+            else if (tipe === "MURAJAAH" || tipe === "TASMI") weeklyMurajaahCount++;
+          }
+
+          sKeys.forEach(k => {
+            // Setoran terakhir (pertama kali ditemukan saat reverse loop)
+            if (!latestLogMap[k]) {
+              latestLogMap[k] = {
+                juz: juz,
+                surah: surahIdx !== -1 ? String(r[surahIdx] || "").trim() || `Juz ${juz}` : `Juz ${juz}`,
+                halaman: halIdx !== -1 && r[halIdx] ? `Halaman ${r[halIdx]}` : "Halaman 1",
+                totalHalaman: totHalIdx !== -1 ? (Number(r[totHalIdx]) || 1) : 1,
+                tanggal: normalizeDateString(rawTgl),
+                sesi: sesiIdx !== -1 ? String(r[sesiIdx] || "Pagi (Ba'da Subuh)").trim() : "Pagi (Ba'da Subuh)",
+                tipe: tipe,
+                nilai: nilai,
+                statusSetoran: statusSetoran,
+                muhafiz: muhIdx !== -1 ? String(r[muhIdx] || "").trim() : ""
+              };
+            }
+
+            // Capaian Juz tertinggi
+            if (statusSetoran !== "ULANG" && juz > (maxJuzMap[k] || 0)) {
+              maxJuzMap[k] = juz;
+            }
+
+            // Jumlah total setoran
+            setoranCountMap[k] = (setoranCountMap[k] || 0) + 1;
+
+            // Setoran pekan ini
+            if (isRecent) {
+              setoranPekanIniMap[k] = (setoranPekanIniMap[k] || 0) + 1;
+            }
+          });
+        }
       }
-    });
+    }
 
-    // 7. Kalkulasi Data Santri Terintegrasi
+    // 6. Kalkulasi Data Santri Terintegrasi
     let totalJuzAllStudents = 0;
     let khatam30Count = 0;
+
     const enrichedStudents = filteredStudents.map(st => {
       const sId = String(st.studentId || st.student_id || "").trim();
       const sNis = String(st.nis || "").trim();
-      const sLogs = logsByStudent[sId] || logsByStudent[sNis] || [];
+      const latestLog = latestLogMap[sId] || latestLogMap[sNis] || null;
 
-      // Urutkan logs santri dari yang terbaru
-      sLogs.sort((a, b) => new Date(b.tanggal || b.createdAt) - new Date(a.tanggal || a.createdAt));
-      const latestLog = sLogs.length > 0 ? sLogs[0] : null;
-
-      // Hitung capaian Juz tertinggi (hanya dari setoran yang lulus/LANJUT)
-      let currentJuz = 0;
-      sLogs.forEach(lg => {
-        if (lg.statusSetoran !== "ULANG" && lg.juz && lg.juz > currentJuz) {
-          currentJuz = lg.juz;
-        }
-      });
+      let currentJuz = maxJuzMap[sId] || maxJuzMap[sNis] || 0;
       if (currentJuz === 0 && st.program && st.program.toLowerCase().includes("tahfidz")) {
         currentJuz = 1;
       }
       if (currentJuz >= 30) khatam30Count++;
       totalJuzAllStudents += currentJuz;
 
-      // Hitung setoran pekan ini
-      let setoranPekanIni = 0;
-      sLogs.forEach(lg => {
-        const d = new Date(lg.tanggal || lg.createdAt);
-        if (d >= oneWeekAgo) setoranPekanIni++;
-      });
-
-      // Status On-Track
+      const setoranPekanIni = setoranPekanIniMap[sId] || setoranPekanIniMap[sNis] || 0;
       const onTrack = setoranPekanIni >= 2 ? `On-Track (${setoranPekanIni}x Pekan Ini)` : (setoranPekanIni === 1 ? `1x Setor Pekan Ini` : `Belum Setor`);
 
-      // Target
       const target = targetMap[sId] || targetMap[sNis] || {
         targetZiyadahSesi: 1,
         targetZiyadahPekan: 10,
@@ -10433,7 +10446,6 @@ function getTahfidzDashboard(token) {
         targetMurajaahPekan: 10
       };
 
-      // Halaqah: Cocokkan ID, NIS, atau Nama
       const sIdLower = sId.toLowerCase();
       const sNisLower = sNis.toLowerCase();
       const sNameLower = String(st.name || st.nama || "").trim().toLowerCase();
@@ -10471,15 +10483,7 @@ function getTahfidzDashboard(token) {
           murajaahBulan: target.targetMurajaahPekan * 4
         },
         setoranTerakhir: latestLog ? {
-          juz: latestLog.juz,
-          surah: latestLog.surah || `Juz ${latestLog.juz}`,
-          halaman: latestLog.halamanList ? `Halaman ${latestLog.halamanList}` : "Halaman 1",
-          totalHalaman: latestLog.totalHalaman || 1,
-          tanggal: latestLog.tanggal,
-          sesi: latestLog.sesi,
-          tipe: latestLog.tipe,
-          nilai: latestLog.nilai,
-          statusSetoran: latestLog.statusSetoran || (latestLog.nilai === "DHAIF" ? "ULANG" : "LANJUT"),
+          ...latestLog,
           muhafiz: latestLog.muhafiz || halaqah.muhafiz || "Ustadz Pembina"
         } : null,
         progress: {
@@ -10488,11 +10492,11 @@ function getTahfidzDashboard(token) {
           percent: Math.min(100, Math.round((currentJuz / 30) * 100)),
           onTrackStatus: onTrack
         },
-        totalSetoran: sLogs.length
+        totalSetoran: setoranCountMap[sId] || setoranCountMap[sNis] || 0
       };
     });
 
-    // 8. Hitung Summary Makro (fokus pada santri aktif halaqah)
+    // 7. Hitung Summary Makro
     const halaqahMembers = enrichedStudents.filter(st => st.isInHalaqah);
     const activeStudentCount = halaqahMembers.length > 0 ? halaqahMembers.length : (enrichedStudents.length || 1);
     let totalJuzHalaqahStudents = 0;
@@ -10507,6 +10511,45 @@ function getTahfidzDashboard(token) {
     const totalWeeklyActivity = weeklyZiyadahCount + weeklyMurajaahCount;
     const ziyadahPercent = totalWeeklyActivity > 0 ? Math.round((weeklyZiyadahCount / totalWeeklyActivity) * 100) : 100;
     const murajaahPercent = 100 - ziyadahPercent;
+
+    // 8. Jadwal Sesi
+    const sesiList = [];
+    if (sesiSheet) {
+      const sData = sesiSheet.getDataRange().getValues();
+      if (sData && sData.length > 1) {
+        const h = sData[0].map(x => String(x || "").trim().toLowerCase().replace(/[\s\-_]+/g, ""));
+        const idIdx = h.findIndex(x => x === "sesiid" || x === "id");
+        const namaIdx = h.findIndex(x => x === "namasesi" || x === "nama");
+        const jenisIdx = h.findIndex(x => x === "jenissesi" || x === "jenis");
+        const statusIdx = h.findIndex(x => x === "status");
+        const mulaiIdx = h.findIndex(x => x === "jammulai" || x === "mulai");
+        const selesaiIdx = h.findIndex(x => x === "jamselesai" || x === "selesai");
+        const hariIdx = h.findIndex(x => x === "harilist" || x === "hari");
+        for (let i = 1; i < sData.length; i++) {
+          const r = sData[i];
+          const sId = idIdx !== -1 ? String(r[idIdx] || "").trim() : "";
+          if (!sId) continue;
+          sesiList.push({
+            sesiId: sId,
+            namaSesi: namaIdx !== -1 ? String(r[namaIdx] || "") : "",
+            jenisSesi: jenisIdx !== -1 ? String(r[jenisIdx] || "Ziyadah (Setoran Hafalan Baru)") : "Ziyadah (Setoran Hafalan Baru)",
+            status: statusIdx !== -1 ? String(r[statusIdx] || "Aktif Digunakan") : "Aktif Digunakan",
+            jamMulai: mulaiIdx !== -1 ? String(r[mulaiIdx] || "").trim() : "05:00",
+            jamSelesai: selesaiIdx !== -1 ? String(r[selesaiIdx] || "").trim() : "06:30",
+            hariList: hariIdx !== -1 ? String(r[hariIdx] || "").split(",").map(x => x.trim()).filter(Boolean) : []
+          });
+        }
+      }
+    }
+
+    // 9. Muhafiz List (dari halaqah + log aktif tanpa RPC pembacaan sheet Pegawai)
+    const muhafizSet = new Set();
+    halaqahList.forEach(hlq => {
+      if (hlq.muhafiz && hlq.muhafiz !== "-" && hlq.muhafiz !== "Belum Ditunjuk") muhafizSet.add(hlq.muhafiz);
+    });
+    Object.values(latestLogMap).forEach(lg => {
+      if (lg && lg.muhafiz && lg.muhafiz !== "-" && lg.muhafiz !== "Ustadz Pembina") muhafizSet.add(lg.muhafiz);
+    });
 
     return {
       status: "success",
@@ -10567,71 +10610,8 @@ function getTahfidzDashboard(token) {
           };
         });
       })(),
-      sesiList: (function() {
-        try {
-          const sesiSheet = ss.getSheetByName(SHEET_TAHFIDZ_SESI);
-          if (sesiSheet) {
-            const sData = sesiSheet.getDataRange().getValues();
-            if (sData && sData.length > 1) {
-              const h = sData[0].map(x => String(x || "").trim().toLowerCase().replace(/[\s\-_]+/g, ""));
-              const idIdx = h.findIndex(x => x === "sesiid" || x === "id");
-              const namaIdx = h.findIndex(x => x === "namasesi" || x === "nama");
-              const jenisIdx = h.findIndex(x => x === "jenissesi" || x === "jenis");
-              const statusIdx = h.findIndex(x => x === "status");
-              const mulaiIdx = h.findIndex(x => x === "jammulai" || x === "mulai");
-              const selesaiIdx = h.findIndex(x => x === "jamselesai" || x === "selesai");
-              const hariIdx = h.findIndex(x => x === "harilist" || x === "hari");
-              const list = [];
-              for (let i = 1; i < sData.length; i++) {
-                const r = sData[i];
-                const sId = idIdx !== -1 ? String(r[idIdx] || "").trim() : "";
-                if (!sId) continue;
-                list.push({
-                  sesiId: sId,
-                  namaSesi: namaIdx !== -1 ? String(r[namaIdx] || "") : "",
-                  jenisSesi: jenisIdx !== -1 ? String(r[jenisIdx] || "Ziyadah (Setoran Hafalan Baru)") : "Ziyadah (Setoran Hafalan Baru)",
-                  status: statusIdx !== -1 ? String(r[statusIdx] || "Aktif Digunakan") : "Aktif Digunakan",
-                  jamMulai: mulaiIdx !== -1 ? String(r[mulaiIdx] || "").trim() : "05:00",
-                  jamSelesai: selesaiIdx !== -1 ? String(r[selesaiIdx] || "").trim() : "06:30",
-                  hariList: hariIdx !== -1 ? String(r[hariIdx] || "").split(",").map(x => x.trim()).filter(Boolean) : []
-                });
-              }
-              return list;
-            }
-          }
-          return [];
-        } catch(e) {
-          return [];
-        }
-      })(),
-      muhafizList: (function() {
-        const muhafizSet = new Set();
-        try {
-          const empSheet = ss.getSheetByName(SHEET_PEGAWAI) || ss.getSheetByName("Pegawai");
-          if (empSheet) {
-            const empData = empSheet.getDataRange().getValues();
-            if (empData && empData.length > 1) {
-              const h = empData[0].map(x => String(x || "").trim().toLowerCase().replace(/[\s\-_]+/g, ""));
-              const namaIdx = h.findIndex(x => x === "nama" || x === "name");
-              const statusIdx = h.findIndex(x => x === "status");
-              for (let i = 1; i < empData.length; i++) {
-                const row = empData[i];
-                const st = statusIdx !== -1 ? String(row[statusIdx] || "ACTIVE").toUpperCase() : "ACTIVE";
-                const nama = namaIdx !== -1 ? String(row[namaIdx] || "").trim() : "";
-                if (nama && (st === "ACTIVE" || st === "AKTIF")) {
-                  muhafizSet.add(nama);
-                }
-              }
-            }
-          }
-        } catch (e) {
-          console.warn("[MUHAFIZ LIST EMP ERROR]", e);
-        }
-        halaqahList.forEach(hlq => {
-          if (hlq.muhafiz) muhafizSet.add(hlq.muhafiz);
-        });
-        return ["Semua Muhafiz", ...Array.from(muhafizSet).sort()];
-      })()
+      sesiList: sesiList,
+      muhafizList: ["Semua Muhafiz", ...Array.from(muhafizSet).sort()]
     };
 
   } catch (err) {
