@@ -7206,6 +7206,25 @@
                                             <option value="LANJUT">Lancar (Lanjut)</option>
                                             <option value="ULANG">Wajib Mengulang</option>
                                         </select>
+
+                                        <button type="button" onclick="openTPQKelasModal(1)"
+                                            class="px-2.5 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 dark:bg-teal-950/60 dark:hover:bg-teal-900/60 dark:text-teal-300 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 border border-teal-200 dark:border-teal-800/60 active:scale-95"
+                                            title="Kelola Kelas & Plotting Santri TPQ">
+                                            <i class="fa-solid fa-users-gear text-xs"></i>
+                                            <span>Kelola Kelas</span>
+                                        </button>
+                                        <button type="button" onclick="openTPQKelasModal(4)"
+                                            class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-200 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 border border-slate-200 dark:border-[#283a4e] active:scale-95"
+                                            title="Jadwal Sesi Bimbingan TPQ">
+                                            <i class="fa-regular fa-clock text-xs"></i>
+                                            <span>Jadwal & Sesi</span>
+                                        </button>
+                                        <button type="button" onclick="openTPQBulkTargetModal()"
+                                            class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 dark:text-amber-300 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 border border-amber-200 dark:border-amber-800/60 active:scale-95"
+                                            title="Atur Target Capaian TPQ Massal">
+                                            <i class="fa-solid fa-bullseye text-xs text-amber-600"></i>
+                                            <span>Target Massal</span>
+                                        </button>
                                     </div>
                                 </div>
 
@@ -7218,13 +7237,37 @@
                                         <span id="admin-tpq-count" class="text-[11px] font-bold text-teal-800 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 px-2.5 py-0.5 rounded-lg">0 Santri</span>
                                     </div>
 
+                                    <!-- FLOATING BULK SELECTION ACTION BAR TPQ -->
+                                    <div id="tpq-bulk-selection-bar"
+                                        class="hidden p-2.5 bg-amber-50/90 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-800/60 flex items-center justify-between text-xs transition">
+                                        <div class="flex items-center gap-2 text-amber-900 dark:text-amber-200 font-bold">
+                                            <i class="fa-solid fa-square-check text-amber-600"></i>
+                                            <span id="tpq-selected-count-text">0 santri dipilih</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <button type="button" onclick="openTPQBulkTargetModal('SELECTED')"
+                                                class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1.5 transition active:scale-95">
+                                                <i class="fa-solid fa-bullseye"></i> Atur Target Santri Ini
+                                            </button>
+                                            <button type="button" onclick="clearTPQSelectedStudents()"
+                                                class="px-2 py-1 text-slate-500 hover:text-slate-700 dark:text-slate-400 text-xs font-semibold">
+                                                Batal
+                                            </button>
+                                        </div>
+                                    </div>
+
                                     <div class="overflow-x-auto">
                                         <table class="w-full text-left border-collapse">
                                             <thead>
                                                 <tr class="bg-slate-50 dark:bg-[#1c2836] text-slate-500 dark:text-slate-400 uppercase text-[10px] font-extrabold tracking-wider border-b border-slate-100 dark:border-[#253447]">
-                                                    <th class="p-3 w-12 text-center">No</th>
+                                                    <th class="p-3 w-10 text-center">
+                                                        <input type="checkbox" id="tpq-check-all" onchange="toggleSelectAllTPQStudents(this.checked)"
+                                                            class="rounded border-slate-300 text-teal-600 focus:ring-teal-500 cursor-pointer" title="Pilih Semua Santri">
+                                                    </th>
+                                                    <th class="p-3 w-10 text-center">No</th>
                                                     <th class="p-3">Santri</th>
                                                     <th class="p-3">Posisi Yanbu'a</th>
+                                                    <th class="p-3">Target Capaian</th>
                                                     <th class="p-3">Kelas & Ustadz</th>
                                                     <th class="p-3">Status Terakhir</th>
                                                     <th class="p-3 text-right">Aksi</th>
@@ -7380,6 +7423,25 @@
                                             <option value="LANJUT">Lancar (Lanjut)</option>
                                             <option value="ULANG">Wajib Mengulang</option>
                                         </select>
+
+                                        <button type="button" onclick="openSoroganHalaqahModal(1)"
+                                            class="px-2.5 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:hover:bg-sky-900/60 dark:text-sky-300 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 border border-sky-200 dark:border-sky-800/60 active:scale-95"
+                                            title="Kelola Halaqah & Plotting Santri Sorogan">
+                                            <i class="fa-solid fa-users-gear text-xs"></i>
+                                            <span>Kelola Halaqah</span>
+                                        </button>
+                                        <button type="button" onclick="openSoroganHalaqahModal(4)"
+                                            class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-200 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 border border-slate-200 dark:border-[#283a4e] active:scale-95"
+                                            title="Jadwal Sesi Sorogan Al-Qur'an">
+                                            <i class="fa-regular fa-clock text-xs"></i>
+                                            <span>Jadwal & Sesi</span>
+                                        </button>
+                                        <button type="button" onclick="openSoroganBulkTargetModal()"
+                                            class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 dark:text-amber-300 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 border border-amber-200 dark:border-amber-800/60 active:scale-95"
+                                            title="Atur Target Capaian Sorogan Massal">
+                                            <i class="fa-solid fa-bullseye text-xs text-amber-600"></i>
+                                            <span>Target Massal</span>
+                                        </button>
                                     </div>
                                 </div>
 
@@ -7392,13 +7454,37 @@
                                         <span id="admin-sorogan-count" class="text-[11px] font-bold text-sky-800 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2.5 py-0.5 rounded-lg">0 Santri</span>
                                     </div>
 
+                                    <!-- FLOATING BULK SELECTION ACTION BAR SOROGAN -->
+                                    <div id="sorogan-bulk-selection-bar"
+                                        class="hidden p-2.5 bg-amber-50/90 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-800/60 flex items-center justify-between text-xs transition">
+                                        <div class="flex items-center gap-2 text-amber-900 dark:text-amber-200 font-bold">
+                                            <i class="fa-solid fa-square-check text-amber-600"></i>
+                                            <span id="sorogan-selected-count-text">0 santri dipilih</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <button type="button" onclick="openSoroganBulkTargetModal('SELECTED')"
+                                                class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1.5 transition active:scale-95">
+                                                <i class="fa-solid fa-bullseye"></i> Atur Target Santri Ini
+                                            </button>
+                                            <button type="button" onclick="clearSoroganSelectedStudents()"
+                                                class="px-2 py-1 text-slate-500 hover:text-slate-700 dark:text-slate-400 text-xs font-semibold">
+                                                Batal
+                                            </button>
+                                        </div>
+                                    </div>
+
                                     <div class="overflow-x-auto">
                                         <table class="w-full text-left border-collapse">
                                             <thead>
                                                 <tr class="bg-slate-50 dark:bg-[#1c2836] text-slate-500 dark:text-slate-400 uppercase text-[10px] font-extrabold tracking-wider border-b border-slate-100 dark:border-[#253447]">
-                                                    <th class="p-3 w-12 text-center">No</th>
+                                                    <th class="p-3 w-10 text-center">
+                                                        <input type="checkbox" id="sorogan-check-all" onchange="toggleSelectAllSoroganStudents(this.checked)"
+                                                            class="rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer" title="Pilih Semua Santri">
+                                                    </th>
+                                                    <th class="p-3 w-10 text-center">No</th>
                                                     <th class="p-3">Santri</th>
                                                     <th class="p-3">Posisi Mushaf (20 Hal/Juz)</th>
+                                                    <th class="p-3">Target Capaian</th>
                                                     <th class="p-3">Halaqah & Muallim</th>
                                                     <th class="p-3">Status Terakhir</th>
                                                     <th class="p-3 text-right">Aksi</th>
@@ -11421,7 +11507,972 @@
         </div>
     </div>
 
-    <!-- ==================== MODAL DETAIL PENDAFTAR PPDB ==================== -->
+    <!-- ==================== MODAL TPQ: TARGET INDIVIDUAL ==================== -->
+    <div id="modal-tpq-target"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 md:p-4 hidden">
+        <div class="bg-white dark:bg-[#15202d] w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-[#253447] flex flex-col max-h-[92vh] transform transition-all">
+            <div class="px-5 py-4 bg-slate-50 dark:bg-[#1c2836] border-b border-slate-100 dark:border-[#253447] flex justify-between items-center shrink-0">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-9 h-9 bg-teal-100 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 rounded-xl flex items-center justify-center text-base font-bold">
+                        <i class="fa-solid fa-bullseye"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-black text-slate-800 dark:text-slate-100">Atur Target Belajar Santri TPQ</h3>
+                        <p class="text-[10px] text-slate-400">Target kelulusan Jilid Yanbu'a dan ritme halaman per sesi bimbingan</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeTPQTargetModal()" class="w-8 h-8 rounded-full bg-slate-200/60 dark:bg-slate-700 hover:bg-slate-300 text-slate-500 dark:text-slate-300 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+            <div class="p-5 overflow-y-auto space-y-4 custom-scrollbar text-xs">
+                <!-- Info Santri -->
+                <div class="p-3.5 bg-teal-50/50 dark:bg-teal-950/30 rounded-2xl border border-teal-100 dark:border-teal-900/40 flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] font-bold text-teal-700 dark:text-teal-400 uppercase">Nama Santri:</span>
+                        <h4 id="tpq-target-student-name" class="font-bold text-sm text-slate-800 dark:text-slate-100">-</h4>
+                        <p id="tpq-target-student-nis" class="text-[10px] text-slate-400">NIS: -</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[10px] font-bold text-teal-700 dark:text-teal-400 uppercase">Posisi Terkini:</span>
+                        <div id="tpq-target-current-pos" class="font-black text-xs text-teal-700 dark:text-teal-300">Jilid 1 • Hal 1</div>
+                    </div>
+                </div>
+                <input type="hidden" id="input-tpq-target-student-id" value="">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <!-- Target Jilid Sasaran -->
+                    <div class="p-3.5 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200 dark:border-[#283a4e] space-y-2">
+                        <label class="font-bold text-slate-700 dark:text-slate-300 block">Target Jilid Berikutnya <span class="text-rose-500">*</span></label>
+                        <select id="input-tpq-target-jilid" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-bold bg-white dark:bg-[#15202d] text-slate-800 dark:text-slate-100">
+                            <option value="1">Jilid 1 (Dasar Hijaiyah)</option>
+                            <option value="2">Jilid 2 (Huruf Bersambung)</option>
+                            <option value="3">Jilid 3 (Tanda Baca Kasrah/Dhammah)</option>
+                            <option value="4">Jilid 4 (Tasydid & Nun Sukun)</option>
+                            <option value="5">Jilid 5 (Waqaf & Ibtida')</option>
+                            <option value="6">Jilid 6 (Gharib & Musykilat)</option>
+                            <option value="7">Jilid 7 (Tajwid Lengkap)</option>
+                        </select>
+                        <p class="text-[9px] text-slate-400">Target jenjang jilid yang diharapkan tercapai pada periode evaluasi.</p>
+                    </div>
+
+                    <!-- Target Halaman per Sesi -->
+                    <div class="p-3.5 bg-teal-50/40 dark:bg-teal-950/20 rounded-2xl border border-teal-200 dark:border-teal-900/40 space-y-2">
+                        <label class="font-bold text-slate-700 dark:text-slate-300 block">Target per Sesi (Halaman) <span class="text-rose-500">*</span></label>
+                        <input type="number" id="input-tpq-target-sesi" oninput="recalculateTPQTargetWeekly()" value="1" min="0.5" step="0.5" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-bold bg-white dark:bg-[#1c2836] outline-none focus:ring-2 focus:ring-teal-500">
+                        <div class="flex flex-wrap gap-1.5 pt-0.5">
+                            <button type="button" onclick="setTPQTargetChip('SESI', 0.5)" class="px-2 py-1 bg-white dark:bg-[#1c2836] font-bold rounded-lg border border-slate-200 dark:border-[#283a4e] text-[10px] hover:bg-teal-50 transition">+ 0,5 Hal</button>
+                            <button type="button" onclick="setTPQTargetChip('SESI', 1)" class="px-2 py-1 bg-white dark:bg-[#1c2836] font-bold rounded-lg border border-slate-200 dark:border-[#283a4e] text-[10px] hover:bg-teal-50 transition">+ 1 Hal</button>
+                            <button type="button" onclick="setTPQTargetChip('SESI', 2)" class="px-2 py-1 bg-white dark:bg-[#1c2836] font-bold rounded-lg border border-slate-200 dark:border-[#283a4e] text-[10px] hover:bg-teal-50 transition">+ 2 Hal</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div class="p-3 bg-slate-50 dark:bg-[#1c2836] rounded-xl border border-slate-200 dark:border-[#283a4e]">
+                        <span class="text-[10px] font-bold text-slate-400 block mb-0.5">Estimasi Target Pekanan (6 Sesi):</span>
+                        <input type="text" id="input-tpq-target-pekan" readonly value="6 Halaman / Pekan" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#253447] text-xs font-bold bg-white/80 dark:bg-[#15202d] text-slate-700 dark:text-slate-200">
+                    </div>
+                    <div class="p-3 bg-slate-50 dark:bg-[#1c2836] rounded-xl border border-slate-200 dark:border-[#283a4e]">
+                        <span class="text-[10px] font-bold text-slate-400 block mb-0.5">Estimasi Target Bulanan (4 Pekan):</span>
+                        <input type="text" id="input-tpq-target-bulan" readonly value="24 Halaman (~0.6 Jilid)" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#253447] text-xs font-bold bg-white/80 dark:bg-[#15202d] text-slate-700 dark:text-slate-200">
+                    </div>
+                </div>
+            </div>
+            <div class="px-5 py-3.5 bg-slate-50 dark:bg-[#1c2836] border-t border-slate-100 dark:border-[#253447] flex items-center justify-between gap-3 shrink-0">
+                <span class="text-[10px] text-slate-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-check text-teal-600"></i>
+                    <span>Tersimpan ke database Sheet TPQ_Target</span>
+                </span>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="closeTPQTargetModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-[#253447] text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition">Batal</button>
+                    <button type="button" id="btn-save-tpq-target" onclick="submitTPQTarget()" class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5 active:scale-95">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>Simpan Target</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL TPQ: TARGET MASSAL (BULK TARGET) ==================== -->
+    <div id="modal-tpq-target-bulk"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 md:p-4 hidden">
+        <div class="bg-white dark:bg-[#15202d] w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-[#253447] flex flex-col max-h-[92vh] transform transition-all">
+            <div class="px-5 py-4 bg-slate-50 dark:bg-[#1c2836] border-b border-slate-100 dark:border-[#253447] flex justify-between items-center shrink-0">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-9 h-9 bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 rounded-xl flex items-center justify-center text-base font-bold">
+                        <i class="fa-solid fa-bullseye"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-black text-slate-800 dark:text-slate-100">Atur Target Belajar TPQ Massal</h3>
+                        <p class="text-[10px] text-slate-400">Terapkan target ritme halaman Yanbu'a serentak ke santri atau kelas</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeTPQBulkTargetModal()" class="w-8 h-8 rounded-full bg-slate-200/60 dark:bg-slate-700 hover:bg-slate-300 text-slate-500 dark:text-slate-300 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+            <div class="p-5 overflow-y-auto space-y-4 custom-scrollbar text-xs">
+                <!-- 1. SASARAN PENERAPAN -->
+                <div class="p-3.5 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200/80 dark:border-[#283a4e] space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="font-extrabold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                            <i class="fa-solid fa-users text-amber-600"></i> 1. PILIH SASARAN PENERAPAN TARGET
+                        </span>
+                        <span id="tpq-bulk-target-recipient-badge" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300">
+                            0 Santri Sasaran
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <button type="button" onclick="setTPQBulkTargetScope('ALL')" id="btn-tpq-scope-all"
+                            class="px-3 py-2 rounded-xl font-bold text-xs border text-center transition flex flex-col items-center gap-1 bg-white dark:bg-[#15202d] border-teal-500 text-teal-700 dark:text-teal-300 shadow-sm ring-2 ring-teal-500/20">
+                            <i class="fa-solid fa-user-group text-sm"></i>
+                            <span>Semua Santri</span>
+                        </button>
+                        <button type="button" onclick="setTPQBulkTargetScope('KELAS')" id="btn-tpq-scope-kelas"
+                            class="px-3 py-2 rounded-xl font-bold text-xs border text-center transition flex flex-col items-center gap-1 bg-white dark:bg-[#15202d] border-slate-200 dark:border-[#283a4e] text-slate-600 dark:text-slate-300 hover:border-amber-400">
+                            <i class="fa-solid fa-chalkboard-user text-sm"></i>
+                            <span>Per Kelas</span>
+                        </button>
+                        <button type="button" onclick="setTPQBulkTargetScope('JILID')" id="btn-tpq-scope-jilid"
+                            class="px-3 py-2 rounded-xl font-bold text-xs border text-center transition flex flex-col items-center gap-1 bg-white dark:bg-[#15202d] border-slate-200 dark:border-[#283a4e] text-slate-600 dark:text-slate-300 hover:border-amber-400">
+                            <i class="fa-solid fa-layer-group text-sm"></i>
+                            <span>Per Jilid</span>
+                        </button>
+                        <button type="button" onclick="setTPQBulkTargetScope('SELECTED')" id="btn-tpq-scope-selected"
+                            class="px-3 py-2 rounded-xl font-bold text-xs border text-center transition flex flex-col items-center gap-1 bg-white dark:bg-[#15202d] border-slate-200 dark:border-[#283a4e] text-slate-600 dark:text-slate-300 hover:border-amber-400">
+                            <i class="fa-solid fa-square-check text-sm"></i>
+                            <span>Santri Dicentang</span>
+                        </button>
+                    </div>
+
+                    <div id="tpq-bulk-target-subselect-container" class="space-y-2 pt-1 hidden">
+                        <div id="tpq-bulk-target-kelas-wrapper" class="hidden">
+                            <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Pilih Kelas TPQ:</label>
+                            <select id="tpq-bulk-target-select-kelas" onchange="onTPQBulkTargetScopeChange()" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-semibold bg-white dark:bg-[#15202d] text-slate-800 dark:text-slate-100">
+                            </select>
+                        </div>
+                        <div id="tpq-bulk-target-jilid-wrapper" class="hidden">
+                            <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Pilih Jilid Yanbu'a:</label>
+                            <select id="tpq-bulk-target-select-jilid" onchange="onTPQBulkTargetScopeChange()" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-semibold bg-white dark:bg-[#15202d] text-slate-800 dark:text-slate-100">
+                                <option value="1">Jilid 1</option>
+                                <option value="2">Jilid 2</option>
+                                <option value="3">Jilid 3</option>
+                                <option value="4">Jilid 4</option>
+                                <option value="5">Jilid 5</option>
+                                <option value="6">Jilid 6</option>
+                                <option value="7">Jilid 7</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="p-2.5 bg-teal-50/70 dark:bg-teal-950/40 rounded-xl border border-teal-200/80 dark:border-teal-800/60 flex items-center justify-between text-[11px]">
+                        <span class="text-teal-800 dark:text-teal-300 flex items-center gap-1.5 font-bold">
+                            <i class="fa-solid fa-circle-info text-teal-600"></i>
+                            <span id="tpq-bulk-target-summary-text">Target akan diterapkan ke seluruh santri TPQ aktif</span>
+                        </span>
+                        <span class="text-slate-400 text-[10px]" id="tpq-bulk-target-student-preview">0 santri</span>
+                    </div>
+                </div>
+
+                <!-- 2. PARAMETER TARGET -->
+                <div class="p-4 bg-teal-50/40 dark:bg-teal-950/20 rounded-2xl border border-teal-200/80 dark:border-teal-900/40 space-y-3">
+                    <span class="font-black text-teal-800 dark:text-teal-300 flex items-center gap-1.5">
+                        <i class="fa-solid fa-bullseye"></i> 2. TARGET RITME BELAJAR YANBU'A
+                    </span>
+                    <div class="space-y-1.5">
+                        <label class="font-bold text-slate-700 dark:text-slate-300 block">Target Halaman per Sesi / Bimbingan <span class="text-rose-500">*</span></label>
+                        <input type="number" id="input-tpq-bulk-target-sesi" oninput="recalculateTPQBulkTargetWeekly()" value="1" min="0.5" step="0.5" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-bold bg-white dark:bg-[#1c2836] outline-none focus:ring-2 focus:ring-teal-500">
+                        <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+                            <button type="button" onclick="setTPQBulkTargetChip('SESI', 0.5)" class="px-2 py-1 bg-white dark:bg-[#1c2836] font-bold rounded-lg border border-slate-200 dark:border-[#283a4e] text-[10px] hover:bg-teal-50 transition">+ 0,5 Hal</button>
+                            <button type="button" onclick="setTPQBulkTargetChip('SESI', 1)" class="px-2 py-1 bg-white dark:bg-[#1c2836] font-bold rounded-lg border border-slate-200 dark:border-[#283a4e] text-[10px] hover:bg-teal-50 transition">+ 1 Hal</button>
+                            <button type="button" onclick="setTPQBulkTargetChip('SESI', 2)" class="px-2 py-1 bg-white dark:bg-[#1c2836] font-bold rounded-lg border border-slate-200 dark:border-[#283a4e] text-[10px] hover:bg-teal-50 transition">+ 2 Hal</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 pt-1 border-t border-teal-200/60 dark:border-teal-900/40">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-0.5">Target Pekanan (6 Sesi):</label>
+                            <input type="text" id="input-tpq-bulk-target-pekan" readonly value="6 Halaman" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#253447] text-[11px] font-bold bg-white/80 dark:bg-[#15202d] text-slate-700 dark:text-slate-200">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-0.5">Target Bulanan:</label>
+                            <input type="text" id="input-tpq-bulk-target-bulan" readonly value="24 Halaman" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#253447] text-[11px] font-bold bg-white/80 dark:bg-[#15202d] text-slate-700 dark:text-slate-200">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="px-5 py-3.5 bg-slate-50 dark:bg-[#1c2836] border-t border-slate-100 dark:border-[#253447] flex items-center justify-between gap-3 shrink-0">
+                <span class="text-[10px] text-slate-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-bolt text-amber-500"></i>
+                    <span>Tersimpan massal ke database Sheet TPQ_Target</span>
+                </span>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="closeTPQBulkTargetModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-[#253447] text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition">Batal</button>
+                    <button type="button" id="btn-save-tpq-target-bulk" onclick="submitTPQBulkTarget()" class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5 active:scale-95">
+                        <i class="fa-solid fa-bullseye"></i>
+                        <span>Terapkan Target Massal</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL TPQ: KELOLA KELAS & PLOTTING (4 TAB LENGKAP) ==================== -->
+    <div id="modal-tpq-kelas"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 hidden">
+        <div class="bg-white dark:bg-[#15202d] w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-[#253447] flex flex-col max-h-[94vh] transform transition-all">
+            <div class="px-5 py-4 bg-slate-50 dark:bg-[#1c2836] border-b border-slate-100 dark:border-[#253447] flex justify-between items-center shrink-0">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-9 h-9 bg-teal-100 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 rounded-xl flex items-center justify-center text-base font-bold">
+                        <i class="fa-solid fa-users-gear"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Kelola Kelas & Plotting Santri TPQ</h3>
+                        <p class="text-[10px] text-slate-400">Atur kelompok bimbingan Yanbu'a, tunjuk Ustadz Pengampu, dan plotting santri</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeTPQKelasModal()" class="w-8 h-8 rounded-full bg-slate-200/60 dark:bg-slate-700 hover:bg-slate-300 text-slate-500 dark:text-slate-300 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Tab Navigation Bar (4 TAB) -->
+            <div class="flex items-center space-x-1 border-b border-slate-200 dark:border-[#253447] px-5 pt-2 bg-slate-50/70 dark:bg-[#1c2836]/60 overflow-x-auto custom-scrollbar shrink-0">
+                <button type="button" id="tab-btn-tpq-kls-1" onclick="switchTPQKelasTab(1)"
+                    class="px-4 py-2.5 text-xs font-extrabold border-b-2 border-teal-600 text-teal-700 dark:text-teal-400 flex items-center gap-1.5 whitespace-nowrap transition">
+                    <i class="fa-solid fa-layer-group"></i> 1. KELAS TPQ
+                </button>
+                <button type="button" id="tab-btn-tpq-kls-2" onclick="switchTPQKelasTab(2)"
+                    class="px-4 py-2.5 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 flex items-center gap-1.5 whitespace-nowrap transition">
+                    <i class="fa-solid fa-user-plus"></i> 2. PLOTTING SANTRI
+                </button>
+                <button type="button" id="tab-btn-tpq-kls-3" onclick="switchTPQKelasTab(3)"
+                    class="px-4 py-2.5 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 flex items-center gap-1.5 whitespace-nowrap transition">
+                    <i class="fa-solid fa-table-list"></i> 3. MATRIKS BEBAN
+                </button>
+                <button type="button" id="tab-btn-tpq-kls-4" onclick="switchTPQKelasTab(4)"
+                    class="px-4 py-2.5 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 flex items-center gap-1.5 whitespace-nowrap transition">
+                    <i class="fa-regular fa-clock"></i> 4. JADWAL & SESI WAKTU
+                </button>
+            </div>
+
+            <div class="p-5 overflow-y-auto custom-scrollbar flex-1 text-xs">
+                <!-- TAB 1: KELAS TPQ -->
+                <div id="panel-tpq-kls-tab-1" class="space-y-4">
+                    <form id="form-new-tpq-kelas" onsubmit="submitNewTPQKelas(event)"
+                        class="p-4 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200 dark:border-[#283a4e] space-y-3">
+                        <span class="font-extrabold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-plus text-teal-600"></i> BUAT KELAS TPQ BARU
+                        </span>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                            <div>
+                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Kelas <span class="text-rose-500">*</span></label>
+                                <input type="text" id="input-tpq-kelas-nama" required placeholder="Misal: Yanbu'a Jilid 1 Putra"
+                                    class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs outline-none focus:ring-2 focus:ring-teal-500">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Kategori Jilid <span class="text-rose-500">*</span></label>
+                                <select id="input-tpq-kelas-kategori" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs outline-none font-bold">
+                                    <option value="Jilid 1 - 2 (Dasar)">Jilid 1 - 2 (Dasar)</option>
+                                    <option value="Jilid 3 - 4 (Menengah)">Jilid 3 - 4 (Menengah)</option>
+                                    <option value="Jilid 5 - 7 (Lanjutan & Tajwid)">Jilid 5 - 7 (Lanjutan & Tajwid)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Ustadz / Ustadzah Pengampu <span class="text-rose-500">*</span></label>
+                                <select id="input-tpq-kelas-ustadz" required class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs outline-none font-bold">
+                                    <option value="">-- Pilih Ustadz Pengampu --</option>
+                                </select>
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Deskripsi / Target Kelas</label>
+                                <input type="text" id="input-tpq-kelas-target" placeholder="Misal: Bimbingan Tahsin Dasar Fathah & Kasrah / 1 Halaman per Hari"
+                                    class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs outline-none focus:ring-2 focus:ring-teal-500">
+                            </div>
+                            <div class="flex items-end">
+                                <button type="submit" id="btn-submit-tpq-kelas" class="w-full py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95">
+                                    <i class="fa-solid fa-plus text-[10px]"></i>
+                                    <span>Tambah Kelas</span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <span class="font-extrabold text-xs text-slate-800 dark:text-slate-100 uppercase tracking-wider">DAFTAR KELAS TPQ AKTIF</span>
+                            <span id="tpq-kelas-count-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300">0 Kelas</span>
+                        </div>
+                        <div id="tpq-kelas-cards-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <!-- Populated dynamically by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: PLOTTING SANTRI -->
+                <div id="panel-tpq-kls-tab-2" class="hidden space-y-4">
+                    <div class="p-4 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200 dark:border-[#283a4e] space-y-3">
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+                            <div class="flex items-center space-x-2">
+                                <label class="font-bold text-slate-700 dark:text-slate-300 text-xs shrink-0">Pilih Kelas TPQ:</label>
+                                <select id="select-plotting-tpq-kelas" onchange="onSelectPlottingTPQKelas(this.value)"
+                                    class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs font-bold outline-none focus:ring-2 focus:ring-teal-500">
+                                </select>
+                            </div>
+                            <span id="tab2-tpq-plotting-count-badge" class="font-extrabold text-teal-700 dark:text-teal-300 text-xs bg-teal-50 dark:bg-teal-950/60 px-3 py-1 rounded-xl border border-teal-200/60">0 Santri Terplot</span>
+                        </div>
+                        <div class="p-3 bg-teal-50/50 dark:bg-teal-950/30 rounded-xl border border-teal-100 dark:border-teal-900/40 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                            <div>
+                                <span class="text-[10px] font-bold text-teal-700 dark:text-teal-400 uppercase">Ustadz Pengampu:</span>
+                                <p id="tab2-tpq-plotting-ustadz" class="font-bold text-slate-800 dark:text-slate-100">-</p>
+                            </div>
+                            <div>
+                                <span class="text-[10px] font-bold text-teal-700 dark:text-teal-400 uppercase">Kategori / Target:</span>
+                                <p id="tab2-tpq-plotting-target" class="font-semibold text-slate-700 dark:text-slate-300">-</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Santri Terdaftar di Kelas Ini -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="font-extrabold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1.5 uppercase">
+                                <i class="fa-solid fa-user-check text-teal-600"></i>
+                                <span>Santri Terdaftar di Kelas Ini (<span id="tab2-tpq-plotting-enrolled-count">0</span>)</span>
+                            </span>
+                            <span class="text-[10px] text-slate-400">Klik Keluarkan untuk melepas santri</span>
+                        </div>
+                        <div id="tab2-tpq-plotting-enrolled-container" class="max-h-48 overflow-y-auto space-y-1.5 p-2 rounded-2xl bg-slate-50 dark:bg-[#1c2836] border border-slate-200 dark:border-[#283a4e] custom-scrollbar">
+                        </div>
+                    </div>
+
+                    <!-- Tambah Santri Lain -->
+                    <div class="space-y-2 pt-2 border-t border-slate-100 dark:border-[#283a4e]">
+                        <div class="flex items-center justify-between">
+                            <span class="font-extrabold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1.5 uppercase">
+                                <i class="fa-solid fa-user-plus text-indigo-600"></i>
+                                <span>Tambah Santri Lain ke Kelas Ini</span>
+                            </span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+                            <div class="relative flex-1">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <input type="text" id="tab2-tpq-plotting-search" oninput="filterTPQPlottingAvailableList()"
+                                    placeholder="Cari santri berdasarkan Nama atau NIS..."
+                                    class="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs outline-none focus:ring-2 focus:ring-teal-500">
+                            </div>
+                            <select id="tab2-tpq-plotting-filter-gender" onchange="filterTPQPlottingAvailableList()"
+                                class="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs font-semibold outline-none">
+                                <option value="ALL">Semua Gender</option>
+                                <option value="L">Putra (L)</option>
+                                <option value="P">Putri (P)</option>
+                            </select>
+                        </div>
+                        <div id="tab2-tpq-plotting-available-container" class="max-h-56 overflow-y-auto space-y-1.5 p-2 rounded-2xl bg-slate-50 dark:bg-[#1c2836] border border-slate-200 dark:border-[#283a4e] custom-scrollbar">
+                        </div>
+                        <div class="flex justify-end pt-2">
+                            <button type="button" id="tab2-btn-save-tpq-plotting" onclick="submitTPQPlotting()"
+                                class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5 active:scale-95">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                                <span>Simpan Plotting Santri</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: MATRIKS BEBAN -->
+                <div id="panel-tpq-kls-tab-3" class="hidden space-y-4">
+                    <div class="p-4 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200 dark:border-[#283a4e] space-y-1">
+                        <h4 class="font-extrabold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-simple text-teal-600"></i>
+                            <span>REKAPITULASI DISTRIBUSI & BEBAN BINAAN USTADZ TPQ</span>
+                        </h4>
+                        <p class="text-[10px] text-slate-400">Gambaran rasio kapasitas bimbingan santri per tenaga pendidik TPQ Yanbu'a</p>
+                    </div>
+
+                    <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-[#283a4e]">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-50 dark:bg-[#1c2836] text-slate-500 dark:text-slate-400 uppercase text-[10px] font-bold border-b border-slate-200 dark:border-[#283a4e]">
+                                    <th class="py-3 px-4">USTADZ PENGAMPU</th>
+                                    <th class="py-3 px-4">KELAS TPQ</th>
+                                    <th class="py-3 px-4">KATEGORI</th>
+                                    <th class="py-3 px-4">BINAAN</th>
+                                    <th class="py-3 px-4">RATA-RATA JILID</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tpq-matriks-beban-tbody" class="divide-y divide-slate-100 dark:divide-[#253447] bg-white dark:bg-[#15202d]">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB 4: JADWAL & SESI WAKTU -->
+                <div id="panel-tpq-kls-tab-4" class="hidden space-y-4">
+                    <form id="form-tpq-sesi" onsubmit="submitTPQSesi(event)"
+                        class="p-4 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200 dark:border-[#283a4e] space-y-3">
+                        <span class="font-extrabold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-plus text-teal-600"></i> TAMBAH JADWAL SESI TPQ BARU
+                        </span>
+                        <input type="hidden" id="input-tpq-sesi-id" value="">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                            <div>
+                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Sesi <span class="text-rose-500">*</span></label>
+                                <input type="text" id="input-tpq-sesi-nama" required placeholder="Misal: Sore (Ba'da Ashar)"
+                                    class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs outline-none focus:ring-2 focus:ring-teal-500">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Jenis Sesi <span class="text-rose-500">*</span></label>
+                                <select id="input-tpq-sesi-tipe" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs outline-none font-bold">
+                                    <option value="Bimbingan Yanbu'a Reguler">Bimbingan Yanbu'a Reguler</option>
+                                    <option value="Privat Tahsin & I'adah">Privat Tahsin & I'adah</option>
+                                    <option value="Imtihan / Ujian Kenaikan Jilid">Imtihan / Ujian Kenaikan Jilid</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Status Operasional</label>
+                                <select id="input-tpq-sesi-status" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs outline-none font-bold">
+                                    <option value="Aktif Digunakan">Aktif Digunakan</option>
+                                    <option value="Nonaktif">Nonaktif</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                            <div>
+                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Rentang Jam Sesi</label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="time" id="input-tpq-sesi-jam-mulai" value="15:45" class="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs outline-none font-bold">
+                                    <span class="text-slate-400 font-bold text-xs">s/d</span>
+                                    <input type="time" id="input-tpq-sesi-jam-selesai" value="17:00" class="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs outline-none font-bold">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Hari Berlakunya Sesi</label>
+                                <div class="flex flex-wrap gap-2 text-xs">
+                                    <label class="inline-flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="tpq-sesi-hari" value="Sen" checked class="rounded text-teal-600 focus:ring-teal-500"><span>Sen</span></label>
+                                    <label class="inline-flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="tpq-sesi-hari" value="Sel" checked class="rounded text-teal-600 focus:ring-teal-500"><span>Sel</span></label>
+                                    <label class="inline-flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="tpq-sesi-hari" value="Rab" checked class="rounded text-teal-600 focus:ring-teal-500"><span>Rab</span></label>
+                                    <label class="inline-flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="tpq-sesi-hari" value="Kam" checked class="rounded text-teal-600 focus:ring-teal-500"><span>Kam</span></label>
+                                    <label class="inline-flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="tpq-sesi-hari" value="Jum" class="rounded text-teal-600 focus:ring-teal-500"><span>Jum</span></label>
+                                    <label class="inline-flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="tpq-sesi-hari" value="Sab" checked class="rounded text-teal-600 focus:ring-teal-500"><span>Sab</span></label>
+                                    <label class="inline-flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="tpq-sesi-hari" value="Min" checked class="rounded text-teal-600 focus:ring-teal-500"><span>Min</span></label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end items-center gap-2 pt-1">
+                            <button type="button" id="btn-cancel-tpq-sesi" onclick="resetTPQSesiForm()" class="px-3.5 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-[#253447] text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition hidden">Batal Edit</button>
+                            <button type="submit" id="btn-submit-tpq-sesi" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs shadow-sm transition flex items-center gap-1.5 active:scale-95">
+                                <i class="fa-solid fa-plus text-[10px]"></i>
+                                <span id="btn-submit-tpq-sesi-text">Simpan Sesi</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <span class="font-extrabold text-xs text-slate-800 dark:text-slate-100 uppercase tracking-wider">DAFTAR SESI BIMBINGAN TPQ AKTIF</span>
+                            <span id="tpq-sesi-count-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300">0 Sesi Aktif</span>
+                        </div>
+                        <div id="tpq-sesi-cards-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-5 py-3.5 bg-slate-50 dark:bg-[#1c2836] border-t border-slate-100 dark:border-[#253447] flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+                <p class="text-[10px] sm:text-[11px] text-slate-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-check text-teal-500"></i>
+                    <span>Perubahan tersimpan ke database Google Sheets TPQ.</span>
+                </p>
+                <div class="flex items-center gap-2 self-end sm:self-auto">
+                    <button type="button" onclick="closeTPQKelasModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-[#253447] text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ==================== MODAL SOROGAN: TARGET INDIVIDUAL ==================== -->
+    <div id="modal-sorogan-target"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 md:p-4 hidden">
+        <div class="bg-white dark:bg-[#15202d] w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-[#253447] flex flex-col max-h-[92vh] transform transition-all">
+            <div class="px-5 py-4 bg-slate-50 dark:bg-[#1c2836] border-b border-slate-100 dark:border-[#253447] flex justify-between items-center shrink-0">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-9 h-9 bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 rounded-xl flex items-center justify-center text-base font-bold">
+                        <i class="fa-solid fa-bullseye"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-black text-slate-800 dark:text-slate-100">Atur Target Sorogan Santri</h3>
+                        <p class="text-[10px] text-slate-400">Target kelulusan Juz Mushaf Pojok & ritme lembar/halaman per sesi</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeSoroganTargetModal()" class="w-8 h-8 rounded-full bg-slate-200/60 dark:bg-slate-700 hover:bg-slate-300 text-slate-500 dark:text-slate-300 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+            <div class="p-5 overflow-y-auto space-y-4 custom-scrollbar text-xs">
+                <!-- Info Santri -->
+                <div class="p-3.5 bg-sky-50/50 dark:bg-sky-950/30 rounded-2xl border border-sky-100 dark:border-sky-900/40 flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] font-bold text-sky-700 dark:text-sky-400 uppercase">Nama Santri:</span>
+                        <h4 id="sorogan-target-student-name" class="font-bold text-sm text-slate-800 dark:text-slate-100">-</h4>
+                        <p id="sorogan-target-student-nis" class="text-[10px] text-slate-400">NIS: -</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[10px] font-bold text-sky-700 dark:text-sky-400 uppercase">Posisi Terkini:</span>
+                        <div id="sorogan-target-current-pos" class="font-black text-xs text-sky-700 dark:text-sky-300">Juz 1 • Hal 1</div>
+                    </div>
+                </div>
+                <input type="hidden" id="input-sorogan-target-student-id" value="">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <!-- Target Juz Sasaran -->
+                    <div class="p-3.5 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200 dark:border-[#283a4e] space-y-2">
+                        <label class="font-bold text-slate-700 dark:text-slate-300 block">Target Juz Sasaran <span class="text-rose-500">*</span></label>
+                        <select id="input-sorogan-target-juz" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-bold bg-white dark:bg-[#15202d] text-slate-800 dark:text-slate-100">
+                            <!-- Populated with Juz 1 to 30 -->
+                        </select>
+                        <p class="text-[9px] text-slate-400">Target juz akhir yang ditargetkan khatam disimak secara binnazhar.</p>
+                    </div>
+
+                    <!-- Target Halaman per Sesi -->
+                    <div class="p-3.5 bg-sky-50/40 dark:bg-sky-950/20 rounded-2xl border border-sky-200 dark:border-sky-900/40 space-y-2">
+                        <label class="font-bold text-slate-700 dark:text-slate-300 block">Target per Sesi (Halaman Mushaf) <span class="text-rose-500">*</span></label>
+                        <input type="number" id="input-sorogan-target-sesi" oninput="recalculateSoroganTargetWeekly()" value="2" min="1" step="1" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-bold bg-white dark:bg-[#1c2836] outline-none focus:ring-2 focus:ring-sky-500">
+                        <div class="flex flex-wrap gap-1.5 pt-0.5">
+                            <button type="button" onclick="setSoroganTargetChip('SESI', 1)" class="px-2 py-1 bg-white dark:bg-[#1c2836] font-bold rounded-lg border border-slate-200 dark:border-[#283a4e] text-[10px] hover:bg-sky-50 transition">+ 1 Hal</button>
+                            <button type="button" onclick="setSoroganTargetChip('SESI', 2)" class="px-2 py-1 bg-white dark:bg-[#1c2836] font-bold rounded-lg border border-slate-200 dark:border-[#283a4e] text-[10px] hover:bg-sky-50 transition">+ 2 Hal (1 Lbr)</button>
+                            <button type="button" onclick="setSoroganTargetChip('SESI', 4)" class="px-2 py-1 bg-white dark:bg-[#1c2836] font-bold rounded-lg border border-slate-200 dark:border-[#283a4e] text-[10px] hover:bg-sky-50 transition">+ 4 Hal (2 Lbr)</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div class="p-3 bg-slate-50 dark:bg-[#1c2836] rounded-xl border border-slate-200 dark:border-[#283a4e]">
+                        <span class="text-[10px] font-bold text-slate-400 block mb-0.5">Estimasi Target Pekanan (6 Sesi):</span>
+                        <input type="text" id="input-sorogan-target-pekan" readonly value="12 Halaman (6 Lembar)" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#253447] text-xs font-bold bg-white/80 dark:bg-[#15202d] text-slate-700 dark:text-slate-200">
+                    </div>
+                    <div class="p-3 bg-slate-50 dark:bg-[#1c2836] rounded-xl border border-slate-200 dark:border-[#283a4e]">
+                        <span class="text-[10px] font-bold text-slate-400 block mb-0.5">Estimasi Target Bulanan (4 Pekan):</span>
+                        <input type="text" id="input-sorogan-target-bulan" readonly value="48 Halaman (~2.4 Juz)" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#253447] text-xs font-bold bg-white/80 dark:bg-[#15202d] text-slate-700 dark:text-slate-200">
+                    </div>
+                </div>
+            </div>
+            <div class="px-5 py-3.5 bg-slate-50 dark:bg-[#1c2836] border-t border-slate-100 dark:border-[#253447] flex items-center justify-between gap-3 shrink-0">
+                <span class="text-[10px] text-slate-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-check text-sky-600"></i>
+                    <span>Tersimpan ke database Sheet Sorogan_Target</span>
+                </span>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="closeSoroganTargetModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-[#253447] text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition">Batal</button>
+                    <button type="button" id="btn-save-sorogan-target" onclick="submitSoroganTarget()" class="px-5 py-2 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5 active:scale-95">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>Simpan Target</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL SOROGAN: TARGET MASSAL (BULK TARGET) ==================== -->
+    <div id="modal-sorogan-target-bulk"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 md:p-4 hidden">
+        <div class="bg-white dark:bg-[#15202d] w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-[#253447] flex flex-col max-h-[92vh] transform transition-all">
+            <div class="px-5 py-4 bg-slate-50 dark:bg-[#1c2836] border-b border-slate-100 dark:border-[#253447] flex justify-between items-center shrink-0">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-9 h-9 bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 rounded-xl flex items-center justify-center text-base font-bold">
+                        <i class="fa-solid fa-bullseye"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-black text-slate-800 dark:text-slate-100">Atur Target Sorogan Massal</h3>
+                        <p class="text-[10px] text-slate-400">Terapkan target ritme lembar binnazhar serentak ke santri atau halaqah</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeSoroganBulkTargetModal()" class="w-8 h-8 rounded-full bg-slate-200/60 dark:bg-slate-700 hover:bg-slate-300 text-slate-500 dark:text-slate-300 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+            <div class="p-5 overflow-y-auto space-y-4 custom-scrollbar text-xs">
+                <!-- 1. SASARAN PENERAPAN -->
+                <div class="p-3.5 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200/80 dark:border-[#283a4e] space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="font-extrabold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                            <i class="fa-solid fa-users text-amber-600"></i> 1. PILIH SASARAN PENERAPAN TARGET
+                        </span>
+                        <span id="sorogan-bulk-target-recipient-badge" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300">
+                            0 Santri Sasaran
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <button type="button" onclick="setSoroganBulkTargetScope('ALL')" id="btn-sorogan-scope-all"
+                            class="px-3 py-2 rounded-xl font-bold text-xs border text-center transition flex flex-col items-center gap-1 bg-white dark:bg-[#15202d] border-sky-500 text-sky-700 dark:text-sky-300 shadow-sm ring-2 ring-sky-500/20">
+                            <i class="fa-solid fa-user-group text-sm"></i>
+                            <span>Semua Santri</span>
+                        </button>
+                        <button type="button" onclick="setSoroganBulkTargetScope('HALAQAH')" id="btn-sorogan-scope-halaqah"
+                            class="px-3 py-2 rounded-xl font-bold text-xs border text-center transition flex flex-col items-center gap-1 bg-white dark:bg-[#15202d] border-slate-200 dark:border-[#283a4e] text-slate-600 dark:text-slate-300 hover:border-amber-400">
+                            <i class="fa-solid fa-layer-group text-sm"></i>
+                            <span>Per Halaqah</span>
+                        </button>
+                        <button type="button" onclick="setSoroganBulkTargetScope('JUZ')" id="btn-sorogan-scope-juz"
+                            class="px-3 py-2 rounded-xl font-bold text-xs border text-center transition flex flex-col items-center gap-1 bg-white dark:bg-[#15202d] border-slate-200 dark:border-[#283a4e] text-slate-600 dark:text-slate-300 hover:border-amber-400">
+                            <i class="fa-solid fa-book-open text-sm"></i>
+                            <span>Per Juz Aktif</span>
+                        </button>
+                        <button type="button" onclick="setSoroganBulkTargetScope('SELECTED')" id="btn-sorogan-scope-selected"
+                            class="px-3 py-2 rounded-xl font-bold text-xs border text-center transition flex flex-col items-center gap-1 bg-white dark:bg-[#15202d] border-slate-200 dark:border-[#283a4e] text-slate-600 dark:text-slate-300 hover:border-amber-400">
+                            <i class="fa-solid fa-square-check text-sm"></i>
+                            <span>Santri Dicentang</span>
+                        </button>
+                    </div>
+
+                    <div id="sorogan-bulk-target-subselect-container" class="space-y-2 pt-1 hidden">
+                        <div id="sorogan-bulk-target-halaqah-wrapper" class="hidden">
+                            <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Pilih Kelompok Halaqah:</label>
+                            <select id="sorogan-bulk-target-select-halaqah" onchange="onSoroganBulkTargetScopeChange()" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-semibold bg-white dark:bg-[#15202d] text-slate-800 dark:text-slate-100">
+                            </select>
+                        </div>
+                        <div id="sorogan-bulk-target-juz-wrapper" class="hidden">
+                            <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Pilih Juz Aktif:</label>
+                            <select id="sorogan-bulk-target-select-juz" onchange="onSoroganBulkTargetScopeChange()" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-semibold bg-white dark:bg-[#15202d] text-slate-800 dark:text-slate-100">
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="p-2.5 bg-sky-50/70 dark:bg-sky-950/40 rounded-xl border border-sky-200/80 dark:border-sky-800/60 flex items-center justify-between text-[11px]">
+                        <span class="text-sky-800 dark:text-sky-300 flex items-center gap-1.5 font-bold">
+                            <i class="fa-solid fa-circle-info text-sky-600"></i>
+                            <span id="sorogan-bulk-target-summary-text">Target akan diterapkan ke seluruh santri Sorogan aktif</span>
+                        </span>
+                        <span class="text-slate-400 text-[10px]" id="sorogan-bulk-target-student-preview">0 santri</span>
+                    </div>
+                </div>
+
+                <!-- 2. PARAMETER TARGET -->
+                <div class="p-4 bg-sky-50/40 dark:bg-sky-950/20 rounded-2xl border border-sky-200/80 dark:border-sky-900/40 space-y-3">
+                    <span class="font-black text-sky-800 dark:text-sky-300 flex items-center gap-1.5">
+                        <i class="fa-solid fa-bullseye"></i> 2. TARGET RITME SOROGAN MUSHAF POJOK
+                    </span>
+                    <div class="space-y-1.5">
+                        <label class="font-bold text-slate-700 dark:text-slate-300 block">Target Halaman per Sesi / Setoran <span class="text-rose-500">*</span></label>
+                        <input type="number" id="input-sorogan-bulk-target-sesi" oninput="recalculateSoroganBulkTargetWeekly()" value="2" min="1" step="1" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-bold bg-white dark:bg-[#1c2836] outline-none focus:ring-2 focus:ring-sky-500">
+                        <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+                            <button type="button" onclick="setSoroganBulkTargetChip('SESI', 1)" class="px-2 py-1 bg-white dark:bg-[#1c2836] font-bold rounded-lg border border-slate-200 dark:border-[#283a4e] text-[10px] hover:bg-sky-50 transition">+ 1 Hal</button>
+                            <button type="button" onclick="setSoroganBulkTargetChip('SESI', 2)" class="px-2 py-1 bg-white dark:bg-[#1c2836] font-bold rounded-lg border border-slate-200 dark:border-[#283a4e] text-[10px] hover:bg-sky-50 transition">+ 2 Hal (1 Lbr)</button>
+                            <button type="button" onclick="setSoroganBulkTargetChip('SESI', 4)" class="px-2 py-1 bg-white dark:bg-[#1c2836] font-bold rounded-lg border border-slate-200 dark:border-[#283a4e] text-[10px] hover:bg-sky-50 transition">+ 4 Hal (2 Lbr)</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 pt-1 border-t border-sky-200/60 dark:border-sky-900/40">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-0.5">Target Pekanan (6 Sesi):</label>
+                            <input type="text" id="input-sorogan-bulk-target-pekan" readonly value="12 Halaman (6 Lembar)" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#253447] text-[11px] font-bold bg-white/80 dark:bg-[#15202d] text-slate-700 dark:text-slate-200">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-0.5">Target Bulanan:</label>
+                            <input type="text" id="input-sorogan-bulk-target-bulan" readonly value="48 Halaman (~2.4 Juz)" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#253447] text-[11px] font-bold bg-white/80 dark:bg-[#15202d] text-slate-700 dark:text-slate-200">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="px-5 py-3.5 bg-slate-50 dark:bg-[#1c2836] border-t border-slate-100 dark:border-[#253447] flex items-center justify-between gap-3 shrink-0">
+                <span class="text-[10px] text-slate-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-bolt text-amber-500"></i>
+                    <span>Tersimpan massal ke database Sheet Sorogan_Target</span>
+                </span>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="closeSoroganBulkTargetModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-[#253447] text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition">Batal</button>
+                    <button type="button" id="btn-save-sorogan-target-bulk" onclick="submitSoroganBulkTarget()" class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5 active:scale-95">
+                        <i class="fa-solid fa-bullseye"></i>
+                        <span>Terapkan Target Massal</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL SOROGAN: KELOLA HALAQAH & PLOTTING (4 TAB LENGKAP) ==================== -->
+    <div id="modal-sorogan-halaqah"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 hidden">
+        <div class="bg-white dark:bg-[#15202d] w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-[#253447] flex flex-col max-h-[94vh] transform transition-all">
+            <div class="px-5 py-4 bg-slate-50 dark:bg-[#1c2836] border-b border-slate-100 dark:border-[#253447] flex justify-between items-center shrink-0">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-9 h-9 bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 rounded-xl flex items-center justify-center text-base font-bold">
+                        <i class="fa-solid fa-users-gear"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Kelola Halaqah & Plotting Santri Sorogan</h3>
+                        <p class="text-[10px] text-slate-400">Atur kelompok binnazhar, tunjuk Kyai/Mu'allim Pengampu, dan alokasikan santri</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeSoroganHalaqahModal()" class="w-8 h-8 rounded-full bg-slate-200/60 dark:bg-slate-700 hover:bg-slate-300 text-slate-500 dark:text-slate-300 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Tab Navigation Bar (4 TAB) -->
+            <div class="flex items-center space-x-1 border-b border-slate-200 dark:border-[#253447] px-5 pt-2 bg-slate-50/70 dark:bg-[#1c2836]/60 overflow-x-auto custom-scrollbar shrink-0">
+                <button type="button" id="tab-btn-srg-hlq-1" onclick="switchSoroganHalaqahTab(1)"
+                    class="px-4 py-2.5 text-xs font-extrabold border-b-2 border-sky-600 text-sky-700 dark:text-sky-400 flex items-center gap-1.5 whitespace-nowrap transition">
+                    <i class="fa-solid fa-layer-group"></i> 1. KELOMPOK HALAQAH
+                </button>
+                <button type="button" id="tab-btn-srg-hlq-2" onclick="switchSoroganHalaqahTab(2)"
+                    class="px-4 py-2.5 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 flex items-center gap-1.5 whitespace-nowrap transition">
+                    <i class="fa-solid fa-user-plus"></i> 2. PLOTTING SANTRI
+                </button>
+                <button type="button" id="tab-btn-srg-hlq-3" onclick="switchSoroganHalaqahTab(3)"
+                    class="px-4 py-2.5 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 flex items-center gap-1.5 whitespace-nowrap transition">
+                    <i class="fa-solid fa-table-list"></i> 3. MATRIKS BEBAN
+                </button>
+                <button type="button" id="tab-btn-srg-hlq-4" onclick="switchSoroganHalaqahTab(4)"
+                    class="px-4 py-2.5 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 flex items-center gap-1.5 whitespace-nowrap transition">
+                    <i class="fa-regular fa-clock"></i> 4. JADWAL & SESI WAKTU
+                </button>
+            </div>
+
+            <div class="p-5 overflow-y-auto custom-scrollbar flex-1 text-xs">
+                <!-- TAB 1: KELOMPOK HALAQAH -->
+                <div id="panel-srg-hlq-tab-1" class="space-y-4">
+                    <form id="form-new-sorogan-halaqah" onsubmit="submitNewSoroganHalaqah(event)"
+                        class="p-4 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200 dark:border-[#283a4e] space-y-3">
+                        <span class="font-extrabold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-plus text-sky-600"></i> BUAT KELOMPOK HALAQAH SOROGAN BARU
+                        </span>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                            <div>
+                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Halaqah <span class="text-rose-500">*</span></label>
+                                <input type="text" id="input-sorogan-halaqah-nama" required placeholder="Misal: Halaqah Sorogan Putra A"
+                                    class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs outline-none focus:ring-2 focus:ring-sky-500">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Kategori Program <span class="text-rose-500">*</span></label>
+                                <select id="input-sorogan-halaqah-kategori" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs outline-none font-bold">
+                                    <option value="Sorogan Binnazhar Putra">Sorogan Binnazhar Putra</option>
+                                    <option value="Sorogan Binnazhar Putri">Sorogan Binnazhar Putri</option>
+                                    <option value="Sorogan Khusus Pengasuh">Sorogan Khusus Pengasuh</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Kyai / Mu'allim Pengampu <span class="text-rose-500">*</span></label>
+                                <select id="input-sorogan-halaqah-muallim" required class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs outline-none font-bold">
+                                    <option value="">-- Pilih Mu'allim Pengampu --</option>
+                                </select>
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Deskripsi / Target Halaqah</label>
+                                <input type="text" id="input-sorogan-halaqah-target" placeholder="Misal: Binnazhar Mushaf Pojok Tartil / Target Khatam 30 Juz"
+                                    class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs outline-none focus:ring-2 focus:ring-sky-500">
+                            </div>
+                            <div class="flex items-end">
+                                <button type="submit" id="btn-submit-sorogan-halaqah" class="w-full py-2 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl text-xs shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95">
+                                    <i class="fa-solid fa-plus text-[10px]"></i>
+                                    <span>Tambah Halaqah</span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <span class="font-extrabold text-xs text-slate-800 dark:text-slate-100 uppercase tracking-wider">DAFTAR KELOMPOK HALAQAH SOROGAN AKTIF</span>
+                            <span id="sorogan-halaqah-count-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300">0 Halaqah</span>
+                        </div>
+                        <div id="sorogan-halaqah-cards-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <!-- Populated dynamically by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: PLOTTING SANTRI -->
+                <div id="panel-srg-hlq-tab-2" class="hidden space-y-4">
+                    <div class="p-4 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200 dark:border-[#283a4e] space-y-3">
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+                            <div class="flex items-center space-x-2">
+                                <label class="font-bold text-slate-700 dark:text-slate-300 text-xs shrink-0">Pilih Halaqah:</label>
+                                <select id="select-plotting-sorogan-halaqah" onchange="onSelectPlottingSoroganHalaqah(this.value)"
+                                    class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs font-bold outline-none focus:ring-2 focus:ring-sky-500">
+                                </select>
+                            </div>
+                            <span id="tab2-sorogan-plotting-count-badge" class="font-extrabold text-sky-700 dark:text-sky-300 text-xs bg-sky-50 dark:bg-sky-950/60 px-3 py-1 rounded-xl border border-sky-200/60">0 Santri Terplot</span>
+                        </div>
+                        <div class="p-3 bg-sky-50/50 dark:bg-sky-950/30 rounded-xl border border-sky-100 dark:border-sky-900/40 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                            <div>
+                                <span class="text-[10px] font-bold text-sky-700 dark:text-sky-400 uppercase">Mu'allim Pengampu:</span>
+                                <p id="tab2-sorogan-plotting-muallim" class="font-bold text-slate-800 dark:text-slate-100">-</p>
+                            </div>
+                            <div>
+                                <span class="text-[10px] font-bold text-sky-700 dark:text-sky-400 uppercase">Target / Catatan:</span>
+                                <p id="tab2-sorogan-plotting-target" class="font-semibold text-slate-700 dark:text-slate-300">-</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Santri Terdaftar di Halaqah Ini -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="font-extrabold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1.5 uppercase">
+                                <i class="fa-solid fa-user-check text-sky-600"></i>
+                                <span>Santri Terdaftar di Halaqah Ini (<span id="tab2-sorogan-plotting-enrolled-count">0</span>)</span>
+                            </span>
+                            <span class="text-[10px] text-slate-400">Klik Keluarkan untuk melepas santri</span>
+                        </div>
+                        <div id="tab2-sorogan-plotting-enrolled-container" class="max-h-48 overflow-y-auto space-y-1.5 p-2 rounded-2xl bg-slate-50 dark:bg-[#1c2836] border border-slate-200 dark:border-[#283a4e] custom-scrollbar">
+                        </div>
+                    </div>
+
+                    <!-- Tambah Santri Lain -->
+                    <div class="space-y-2 pt-2 border-t border-slate-100 dark:border-[#283a4e]">
+                        <div class="flex items-center justify-between">
+                            <span class="font-extrabold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1.5 uppercase">
+                                <i class="fa-solid fa-user-plus text-indigo-600"></i>
+                                <span>Tambah Santri Lain ke Halaqah Ini</span>
+                            </span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+                            <div class="relative flex-1">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <input type="text" id="tab2-sorogan-plotting-search" oninput="filterSoroganPlottingAvailableList()"
+                                    placeholder="Cari santri berdasarkan Nama atau NIS..."
+                                    class="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs outline-none focus:ring-2 focus:ring-sky-500">
+                            </div>
+                            <select id="tab2-sorogan-plotting-filter-gender" onchange="filterSoroganPlottingAvailableList()"
+                                class="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs font-semibold outline-none">
+                                <option value="ALL">Semua Gender</option>
+                                <option value="L">Putra (L)</option>
+                                <option value="P">Putri (P)</option>
+                            </select>
+                        </div>
+                        <div id="tab2-sorogan-plotting-available-container" class="max-h-56 overflow-y-auto space-y-1.5 p-2 rounded-2xl bg-slate-50 dark:bg-[#1c2836] border border-slate-200 dark:border-[#283a4e] custom-scrollbar">
+                        </div>
+                        <div class="flex justify-end pt-2">
+                            <button type="button" id="tab2-btn-save-sorogan-plotting" onclick="submitSoroganPlotting()"
+                                class="px-5 py-2 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5 active:scale-95">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                                <span>Simpan Plotting Santri</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: MATRIKS BEBAN -->
+                <div id="panel-srg-hlq-tab-3" class="hidden space-y-4">
+                    <div class="p-4 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200 dark:border-[#283a4e] space-y-1">
+                        <h4 class="font-extrabold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-simple text-sky-600"></i>
+                            <span>REKAPITULASI DISTRIBUSI & BEBAN BINAAN MU'ALLIM SOROGAN</span>
+                        </h4>
+                        <p class="text-[10px] text-slate-400">Gambaran rasio kapasitas bimbingan sorogan santri per Mu'allim/Kyai pengampu</p>
+                    </div>
+
+                    <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-[#283a4e]">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-50 dark:bg-[#1c2836] text-slate-500 dark:text-slate-400 uppercase text-[10px] font-bold border-b border-slate-200 dark:border-[#283a4e]">
+                                    <th class="py-3 px-4">MU'ALLIM PENGAMPU</th>
+                                    <th class="py-3 px-4">KELOMPOK HALAQAH</th>
+                                    <th class="py-3 px-4">KATEGORI</th>
+                                    <th class="py-3 px-4">BINAAN</th>
+                                    <th class="py-3 px-4">RATA-RATA JUZ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sorogan-matriks-beban-tbody" class="divide-y divide-slate-100 dark:divide-[#253447] bg-white dark:bg-[#15202d]">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB 4: JADWAL & SESI WAKTU -->
+                <div id="panel-srg-hlq-tab-4" class="hidden space-y-4">
+                    <form id="form-sorogan-sesi" onsubmit="submitSoroganSesi(event)"
+                        class="p-4 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200 dark:border-[#283a4e] space-y-3">
+                        <span class="font-extrabold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-plus text-sky-600"></i> TAMBAH JADWAL SESI SOROGAN BARU
+                        </span>
+                        <input type="hidden" id="input-sorogan-sesi-id" value="">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                            <div>
+                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Sesi <span class="text-rose-500">*</span></label>
+                                <input type="text" id="input-sorogan-sesi-nama" required placeholder="Misal: Pagi (Ba'da Subuh)"
+                                    class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs outline-none focus:ring-2 focus:ring-sky-500">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Jenis Sesi <span class="text-rose-500">*</span></label>
+                                <select id="input-sorogan-sesi-tipe" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs outline-none font-bold">
+                                    <option value="Sorogan Binnazhar Reguler">Sorogan Binnazhar Reguler</option>
+                                    <option value="Sorogan Privat / I'adah">Sorogan Privat / I'adah</option>
+                                    <option value="Khataman / Ujian Akhir Juz">Khataman / Ujian Akhir Juz</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Status Operasional</label>
+                                <select id="input-sorogan-sesi-status" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs outline-none font-bold">
+                                    <option value="Aktif Digunakan">Aktif Digunakan</option>
+                                    <option value="Nonaktif">Nonaktif</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                            <div>
+                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Rentang Jam Sesi</label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="time" id="input-sorogan-sesi-jam-mulai" value="05:15" class="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs outline-none font-bold">
+                                    <span class="text-slate-400 font-bold text-xs">s/d</span>
+                                    <input type="time" id="input-sorogan-sesi-jam-selesai" value="06:30" class="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs outline-none font-bold">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Hari Berlakunya Sesi</label>
+                                <div class="flex flex-wrap gap-2 text-xs">
+                                    <label class="inline-flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="sorogan-sesi-hari" value="Sen" checked class="rounded text-sky-600 focus:ring-sky-500"><span>Sen</span></label>
+                                    <label class="inline-flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="sorogan-sesi-hari" value="Sel" checked class="rounded text-sky-600 focus:ring-sky-500"><span>Sel</span></label>
+                                    <label class="inline-flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="sorogan-sesi-hari" value="Rab" checked class="rounded text-sky-600 focus:ring-sky-500"><span>Rab</span></label>
+                                    <label class="inline-flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="sorogan-sesi-hari" value="Kam" checked class="rounded text-sky-600 focus:ring-sky-500"><span>Kam</span></label>
+                                    <label class="inline-flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="sorogan-sesi-hari" value="Jum" class="rounded text-sky-600 focus:ring-sky-500"><span>Jum</span></label>
+                                    <label class="inline-flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="sorogan-sesi-hari" value="Sab" checked class="rounded text-sky-600 focus:ring-sky-500"><span>Sab</span></label>
+                                    <label class="inline-flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="sorogan-sesi-hari" value="Min" checked class="rounded text-sky-600 focus:ring-sky-500"><span>Min</span></label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end items-center gap-2 pt-1">
+                            <button type="button" id="btn-cancel-sorogan-sesi" onclick="resetSoroganSesiForm()" class="px-3.5 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-[#253447] text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition hidden">Batal Edit</button>
+                            <button type="submit" id="btn-submit-sorogan-sesi" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl text-xs shadow-sm transition flex items-center gap-1.5 active:scale-95">
+                                <i class="fa-solid fa-plus text-[10px]"></i>
+                                <span id="btn-submit-sorogan-sesi-text">Simpan Sesi</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <span class="font-extrabold text-xs text-slate-800 dark:text-slate-100 uppercase tracking-wider">DAFTAR SESI SOROGAN AKTIF</span>
+                            <span id="sorogan-sesi-count-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300">0 Sesi Aktif</span>
+                        </div>
+                        <div id="sorogan-sesi-cards-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-5 py-3.5 bg-slate-50 dark:bg-[#1c2836] border-t border-slate-100 dark:border-[#253447] flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+                <p class="text-[10px] sm:text-[11px] text-slate-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-check text-sky-500"></i>
+                    <span>Perubahan tersimpan ke database Google Sheets Sorogan.</span>
+                </p>
+                <div class="flex items-center gap-2 self-end sm:self-auto">
+                    <button type="button" onclick="closeSoroganHalaqahModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-[#253447] text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <div id="adminPPDBDetailModal"
         class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div

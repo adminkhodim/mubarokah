@@ -423,6 +423,62 @@ function doPost(e) {
       return createJsonResponse(initTPQSheets(token));
     }
 
+    if (action === "saveTPQPlotting" || action === "tpq.savePlotting") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "EDITOR"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      return createJsonResponse(saveTPQPlotting(payload.data || payload, token));
+    }
+
+    if (action === "saveTPQTarget" || action === "tpq.saveTarget") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "EDITOR"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      return createJsonResponse(saveTPQTarget(payload.data || payload, token));
+    }
+
+    if (action === "saveBulkTPQTarget" || action === "tpq.saveBulkTarget") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      return createJsonResponse(saveBulkTPQTarget(payload.data || payload, token));
+    }
+
+    if (action === "saveTPQSesi" || action === "tpq.saveSesi") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "EDITOR"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      return createJsonResponse(saveTPQSesi(payload.data || payload.sesi || payload, token));
+    }
+
+    if (action === "deleteTPQSesi" || action === "tpq.deleteSesi") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "EDITOR"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      const sId = payload.sesiId || payload.id || (payload.data && (payload.data.sesiId || payload.data.id)) || "";
+      return createJsonResponse(deleteTPQSesi(sId, token));
+    }
+
     // ========================================================
     // SOROGAN AL-QUR'AN ACTIONS (doPost)
     // ========================================================
@@ -502,6 +558,62 @@ function doPost(e) {
         return createJsonResponse({ status: "error", message: authErr.message });
       }
       return createJsonResponse(initSoroganSheets(token));
+    }
+
+    if (action === "saveSoroganPlotting" || action === "sorogan.savePlotting") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "EDITOR"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      return createJsonResponse(saveSoroganPlotting(payload.data || payload, token));
+    }
+
+    if (action === "saveSoroganTarget" || action === "sorogan.saveTarget") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "EDITOR"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      return createJsonResponse(saveSoroganTarget(payload.data || payload, token));
+    }
+
+    if (action === "saveBulkSoroganTarget" || action === "sorogan.saveBulkTarget") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      return createJsonResponse(saveBulkSoroganTarget(payload.data || payload, token));
+    }
+
+    if (action === "saveSoroganSesi" || action === "sorogan.saveSesi") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "EDITOR"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      return createJsonResponse(saveSoroganSesi(payload.data || payload.sesi || payload, token));
+    }
+
+    if (action === "deleteSoroganSesi" || action === "sorogan.deleteSesi") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "EDITOR"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      const sId = payload.sesiId || payload.id || (payload.data && (payload.data.sesiId || payload.data.id)) || "";
+      return createJsonResponse(deleteSoroganSesi(sId, token));
     }
 
     // ========================================================
@@ -11791,6 +11903,8 @@ function initTPQSheets(token) {
     const headersLogs = ["log_id", "student_id", "nis", "student_name", "gender", "tanggal", "sesi", "jilid", "halaman", "status_setoran", "nilai", "ustadz", "catatan", "created_at"];
     const headersCapaian = ["student_id", "student_name", "jilid_aktif", "halaman_aktif", "status_terakhir", "kelas_id", "nama_kelas", "ustadz_pengampu", "updated_at"];
     const headersKelas = ["kelas_id", "nama_kelas", "ustadz_pengampu", "jadwal_sesi", "student_ids", "created_at"];
+    const headersTarget = ["student_id", "target_jilid", "target_halaman_sesi", "target_halaman_pekan", "updated_at"];
+    const headersSesi = ["sesi_id", "nama_sesi", "jenis_sesi", "status", "jam_mulai", "jam_selesai", "hari_list", "created_at"];
 
     const created = [];
     const existing = [];
@@ -11798,7 +11912,9 @@ function initTPQSheets(token) {
     [
       { name: SHEET_TPQ_LOGS, headers: headersLogs, color: "#059669" },
       { name: SHEET_TPQ_CAPAIAN, headers: headersCapaian, color: "#0d9488" },
-      { name: SHEET_TPQ_KELAS, headers: headersKelas, color: "#0284c7" }
+      { name: SHEET_TPQ_KELAS, headers: headersKelas, color: "#0284c7" },
+      { name: SHEET_TPQ_TARGET, headers: headersTarget, color: "#f59e0b" },
+      { name: SHEET_TPQ_SESI, headers: headersSesi, color: "#0d9488" }
     ].forEach(item => {
       let s = ss.getSheetByName(item.name);
       if (!s) {
@@ -11812,16 +11928,28 @@ function initTPQSheets(token) {
       }
     });
 
+    const nowIso = new Date().toISOString();
+
     // Buat contoh default kelas jika TPQ_Kelas baru dibuat
     if (created.includes(SHEET_TPQ_KELAS)) {
       const kSheet = ss.getSheetByName(SHEET_TPQ_KELAS);
-      const nowIso = new Date().toISOString();
       const defaultKelas = [
         ["KLS-01", "TPQ Yanbu'a A (Jilid 1-2)", "Ustadzah Fatimah", "Sore (15:45 - 17:00)", "[]", nowIso],
         ["KLS-02", "TPQ Yanbu'a B (Jilid 3-5)", "Ustadz Hasan", "Sore (15:45 - 17:00)", "[]", nowIso],
         ["KLS-03", "TPQ Yanbu'a C (Jilid 6-7)", "Ustadz Ahmad", "Sore (15:45 - 17:00)", "[]", nowIso]
       ];
       kSheet.getRange(2, 1, defaultKelas.length, headersKelas.length).setValues(defaultKelas);
+    }
+
+    // Buat default sesi jika TPQ_Sesi baru dibuat
+    if (created.includes(SHEET_TPQ_SESI)) {
+      const sSheet = ss.getSheetByName(SHEET_TPQ_SESI);
+      const defaultSesi = [
+        ["TPQ-SESI-01", "Sore (Reguler Yanbu'a)", "Bimbingan Yanbu'a Reguler", "Aktif Digunakan", "15:45", "17:00", "Sen,Sel,Rab,Kam,Sab,Min", nowIso],
+        ["TPQ-SESI-02", "Pagi (Madin / Yanbu'a Cilik)", "Privat Tahsin & I'adah", "Aktif Digunakan", "08:30", "10:00", "Min", nowIso],
+        ["TPQ-SESI-03", "Ba'da Maghrib (Khataman)", "Imtihan / Ujian Kenaikan Jilid", "Aktif Digunakan", "18:30", "19:30", "Kam", nowIso]
+      ];
+      sSheet.getRange(2, 1, defaultSesi.length, headersSesi.length).setValues(defaultSesi);
     }
 
     return {
@@ -11934,6 +12062,60 @@ function getTPQDashboard(token) {
       }
     }
 
+    // 4. Ambil data Target TPQ
+    const headersTarget = ["student_id", "target_jilid", "target_halaman_sesi", "target_halaman_pekan", "updated_at"];
+    const targetSheet = getOrCreateTPQSheet(ss, SHEET_TPQ_TARGET, headersTarget, "#f59e0b");
+    const targetMap = {};
+    const tData = targetSheet.getDataRange().getValues();
+    if (tData.length >= 2) {
+      const tHead = tData[0].map(h => String(h || "").trim().toLowerCase());
+      const sIdIdx = tHead.indexOf("student_id");
+      const jIdx = tHead.indexOf("target_jilid");
+      const sSesiIdx = tHead.indexOf("target_halaman_sesi");
+      const sPekanIdx = tHead.indexOf("target_halaman_pekan");
+
+      for (let i = 1; i < tData.length; i++) {
+        const sid = String(tData[i][sIdIdx] || "").trim();
+        if (sid) {
+          targetMap[sid] = {
+            targetJilid: Number(tData[i][jIdx]) || 1,
+            targetHalamanSesi: Number(tData[i][sSesiIdx]) || 1,
+            targetHalamanPekan: Number(tData[i][sPekanIdx]) || 6
+          };
+        }
+      }
+    }
+
+    // 5. Ambil data Jadwal Sesi TPQ
+    const headersSesi = ["sesi_id", "nama_sesi", "jenis_sesi", "status", "jam_mulai", "jam_selesai", "hari_list", "created_at"];
+    const sesiSheet = getOrCreateTPQSheet(ss, SHEET_TPQ_SESI, headersSesi, "#0d9488");
+    const sesiList = [];
+    const sesiData = sesiSheet.getDataRange().getValues();
+    if (sesiData.length >= 2) {
+      const sHead = sesiData[0].map(h => String(h || "").trim().toLowerCase());
+      const idIdx = sHead.indexOf("sesi_id");
+      const nameIdx = sHead.indexOf("nama_sesi");
+      const typeIdx = sHead.indexOf("jenis_sesi");
+      const stIdx = sHead.indexOf("status");
+      const jmIdx = sHead.indexOf("jam_mulai");
+      const jsIdx = sHead.indexOf("jam_selesai");
+      const hIdx = sHead.indexOf("hari_list");
+
+      for (let i = 1; i < sesiData.length; i++) {
+        const rawHari = sesiData[i][hIdx] || "";
+        const hariList = Array.isArray(rawHari) ? rawHari : String(rawHari).split(",").map(h => h.trim()).filter(Boolean);
+        sesiList.push({
+          sesiId: String(sesiData[i][idIdx] || "").trim(),
+          namaSesi: String(sesiData[i][nameIdx] || "").trim(),
+          jenisSesi: String(sesiData[i][typeIdx] || "").trim(),
+          status: String(sesiData[i][stIdx] || "Aktif Digunakan").trim(),
+          jamMulai: String(sesiData[i][jmIdx] || "15:45").trim(),
+          jamSelesai: String(sesiData[i][jsIdx] || "17:00").trim(),
+          hariList: hariList
+        });
+      }
+    }
+
     // Gabungkan status capaian ke setiap siswa & hitung statistik
     const perJilidCount = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0 };
     let totalLanjut = 0;
@@ -11970,6 +12152,12 @@ function getTPQDashboard(token) {
         ustadzSet.add(cp.ustadzPengampu);
       }
 
+      const tgt = targetMap[st.studentId] || {
+        targetJilid: Math.min(7, jld + 1),
+        targetHalamanSesi: 1,
+        targetHalamanPekan: 6
+      };
+
       return {
         ...st,
         jilidAktif: jld,
@@ -11978,7 +12166,8 @@ function getTPQDashboard(token) {
         kelasId: cp.kelasId,
         namaKelas: cp.namaKelas,
         ustadzPengampu: cp.ustadzPengampu,
-        updatedAt: cp.updatedAt
+        updatedAt: cp.updatedAt,
+        target: tgt
       };
     });
 
@@ -11994,7 +12183,9 @@ function getTPQDashboard(token) {
       },
       students: enrichedStudents,
       kelasList: kelasList,
-      ustadzList: Array.from(ustadzSet)
+      ustadzList: Array.from(ustadzSet),
+      targets: targetMap,
+      sesiList: sesiList
     };
   } catch (err) {
     console.error("[GET TPQ DASHBOARD ERROR]", err);
@@ -12267,6 +12458,243 @@ function deleteTPQKelas(kelasId, token) {
   });
 }
 
+function saveTPQPlotting(payload, token) {
+  return withScriptLock(() => {
+    try {
+      const kelasId = String(payload.kelasId || payload.kelas_id || "").trim();
+      if (!kelasId) throw new Error("ID Kelas TPQ wajib disertakan.");
+
+      let rawList = payload.studentIds || payload.student_ids || [];
+      if (typeof rawList === "string") {
+        rawList = rawList.split(",");
+      }
+      const cleanStudentIds = Array.isArray(rawList) ? rawList.map(s => String(s).trim()).filter(Boolean) : [];
+
+      const ss = getDatabaseSpreadsheet();
+      const sheet = getOrCreateTPQSheet(ss, SHEET_TPQ_KELAS, [
+        "kelas_id", "nama_kelas", "ustadz_pengampu", "jadwal_sesi", "student_ids", "created_at"
+      ], "#0284c7");
+
+      const data = sheet.getDataRange().getValues();
+      if (data.length <= 1) throw new Error("Data kelas TPQ tidak ditemukan.");
+
+      const idIdx = data[0].map(h => String(h).toLowerCase()).indexOf("kelas_id");
+      const sidsIdx = data[0].map(h => String(h).toLowerCase()).indexOf("student_ids");
+
+      let foundRow = -1;
+      for (let i = 1; i < data.length; i++) {
+        if (String(data[i][idIdx] || "").trim() === kelasId) {
+          foundRow = i + 1;
+          break;
+        }
+      }
+
+      if (foundRow <= 0) throw new Error("Kelas TPQ ID '" + kelasId + "' tidak ditemukan.");
+
+      sheet.getRange(foundRow, sidsIdx + 1).setValue(JSON.stringify(cleanStudentIds));
+
+      return {
+        status: "success",
+        success: true,
+        kelasId: kelasId,
+        totalPlotting: cleanStudentIds.length,
+        message: `Plotting ${cleanStudentIds.length} santri ke kelas TPQ berhasil disimpan.`
+      };
+    } catch (err) {
+      return { status: "error", success: false, message: "Gagal menyimpan plotting TPQ: " + err.message };
+    }
+  });
+}
+
+function saveTPQTarget(payload, token) {
+  return withScriptLock(() => {
+    try {
+      const studentId = String(payload.studentId || payload.student_id || "").trim();
+      if (!studentId) throw new Error("ID Santri wajib disertakan.");
+
+      const ss = getDatabaseSpreadsheet();
+      const headers = ["student_id", "target_jilid", "target_halaman_sesi", "target_halaman_pekan", "updated_at"];
+      const sheet = getOrCreateTPQSheet(ss, SHEET_TPQ_TARGET, headers, "#f59e0b");
+
+      const targetJilid = Number(payload.targetJilid || payload.target_jilid || 1);
+      const targetHalamanSesi = Number(payload.targetHalamanSesi || payload.target_halaman_sesi || 1);
+      const targetHalamanPekan = Number(payload.targetHalamanPekan || payload.target_halaman_pekan || (targetHalamanSesi * 6));
+      const updatedAt = new Date().toISOString();
+
+      const data = sheet.getDataRange().getValues();
+      const idIdx = data[0].map(h => String(h || "").toLowerCase()).indexOf("student_id");
+      let foundRow = -1;
+
+      if (data.length >= 2 && idIdx !== -1) {
+        for (let i = 1; i < data.length; i++) {
+          if (String(data[i][idIdx] || "").trim() === studentId) {
+            foundRow = i + 1;
+            break;
+          }
+        }
+      }
+
+      const rowValues = [studentId, targetJilid, targetHalamanSesi, targetHalamanPekan, updatedAt];
+
+      if (foundRow > 0) {
+        sheet.getRange(foundRow, 1, 1, rowValues.length).setValues([rowValues]);
+      } else {
+        sheet.appendRow(rowValues);
+      }
+
+      return {
+        status: "success",
+        success: true,
+        message: "Target capaian santri TPQ berhasil disimpan."
+      };
+    } catch (err) {
+      return { status: "error", success: false, message: "Gagal menyimpan target TPQ: " + err.message };
+    }
+  });
+}
+
+function saveBulkTPQTarget(payload, token) {
+  return withScriptLock(() => {
+    try {
+      const studentIds = Array.isArray(payload.studentIds)
+        ? payload.studentIds.map(id => String(id || "").trim()).filter(Boolean)
+        : (payload.studentId ? [String(payload.studentId).trim()] : []);
+
+      if (studentIds.length === 0) {
+        throw new Error("Daftar ID Santri sasaran tidak boleh kosong.");
+      }
+
+      const ss = getDatabaseSpreadsheet();
+      const headers = ["student_id", "target_jilid", "target_halaman_sesi", "target_halaman_pekan", "updated_at"];
+      const sheet = getOrCreateTPQSheet(ss, SHEET_TPQ_TARGET, headers, "#f59e0b");
+
+      const targetHalamanSesi = Number(payload.targetHalamanSesi || payload.target_halaman_sesi || 1);
+      const targetHalamanPekan = Number(payload.targetHalamanPekan || payload.target_halaman_pekan || (targetHalamanSesi * 6));
+      const updatedAt = new Date().toISOString();
+
+      const data = sheet.getDataRange().getValues();
+      const idIdx = data[0].map(h => String(h || "").toLowerCase()).indexOf("student_id");
+      const targetJilidIdx = data[0].map(h => String(h || "").toLowerCase()).indexOf("target_jilid");
+
+      const existingRowMap = {};
+      if (data.length >= 2 && idIdx !== -1) {
+        for (let i = 1; i < data.length; i++) {
+          const sid = String(data[i][idIdx] || "").trim();
+          if (sid) {
+            existingRowMap[sid] = {
+              row: i + 1,
+              targetJilid: targetJilidIdx !== -1 ? Number(data[i][targetJilidIdx]) || 1 : 1
+            };
+          }
+        }
+      }
+
+      const newRows = [];
+      studentIds.forEach(id => {
+        if (existingRowMap[id]) {
+          const r = existingRowMap[id].row;
+          const tj = existingRowMap[id].targetJilid || 1;
+          sheet.getRange(r, 1, 1, 5).setValues([[id, tj, targetHalamanSesi, targetHalamanPekan, updatedAt]]);
+        } else {
+          newRows.push([id, 1, targetHalamanSesi, targetHalamanPekan, updatedAt]);
+        }
+      });
+
+      if (newRows.length > 0) {
+        sheet.getRange(sheet.getLastRow() + 1, 1, newRows.length, 5).setValues(newRows);
+      }
+
+      return {
+        status: "success",
+        success: true,
+        totalUpdated: studentIds.length,
+        message: `Target capaian berhasil diterapkan ke ${studentIds.length} santri TPQ.`
+      };
+    } catch (err) {
+      return { status: "error", success: false, message: "Gagal menerapkan target massal TPQ: " + err.message };
+    }
+  });
+}
+
+function saveTPQSesi(payload, token) {
+  return withScriptLock(() => {
+    try {
+      const p = (payload && (payload.sesi || payload.data)) ? (payload.sesi || payload.data) : (payload || {});
+      const namaSesi = String(p.namaSesi || p.nama_sesi || p.nama || "").trim();
+      if (!namaSesi) throw new Error("Nama sesi wajib diisi.");
+
+      const ss = getDatabaseSpreadsheet();
+      const headers = ["sesi_id", "nama_sesi", "jenis_sesi", "status", "jam_mulai", "jam_selesai", "hari_list", "created_at"];
+      const sheet = getOrCreateTPQSheet(ss, SHEET_TPQ_SESI, headers, "#0d9488");
+
+      const rawId = String(p.sesiId || p.sesi_id || p.id || "").trim();
+      const sesiId = rawId || ("TPQ-SESI-" + Utilities.formatDate(new Date(), "GMT+7", "yyyyMMdd-HHmm"));
+      const jenisSesi = String(p.jenisSesi || p.jenis_sesi || p.jenis || "Bimbingan Yanbu'a Reguler").trim();
+      const status = String(p.status || "Aktif Digunakan").trim();
+      const jamMulai = String(p.jamMulai || p.jam_mulai || "15:45").trim();
+      const jamSelesai = String(p.jamSelesai || p.jam_selesai || "17:00").trim();
+      const rawHari = p.hariList || p.hari || "Sen,Sel,Rab,Kam,Sab,Min";
+      const hariList = Array.isArray(rawHari) ? rawHari.join(",") : String(rawHari);
+      const createdAt = new Date().toISOString();
+
+      const data = sheet.getDataRange().getValues();
+      const headersArr = data[0].map(h => String(h || "").trim().toLowerCase());
+      const idIdx = headersArr.indexOf("sesi_id");
+      let foundRow = -1;
+
+      if (rawId && idIdx >= 0) {
+        for (let i = 1; i < data.length; i++) {
+          if (String(data[i][idIdx] || "").trim() === rawId) {
+            foundRow = i + 1;
+            break;
+          }
+        }
+      }
+
+      const rowValues = [sesiId, namaSesi, jenisSesi, status, jamMulai, jamSelesai, hariList, createdAt];
+
+      if (foundRow > 0) {
+        sheet.getRange(foundRow, 1, 1, rowValues.length).setValues([rowValues]);
+      } else {
+        sheet.appendRow(rowValues);
+      }
+
+      return {
+        status: "success",
+        success: true,
+        sesiId: sesiId,
+        message: `Jadwal sesi ${namaSesi} TPQ berhasil disimpan.`
+      };
+    } catch (err) {
+      return { status: "error", success: false, message: "Gagal menyimpan sesi TPQ: " + err.message };
+    }
+  });
+}
+
+function deleteTPQSesi(sesiId, token) {
+  return withScriptLock(() => {
+    try {
+      if (!sesiId) throw new Error("ID Sesi wajib disertakan.");
+      const ss = getDatabaseSpreadsheet();
+      const sheet = ss.getSheetByName(SHEET_TPQ_SESI);
+      if (!sheet) throw new Error("Sheet TPQ_Sesi tidak ditemukan.");
+
+      const data = sheet.getDataRange().getValues();
+      const idIdx = data[0].map(h => String(h || "").toLowerCase()).indexOf("sesi_id");
+
+      for (let i = 1; i < data.length; i++) {
+        if (String(data[i][idIdx] || "").trim() === String(sesiId).trim()) {
+          sheet.deleteRow(i + 1);
+          return { status: "success", success: true, message: "Sesi TPQ berhasil dihapus." };
+        }
+      }
+      return { status: "error", success: false, message: "Sesi TPQ tidak ditemukan." };
+    } catch (err) {
+      return { status: "error", success: false, message: err.message };
+    }
+  });
+}
+
 
 // ====================================================================
 // MODUL BACKEND: SOROGAN AL-QUR'AN (BINNAZHAR MUSHAF POJOK 20 HAL/JUZ)
@@ -12305,6 +12733,8 @@ function initSoroganSheets(token) {
     const headersLogs = ["log_id", "student_id", "nis", "student_name", "gender", "tanggal", "sesi", "juz", "halaman_list", "total_halaman", "status_setoran", "nilai", "muallim", "catatan", "created_at"];
     const headersCapaian = ["student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_khatam", "status_terakhir", "halaqah_id", "nama_halaqah", "muallim_pengampu", "updated_at"];
     const headersHalaqah = ["halaqah_id", "nama_halaqah", "muallim", "jadwal_sesi", "student_ids", "created_at"];
+    const headersTarget = ["student_id", "target_juz", "target_halaman_sesi", "target_halaman_pekan", "updated_at"];
+    const headersSesi = ["sesi_id", "nama_sesi", "jenis_sesi", "status", "jam_mulai", "jam_selesai", "hari_list", "created_at"];
 
     const created = [];
     const existing = [];
@@ -12312,7 +12742,9 @@ function initSoroganSheets(token) {
     [
       { name: SHEET_SOROGAN_LOGS, headers: headersLogs, color: "#0369a1" },
       { name: SHEET_SOROGAN_CAPAIAN, headers: headersCapaian, color: "#0f766e" },
-      { name: SHEET_SOROGAN_HALAQAH, headers: headersHalaqah, color: "#4338ca" }
+      { name: SHEET_SOROGAN_HALAQAH, headers: headersHalaqah, color: "#4338ca" },
+      { name: SHEET_SOROGAN_TARGET, headers: headersTarget, color: "#f59e0b" },
+      { name: SHEET_SOROGAN_SESI, headers: headersSesi, color: "#0284c7" }
     ].forEach(item => {
       let s = ss.getSheetByName(item.name);
       if (!s) {
@@ -12326,14 +12758,25 @@ function initSoroganSheets(token) {
       }
     });
 
+    const nowIso = new Date().toISOString();
+
     if (created.includes(SHEET_SOROGAN_HALAQAH)) {
       const hSheet = ss.getSheetByName(SHEET_SOROGAN_HALAQAH);
-      const nowIso = new Date().toISOString();
       const defaultHalaqah = [
         ["SRG-HLQ-01", "Halaqah Sorogan Putra (Mushaf Besar)", "Kyai / Ustadz Yusuf", "Ba'da Subuh & Maghrib", "[]", nowIso],
         ["SRG-HLQ-02", "Halaqah Sorogan Putri (Mushaf Besar)", "Nyai / Ustadzah Maryam", "Ba'da Ashar & Isya'", "[]", nowIso]
       ];
       hSheet.getRange(2, 1, defaultHalaqah.length, headersHalaqah.length).setValues(defaultHalaqah);
+    }
+
+    if (created.includes(SHEET_SOROGAN_SESI)) {
+      const sSheet = ss.getSheetByName(SHEET_SOROGAN_SESI);
+      const defaultSesi = [
+        ["SRG-SESI-01", "Pagi (Ba'da Subuh)", "Sorogan Binnazhar Reguler", "Aktif Digunakan", "05:15", "06:30", "Sen,Sel,Rab,Kam,Sab,Min", nowIso],
+        ["SRG-SESI-02", "Sore (Ba'da Ashar)", "Sorogan Privat / I'adah", "Aktif Digunakan", "16:00", "17:15", "Sen,Sel,Kam,Sab", nowIso],
+        ["SRG-SESI-03", "Malam (Ba'da Isya)", "Khataman / Ujian Akhir Juz", "Aktif Digunakan", "20:00", "21:30", "Kam", nowIso]
+      ];
+      sSheet.getRange(2, 1, defaultSesi.length, headersSesi.length).setValues(defaultSesi);
     }
 
     return {
@@ -12444,6 +12887,60 @@ function getSoroganDashboard(token) {
       }
     }
 
+    // 4. Ambil data Target Sorogan
+    const headersTarget = ["student_id", "target_juz", "target_halaman_sesi", "target_halaman_pekan", "updated_at"];
+    const targetSheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_TARGET, headersTarget, "#f59e0b");
+    const targetMap = {};
+    const tData = targetSheet.getDataRange().getValues();
+    if (tData.length >= 2) {
+      const tHead = tData[0].map(h => String(h || "").trim().toLowerCase());
+      const sIdIdx = tHead.indexOf("student_id");
+      const jIdx = tHead.indexOf("target_juz");
+      const sSesiIdx = tHead.indexOf("target_halaman_sesi");
+      const sPekanIdx = tHead.indexOf("target_halaman_pekan");
+
+      for (let i = 1; i < tData.length; i++) {
+        const sid = String(tData[i][sIdIdx] || "").trim();
+        if (sid) {
+          targetMap[sid] = {
+            targetJuz: Number(tData[i][jIdx]) || 1,
+            targetHalamanSesi: Number(tData[i][sSesiIdx]) || 2,
+            targetHalamanPekan: Number(tData[i][sPekanIdx]) || 12
+          };
+        }
+      }
+    }
+
+    // 5. Ambil data Jadwal Sesi Sorogan
+    const headersSesi = ["sesi_id", "nama_sesi", "jenis_sesi", "status", "jam_mulai", "jam_selesai", "hari_list", "created_at"];
+    const sesiSheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_SESI, headersSesi, "#0284c7");
+    const sesiList = [];
+    const sesiData = sesiSheet.getDataRange().getValues();
+    if (sesiData.length >= 2) {
+      const sHead = sesiData[0].map(h => String(h || "").trim().toLowerCase());
+      const idIdx = sHead.indexOf("sesi_id");
+      const nameIdx = sHead.indexOf("nama_sesi");
+      const typeIdx = sHead.indexOf("jenis_sesi");
+      const stIdx = sHead.indexOf("status");
+      const jmIdx = sHead.indexOf("jam_mulai");
+      const jsIdx = sHead.indexOf("jam_selesai");
+      const hIdx = sHead.indexOf("hari_list");
+
+      for (let i = 1; i < sesiData.length; i++) {
+        const rawHari = sesiData[i][hIdx] || "";
+        const hariList = Array.isArray(rawHari) ? rawHari : String(rawHari).split(",").map(h => h.trim()).filter(Boolean);
+        sesiList.push({
+          sesiId: String(sesiData[i][idIdx] || "").trim(),
+          namaSesi: String(sesiData[i][nameIdx] || "").trim(),
+          jenisSesi: String(sesiData[i][typeIdx] || "").trim(),
+          status: String(sesiData[i][stIdx] || "Aktif Digunakan").trim(),
+          jamMulai: String(sesiData[i][jmIdx] || "05:15").trim(),
+          jamSelesai: String(sesiData[i][jsIdx] || "06:30").trim(),
+          hariList: hariList
+        });
+      }
+    }
+
     // Gabungkan data capaian & hitung ringkasan
     let totalJuzSum = 0;
     let khatam30Juz = 0;
@@ -12483,6 +12980,12 @@ function getSoroganDashboard(token) {
         muallimSet.add(cp.muallimPengampu);
       }
 
+      const tgt = targetMap[st.studentId] || {
+        targetJuz: Math.min(30, juz + 1),
+        targetHalamanSesi: 2,
+        targetHalamanPekan: 12
+      };
+
       return {
         ...st,
         juzAktif: juz,
@@ -12492,7 +12995,8 @@ function getSoroganDashboard(token) {
         halaqahId: cp.halaqahId,
         namaHalaqah: cp.namaHalaqah,
         muallimPengampu: cp.muallimPengampu,
-        updatedAt: cp.updatedAt
+        updatedAt: cp.updatedAt,
+        target: tgt
       };
     });
 
@@ -12511,7 +13015,9 @@ function getSoroganDashboard(token) {
       },
       students: enrichedStudents,
       halaqahs: halaqahs,
-      muallimList: Array.from(muallimSet)
+      muallimList: Array.from(muallimSet),
+      targets: targetMap,
+      sesiList: sesiList
     };
   } catch (err) {
     console.error("[GET SOROGAN DASHBOARD ERROR]", err);
@@ -12786,6 +13292,243 @@ function deleteSoroganHalaqah(halaqahId, token) {
         }
       }
       return { status: "error", success: false, message: "Halaqah sorogan tidak ditemukan." };
+    } catch (err) {
+      return { status: "error", success: false, message: err.message };
+    }
+  });
+}
+
+function saveSoroganPlotting(payload, token) {
+  return withScriptLock(() => {
+    try {
+      const halaqahId = String(payload.halaqahId || payload.halaqah_id || "").trim();
+      if (!halaqahId) throw new Error("ID Halaqah wajib disertakan.");
+
+      let rawList = payload.studentIds || payload.student_ids || [];
+      if (typeof rawList === "string") {
+        rawList = rawList.split(",");
+      }
+      const cleanStudentIds = Array.isArray(rawList) ? rawList.map(s => String(s).trim()).filter(Boolean) : [];
+
+      const ss = getDatabaseSpreadsheet();
+      const sheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_HALAQAH, [
+        "halaqah_id", "nama_halaqah", "muallim", "jadwal_sesi", "student_ids", "created_at"
+      ], "#4338ca");
+
+      const data = sheet.getDataRange().getValues();
+      if (data.length <= 1) throw new Error("Data halaqah Sorogan tidak ditemukan.");
+
+      const idIdx = data[0].map(h => String(h).toLowerCase()).indexOf("halaqah_id");
+      const sidsIdx = data[0].map(h => String(h).toLowerCase()).indexOf("student_ids");
+
+      let foundRow = -1;
+      for (let i = 1; i < data.length; i++) {
+        if (String(data[i][idIdx] || "").trim() === halaqahId) {
+          foundRow = i + 1;
+          break;
+        }
+      }
+
+      if (foundRow <= 0) throw new Error("Halaqah Sorogan ID '" + halaqahId + "' tidak ditemukan.");
+
+      sheet.getRange(foundRow, sidsIdx + 1).setValue(JSON.stringify(cleanStudentIds));
+
+      return {
+        status: "success",
+        success: true,
+        halaqahId: halaqahId,
+        totalPlotting: cleanStudentIds.length,
+        message: `Plotting ${cleanStudentIds.length} santri ke halaqah Sorogan berhasil disimpan.`
+      };
+    } catch (err) {
+      return { status: "error", success: false, message: "Gagal menyimpan plotting Sorogan: " + err.message };
+    }
+  });
+}
+
+function saveSoroganTarget(payload, token) {
+  return withScriptLock(() => {
+    try {
+      const studentId = String(payload.studentId || payload.student_id || "").trim();
+      if (!studentId) throw new Error("ID Santri wajib disertakan.");
+
+      const ss = getDatabaseSpreadsheet();
+      const headers = ["student_id", "target_juz", "target_halaman_sesi", "target_halaman_pekan", "updated_at"];
+      const sheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_TARGET, headers, "#f59e0b");
+
+      const targetJuz = Number(payload.targetJuz || payload.target_juz || 1);
+      const targetHalamanSesi = Number(payload.targetHalamanSesi || payload.target_halaman_sesi || 2);
+      const targetHalamanPekan = Number(payload.targetHalamanPekan || payload.target_halaman_pekan || (targetHalamanSesi * 6));
+      const updatedAt = new Date().toISOString();
+
+      const data = sheet.getDataRange().getValues();
+      const idIdx = data[0].map(h => String(h || "").toLowerCase()).indexOf("student_id");
+      let foundRow = -1;
+
+      if (data.length >= 2 && idIdx !== -1) {
+        for (let i = 1; i < data.length; i++) {
+          if (String(data[i][idIdx] || "").trim() === studentId) {
+            foundRow = i + 1;
+            break;
+          }
+        }
+      }
+
+      const rowValues = [studentId, targetJuz, targetHalamanSesi, targetHalamanPekan, updatedAt];
+
+      if (foundRow > 0) {
+        sheet.getRange(foundRow, 1, 1, rowValues.length).setValues([rowValues]);
+      } else {
+        sheet.appendRow(rowValues);
+      }
+
+      return {
+        status: "success",
+        success: true,
+        message: "Target capaian santri Sorogan berhasil disimpan."
+      };
+    } catch (err) {
+      return { status: "error", success: false, message: "Gagal menyimpan target Sorogan: " + err.message };
+    }
+  });
+}
+
+function saveBulkSoroganTarget(payload, token) {
+  return withScriptLock(() => {
+    try {
+      const studentIds = Array.isArray(payload.studentIds)
+        ? payload.studentIds.map(id => String(id || "").trim()).filter(Boolean)
+        : (payload.studentId ? [String(payload.studentId).trim()] : []);
+
+      if (studentIds.length === 0) {
+        throw new Error("Daftar ID Santri sasaran tidak boleh kosong.");
+      }
+
+      const ss = getDatabaseSpreadsheet();
+      const headers = ["student_id", "target_juz", "target_halaman_sesi", "target_halaman_pekan", "updated_at"];
+      const sheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_TARGET, headers, "#f59e0b");
+
+      const targetHalamanSesi = Number(payload.targetHalamanSesi || payload.target_halaman_sesi || 2);
+      const targetHalamanPekan = Number(payload.targetHalamanPekan || payload.target_halaman_pekan || (targetHalamanSesi * 6));
+      const updatedAt = new Date().toISOString();
+
+      const data = sheet.getDataRange().getValues();
+      const idIdx = data[0].map(h => String(h || "").toLowerCase()).indexOf("student_id");
+      const targetJuzIdx = data[0].map(h => String(h || "").toLowerCase()).indexOf("target_juz");
+
+      const existingRowMap = {};
+      if (data.length >= 2 && idIdx !== -1) {
+        for (let i = 1; i < data.length; i++) {
+          const sid = String(data[i][idIdx] || "").trim();
+          if (sid) {
+            existingRowMap[sid] = {
+              row: i + 1,
+              targetJuz: targetJuzIdx !== -1 ? Number(data[i][targetJuzIdx]) || 1 : 1
+            };
+          }
+        }
+      }
+
+      const newRows = [];
+      studentIds.forEach(id => {
+        if (existingRowMap[id]) {
+          const r = existingRowMap[id].row;
+          const tj = existingRowMap[id].targetJuz || 1;
+          sheet.getRange(r, 1, 1, 5).setValues([[id, tj, targetHalamanSesi, targetHalamanPekan, updatedAt]]);
+        } else {
+          newRows.push([id, 1, targetHalamanSesi, targetHalamanPekan, updatedAt]);
+        }
+      });
+
+      if (newRows.length > 0) {
+        sheet.getRange(sheet.getLastRow() + 1, 1, newRows.length, 5).setValues(newRows);
+      }
+
+      return {
+        status: "success",
+        success: true,
+        totalUpdated: studentIds.length,
+        message: `Target capaian berhasil diterapkan ke ${studentIds.length} santri Sorogan.`
+      };
+    } catch (err) {
+      return { status: "error", success: false, message: "Gagal menerapkan target massal Sorogan: " + err.message };
+    }
+  });
+}
+
+function saveSoroganSesi(payload, token) {
+  return withScriptLock(() => {
+    try {
+      const p = (payload && (payload.sesi || payload.data)) ? (payload.sesi || payload.data) : (payload || {});
+      const namaSesi = String(p.namaSesi || p.nama_sesi || p.nama || "").trim();
+      if (!namaSesi) throw new Error("Nama sesi wajib diisi.");
+
+      const ss = getDatabaseSpreadsheet();
+      const headers = ["sesi_id", "nama_sesi", "jenis_sesi", "status", "jam_mulai", "jam_selesai", "hari_list", "created_at"];
+      const sheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_SESI, headers, "#0284c7");
+
+      const rawId = String(p.sesiId || p.sesi_id || p.id || "").trim();
+      const sesiId = rawId || ("SRG-SESI-" + Utilities.formatDate(new Date(), "GMT+7", "yyyyMMdd-HHmm"));
+      const jenisSesi = String(p.jenisSesi || p.jenis_sesi || p.jenis || "Sorogan Binnazhar Reguler").trim();
+      const status = String(p.status || "Aktif Digunakan").trim();
+      const jamMulai = String(p.jamMulai || p.jam_mulai || "05:15").trim();
+      const jamSelesai = String(p.jamSelesai || p.jam_selesai || "06:30").trim();
+      const rawHari = p.hariList || p.hari || "Sen,Sel,Rab,Kam,Sab,Min";
+      const hariList = Array.isArray(rawHari) ? rawHari.join(",") : String(rawHari);
+      const createdAt = new Date().toISOString();
+
+      const data = sheet.getDataRange().getValues();
+      const headersArr = data[0].map(h => String(h || "").trim().toLowerCase());
+      const idIdx = headersArr.indexOf("sesi_id");
+      let foundRow = -1;
+
+      if (rawId && idIdx >= 0) {
+        for (let i = 1; i < data.length; i++) {
+          if (String(data[i][idIdx] || "").trim() === rawId) {
+            foundRow = i + 1;
+            break;
+          }
+        }
+      }
+
+      const rowValues = [sesiId, namaSesi, jenisSesi, status, jamMulai, jamSelesai, hariList, createdAt];
+
+      if (foundRow > 0) {
+        sheet.getRange(foundRow, 1, 1, rowValues.length).setValues([rowValues]);
+      } else {
+        sheet.appendRow(rowValues);
+      }
+
+      return {
+        status: "success",
+        success: true,
+        sesiId: sesiId,
+        message: `Jadwal sesi ${namaSesi} Sorogan berhasil disimpan.`
+      };
+    } catch (err) {
+      return { status: "error", success: false, message: "Gagal menyimpan sesi Sorogan: " + err.message };
+    }
+  });
+}
+
+function deleteSoroganSesi(sesiId, token) {
+  return withScriptLock(() => {
+    try {
+      if (!sesiId) throw new Error("ID Sesi wajib disertakan.");
+      const ss = getDatabaseSpreadsheet();
+      const sheet = ss.getSheetByName(SHEET_SOROGAN_SESI);
+      if (!sheet) throw new Error("Sheet Sorogan_Sesi tidak ditemukan.");
+
+      const data = sheet.getDataRange().getValues();
+      const idIdx = data[0].map(h => String(h || "").toLowerCase()).indexOf("sesi_id");
+
+      for (let i = 1; i < data.length; i++) {
+        if (String(data[i][idIdx] || "").trim() === String(sesiId).trim()) {
+          sheet.deleteRow(i + 1);
+          return { status: "success", success: true, message: "Sesi Sorogan berhasil dihapus." };
+        }
+      }
+      return { status: "error", success: false, message: "Sesi Sorogan tidak ditemukan." };
     } catch (err) {
       return { status: "error", success: false, message: err.message };
     }

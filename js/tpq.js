@@ -30,9 +30,21 @@ const ASNTPQ = {
         },
         students: [],
         kelasList: [],
-        ustadzList: []
+        ustadzList: [],
+        sesiList: [],
+        targets: {}
     },
     filteredStudents: [],
+    selectedStudentIds: new Set(),
+    kelasActiveTab: 1,
+    activePlottingKelas: null,
+    activePlottingStudentIds: [],
+    bulkTargetState: {
+        scope: 'ALL',
+        kelasId: '',
+        jilid: '1',
+        studentIds: []
+    },
     cache: null,
     simakState: {
         studentId: "",
@@ -240,6 +252,90 @@ function filterTPQList() {
 }
 
 /**
+ * Multi-select santri TPQ
+ */
+function toggleSelectAllTPQStudents(checked) {
+    if (!ASNTPQ.selectedStudentIds) {
+        ASNTPQ.selectedStudentIds = new Set();
+    }
+    const currentStudents = (ASNTPQ.filteredStudents && ASNTPQ.filteredStudents.length > 0)
+        ? ASNTPQ.filteredStudents
+        : (ASNTPQ.data.students || []);
+
+    currentStudents.forEach(st => {
+        if (st && st.studentId) {
+            if (checked) {
+                ASNTPQ.selectedStudentIds.add(st.studentId);
+            } else {
+                ASNTPQ.selectedStudentIds.delete(st.studentId);
+            }
+        }
+    });
+
+    document.querySelectorAll('.tpq-row-checkbox').forEach(cb => {
+        cb.checked = checked;
+    });
+
+    updateTPQBulkSelectionBar();
+}
+
+function toggleSelectTPQStudent(studentId, checked) {
+    if (!ASNTPQ.selectedStudentIds) {
+        ASNTPQ.selectedStudentIds = new Set();
+    }
+    if (checked) {
+        ASNTPQ.selectedStudentIds.add(studentId);
+    } else {
+        ASNTPQ.selectedStudentIds.delete(studentId);
+    }
+    updateTPQBulkSelectionBar();
+}
+
+function clearTPQSelectedStudents() {
+    if (ASNTPQ.selectedStudentIds) {
+        ASNTPQ.selectedStudentIds.clear();
+    }
+    document.querySelectorAll('.tpq-row-checkbox').forEach(cb => {
+        cb.checked = false;
+    });
+    const checkAll = document.getElementById('tpq-check-all');
+    if (checkAll) {
+        checkAll.checked = false;
+        checkAll.indeterminate = false;
+    }
+    updateTPQBulkSelectionBar();
+}
+
+function updateTPQBulkSelectionBar() {
+    const bar = document.getElementById('tpq-bulk-selection-bar');
+    const textEl = document.getElementById('tpq-selected-count-text');
+    const checkAll = document.getElementById('tpq-check-all');
+    const count = ASNTPQ.selectedStudentIds ? ASNTPQ.selectedStudentIds.size : 0;
+    const totalVisible = (ASNTPQ.filteredStudents || []).length;
+
+    if (bar) {
+        if (count > 0) bar.classList.remove('hidden');
+        else bar.classList.add('hidden');
+    }
+
+    if (textEl) {
+        textEl.innerText = `${count} santri dipilih`;
+    }
+
+    if (checkAll) {
+        if (count === 0) {
+            checkAll.checked = false;
+            checkAll.indeterminate = false;
+        } else if (totalVisible > 0 && count >= totalVisible) {
+            checkAll.checked = true;
+            checkAll.indeterminate = false;
+        } else {
+            checkAll.indeterminate = true;
+        }
+    }
+}
+
+/**
  * Render tabel daftar capaian santri TPQ
  */
 function renderTPQTable() {
@@ -263,21 +359,35 @@ function renderTPQTable() {
 
     if (emptyState) emptyState.classList.add('hidden');
 
+    const selectedSet = ASNTPQ.selectedStudentIds || new Set();
+    const targets = (ASNTPQ.data && ASNTPQ.data.targets) || {};
+
     let html = '';
     list.forEach((st, idx) => {
         const jInfo = YANBUA_JILID_INFO[st.jilidAktif] || { name: `Jilid ${st.jilidAktif}`, badge: "bg-slate-50 text-slate-700 border-slate-200" };
         const isUlang = st.statusTerakhir === 'ULANG';
+        const isChecked = selectedSet.has(st.studentId);
 
         const statusBadge = isUlang
             ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/50 dark:text-rose-300"><i class="fa-solid fa-rotate-left"></i> Wajib Mengulang</span>`
             : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300"><i class="fa-solid fa-circle-check"></i> Lancar (Lanjut)</span>`;
 
+        // Target Info
+        const tgt = targets[st.studentId] || st.target || {
+            targetJilid: Math.min(7, (st.jilidAktif || 1) + 1),
+            targetHalamanSesi: 1
+        };
+
         html += `
             <tr class="hover:bg-slate-50/80 dark:hover:bg-[#1a2636]/60 transition border-b border-slate-100 dark:border-[#202f42] text-xs">
+                <td class="p-3 text-center">
+                    <input type="checkbox" class="tpq-row-checkbox rounded border-slate-300 text-teal-600 focus:ring-teal-500 cursor-pointer"
+                        ${isChecked ? 'checked' : ''} onchange="toggleSelectTPQStudent('${escapeHtml(st.studentId)}', this.checked)">
+                </td>
                 <td class="p-3 text-center text-slate-400 font-medium">${idx + 1}</td>
                 <td class="p-3">
                     <div class="flex items-center space-x-2.5">
-                        <div class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold flex items-center justify-center shrink-0 border border-emerald-200 dark:border-emerald-800/40">
+                        <div class="w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300 font-bold flex items-center justify-center shrink-0 border border-teal-200 dark:border-teal-800/40">
                             ${st.photoUrl ? `<img src="${escapeHtml(st.photoUrl)}" class="w-full h-full rounded-full object-cover">` : `<i class="fa-solid fa-user text-xs"></i>`}
                         </div>
                         <div>
@@ -293,9 +403,21 @@ function renderTPQTable() {
                             <span>${jInfo.name}</span>
                         </span>
                         <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-                            Halaman <strong class="text-emerald-600 dark:text-emerald-400 font-black text-sm">${st.halamanAktif || 1}</strong>
+                            Halaman <strong class="text-teal-600 dark:text-teal-400 font-black text-sm">${st.halamanAktif || 1}</strong>
                         </span>
                     </div>
+                </td>
+                <td class="p-3">
+                    <button type="button" onclick="openTPQTargetModal('${escapeHtml(st.studentId)}')"
+                        class="text-left group/tgt hover:opacity-80 transition" title="Klik untuk ubah target">
+                        <div class="flex items-center gap-1 font-bold text-slate-800 dark:text-slate-200">
+                            <i class="fa-solid fa-bullseye text-[10px] text-amber-500"></i>
+                            <span>Jilid ${tgt.targetJilid || Math.min(7, (st.jilidAktif || 1) + 1)}</span>
+                        </div>
+                        <div class="text-[10px] text-slate-400 group-hover/tgt:text-teal-600 font-medium">
+                            ${tgt.targetHalamanSesi || 1} Hal/Sesi (${(tgt.targetHalamanSesi || 1) * 6} Hal/Pekan)
+                        </div>
+                    </button>
                 </td>
                 <td class="p-3">
                     <div class="text-xs font-semibold text-slate-700 dark:text-slate-200">${escapeHtml(st.namaKelas || "Belum Ada Kelas")}</div>
@@ -306,17 +428,24 @@ function renderTPQTable() {
                     ${st.updatedAt ? `<div class="text-[9px] text-slate-400 mt-1">Terakhir: ${st.updatedAt.substring(0, 10)}</div>` : ''}
                 </td>
                 <td class="p-3 text-right">
-                    <button type="button" onclick="openSimakTPQModal('${escapeHtml(st.studentId)}')"
-                        class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm transition active:scale-95 inline-flex items-center gap-1.5">
-                        <i class="fa-solid fa-pen-nib text-xs"></i>
-                        <span>Simak Santri</span>
-                    </button>
+                    <div class="flex items-center justify-end gap-1.5">
+                        <button type="button" onclick="openTPQTargetModal('${escapeHtml(st.studentId)}')"
+                            class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl text-xs transition" title="Atur Target">
+                            <i class="fa-solid fa-bullseye text-amber-600"></i>
+                        </button>
+                        <button type="button" onclick="openSimakTPQModal('${escapeHtml(st.studentId)}')"
+                            class="px-2.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs shadow-sm transition active:scale-95 inline-flex items-center gap-1">
+                            <i class="fa-solid fa-pen-nib text-[10px]"></i>
+                            <span>Simak</span>
+                        </button>
+                    </div>
                 </td>
             </tr>
         `;
     });
 
     tbody.innerHTML = html;
+    updateTPQBulkSelectionBar();
 }
 
 /**
@@ -497,3 +626,1089 @@ async function initTPQDatabaseSheets() {
         alert("Kesalahan jaringan saat inisialisasi sheet TPQ.");
     }
 }
+
+// ====================================================================
+// FITUR MANAJEMEN KELAS & PLOTTING TPQ (4 TAB LENGKAP)
+// ====================================================================
+
+/**
+ * Buka modal kelola kelas TPQ & plotting
+ * @param {number} defaultTab 1 = Kelas, 2 = Plotting, 3 = Matriks, 4 = Jadwal Sesi
+ */
+function openTPQKelasModal(defaultTab = 1) {
+    const modal = document.getElementById('modal-tpq-kelas');
+    if (!modal) return;
+
+    populateTPQUstadzDropdown();
+    modal.classList.remove('hidden');
+    switchTPQKelasTab(defaultTab || 1);
+}
+
+function closeTPQKelasModal() {
+    const modal = document.getElementById('modal-tpq-kelas');
+    if (modal) modal.classList.add('hidden');
+}
+
+/**
+ * Switch 4 Tab pada Modal Kelola Kelas TPQ
+ */
+function switchTPQKelasTab(tabNum) {
+    ASNTPQ.kelasActiveTab = tabNum;
+
+    for (let i = 1; i <= 4; i++) {
+        const btn = document.getElementById(`tab-btn-tpq-kls-${i}`);
+        const panel = document.getElementById(`panel-tpq-kls-tab-${i}`);
+
+        if (i === tabNum) {
+            if (btn) {
+                btn.className = "px-4 py-2.5 text-xs font-extrabold border-b-2 border-teal-600 text-teal-700 dark:text-teal-400 flex items-center gap-1.5 whitespace-nowrap transition";
+            }
+            if (panel) panel.classList.remove('hidden');
+        } else {
+            if (btn) {
+                btn.className = "px-4 py-2.5 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 flex items-center gap-1.5 whitespace-nowrap transition";
+            }
+            if (panel) panel.classList.add('hidden');
+        }
+    }
+
+    if (tabNum === 1) {
+        renderTPQKelasCards();
+    } else if (tabNum === 2) {
+        populatePlottingTPQKelasSelector();
+    } else if (tabNum === 3) {
+        renderTPQMatriksBeban();
+    } else if (tabNum === 4) {
+        renderTPQSesiCards();
+    }
+}
+
+/**
+ * Sinkronkan dropdown Ustadz Pengampu dari data Pegawai / Asatidz
+ */
+function populateTPQUstadzDropdown() {
+    const sel = document.getElementById('input-tpq-kelas-ustadz');
+    if (!sel) return;
+
+    let teachers = [];
+    if (typeof ASNAdmin !== 'undefined' && ASNAdmin.data && Array.isArray(ASNAdmin.data.employees)) {
+        teachers = ASNAdmin.data.employees.map(e => e.name || e.nama).filter(Boolean);
+    }
+    if (teachers.length === 0 && Array.isArray(ASNTPQ.data.ustadzList) && ASNTPQ.data.ustadzList.length > 0) {
+        teachers = ASNTPQ.data.ustadzList;
+    }
+    if (teachers.length === 0) {
+        teachers = ["Ustadz Yusuf", "Ustadzah Maryam", "Ustadz Ridwan", "Ustadzah Khadijah", "Ustadz Hasan"];
+    }
+
+    const currentVal = sel.value;
+    sel.innerHTML = `<option value="">-- Pilih Ustadz Pengampu --</option>` +
+        teachers.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+
+    if (currentVal && teachers.includes(currentVal)) {
+        sel.value = currentVal;
+    }
+}
+
+/**
+ * Render Kartu Kelas TPQ Aktif (Tab 1)
+ */
+function renderTPQKelasCards() {
+    const container = document.getElementById('tpq-kelas-cards-container');
+    const badgeCount = document.getElementById('tpq-kelas-count-badge');
+    if (!container) return;
+
+    const kelasList = ASNTPQ.data.kelasList || [];
+    if (badgeCount) badgeCount.innerText = `${kelasList.length} Kelas`;
+
+    if (kelasList.length === 0) {
+        container.innerHTML = `
+        <div class="col-span-1 sm:col-span-2 text-center py-8 px-4 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-dashed border-slate-200 dark:border-[#283a4e] space-y-2">
+            <div class="w-10 h-10 mx-auto rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center text-base">
+                <i class="fa-solid fa-chalkboard-user"></i>
+            </div>
+            <p class="text-xs font-bold text-slate-700 dark:text-slate-200">Belum Ada Kelas TPQ Aktif</p>
+            <p class="text-[10px] text-slate-400 max-w-sm mx-auto">Silakan buat kelas bimbingan Yanbu'a baru di atas untuk mulai memplot santri.</p>
+        </div>`;
+        return;
+    }
+
+    const students = ASNTPQ.data.students || [];
+
+    container.innerHTML = kelasList.map((k, i) => {
+        const enrolledCount = Array.isArray(k.studentIds) ? k.studentIds.length : (
+            students.filter(s => s.kelasId === k.kelasId).length
+        );
+
+        return `
+        <div class="p-4 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200 dark:border-[#283a4e] space-y-3 relative group">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h4 class="font-black text-sm text-slate-800 dark:text-slate-100">${escapeHtml(k.namaKelas)}</h4>
+                    <span class="inline-block mt-1 px-2 py-0.5 rounded text-[9px] font-bold bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300">
+                        ${escapeHtml(k.kategori || 'Bimbingan Yanbu\'a')}
+                    </span>
+                </div>
+                <div class="flex items-center space-x-1.5">
+                    <button type="button" onclick="deleteTPQKelasConfirm('${k.kelasId}', '${escapeHtml(k.namaKelas)}')" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-300 flex items-center justify-center text-[10px] transition" title="Hapus Kelas">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                    <span class="w-7 h-7 rounded-lg bg-white dark:bg-[#15202d] text-slate-500 dark:text-slate-300 flex items-center justify-center text-xs font-bold shadow-sm">
+                        ${String.fromCharCode(65 + (i % 26))}
+                    </span>
+                </div>
+            </div>
+            <div class="space-y-1 text-xs text-slate-600 dark:text-slate-300">
+                <p class="flex items-center gap-1.5 truncate font-semibold">
+                    <i class="fa-solid fa-user-tie text-teal-600"></i>
+                    <span>${escapeHtml(k.ustadzPengampu || 'Ustadz Pengampu')}</span>
+                </p>
+                <p class="text-[10px] text-slate-400 truncate">
+                    <i class="fa-regular fa-clock mr-1"></i> ${escapeHtml(k.jadwalSesi || 'Sore (15:45 - 17:00)')}
+                </p>
+            </div>
+            <div class="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-[#283a4e] text-xs">
+                <span class="font-bold text-slate-700 dark:text-slate-300">${enrolledCount} Santri Terdaftar</span>
+                <button type="button" onclick="openPlottingFromKelasCard('${k.kelasId}')" class="px-3 py-1 bg-white dark:bg-[#15202d] hover:bg-teal-50 text-teal-700 dark:text-teal-300 font-bold rounded-lg border border-slate-200 dark:border-[#283a4e] text-[10px] transition flex items-center gap-1">
+                    <i class="fa-solid fa-user-plus text-[9px]"></i>
+                    <span>+ Atur Santri</span>
+                </button>
+            </div>
+        </div>
+        `;
+    }).join('');
+}
+
+/**
+ * Submit Tambah Kelas Baru
+ */
+async function submitNewTPQKelas(e) {
+    if (e && e.preventDefault) e.preventDefault();
+
+    const inputNama = document.getElementById('input-tpq-kelas-nama');
+    const inputKat = document.getElementById('input-tpq-kelas-kategori');
+    const inputUstadz = document.getElementById('input-tpq-kelas-ustadz');
+    const inputTarget = document.getElementById('input-tpq-kelas-target');
+    const btn = document.getElementById('btn-submit-tpq-kelas');
+
+    const namaKelas = inputNama ? inputNama.value.trim() : "";
+    const kategori = inputKat ? inputKat.value : "Jilid 1 - 2 (Dasar)";
+    const ustadz = inputUstadz ? inputUstadz.value.trim() : "";
+    const targetDeskripsi = inputTarget ? inputTarget.value.trim() : "";
+
+    if (!namaKelas || !ustadz) {
+        alert("Nama kelas dan Ustadz pengampu wajib diisi!");
+        return;
+    }
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Menyimpan...`;
+    }
+
+    try {
+        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TPQ_STORAGE_KEYS.adminToken)) || "";
+        const res = await apiPost("saveTPQKelas", {
+            token,
+            namaKelas,
+            ustadzPengampu: ustadz,
+            jadwalSesi: targetDeskripsi || "Sore (15:45 - 17:00)",
+            kategori,
+            studentIds: []
+        });
+
+        if (res && (res.success || res.status === "success")) {
+            if (typeof showToast === 'function') showToast(res.message || "Kelas TPQ berhasil ditambahkan!");
+            if (inputNama) inputNama.value = '';
+            if (inputTarget) inputTarget.value = '';
+
+            // Update state lokal
+            const newK = {
+                kelasId: res.kelasId || ("KLS-" + Date.now().toString().substring(8)),
+                namaKelas,
+                ustadzPengampu: ustadz,
+                kategori,
+                jadwalSesi: targetDeskripsi || "Sore (15:45 - 17:00)",
+                studentIds: []
+            };
+            ASNTPQ.data.kelasList = ASNTPQ.data.kelasList || [];
+            ASNTPQ.data.kelasList.push(newK);
+
+            renderTPQKelasCards();
+            populateTPQFilters();
+            loadAdminTPQData(true);
+        } else {
+            alert("Gagal menyimpan kelas: " + ((res && res.message) || "Kesalahan server"));
+        }
+    } catch (err) {
+        alert("Terjadi kesalahan jaringan saat menyimpan kelas TPQ.");
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-plus text-[10px]"></i><span>Tambah Kelas</span>`;
+        }
+    }
+}
+
+/**
+ * Hapus Kelas TPQ
+ */
+async function deleteTPQKelasConfirm(kelasId, namaKelas) {
+    const ok = confirm(`Hapus kelas "${namaKelas}"?\nSantri yang ada di kelas ini tidak akan dihapus, tetapi status kelasnya akan di-reset.`);
+    if (!ok) return;
+
+    try {
+        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TPQ_STORAGE_KEYS.adminToken)) || "";
+        const res = await apiPost("deleteTPQKelas", { token, kelasId });
+
+        if (res && (res.success || res.status === "success")) {
+            if (typeof showToast === 'function') showToast("Kelas TPQ berhasil dihapus!");
+            ASNTPQ.data.kelasList = (ASNTPQ.data.kelasList || []).filter(k => k.kelasId !== kelasId);
+            renderTPQKelasCards();
+            populateTPQFilters();
+            loadAdminTPQData(true);
+        } else {
+            alert("Gagal menghapus: " + ((res && res.message) || "Error"));
+        }
+    } catch (e) {
+        alert("Kesalahan jaringan saat menghapus kelas.");
+    }
+}
+
+/**
+ * Tombol "+ Atur Santri" di kartu kelas
+ */
+function openPlottingFromKelasCard(kelasId) {
+    switchTPQKelasTab(2);
+    const sel = document.getElementById('select-plotting-tpq-kelas');
+    if (sel && kelasId) {
+        sel.value = kelasId;
+    }
+    onSelectPlottingTPQKelas(kelasId);
+}
+
+/**
+ * Mengisi dropdown pilihan kelas di Tab 2 Plotting
+ */
+function populatePlottingTPQKelasSelector() {
+    const sel = document.getElementById('select-plotting-tpq-kelas');
+    if (!sel) return;
+
+    const kelasList = ASNTPQ.data.kelasList || [];
+    if (kelasList.length === 0) {
+        sel.innerHTML = `<option value="">-- Belum Ada Kelas --</option>`;
+        ASNTPQ.activePlottingKelas = null;
+        ASNTPQ.activePlottingStudentIds = [];
+        renderTPQPlottingLists();
+        return;
+    }
+
+    const currentVal = sel.value;
+    sel.innerHTML = kelasList.map(k => `<option value="${escapeHtml(k.kelasId)}">${escapeHtml(k.namaKelas)}</option>`).join('');
+
+    let targetId = currentVal;
+    if (!targetId || !kelasList.some(k => k.kelasId === targetId)) {
+        targetId = kelasList[0].kelasId;
+    }
+    sel.value = targetId;
+    onSelectPlottingTPQKelas(targetId);
+}
+
+function onSelectPlottingTPQKelas(kelasId) {
+    const kelasList = ASNTPQ.data.kelasList || [];
+    const kelas = kelasList.find(k => k.kelasId === kelasId) || kelasList[0] || null;
+
+    ASNTPQ.activePlottingKelas = kelas;
+    if (!kelas) {
+        ASNTPQ.activePlottingStudentIds = [];
+        renderTPQPlottingLists();
+        return;
+    }
+
+    let currentIds = [];
+    if (Array.isArray(kelas.studentIds) && kelas.studentIds.length > 0) {
+        currentIds = [...kelas.studentIds];
+    } else if (Array.isArray(ASNTPQ.data.students)) {
+        currentIds = ASNTPQ.data.students
+            .filter(st => st.kelasId === kelas.kelasId)
+            .map(st => st.studentId || st.nis);
+    }
+    ASNTPQ.activePlottingStudentIds = currentIds.map(id => String(id).trim()).filter(Boolean);
+
+    const ustadzEl = document.getElementById('tab2-tpq-plotting-ustadz');
+    const targetEl = document.getElementById('tab2-tpq-plotting-target');
+    if (ustadzEl) ustadzEl.innerText = kelas.ustadzPengampu || 'Belum Ditunjuk';
+    if (targetEl) targetEl.innerText = kelas.jadwalSesi || kelas.kategori || 'Yanbu\'a';
+
+    renderTPQPlottingLists();
+}
+
+/**
+ * Render daftar santri di Tab 2 Plotting (Enrolled vs Available)
+ */
+function renderTPQPlottingLists() {
+    const enrolledContainer = document.getElementById('tab2-tpq-plotting-enrolled-container');
+    const availableContainer = document.getElementById('tab2-tpq-plotting-available-container');
+    const countBadge = document.getElementById('tab2-tpq-plotting-count-badge');
+    const enrolledCountBadge = document.getElementById('tab2-tpq-plotting-enrolled-count');
+
+    const allStudents = ASNTPQ.data.students || [];
+    const currentEnrolledIds = new Set(ASNTPQ.activePlottingStudentIds.map(s => String(s).trim()));
+
+    const enrolledStudents = allStudents.filter(st => {
+        const sId = String(st.studentId || "").trim();
+        const sNis = String(st.nis || "").trim();
+        return currentEnrolledIds.has(sId) || currentEnrolledIds.has(sNis);
+    });
+
+    const searchInp = document.getElementById('tab2-tpq-plotting-search');
+    const filterGen = document.getElementById('tab2-tpq-plotting-filter-gender');
+
+    const searchQuery = (searchInp?.value || "").toLowerCase().trim();
+    const genderFilter = (filterGen?.value || "ALL").toUpperCase();
+
+    const availableStudents = allStudents.filter(st => {
+        const sId = String(st.studentId || "").trim();
+        const sNis = String(st.nis || "").trim();
+        if (currentEnrolledIds.has(sId) || currentEnrolledIds.has(sNis)) return false;
+
+        const matchSearch = !searchQuery ||
+            (st.name && st.name.toLowerCase().includes(searchQuery)) ||
+            (st.nis && st.nis.toLowerCase().includes(searchQuery));
+
+        const matchGender = (genderFilter === 'ALL') || (String(st.gender || 'L').toUpperCase() === genderFilter);
+        return matchSearch && matchGender;
+    });
+
+    if (countBadge) countBadge.innerText = `${enrolledStudents.length} Santri Terplot`;
+    if (enrolledCountBadge) enrolledCountBadge.innerText = enrolledStudents.length;
+
+    // 1. Enrolled List
+    if (enrolledContainer) {
+        if (enrolledStudents.length === 0) {
+            enrolledContainer.innerHTML = `
+                <div class="py-5 text-center text-xs text-slate-400">
+                    <p>Belum ada santri yang dimasukkan ke kelas ini.</p>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Pilih santri dari daftar di bawah lalu klik + Masukkan.</p>
+                </div>`;
+        } else {
+            enrolledContainer.innerHTML = enrolledStudents.map(st => {
+                const sId = st.studentId || st.nis;
+                const initials = (st.name || "S").substring(0, 2).toUpperCase();
+                return `
+                <div class="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-[#15202d] border border-slate-200/80 dark:border-[#283a4e] text-xs">
+                    <div class="flex items-center space-x-2.5 min-w-0">
+                        <div class="w-7 h-7 rounded-lg ${st.gender === 'P' ? 'bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300' : 'bg-teal-100 text-teal-700 dark:bg-teal-950 dark:text-teal-300'} flex items-center justify-center font-bold text-[10px] shrink-0">
+                            ${initials}
+                        </div>
+                        <div class="min-w-0">
+                            <h5 class="font-bold text-slate-800 dark:text-slate-100 truncate">${escapeHtml(st.name)}</h5>
+                            <p class="text-[10px] text-slate-400">NIS: ${escapeHtml(st.nis || '-')} • Jilid ${st.jilidAktif || 1}</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="removeStudentFromTPQPlotting('${sId}')" class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 font-bold text-[10px] transition shrink-0 flex items-center gap-1">
+                        <i class="fa-solid fa-user-minus"></i>
+                        <span>Keluarkan</span>
+                    </button>
+                </div>`;
+            }).join('');
+        }
+    }
+
+    // 2. Available List
+    if (availableContainer) {
+        if (availableStudents.length === 0) {
+            availableContainer.innerHTML = `
+                <div class="py-6 text-center text-xs text-slate-400">
+                    <p>Semua santri yang cocok sudah dimasukkan ke kelas ini.</p>
+                </div>`;
+        } else {
+            availableContainer.innerHTML = availableStudents.map(st => {
+                const sId = st.studentId || st.nis;
+                const initials = (st.name || "S").substring(0, 2).toUpperCase();
+                const curKelas = st.namaKelas && st.namaKelas !== "Belum Ditentukan" ? st.namaKelas : null;
+                return `
+                <div class="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-[#15202d] border border-slate-200/80 dark:border-[#283a4e] text-xs hover:border-teal-300 transition">
+                    <div class="flex items-center space-x-2.5 min-w-0">
+                        <div class="w-7 h-7 rounded-lg ${st.gender === 'P' ? 'bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300' : 'bg-teal-100 text-teal-700 dark:bg-teal-950 dark:text-teal-300'} flex items-center justify-center font-bold text-[10px] shrink-0">
+                            ${initials}
+                        </div>
+                        <div class="min-w-0">
+                            <h5 class="font-bold text-slate-800 dark:text-slate-100 truncate">${escapeHtml(st.name)}</h5>
+                            <p class="text-[10px] text-slate-400 truncate">
+                                NIS: ${escapeHtml(st.nis || '-')} • Jilid ${st.jilidAktif || 1}
+                                ${curKelas ? ` • <span class="text-amber-600 dark:text-amber-400 font-semibold">(Saat ini: ${escapeHtml(curKelas)})</span>` : ''}
+                            </p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="addStudentToTPQPlotting('${sId}')" class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300 font-bold text-[10px] transition shrink-0 flex items-center gap-1">
+                        <i class="fa-solid fa-user-plus"></i>
+                        <span>+ Masukkan</span>
+                    </button>
+                </div>`;
+            }).join('');
+        }
+    }
+}
+
+function filterTPQPlottingAvailableList() {
+    renderTPQPlottingLists();
+}
+
+function addStudentToTPQPlotting(studentId) {
+    const cleanId = String(studentId || "").trim();
+    if (!cleanId) return;
+
+    if (!ASNTPQ.activePlottingStudentIds.includes(cleanId)) {
+        ASNTPQ.activePlottingStudentIds.push(cleanId);
+        renderTPQPlottingLists();
+    }
+}
+
+function removeStudentFromTPQPlotting(studentId) {
+    const cleanId = String(studentId || "").trim();
+    if (!cleanId) return;
+
+    ASNTPQ.activePlottingStudentIds = ASNTPQ.activePlottingStudentIds.filter(id => id !== cleanId);
+    renderTPQPlottingLists();
+}
+
+async function submitTPQPlotting() {
+    if (!ASNTPQ.activePlottingKelas) {
+        alert("Pilih kelas TPQ terlebih dahulu.");
+        return;
+    }
+
+    const kelasId = ASNTPQ.activePlottingKelas.kelasId;
+    const studentIds = ASNTPQ.activePlottingStudentIds || [];
+    const btn = document.getElementById('tab2-btn-save-tpq-plotting');
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Menyimpan...`;
+    }
+
+    try {
+        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TPQ_STORAGE_KEYS.adminToken)) || "";
+        const res = await apiPost("saveTPQPlotting", {
+            token,
+            kelasId,
+            studentIds
+        });
+
+        if (res && (res.success || res.status === "success")) {
+            if (typeof showToast === 'function') {
+                showToast(`✅ Berhasil mengatur ${studentIds.length} santri binaan ke ${ASNTPQ.activePlottingKelas.namaKelas}!`);
+            }
+            if (ASNTPQ.activePlottingKelas) {
+                ASNTPQ.activePlottingKelas.studentIds = studentIds;
+            }
+            renderTPQKelasCards();
+            renderTPQMatriksBeban();
+            loadAdminTPQData(true);
+        } else {
+            alert("Gagal menyimpan plotting: " + ((res && res.message) || "Kesalahan server"));
+        }
+    } catch (e) {
+        alert("Kesalahan jaringan saat menyimpan plotting santri.");
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i><span>Simpan Plotting Santri</span>`;
+        }
+    }
+}
+
+/**
+ * TAB 3: Matriks Beban Asatidz TPQ
+ */
+function renderTPQMatriksBeban() {
+    const tbody = document.getElementById('tpq-matriks-beban-tbody');
+    if (!tbody) return;
+
+    const kelasList = ASNTPQ.data.kelasList || [];
+    const students = ASNTPQ.data.students || [];
+
+    if (kelasList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-xs text-slate-400">Belum ada data distribusi beban Ustadz TPQ.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = kelasList.map(k => {
+        const enrolled = students.filter(st => {
+            if (Array.isArray(k.studentIds) && (k.studentIds.includes(st.studentId) || k.studentIds.includes(st.nis))) return true;
+            return st.kelasId === k.kelasId;
+        });
+
+        let totalJilid = 0;
+        enrolled.forEach(st => {
+            totalJilid += Number(st.jilidAktif || 1);
+        });
+        const avg = enrolled.length > 0 ? (totalJilid / enrolled.length).toFixed(1) : "1.0";
+
+        return `
+        <tr class="hover:bg-slate-50 dark:hover:bg-[#1c2836]/60 transition">
+            <td class="py-3 px-4 font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <div class="w-7 h-7 rounded-lg bg-teal-100/70 dark:bg-teal-950 text-teal-700 dark:text-teal-300 flex items-center justify-center text-xs">
+                    <i class="fa-solid fa-user-tie"></i>
+                </div>
+                <span class="truncate">${escapeHtml(k.ustadzPengampu || 'Ustadz TPQ')}</span>
+            </td>
+            <td class="py-3 px-4 font-semibold text-slate-700 dark:text-slate-200">${escapeHtml(k.namaKelas || '-')}</td>
+            <td class="py-3 px-4">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300">
+                    ${escapeHtml(k.kategori || 'Yanbu\'a')}
+                </span>
+            </td>
+            <td class="py-3 px-4 font-bold text-slate-800 dark:text-slate-100">${enrolled.length} Santri</td>
+            <td class="py-3 px-4 font-bold text-teal-600 dark:text-teal-400">Jilid ${avg} / 7</td>
+        </tr>
+        `;
+    }).join('');
+}
+
+/**
+ * TAB 4: Jadwal & Sesi Bimbingan TPQ
+ */
+function resetTPQSesiForm() {
+    const idInput = document.getElementById('input-tpq-sesi-id');
+    const namaInput = document.getElementById('input-tpq-sesi-nama');
+    const tipeInput = document.getElementById('input-tpq-sesi-tipe');
+    const statusInput = document.getElementById('input-tpq-sesi-status');
+    const jamMulaiInput = document.getElementById('input-tpq-sesi-jam-mulai');
+    const jamSelesaiInput = document.getElementById('input-tpq-sesi-jam-selesai');
+    const btnText = document.getElementById('btn-submit-tpq-sesi-text');
+    const btnCancel = document.getElementById('btn-cancel-tpq-sesi');
+
+    if (idInput) idInput.value = '';
+    if (namaInput) namaInput.value = '';
+    if (tipeInput) tipeInput.value = 'Bimbingan Yanbu\'a Reguler';
+    if (statusInput) statusInput.value = 'Aktif Digunakan';
+    if (jamMulaiInput) jamMulaiInput.value = '15:45';
+    if (jamSelesaiInput) jamSelesaiInput.value = '17:00';
+    if (btnText) btnText.innerText = "Simpan Sesi";
+    if (btnCancel) btnCancel.classList.add('hidden');
+
+    document.querySelectorAll('input[name="tpq-sesi-hari"]').forEach(chk => {
+        chk.checked = ['Sen', 'Sel', 'Rab', 'Kam', 'Sab', 'Min'].includes(chk.value);
+    });
+}
+
+function renderTPQSesiCards() {
+    const container = document.getElementById('tpq-sesi-cards-container');
+    const badgeCount = document.getElementById('tpq-sesi-count-badge');
+    if (!container) return;
+
+    let sesiList = ASNTPQ.data.sesiList || [];
+
+    if (!sesiList || sesiList.length === 0) {
+        sesiList = [
+            { sesiId: "TPQ-SESI-01", namaSesi: "Sore (Reguler Yanbu'a)", jenisSesi: "Bimbingan Yanbu'a Reguler", jamMulai: "15:45", jamSelesai: "17:00", hariList: ["Sen", "Sel", "Rab", "Kam", "Sab", "Min"], status: "Aktif Digunakan" },
+            { sesiId: "TPQ-SESI-02", namaSesi: "Pagi (Madin / Yanbu'a Cilik)", jenisSesi: "Privat Tahsin & I'adah", jamMulai: "08:30", jamSelesai: "10:00", hariList: ["Ahad"], status: "Aktif Digunakan" },
+            { sesiId: "TPQ-SESI-03", namaSesi: "Ba'da Maghrib (Khataman)", jenisSesi: "Imtihan / Ujian Kenaikan Jilid", jamMulai: "18:30", jamSelesai: "19:30", hariList: ["Kam"], status: "Aktif Digunakan" }
+        ];
+    }
+
+    const activeCount = sesiList.filter(s => (s.status || '').includes('Aktif')).length;
+    if (badgeCount) badgeCount.innerText = `${activeCount} Sesi Aktif (${sesiList.length} Total)`;
+
+    container.innerHTML = sesiList.map((s, idx) => {
+        const id = s.sesiId || `TPQ-SESI-0${idx + 1}`;
+        const nama = s.namaSesi || 'Sesi';
+        const jenis = s.jenisSesi || 'Reguler';
+        const isAktif = (s.status || '').includes('Aktif');
+        const rawHari = s.hariList || [];
+        const hariList = Array.isArray(rawHari) ? rawHari : String(rawHari).split(',').map(h => h.trim()).filter(Boolean);
+        const hariStr = hariList.join(', ');
+
+        return `
+        <div class="p-3.5 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200 dark:border-[#283a4e] space-y-2 relative group">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <span class="px-2 py-0.5 rounded text-[9px] font-extrabold bg-white dark:bg-[#15202d] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-[#283a4e]">
+                        SESI 0${idx + 1}
+                    </span>
+                    <h5 class="font-black text-xs text-slate-800 dark:text-slate-100 truncate">${escapeHtml(nama)}</h5>
+                </div>
+                <div class="flex items-center space-x-1.5">
+                    <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold ${isAktif ? 'bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300' : 'bg-slate-200 text-slate-600'}">
+                        ${isAktif ? 'Aktif' : 'Nonaktif'}
+                    </span>
+                    <button type="button" onclick="editTPQSesi('${escapeHtml(id)}')" class="w-6 h-6 rounded-lg bg-white dark:bg-[#15202d] hover:bg-slate-100 text-slate-500 hover:text-teal-600 flex items-center justify-center text-[10px] shadow-sm transition" title="Edit Sesi">
+                        <i class="fa-solid fa-pencil"></i>
+                    </button>
+                    <button type="button" onclick="deleteTPQSesiConfirm('${escapeHtml(id)}', '${escapeHtml(nama)}')" class="w-6 h-6 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-300 flex items-center justify-center text-[10px] transition" title="Hapus Sesi">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="space-y-1 text-xs text-slate-600 dark:text-slate-300">
+                <p class="flex items-center gap-1.5 font-semibold text-teal-700 dark:text-teal-300">
+                    <i class="fa-solid fa-book-open-reader"></i>
+                    <span>${escapeHtml(jenis)}</span>
+                </p>
+                <div class="flex items-center justify-between text-[11px] pt-1">
+                    <span class="font-bold flex items-center gap-1">
+                        <i class="fa-regular fa-clock text-teal-600"></i> ${escapeHtml(s.jamMulai || '15:45')} - ${escapeHtml(s.jamSelesai || '17:00')} WIB
+                    </span>
+                    <span class="text-slate-400 text-[10px]">${hariStr || 'Setiap Hari'}</span>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function editTPQSesi(sesiId) {
+    const sesiList = ASNTPQ.data.sesiList || [];
+    const sesi = sesiList.find(s => s.sesiId === sesiId);
+    if (!sesi) return;
+
+    const idInput = document.getElementById('input-tpq-sesi-id');
+    const namaInput = document.getElementById('input-tpq-sesi-nama');
+    const tipeInput = document.getElementById('input-tpq-sesi-tipe');
+    const statusInput = document.getElementById('input-tpq-sesi-status');
+    const jamMulaiInput = document.getElementById('input-tpq-sesi-jam-mulai');
+    const jamSelesaiInput = document.getElementById('input-tpq-sesi-jam-selesai');
+    const btnText = document.getElementById('btn-submit-tpq-sesi-text');
+    const btnCancel = document.getElementById('btn-cancel-tpq-sesi');
+
+    if (idInput) idInput.value = sesi.sesiId;
+    if (namaInput) namaInput.value = sesi.namaSesi || '';
+    if (tipeInput) tipeInput.value = sesi.jenisSesi || 'Bimbingan Yanbu\'a Reguler';
+    if (statusInput) statusInput.value = sesi.status || 'Aktif Digunakan';
+    if (jamMulaiInput) jamMulaiInput.value = sesi.jamMulai || '15:45';
+    if (jamSelesaiInput) jamSelesaiInput.value = sesi.jamSelesai || '17:00';
+    if (btnText) btnText.innerText = "Perbarui Sesi";
+    if (btnCancel) btnCancel.classList.remove('hidden');
+
+    const rawHari = sesi.hariList || [];
+    const arrHari = Array.isArray(rawHari) ? rawHari : String(rawHari).split(',').map(h => h.trim());
+    document.querySelectorAll('input[name="tpq-sesi-hari"]').forEach(chk => {
+        chk.checked = arrHari.includes(chk.value);
+    });
+}
+
+async function submitTPQSesi(e) {
+    if (e && e.preventDefault) e.preventDefault();
+
+    const idInput = document.getElementById('input-tpq-sesi-id');
+    const namaInput = document.getElementById('input-tpq-sesi-nama');
+    const tipeInput = document.getElementById('input-tpq-sesi-tipe');
+    const statusInput = document.getElementById('input-tpq-sesi-status');
+    const jamMulaiInput = document.getElementById('input-tpq-sesi-jam-mulai');
+    const jamSelesaiInput = document.getElementById('input-tpq-sesi-jam-selesai');
+    const btn = document.getElementById('btn-submit-tpq-sesi');
+
+    const hariList = [];
+    document.querySelectorAll('input[name="tpq-sesi-hari"]:checked').forEach(chk => hariList.push(chk.value));
+
+    const payload = {
+        sesiId: idInput ? idInput.value.trim() : "",
+        namaSesi: namaInput ? namaInput.value.trim() : "",
+        jenisSesi: tipeInput ? tipeInput.value : "Bimbingan Yanbu'a Reguler",
+        status: statusInput ? statusInput.value : "Aktif Digunakan",
+        jamMulai: jamMulaiInput ? jamMulaiInput.value : "15:45",
+        jamSelesai: jamSelesaiInput ? jamSelesaiInput.value : "17:00",
+        hariList
+    };
+
+    if (!payload.namaSesi) {
+        alert("Nama sesi wajib diisi!");
+        return;
+    }
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Menyimpan...`;
+    }
+
+    try {
+        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TPQ_STORAGE_KEYS.adminToken)) || "";
+        const res = await apiPost("saveTPQSesi", { token, ...payload });
+
+        if (res && (res.success || res.status === "success")) {
+            if (typeof showToast === 'function') showToast("Jadwal sesi TPQ berhasil disimpan!");
+            resetTPQSesiForm();
+
+            if (!ASNTPQ.data.sesiList) ASNTPQ.data.sesiList = [];
+            const existingIdx = ASNTPQ.data.sesiList.findIndex(s => s.sesiId === payload.sesiId);
+            if (existingIdx >= 0) {
+                ASNTPQ.data.sesiList[existingIdx] = { ...ASNTPQ.data.sesiList[existingIdx], ...payload };
+            } else {
+                ASNTPQ.data.sesiList.push({ ...payload, sesiId: res.sesiId || ("TPQ-SESI-" + Date.now().toString().substring(8)) });
+            }
+            renderTPQSesiCards();
+        } else {
+            alert("Gagal: " + ((res && res.message) || "Kesalahan server"));
+        }
+    } catch (err) {
+        alert("Terjadi kesalahan jaringan saat menyimpan sesi.");
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-plus text-[10px]"></i><span id="btn-submit-tpq-sesi-text">Simpan Sesi</span>`;
+        }
+    }
+}
+
+async function deleteTPQSesiConfirm(sesiId, namaSesi) {
+    const ok = confirm(`Hapus jadwal sesi "${namaSesi}"?`);
+    if (!ok) return;
+
+    try {
+        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TPQ_STORAGE_KEYS.adminToken)) || "";
+        const res = await apiPost("deleteTPQSesi", { token, sesiId });
+
+        if (res && (res.success || res.status === "success")) {
+            if (typeof showToast === 'function') showToast("Sesi berhasil dihapus.");
+            ASNTPQ.data.sesiList = (ASNTPQ.data.sesiList || []).filter(s => s.sesiId !== sesiId);
+            renderTPQSesiCards();
+        } else {
+            alert("Gagal menghapus: " + ((res && res.message) || "Error"));
+        }
+    } catch (e) {
+        alert("Kesalahan jaringan.");
+    }
+}
+
+
+// ====================================================================
+// TARGET CAPAIAN TPQ (INDIVIDUAL & MASSAL)
+// ====================================================================
+
+function openTPQTargetModal(studentId) {
+    const st = (ASNTPQ.data.students || []).find(s => s.studentId === studentId);
+    if (!st) return;
+
+    const modal = document.getElementById('modal-tpq-target');
+    if (!modal) return;
+
+    const targets = (ASNTPQ.data && ASNTPQ.data.targets) || {};
+    const tgt = targets[studentId] || st.target || {
+        targetJilid: Math.min(7, (st.jilidAktif || 1) + 1),
+        targetHalamanSesi: 1
+    };
+
+    const nameEl = document.getElementById('tpq-target-student-name');
+    const nisEl = document.getElementById('tpq-target-student-nis');
+    const posEl = document.getElementById('tpq-target-current-pos');
+    const idInput = document.getElementById('input-tpq-target-student-id');
+    const jilidSel = document.getElementById('input-tpq-target-jilid');
+    const sesiInput = document.getElementById('input-tpq-target-sesi');
+
+    if (nameEl) nameEl.innerText = st.name;
+    if (nisEl) nisEl.innerText = `NIS: ${st.nis || "-"} • Kelas: ${st.namaKelas || "TPQ"}`;
+    if (posEl) posEl.innerText = `Jilid ${st.jilidAktif || 1} • Hal ${st.halamanAktif || 1}`;
+    if (idInput) idInput.value = st.studentId;
+    if (jilidSel) jilidSel.value = String(tgt.targetJilid || Math.min(7, (st.jilidAktif || 1) + 1));
+    if (sesiInput) sesiInput.value = tgt.targetHalamanSesi || 1;
+
+    recalculateTPQTargetWeekly();
+    modal.classList.remove('hidden');
+}
+
+function closeTPQTargetModal() {
+    const modal = document.getElementById('modal-tpq-target');
+    if (modal) modal.classList.add('hidden');
+}
+
+function setTPQTargetChip(field, val) {
+    if (field === 'SESI') {
+        const inp = document.getElementById('input-tpq-target-sesi');
+        if (inp) {
+            inp.value = val;
+            recalculateTPQTargetWeekly();
+        }
+    }
+}
+
+function recalculateTPQTargetWeekly() {
+    const sesiInp = document.getElementById('input-tpq-target-sesi');
+    const pekanInp = document.getElementById('input-tpq-target-pekan');
+    const bulanInp = document.getElementById('input-tpq-target-bulan');
+
+    const sesi = Number(sesiInp?.value || 1);
+    const pekan = Math.round(sesi * 6 * 10) / 10;
+    const bulan = Math.round(pekan * 4 * 10) / 10;
+
+    if (pekanInp) pekanInp.value = `${pekan} Halaman / Pekan`;
+    if (bulanInp) bulanInp.value = `${bulan} Halaman (~${(bulan / 40).toFixed(1)} Jilid)`;
+}
+
+async function submitTPQTarget() {
+    const idInput = document.getElementById('input-tpq-target-student-id');
+    const jilidSel = document.getElementById('input-tpq-target-jilid');
+    const sesiInput = document.getElementById('input-tpq-target-sesi');
+    const btn = document.getElementById('btn-save-tpq-target');
+
+    const studentId = idInput ? idInput.value : "";
+    const targetJilid = Number(jilidSel?.value || 1);
+    const targetHalamanSesi = Number(sesiInput?.value || 1);
+
+    if (!studentId) return;
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Menyimpan...`;
+    }
+
+    try {
+        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TPQ_STORAGE_KEYS.adminToken)) || "";
+        const res = await apiPost("saveTPQTarget", {
+            token,
+            studentId,
+            targetJilid,
+            targetHalamanSesi,
+            targetHalamanPekan: targetHalamanSesi * 6
+        });
+
+        if (res && (res.success || res.status === "success")) {
+            closeTPQTargetModal();
+            if (typeof showToast === 'function') showToast("Target santri berhasil disimpan!");
+
+            if (!ASNTPQ.data.targets) ASNTPQ.data.targets = {};
+            ASNTPQ.data.targets[studentId] = {
+                targetJilid,
+                targetHalamanSesi
+            };
+            renderTPQTable();
+        } else {
+            alert("Gagal: " + ((res && res.message) || "Error"));
+        }
+    } catch (e) {
+        alert("Kesalahan jaringan saat menyimpan target.");
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i><span>Simpan Target</span>`;
+        }
+    }
+}
+
+/**
+ * Target Massal (Bulk Target) TPQ
+ */
+function openTPQBulkTargetModal(initialScope = 'ALL') {
+    const modal = document.getElementById('modal-tpq-target-bulk');
+    if (!modal) return;
+
+    // Populate Kelas Dropdown
+    const selKelas = document.getElementById('tpq-bulk-target-select-kelas');
+    if (selKelas) {
+        const kelasList = ASNTPQ.data.kelasList || [];
+        selKelas.innerHTML = kelasList.length > 0
+            ? kelasList.map(k => `<option value="${escapeHtml(k.kelasId)}">${escapeHtml(k.namaKelas)}</option>`).join('')
+            : '<option value="">(Belum ada kelas)</option>';
+    }
+
+    const selCount = ASNTPQ.selectedStudentIds ? ASNTPQ.selectedStudentIds.size : 0;
+    const scopeToUse = (initialScope === 'SELECTED' && selCount === 0) ? 'ALL' : initialScope;
+    setTPQBulkTargetScope(scopeToUse);
+
+    recalculateTPQBulkTargetWeekly();
+    modal.classList.remove('hidden');
+}
+
+function closeTPQBulkTargetModal() {
+    const modal = document.getElementById('modal-tpq-target-bulk');
+    if (modal) modal.classList.add('hidden');
+}
+
+function setTPQBulkTargetScope(scope) {
+    if (!ASNTPQ.bulkTargetState) {
+        ASNTPQ.bulkTargetState = { scope: 'ALL', kelasId: '', jilid: '1', studentIds: [] };
+    }
+    ASNTPQ.bulkTargetState.scope = scope;
+
+    const scopes = ['all', 'kelas', 'jilid', 'selected'];
+    scopes.forEach(s => {
+        const btn = document.getElementById(`btn-tpq-scope-${s}`);
+        if (!btn) return;
+        if (s.toUpperCase() === scope) {
+            btn.className = 'px-3 py-2 rounded-xl font-bold text-xs border text-center transition flex flex-col items-center gap-1 bg-white dark:bg-[#15202d] border-teal-500 text-teal-700 dark:text-teal-300 shadow-sm ring-2 ring-teal-500/20';
+        } else {
+            btn.className = 'px-3 py-2 rounded-xl font-bold text-xs border text-center transition flex flex-col items-center gap-1 bg-white dark:bg-[#15202d] border-slate-200 dark:border-[#283a4e] text-slate-600 dark:text-slate-300 hover:border-amber-400';
+        }
+    });
+
+    const subContainer = document.getElementById('tpq-bulk-target-subselect-container');
+    const kelasWrap = document.getElementById('tpq-bulk-target-kelas-wrapper');
+    const jilidWrap = document.getElementById('tpq-bulk-target-jilid-wrapper');
+
+    if (subContainer) {
+        if (scope === 'KELAS' || scope === 'JILID') {
+            subContainer.classList.remove('hidden');
+        } else {
+            subContainer.classList.add('hidden');
+        }
+    }
+
+    if (kelasWrap) {
+        if (scope === 'KELAS') kelasWrap.classList.remove('hidden');
+        else kelasWrap.classList.add('hidden');
+    }
+
+    if (jilidWrap) {
+        if (scope === 'JILID') jilidWrap.classList.remove('hidden');
+        else jilidWrap.classList.add('hidden');
+    }
+
+    onTPQBulkTargetScopeChange();
+}
+
+function onTPQBulkTargetScopeChange() {
+    const scope = ASNTPQ.bulkTargetState?.scope || 'ALL';
+    const students = ASNTPQ.data.students || [];
+    let count = 0;
+    let summaryText = "";
+
+    if (scope === 'ALL') {
+        count = students.length;
+        summaryText = "Target akan diterapkan ke seluruh santri TPQ aktif";
+    } else if (scope === 'KELAS') {
+        const selKelas = document.getElementById('tpq-bulk-target-select-kelas');
+        const kId = selKelas ? selKelas.value : "";
+        count = students.filter(s => s.kelasId === kId).length;
+        summaryText = `Target akan diterapkan ke santri di kelas terpilih (${count} santri)`;
+    } else if (scope === 'JILID') {
+        const selJilid = document.getElementById('tpq-bulk-target-select-jilid');
+        const j = selJilid ? Number(selJilid.value) : 1;
+        count = students.filter(s => s.jilidAktif === j).length;
+        summaryText = `Target akan diterapkan ke semua santri Jilid ${j} (${count} santri)`;
+    } else if (scope === 'SELECTED') {
+        count = ASNTPQ.selectedStudentIds ? ASNTPQ.selectedStudentIds.size : 0;
+        summaryText = `Target akan diterapkan ke ${count} santri yang dicentang`;
+    }
+
+    const badgeEl = document.getElementById('tpq-bulk-target-recipient-badge');
+    const sumEl = document.getElementById('tpq-bulk-target-summary-text');
+    const prevEl = document.getElementById('tpq-bulk-target-student-preview');
+
+    if (badgeEl) badgeEl.innerText = `${count} Santri Sasaran`;
+    if (sumEl) sumEl.innerText = summaryText;
+    if (prevEl) prevEl.innerText = `${count} santri`;
+}
+
+function setTPQBulkTargetChip(field, val) {
+    if (field === 'SESI') {
+        const inp = document.getElementById('input-tpq-bulk-target-sesi');
+        if (inp) {
+            inp.value = val;
+            recalculateTPQBulkTargetWeekly();
+        }
+    }
+}
+
+function recalculateTPQBulkTargetWeekly() {
+    const sesiInp = document.getElementById('input-tpq-bulk-target-sesi');
+    const pekanInp = document.getElementById('input-tpq-bulk-target-pekan');
+    const bulanInp = document.getElementById('input-tpq-bulk-target-bulan');
+
+    const sesi = Number(sesiInp?.value || 1);
+    const pekan = Math.round(sesi * 6 * 10) / 10;
+    const bulan = Math.round(pekan * 4 * 10) / 10;
+
+    if (pekanInp) pekanInp.value = `${pekan} Halaman`;
+    if (bulanInp) bulanInp.value = `${bulan} Halaman`;
+}
+
+async function submitTPQBulkTarget() {
+    const scope = ASNTPQ.bulkTargetState?.scope || 'ALL';
+    const students = ASNTPQ.data.students || [];
+    let targetStudentIds = [];
+
+    if (scope === 'ALL') {
+        targetStudentIds = students.map(s => s.studentId);
+    } else if (scope === 'KELAS') {
+        const selKelas = document.getElementById('tpq-bulk-target-select-kelas');
+        const kId = selKelas ? selKelas.value : "";
+        targetStudentIds = students.filter(s => s.kelasId === kId).map(s => s.studentId);
+    } else if (scope === 'JILID') {
+        const selJilid = document.getElementById('tpq-bulk-target-select-jilid');
+        const j = selJilid ? Number(selJilid.value) : 1;
+        targetStudentIds = students.filter(s => s.jilidAktif === j).map(s => s.studentId);
+    } else if (scope === 'SELECTED') {
+        targetStudentIds = Array.from(ASNTPQ.selectedStudentIds || []);
+    }
+
+    if (targetStudentIds.length === 0) {
+        alert("Tidak ada santri sasaran yang terpilih.");
+        return;
+    }
+
+    const sesiInp = document.getElementById('input-tpq-bulk-target-sesi');
+    const targetHalamanSesi = Number(sesiInp?.value || 1);
+    const btn = document.getElementById('btn-save-tpq-target-bulk');
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Menerapkan Target...`;
+    }
+
+    try {
+        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TPQ_STORAGE_KEYS.adminToken)) || "";
+        const res = await apiPost("saveBulkTPQTarget", {
+            token,
+            studentIds: targetStudentIds,
+            targetHalamanSesi,
+            targetHalamanPekan: targetHalamanSesi * 6
+        });
+
+        if (res && (res.success || res.status === "success")) {
+            closeTPQBulkTargetModal();
+            if (typeof showToast === 'function') {
+                showToast(`✅ Target berhasil diterapkan ke ${targetStudentIds.length} santri TPQ!`);
+            }
+            if (!ASNTPQ.data.targets) ASNTPQ.data.targets = {};
+            targetStudentIds.forEach(id => {
+                ASNTPQ.data.targets[id] = {
+                    targetHalamanSesi
+                };
+            });
+            clearTPQSelectedStudents();
+            renderTPQTable();
+        } else {
+            alert("Gagal menerapkan target massal: " + ((res && res.message) || "Kesalahan server"));
+        }
+    } catch (e) {
+        alert("Kesalahan jaringan saat menyimpan target massal.");
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-bullseye"></i><span>Terapkan Target Massal</span>`;
+        }
+    }
+}
+
+// Window global exports
+window.openTPQKelasModal = openTPQKelasModal;
+window.closeTPQKelasModal = closeTPQKelasModal;
+window.switchTPQKelasTab = switchTPQKelasTab;
+window.submitNewTPQKelas = submitNewTPQKelas;
+window.deleteTPQKelasConfirm = deleteTPQKelasConfirm;
+window.openPlottingFromKelasCard = openPlottingFromKelasCard;
+window.onSelectPlottingTPQKelas = onSelectPlottingTPQKelas;
+window.filterTPQPlottingAvailableList = filterTPQPlottingAvailableList;
+window.addStudentToTPQPlotting = addStudentToTPQPlotting;
+window.removeStudentFromTPQPlotting = removeStudentFromTPQPlotting;
+window.submitTPQPlotting = submitTPQPlotting;
+window.resetTPQSesiForm = resetTPQSesiForm;
+window.editTPQSesi = editTPQSesi;
+window.submitTPQSesi = submitTPQSesi;
+window.deleteTPQSesiConfirm = deleteTPQSesiConfirm;
+window.toggleSelectAllTPQStudents = toggleSelectAllTPQStudents;
+window.toggleSelectTPQStudent = toggleSelectTPQStudent;
+window.clearTPQSelectedStudents = clearTPQSelectedStudents;
+window.openTPQTargetModal = openTPQTargetModal;
+window.closeTPQTargetModal = closeTPQTargetModal;
+window.setTPQTargetChip = setTPQTargetChip;
+window.recalculateTPQTargetWeekly = recalculateTPQTargetWeekly;
+window.submitTPQTarget = submitTPQTarget;
+window.openTPQBulkTargetModal = openTPQBulkTargetModal;
+window.closeTPQBulkTargetModal = closeTPQBulkTargetModal;
+window.setTPQBulkTargetScope = setTPQBulkTargetScope;
+window.onTPQBulkTargetScopeChange = onTPQBulkTargetScopeChange;
+window.setTPQBulkTargetChip = setTPQBulkTargetChip;
+window.recalculateTPQBulkTargetWeekly = recalculateTPQBulkTargetWeekly;
+window.submitTPQBulkTarget = submitTPQBulkTarget;
+
