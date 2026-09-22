@@ -9496,12 +9496,23 @@
                         </div>
 
                         <div>
-                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                Ustadz / Muhafiz Penyimak
-                            </label>
-                            <input type="text" id="tahfidz-catat-muhafiz"
-                                placeholder="Contoh: Ust. Ahmad / Ustadzah Laila"
-                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white transition">
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block font-bold text-slate-700 dark:text-slate-300 text-xs">
+                                    Ustadz / Muhafiz Penyimak <span class="text-rose-500">*</span>
+                                </label>
+                                <span id="tahfidz-catat-muhafiz-badge" class="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                                    Otomatis Halaqah
+                                </span>
+                            </div>
+                            <select id="tahfidz-catat-muhafiz" required
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white transition">
+                                <option value="">-- Memuat Nama Muhafiz... --</option>
+                            </select>
+                            <div id="container-tahfidz-muhafiz-manual" class="hidden mt-2">
+                                <input type="text" id="tahfidz-catat-muhafiz-manual"
+                                    placeholder="Ketik nama muhafiz / asatidz pengganti..."
+                                    class="w-full px-3.5 py-2 rounded-xl border border-emerald-300 dark:border-emerald-700 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white dark:bg-[#15202d] text-slate-800 dark:text-slate-100 transition">
+                            </div>
                         </div>
                     </div>
 
@@ -9668,14 +9679,18 @@
                     <!-- Tabs Navigation & Analisis Pill -->
                     <div
                         class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-[#253447] pb-2 pt-1">
-                        <div class="flex items-center space-x-2">
+                        <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 sm:pb-0">
                             <button type="button" id="btn-detail-tab-1" onclick="switchTahfidzDetailTab(1)"
-                                class="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-emerald-700 text-white shadow-sm transition flex items-center gap-1.5">
-                                <i class="fa-solid fa-list-check"></i> 1. Tab Rekapitulasi (3 Indikator)
+                                class="px-3 py-1.5 text-xs font-bold rounded-xl bg-emerald-700 text-white shadow-sm transition flex items-center gap-1.5 shrink-0">
+                                <i class="fa-solid fa-list-check"></i> 1. Rekapitulasi
                             </button>
                             <button type="button" id="btn-detail-tab-2" onclick="switchTahfidzDetailTab(2)"
-                                class="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition flex items-center gap-1.5">
-                                <i class="fa-solid fa-clock-rotate-left"></i> 2. Tab Riwayat Setoran
+                                class="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition flex items-center gap-1.5 shrink-0">
+                                <i class="fa-solid fa-clock-rotate-left"></i> 2. Riwayat Setoran
+                            </button>
+                            <button type="button" id="btn-detail-tab-3" onclick="switchTahfidzDetailTab(3)"
+                                class="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition flex items-center gap-1.5 shrink-0">
+                                <i class="fa-solid fa-hourglass-half"></i> 3. Estimasi Waktu Khatam
                             </button>
                         </div>
                         <div class="self-end sm:self-auto">
@@ -9888,6 +9903,112 @@
                                     <!-- Populated dynamically by JS -->
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+
+                    <!-- PANEL TAB 3: ESTIMASI WAKTU KHATAM 30 JUZ -->
+                    <div id="panel-detail-tab-3" class="hidden space-y-4">
+                        <!-- Hero Projection Card -->
+                        <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-md space-y-3 relative overflow-hidden">
+                            <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2 py-0.5 rounded-full bg-white/20 text-white font-extrabold text-[10px] uppercase tracking-wider">
+                                            Proyeksi Berdasarkan Tren Riil
+                                        </span>
+                                        <span id="tahfidz-estimasi-badge-status" class="px-2 py-0.5 rounded-full bg-emerald-400 text-emerald-950 font-black text-[10px]">
+                                            Aktif Menghafal
+                                        </span>
+                                    </div>
+                                    <h3 class="text-xs sm:text-sm font-medium text-emerald-100 mt-1">Perkiraan Waktu Khatam 30 Juz:</h3>
+                                    <div class="flex items-baseline gap-2 mt-0.5">
+                                        <span id="tahfidz-estimasi-khatam-bulan-tahun" class="text-2xl sm:text-3xl font-black tracking-tight text-white">
+                                            Memuat...
+                                        </span>
+                                        <span id="tahfidz-estimasi-khatam-durasi" class="text-xs text-emerald-200 font-semibold">
+                                            (± 0 Bulan lagi)
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="bg-white/10 backdrop-blur-sm p-3 rounded-xl border border-white/15 text-left sm:text-right shrink-0">
+                                    <span class="text-[10px] text-emerald-200 block uppercase font-bold">Kecepatan Hafalan</span>
+                                    <span id="tahfidz-estimasi-laju-text" class="text-base font-extrabold text-white">0 Hal / Pekan</span>
+                                    <span id="tahfidz-estimasi-laju-sub" class="text-[10px] text-emerald-200 block mt-0.5">0 Hal / Bulan</span>
+                                </div>
+                            </div>
+
+                            <!-- Progress Menuju 600 Halaman -->
+                            <div class="space-y-1.5 pt-1 relative z-10">
+                                <div class="flex justify-between items-center text-[11px] font-bold text-emerald-100">
+                                    <span>Milestone: <b id="tahfidz-estimasi-halaman-tuntas" class="text-white">0</b> dari 600 Halaman (30 Juz)</span>
+                                    <span id="tahfidz-estimasi-sisa-halaman" class="text-emerald-200">Sisa 600 Halaman</span>
+                                </div>
+                                <div class="w-full bg-black/20 h-2.5 rounded-full overflow-hidden p-0.5">
+                                    <div id="tahfidz-estimasi-meter-bar" class="bg-white h-full rounded-full transition-all duration-700" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3 Stat Metrics Card Tren Riil -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div class="p-3.5 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200/70 dark:border-[#253447] space-y-1">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                    <i class="fa-solid fa-chart-line text-emerald-600"></i> Tren Riil Setoran
+                                </span>
+                                <div id="tahfidz-estimasi-card-tren" class="text-sm font-black text-slate-800 dark:text-slate-100">-</div>
+                                <p id="tahfidz-estimasi-card-tren-desc" class="text-[10px] text-slate-500 dark:text-slate-400">Berdasarkan log setoran ziyadah santri</p>
+                            </div>
+
+                            <div class="p-3.5 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200/70 dark:border-[#253447] space-y-1">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                    <i class="fa-solid fa-bullseye text-amber-500"></i> Target Santri
+                                </span>
+                                <div id="tahfidz-estimasi-card-target" class="text-sm font-black text-amber-600 dark:text-amber-400">-</div>
+                                <p id="tahfidz-estimasi-card-target-desc" class="text-[10px] text-slate-500 dark:text-slate-400">Target pekanan yang ditetapkan</p>
+                            </div>
+
+                            <div class="p-3.5 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200/70 dark:border-[#253447] space-y-1">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                    <i class="fa-solid fa-trophy text-purple-600"></i> Status Kelancaran
+                                </span>
+                                <div id="tahfidz-estimasi-card-kualitas" class="text-sm font-black text-purple-600 dark:text-purple-400">-</div>
+                                <p id="tahfidz-estimasi-card-kualitas-desc" class="text-[10px] text-slate-500 dark:text-slate-400">Tingkat kelulusan setoran ziyadah</p>
+                            </div>
+                        </div>
+
+                        <!-- Simulasi Skenario Kecepatan Hafalan -->
+                        <div class="p-4 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200/70 dark:border-[#253447] space-y-3">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-xs font-black text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-emerald-600"></i> Simulasi Skenario Waktu Selesai (Khatam)
+                                </h4>
+                                <span class="text-[10px] text-slate-400">Standar 20 Hlm / Juz</span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+                                <!-- Skenario A -->
+                                <div class="p-3 bg-white dark:bg-[#15202d] rounded-xl border border-slate-200/80 dark:border-[#253447] space-y-1">
+                                    <span class="text-[10px] font-bold text-emerald-600 block">Skenario 1: Tren Riil Saat Ini</span>
+                                    <div id="tahfidz-skenario-riil-date" class="text-xs font-black text-slate-800 dark:text-slate-100">-</div>
+                                    <p id="tahfidz-skenario-riil-sub" class="text-[9px] text-slate-400">Mengikuti laju setoran saat ini</p>
+                                </div>
+                                <!-- Skenario B -->
+                                <div class="p-3 bg-white dark:bg-[#15202d] rounded-xl border border-slate-200/80 dark:border-[#253447] space-y-1">
+                                    <span class="text-[10px] font-bold text-amber-600 block">Skenario 2: Target Santri</span>
+                                    <div id="tahfidz-skenario-target-date" class="text-xs font-black text-slate-800 dark:text-slate-100">-</div>
+                                    <p id="tahfidz-skenario-target-sub" class="text-[9px] text-slate-400">Jika konsisten sesuai target pekanan</p>
+                                </div>
+                                <!-- Skenario C -->
+                                <div class="p-3 bg-white dark:bg-[#15202d] rounded-xl border border-slate-200/80 dark:border-[#253447] space-y-1">
+                                    <span class="text-[10px] font-bold text-purple-600 block">Skenario 3: Akselerasi (1 Lembar / Hari)</span>
+                                    <div id="tahfidz-skenario-akselerasi-date" class="text-xs font-black text-slate-800 dark:text-slate-100">-</div>
+                                    <p id="tahfidz-skenario-akselerasi-sub" class="text-[9px] text-slate-400">12 halaman per pekan (6 hari aktif)</p>
+                                </div>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 text-[10px] text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
+                                <i class="fa-solid fa-circle-info shrink-0"></i>
+                                <span>Estimasi dihitung dari sisa halaman menuju 30 juz (600 halaman). Istiqomah dan muroja'ah berkala sangat menentukan ketepatan capaian.</span>
+                            </div>
                         </div>
                     </div>
                 </div>
