@@ -163,11 +163,10 @@ async function loadAdminTahfidzData(forceRefresh = false) {
 
         if (cached && (cached.success || cached.status === "success") && Array.isArray(cached.students)) {
             ASNTahfidz.data = cached;
-            ASNTahfidz.filteredStudents = [...(cached.students || [])];
 
             renderTahfidzSummaryCards();
             populateTahfidzFilters();
-            renderTahfidzStudentTable();
+            filterTahfidzList();
             updateHubTahfidzBadge();
             renderTahfidzHalaqahCards();
             hasRenderedFromCache = true;
@@ -218,11 +217,9 @@ async function loadAdminTahfidzData(forceRefresh = false) {
                 console.warn("Gagal menyimpan cache Tahfidz:", e);
             }
 
-            ASNTahfidz.filteredStudents = [...(response.students || [])];
-
             renderTahfidzSummaryCards();
             populateTahfidzFilters();
-            renderTahfidzStudentTable();
+            filterTahfidzList();
             updateHubTahfidzBadge();
             renderTahfidzHalaqahCards();
             populatePlottingHalaqahSelector();
@@ -302,6 +299,7 @@ function populateTahfidzFilters() {
                 optHtml += `<option value="${escapeHtml(h.namaHalaqah)}">${escapeHtml(h.namaHalaqah)}</option>`;
             }
         });
+        optHtml += `<option value="UNASSIGNED">Belum Masuk Halaqah</option>`;
         selHal.innerHTML = optHtml;
         if (currentVal && Array.from(selHal.options).some(o => o.value === currentVal)) {
             selHal.value = currentVal;
@@ -323,14 +321,60 @@ function populateTahfidzFilters() {
 }
 
 /**
- * Update badge Tahfidz di Hub Admin
+ * Update badge Tahfidz di Hub Admin (Hanya santri aktif di kelompok halaqah)
  */
 function updateHubTahfidzBadge() {
     const hubBadge = document.getElementById('admin-hub-tahfidz-count');
     if (hubBadge) {
-        const count = ASNTahfidz.data.students ? ASNTahfidz.data.students.length : 0;
+        const count = (ASNTahfidz.data.students || []).filter(st => isStudentInHalaqah(st)).length;
         hubBadge.innerText = `${count} Santri`;
     }
+}
+
+/**
+ * Memeriksa apakah santri sudah ditambahkan ke dalam salah satu kelompok halaqah
+ */
+function isStudentInHalaqah(st) {
+    if (!st) return false;
+    if (typeof st.isInHalaqah === 'boolean') {
+        if (st.isInHalaqah) return true;
+    }
+
+    // 1. Cek properti halaqahId pada santri
+    const hid = st.halaqahId || (st.halaqah && st.halaqah.halaqahId);
+    if (hid && String(hid).trim() !== "" && String(hid).trim() !== "0") {
+        return true;
+    }
+
+    // 2. Cek apakah nama halaqah valid (bukan 'Belum Masuk Halaqah')
+    const hname = st.halaqah?.namaHalaqah || st.halaqahName || "";
+    if (hname && hname !== "Belum Masuk Halaqah") {
+        const registeredHalaqahs = ASNTahfidz.data?.halaqahs || [];
+        if (registeredHalaqahs.length === 0) return true;
+        const existsInRegistered = registeredHalaqahs.some(h => 
+            (h.namaHalaqah && h.namaHalaqah.trim().toLowerCase() === hname.trim().toLowerCase()) ||
+            (h.halaqahId && hid && h.halaqahId === hid)
+        );
+        if (existsInRegistered) return true;
+    }
+
+    // 3. Cek apakah ID/NIS santri terdaftar di studentIds salah satu halaqah
+    const sId = String(st.studentId || st.nis || st.id || "").trim().toLowerCase();
+    const sNis = String(st.nis || "").trim().toLowerCase();
+    const sName = String(st.name || "").trim().toLowerCase();
+    const halaqahs = ASNTahfidz.data?.halaqahs || [];
+
+    for (let i = 0; i < halaqahs.length; i++) {
+        const h = halaqahs[i];
+        if (!h || !Array.isArray(h.studentIds)) continue;
+        const hasMember = h.studentIds.some(mId => {
+            const clean = String(mId).trim().toLowerCase();
+            return clean === sId || (sNis && clean === sNis) || (sName && clean === sName);
+        });
+        if (hasMember) return true;
+    }
+
+    return false;
 }
 
 /**
@@ -357,9 +401,21 @@ function filterTahfidzList() {
             (st.program && st.program.toLowerCase() === kat.toLowerCase()) ||
             (st.halaqah && st.halaqah.kategori && st.halaqah.kategori.toLowerCase() === kat.toLowerCase());
 
-        // Halaqah
-        const matchHal = (hal === 'ALL') ||
-            (st.halaqah && st.halaqah.namaHalaqah === hal);
+        // Halaqah Filter:
+        // Filter "Semua Halaqah" (ALL) HANYA menampilkan santri yang sudah dimasukkan ke kelompok halaqah
+        const inHalaqah = isStudentInHalaqah(st);
+        let matchHal = false;
+
+        if (hal === 'ALL') {
+            matchHal = inHalaqah;
+        } else if (hal === 'UNASSIGNED') {
+            matchHal = !inHalaqah;
+        } else {
+            matchHal = inHalaqah && st.halaqah && (
+                st.halaqah.namaHalaqah === hal || 
+                st.halaqah.halaqahId === hal
+            );
+        }
 
         // Muhafiz
         const matchMuh = (muh === 'Semua Muhafiz' || muh === 'ALL') ||
@@ -410,7 +466,8 @@ function renderTahfidzStudentTable() {
     if (tbody) {
         tbody.innerHTML = students.map(st => {
             const initials = (st.name || 'Santri').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'SN';
-            const halaqahName = st.halaqah?.namaHalaqah || st.program || 'Tahfidz Dewasa';
+            const inHal = isStudentInHalaqah(st);
+            const halaqahName = inHal ? (st.halaqah?.namaHalaqah || 'Halaqah Aktif') : 'Belum Masuk Halaqah';
             const targetZ = st.target?.ziyadahSesi || 1;
             const targetZPekan = st.target?.ziyadahPekan || 10;
             const targetZBulan = st.target?.ziyadahBulan || 40;
@@ -443,8 +500,8 @@ function renderTahfidzStudentTable() {
                         <div class="min-w-0">
                             <h4 class="font-extrabold text-xs md:text-sm text-slate-800 dark:text-slate-100 truncate">${escapeHtml(st.name)}</h4>
                             <p class="text-[10px] text-slate-400">NIS: ${escapeHtml(st.nis || '-')} • Bil Hifdhi</p>
-                            <span class="inline-flex items-center gap-1 px-1.5 py-0.2 mt-0.5 rounded text-[9px] font-bold bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            <span class="inline-flex items-center gap-1 px-1.5 py-0.2 mt-0.5 rounded text-[9px] font-bold ${inHal ? 'bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300' : 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40'}">
+                                <span class="w-1.5 h-1.5 rounded-full ${inHal ? 'bg-emerald-500' : 'bg-amber-400'}"></span>
                                 ${escapeHtml(halaqahName)}
                             </span>
                         </div>
@@ -559,7 +616,8 @@ function renderTahfidzStudentTable() {
     if (mobileContainer) {
         mobileContainer.innerHTML = students.map(st => {
             const initials = (st.name || 'Santri').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'SN';
-            const halaqahName = st.halaqah?.namaHalaqah || st.program || 'Tahfidz Dewasa';
+            const inHal = isStudentInHalaqah(st);
+            const halaqahName = inHal ? (st.halaqah?.namaHalaqah || 'Halaqah Aktif') : 'Belum Masuk Halaqah';
             const last = st.setoranTerakhir;
             const isUlang = last && (last.statusSetoran === 'ULANG' || last.nilai === 'DHAIF');
             const currentJuz = st.progress?.currentJuz || 1;
@@ -578,7 +636,7 @@ function renderTahfidzStudentTable() {
                         </div>
                         <div class="min-w-0">
                             <h4 class="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">${escapeHtml(st.name)}</h4>
-                            <p class="text-[10px] text-slate-400">NIS: ${escapeHtml(st.nis || '-')} • <span class="text-emerald-600 font-semibold">${escapeHtml(halaqahName)}</span></p>
+                            <p class="text-[10px] text-slate-400">NIS: ${escapeHtml(st.nis || '-')} • <span class="${inHal ? 'text-emerald-600 font-semibold' : 'text-amber-600 dark:text-amber-400 font-semibold'}">${escapeHtml(halaqahName)}</span></p>
                         </div>
                     </div>
                     <button type="button" onclick="openTahfidzCatatModal('${st.studentId}')" class="px-2.5 py-1 bg-emerald-600 text-white font-bold text-xs rounded-lg shadow-sm">
@@ -1904,8 +1962,8 @@ function onBulkTargetScopeChange() {
     let summaryText = "";
 
     if (scope === 'ALL') {
-        targetStudents = allStudents;
-        summaryText = `Target akan diterapkan ke seluruh santri aktif (${targetStudents.length} santri)`;
+        targetStudents = allStudents.filter(st => isStudentInHalaqah(st));
+        summaryText = `Target akan diterapkan ke seluruh santri halaqah aktif (${targetStudents.length} santri)`;
     } else if (scope === 'HALAQAH') {
         const selHalaqah = document.getElementById('bulk-target-select-halaqah');
         const halaqahVal = selHalaqah ? selHalaqah.value : "";
@@ -3330,3 +3388,4 @@ window.onBulkTargetScopeChange = onBulkTargetScopeChange;
 window.recalculateBulkTargetWeekly = recalculateBulkTargetWeekly;
 window.setTahfidzBulkTargetChip = setTahfidzBulkTargetChip;
 window.submitTahfidzBulkTarget = submitTahfidzBulkTarget;
+window.isStudentInHalaqah = isStudentInHalaqah;

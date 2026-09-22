@@ -10062,12 +10062,16 @@ function getTahfidzDashboard(token) {
         });
 
         stIds.forEach(id => {
-          studentHalaqahMap[id] = {
+          const idClean = String(id).trim();
+          const idLower = idClean.toLowerCase();
+          const halaqahObj = {
             halaqahId: hid,
             namaHalaqah: hname,
             kategori: hkat,
             muhafiz: hmuh
           };
+          studentHalaqahMap[idClean] = halaqahObj;
+          studentHalaqahMap[idLower] = halaqahObj;
         });
       }
     }
@@ -10135,12 +10139,23 @@ function getTahfidzDashboard(token) {
         targetMurajaahPekan: 10
       };
 
-      // Halaqah
-      const halaqah = studentHalaqahMap[sId] || studentHalaqahMap[sNis] || {
+      // Halaqah: Cocokkan ID, NIS, atau Nama
+      const sIdLower = sId.toLowerCase();
+      const sNisLower = sNis.toLowerCase();
+      const sNameLower = String(st.name || st.nama || "").trim().toLowerCase();
+      const assignedHalaqah = studentHalaqahMap[sId] || 
+                              studentHalaqahMap[sNis] || 
+                              studentHalaqahMap[sIdLower] || 
+                              studentHalaqahMap[sNisLower] || 
+                              (sNameLower && studentHalaqahMap[sNameLower]) || 
+                              null;
+
+      const isInHalaqah = Boolean(assignedHalaqah);
+      const halaqah = assignedHalaqah ? assignedHalaqah : {
         halaqahId: "",
-        namaHalaqah: st.program || "Tahfidz Dewasa",
-        kategori: st.program || "Tahfidz Dewasa",
-        muhafiz: "Pembina Tahfidz"
+        namaHalaqah: "Belum Masuk Halaqah",
+        kategori: st.program || "Tahfidz",
+        muhafiz: "-"
       };
 
       return {
@@ -10152,6 +10167,7 @@ function getTahfidzDashboard(token) {
         program: st.program || "Tahfidz",
         status: st.status || "ACTIVE",
         halaqah: halaqah,
+        isInHalaqah: isInHalaqah,
         target: {
           ziyadahSesi: target.targetZiyadahSesi,
           ziyadahPekan: target.targetZiyadahPekan,
@@ -10182,9 +10198,18 @@ function getTahfidzDashboard(token) {
       };
     });
 
-    // 8. Hitung Summary Makro
-    const activeStudentCount = filteredStudents.length || 1;
-    const avgJuz = (totalJuzAllStudents / activeStudentCount).toFixed(1);
+    // 8. Hitung Summary Makro (fokus pada santri aktif halaqah)
+    const halaqahMembers = enrichedStudents.filter(st => st.isInHalaqah);
+    const activeStudentCount = halaqahMembers.length > 0 ? halaqahMembers.length : (enrichedStudents.length || 1);
+    let totalJuzHalaqahStudents = 0;
+    let khatam30HalaqahCount = 0;
+    halaqahMembers.forEach(st => {
+      const jz = (st.progress && st.progress.currentJuz) || 0;
+      totalJuzHalaqahStudents += jz;
+      if (jz >= 30) khatam30HalaqahCount++;
+    });
+
+    const avgJuz = (totalJuzHalaqahStudents / activeStudentCount).toFixed(1);
     const totalWeeklyActivity = weeklyZiyadahCount + weeklyMurajaahCount;
     const ziyadahPercent = totalWeeklyActivity > 0 ? Math.round((weeklyZiyadahCount / totalWeeklyActivity) * 100) : 100;
     const murajaahPercent = 100 - ziyadahPercent;
@@ -10193,9 +10218,10 @@ function getTahfidzDashboard(token) {
       status: "success",
       success: true,
       summary: {
-        khatam30Juz: khatam30Count,
+        khatam30Juz: khatam30HalaqahCount > 0 ? khatam30HalaqahCount : khatam30Count,
         rataRataHafalan: `${avgJuz} Juz / Santri`,
-        totalHafalanJuz: totalJuzAllStudents,
+        totalHafalanJuz: totalJuzHalaqahStudents > 0 ? totalJuzHalaqahStudents : totalJuzAllStudents,
+        totalSantriHalaqah: halaqahMembers.length,
         aktivitasPekanIni: {
           ziyadahPercent: ziyadahPercent,
           murajaahPercent: murajaahPercent,
