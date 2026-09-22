@@ -2641,15 +2641,105 @@ function printTahfidzRekap() {
 /**
  * Ekspor Data Mutaba'ah ke CSV
  */
-function exportTahfidzDataCSV() {
-    const students = ASNTahfidz.filteredStudents || [];
+/**
+ * Ekspor Data Mutaba'ah ke Excel (.xlsx) menggunakan SheetJS
+ */
+function exportTahfidzDataXLSX() {
+    const students = ASNTahfidz.filteredStudents || (ASNTahfidz.data && ASNTahfidz.data.students) || [];
     if (students.length === 0) {
         if (typeof showToast === 'function') showToast("⚠️ Tidak ada data untuk diekspor.");
         return;
     }
 
+    const doExport = () => {
+        try {
+            // 1. Siapkan header dan baris data
+            const headers = [
+                "No", "NIS", "Nama Santri", "Gender", "Program / Kelas",
+                "Kelompok Halaqah", "Muhafiz Pembina", "Capaian (Juz)",
+                "Persentase Capaian", "Target Ziyadah / Sesi", "Target Ziyadah / Pekan",
+                "Target Muraja'ah / Sesi", "Target Muraja'ah / Pekan",
+                "Setoran Terakhir", "Nilai Terakhir", "Status Kelulusan", "Status On-Track"
+            ];
+
+            const rows = students.map((st, idx) => [
+                idx + 1,
+                st.nis || "-",
+                st.name || "-",
+                st.gender === "P" ? "Perempuan" : "Laki-laki",
+                st.program || "Tahfidz",
+                st.halaqah?.namaHalaqah || "-",
+                st.halaqah?.muhafiz || "-",
+                st.progress?.currentJuz || 1,
+                `${st.progress?.percent || 0}%`,
+                st.target?.ziyadahSesi || 1,
+                st.target?.ziyadahPekan || 10,
+                st.target?.murajaahSesi || 2,
+                st.target?.murajaahPekan || 10,
+                st.setoranTerakhir ? `${st.setoranTerakhir.surah || ''} (${st.setoranTerakhir.tanggal || ''})` : "Belum Setor",
+                st.setoranTerakhir?.nilai || "-",
+                st.setoranTerakhir?.statusSetoran === 'ULANG' ? "Wajib Mengulang (I'adah)" : (st.setoranTerakhir ? "Lulus / Lanjut" : "-"),
+                st.progress?.onTrackStatus || "-"
+            ]);
+
+            const wsData = [headers, ...rows];
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+            // 2. Tentukan lebar kolom ideal agar terbaca rapi di Microsoft Excel
+            ws['!cols'] = [
+                { wch: 5 },  // No
+                { wch: 14 }, // NIS
+                { wch: 28 }, // Nama Santri
+                { wch: 14 }, // Gender
+                { wch: 22 }, // Program
+                { wch: 24 }, // Halaqah
+                { wch: 24 }, // Muhafiz
+                { wch: 14 }, // Capaian Juz
+                { wch: 18 }, // Persentase
+                { wch: 20 }, // Target Ziyadah / Sesi
+                { wch: 20 }, // Target Ziyadah / Pekan
+                { wch: 22 }, // Target Murajaah / Sesi
+                { wch: 22 }, // Target Murajaah / Pekan
+                { wch: 28 }, // Setoran Terakhir
+                { wch: 14 }, // Nilai Terakhir
+                { wch: 26 }, // Status Kelulusan (I'adah)
+                { wch: 22 }  // Status On-Track
+            ];
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Rekap Capaian Tahfidz");
+
+            const dateStr = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(wb, `Rekap_Tahfidz_Mubarokah_${dateStr}.xlsx`);
+            if (typeof showToast === 'function') showToast("📥 Rekap Tahfidz (.xlsx) berhasil diunduh!");
+        } catch (err) {
+            console.error("Gagal export XLSX:", err);
+            exportTahfidzDataCSVFallback();
+        }
+    };
+
+    if (typeof XLSX !== 'undefined') {
+        doExport();
+    } else {
+        // Load SheetJS secara on-demand jika belum terpasang
+        const script = document.createElement('script');
+        script.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
+        script.onload = () => doExport();
+        script.onerror = () => {
+            console.warn("Gagal memuat SheetJS CDN, beralih ke format CSV...");
+            exportTahfidzDataCSVFallback();
+        };
+        document.head.appendChild(script);
+    }
+}
+
+/**
+ * Fallback Ekspor CSV jika library Excel offline
+ */
+function exportTahfidzDataCSVFallback() {
+    const students = ASNTahfidz.filteredStudents || (ASNTahfidz.data && ASNTahfidz.data.students) || [];
     let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "NIS,Nama Santri,Gender,Program,Halaqah,Capaian Juz,Persentase,Target Ziyadah Harian,Target Ziyadah Pekan,Status On-Track\n";
+    csvContent += "NIS,Nama Santri,Gender,Program,Halaqah,Capaian Juz,Persentase,Target Ziyadah Harian,Target Ziyadah Pekan,Status Mutabaah,Status On-Track\n";
 
     students.forEach(st => {
         const row = [
@@ -2662,6 +2752,7 @@ function exportTahfidzDataCSV() {
             `"${st.progress?.percent || 0}%"`,
             `"${st.target?.ziyadahSesi || 1}"`,
             `"${st.target?.ziyadahPekan || 10}"`,
+            `"${st.setoranTerakhir?.statusSetoran === 'ULANG' ? 'Wajib Mengulang' : 'Lanjut'}"`,
             `"${st.progress?.onTrackStatus || ''}"`
         ].join(",");
         csvContent += row + "\n";
@@ -2674,6 +2765,12 @@ function exportTahfidzDataCSV() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    if (typeof showToast === 'function') showToast("📥 Rekap Tahfidz (.csv) berhasil diunduh.");
+}
+
+// Alias untuk kompatibilitas
+function exportTahfidzDataCSV() {
+    exportTahfidzDataXLSX();
 }
 
 // ====================================================================
@@ -2775,6 +2872,7 @@ window.submitNewHalaqah = submitNewHalaqah;
 window.printTahfidzStudentCard = printTahfidzStudentCard;
 window.printTahfidzRekap = printTahfidzRekap;
 window.exportTahfidzDataCSV = exportTahfidzDataCSV;
+window.exportTahfidzDataXLSX = exportTahfidzDataXLSX;
 window.openTahfidzPengasuhView = openTahfidzPengasuhView;
 window.deleteTahfidzHalaqahConfirm = deleteTahfidzHalaqahConfirm;
 window.openPlottingSantri = openPlottingSantri;

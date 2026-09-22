@@ -51,6 +51,9 @@
     <!-- Google Sign-In SDK -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
+    <!-- SheetJS (Excel .xlsx Export & Read) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
     <!-- Compiled & Minified Tailwind CSS -->
     <link rel="stylesheet" href="css/styles.min.css">
 
@@ -6746,11 +6749,11 @@
                                             <i id="btn-refresh-tahfidz-icon" class="fa-solid fa-arrows-rotate text-xs"></i>
                                             <span class="hidden sm:inline">Refresh</span>
                                         </button>
-                                        <button type="button" onclick="exportTahfidzDataCSV()"
+                                        <button type="button" onclick="exportTahfidzDataXLSX()"
                                             class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl text-[11px] font-bold transition flex items-center space-x-1 border border-slate-200 dark:border-[#283a4e] active:scale-95"
-                                            title="Ekspor Data CSV">
-                                            <i class="fa-solid fa-file-export text-xs"></i>
-                                            <span class="hidden sm:inline">Ekspor</span>
+                                            title="Ekspor Data Excel (.xlsx)">
+                                            <i class="fa-solid fa-file-excel text-emerald-600 text-xs"></i>
+                                            <span class="hidden sm:inline">Ekspor Excel</span>
                                         </button>
                                         <button type="button" onclick="printTahfidzRekap()"
                                             class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl text-[11px] font-bold transition flex items-center space-x-1 border border-slate-200 dark:border-[#283a4e] active:scale-95"

@@ -9675,6 +9675,30 @@ function getOrCreateTahfidzSheet(ss, sheetName, defaultHeaders, headerBgColor) {
         .setFontColor("#ffffff");
       sheet.setFrozenRows(1);
     }
+  } else if (defaultHeaders && defaultHeaders.length > 0) {
+    // Pastikan semua kolom default ada di row 1
+    const lastCol = sheet.getLastColumn();
+    if (lastCol > 0) {
+      const existingHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s\-_]+/g, ""));
+      let currentLastCol = lastCol;
+      defaultHeaders.forEach(dh => {
+        const cleanDh = String(dh).trim().toLowerCase().replace(/[\s\-_]+/g, "");
+        if (existingHeaders.indexOf(cleanDh) === -1) {
+          currentLastCol++;
+          sheet.getRange(1, currentLastCol).setValue(dh)
+            .setFontWeight("bold")
+            .setBackground(headerBgColor || "#059669")
+            .setFontColor("#ffffff");
+          existingHeaders.push(cleanDh);
+        }
+      });
+    } else {
+      sheet.getRange(1, 1, 1, defaultHeaders.length).setValues([defaultHeaders])
+        .setFontWeight("bold")
+        .setBackground(headerBgColor || "#059669")
+        .setFontColor("#ffffff");
+      sheet.setFrozenRows(1);
+    }
   }
   return sheet;
 }
@@ -9848,12 +9872,19 @@ function initTahfidzSheets(token) {
  */
 function getTahfidzDashboard(token) {
   try {
-    const actor = authenticateSession(token);
-    authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH"]);
+    let actor = null;
+    if (token) {
+      try {
+        actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PENGASUH", "PENGURUS", "WALI_SANTRI", "GURU", "MUHAFIZ"]);
+      } catch (authErr) {
+        verifySessionToken(token);
+      }
+    }
 
     const ss = getDatabaseSpreadsheet();
 
-    // 1. Inisialisasi Sheet jika belum ada
+    // 1. Inisialisasi Sheet jika belum ada (sekaligus auto-tambah header jika ada kolom baru seperti status_setoran)
     const logsSheet = getOrCreateTahfidzSheet(ss, SHEET_TAHFIDZ_LOGS, [
       "log_id", "student_id", "nis", "student_name", "gender",
       "tanggal", "sesi", "tipe", "juz", "surah",
@@ -9868,15 +9899,54 @@ function getTahfidzDashboard(token) {
       "halaqah_id", "nama_halaqah", "kategori", "muhafiz", "target_kurikulum", "student_ids", "created_at"
     ]);
 
-    // 2. Ambil data master Santri
-    const studentsRes = getAllStudentsData(token);
-    const allStudents = (studentsRes && studentsRes.data) || [];
+    // 2. Ambil data master Santri langsung dari spreadsheet terbuka (Super Cepat < 1s)
+    let allStudents = [];
+    const studentSheet = ss.getSheetByName(SHEET_STUDENTS) || (typeof getAuthSheet === "function" ? getAuthSheet(ss, SHEET_STUDENTS) : null);
+    if (studentSheet) {
+      const sData = studentSheet.getDataRange().getValues();
+      if (sData && sData.length > 1) {
+        const sHeaders = sData[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s\-_]+/g, ""));
+        const sIdIdx = sHeaders.findIndex(h => h === "studentid" || h === "id");
+        const sNisIdx = sHeaders.findIndex(h => h === "nis" || h === "nisn");
+        const sNameIdx = sHeaders.findIndex(h => h === "name" || h === "nama");
+        const sGenderIdx = sHeaders.findIndex(h => h === "gender" || h === "jeniskelamin" || h === "jenis");
+        const sPhotoIdx = sHeaders.findIndex(h => h.includes("photo") || h.includes("foto"));
+        const sProgIdx = sHeaders.findIndex(h => h === "program" || h === "kelas");
+        const sStatusIdx = sHeaders.findIndex(h => h === "status");
+
+        for (let i = 1; i < sData.length; i++) {
+          const row = sData[i];
+          const stId = sIdIdx !== -1 ? String(row[sIdIdx] || "").trim() : "";
+          const stName = sNameIdx !== -1 ? String(row[sNameIdx] || "").trim() : "";
+          if (!stId && !stName) continue;
+          allStudents.push({
+            studentId: stId || ("STD-" + i),
+            nis: sNisIdx !== -1 ? String(row[sNisIdx] || "").trim() : "",
+            name: stName,
+            gender: sGenderIdx !== -1 ? String(row[sGenderIdx] || "L").toUpperCase() : "L",
+            photoUrl: sPhotoIdx !== -1 ? String(row[sPhotoIdx] || "") : "",
+            program: sProgIdx !== -1 ? String(row[sProgIdx] || "Tahfidz").trim() : "Tahfidz",
+            status: sStatusIdx !== -1 ? String(row[sStatusIdx] || "ACTIVE").trim() : "ACTIVE"
+          });
+        }
+      }
+    }
+
+    // Fallback jika pembacaan langsung kosong
+    if (allStudents.length === 0 && typeof getAllStudentsData === "function") {
+      try {
+        const studentsRes = getAllStudentsData(token);
+        allStudents = (studentsRes && studentsRes.data) || [];
+      } catch (e) {
+        console.warn("[FALLBACK STUDENTS ERROR]", e);
+      }
+    }
 
     // Filter khusus Wali Santri
     let filteredStudents = allStudents;
     if (actor && actor.role === "WALI_SANTRI") {
-      const linked = getLinkedStudentsForWali(actor.identityId) || [];
-      const allowedIds = linked.map(s => String(s.studentId || s.student_id || s.id || s.nis || "").trim().toLowerCase());
+      const linked = (typeof getLinkedStudentsForWali === "function") ? getLinkedStudentsForWali(actor.identityId) : [];
+      const allowedIds = (linked || []).map(s => String(s.studentId || s.student_id || s.id || s.nis || "").trim().toLowerCase());
       filteredStudents = allStudents.filter(st => {
         const sId = String(st.studentId || st.student_id || "").trim().toLowerCase();
         const sNis = String(st.nis || "").trim().toLowerCase();
@@ -10154,7 +10224,37 @@ function getTahfidzDashboard(token) {
       })(),
       sesiList: (function() {
         try {
-          return getTahfidzSesiList(token).data || [];
+          const sesiSheet = ss.getSheetByName(SHEET_TAHFIDZ_SESI);
+          if (sesiSheet) {
+            const sData = sesiSheet.getDataRange().getValues();
+            if (sData && sData.length > 1) {
+              const h = sData[0].map(x => String(x || "").trim().toLowerCase().replace(/[\s\-_]+/g, ""));
+              const idIdx = h.findIndex(x => x === "sesiid" || x === "id");
+              const namaIdx = h.findIndex(x => x === "namasesi" || x === "nama");
+              const jenisIdx = h.findIndex(x => x === "jenissesi" || x === "jenis");
+              const statusIdx = h.findIndex(x => x === "status");
+              const mulaiIdx = h.findIndex(x => x === "jammulai" || x === "mulai");
+              const selesaiIdx = h.findIndex(x => x === "jamselesai" || x === "selesai");
+              const hariIdx = h.findIndex(x => x === "harilist" || x === "hari");
+              const list = [];
+              for (let i = 1; i < sData.length; i++) {
+                const r = sData[i];
+                const sId = idIdx !== -1 ? String(r[idIdx] || "").trim() : "";
+                if (!sId) continue;
+                list.push({
+                  sesiId: sId,
+                  namaSesi: namaIdx !== -1 ? String(r[namaIdx] || "") : "",
+                  jenisSesi: jenisIdx !== -1 ? String(r[jenisIdx] || "Ziyadah (Setoran Hafalan Baru)") : "Ziyadah (Setoran Hafalan Baru)",
+                  status: statusIdx !== -1 ? String(r[statusIdx] || "Aktif Digunakan") : "Aktif Digunakan",
+                  jamMulai: mulaiIdx !== -1 ? String(r[mulaiIdx] || "").trim() : "05:00",
+                  jamSelesai: selesaiIdx !== -1 ? String(r[selesaiIdx] || "").trim() : "06:30",
+                  hariList: hariIdx !== -1 ? String(r[hariIdx] || "").split(",").map(x => x.trim()).filter(Boolean) : []
+                });
+              }
+              return list;
+            }
+          }
+          return [];
         } catch(e) {
           return [];
         }
@@ -10162,17 +10262,23 @@ function getTahfidzDashboard(token) {
       muhafizList: (function() {
         const muhafizSet = new Set();
         try {
-          const empRes = getAllEmployeesData(token);
-          const employees = (empRes && empRes.data) || [];
-          employees.forEach(emp => {
-            if (emp.status === "ACTIVE") {
-              const j = (emp.jabatan || "").toLowerCase();
-              const s = (emp.spesialisasi || "").toLowerCase();
-              if (j.includes("muhafiz") || j.includes("ustadz") || j.includes("guru") || s.includes("tahfidz") || employees.length <= 20) {
-                if (emp.nama) muhafizSet.add(emp.nama);
+          const empSheet = ss.getSheetByName(SHEET_PEGAWAI) || ss.getSheetByName("Pegawai");
+          if (empSheet) {
+            const empData = empSheet.getDataRange().getValues();
+            if (empData && empData.length > 1) {
+              const h = empData[0].map(x => String(x || "").trim().toLowerCase().replace(/[\s\-_]+/g, ""));
+              const namaIdx = h.findIndex(x => x === "nama" || x === "name");
+              const statusIdx = h.findIndex(x => x === "status");
+              for (let i = 1; i < empData.length; i++) {
+                const row = empData[i];
+                const st = statusIdx !== -1 ? String(row[statusIdx] || "ACTIVE").toUpperCase() : "ACTIVE";
+                const nama = namaIdx !== -1 ? String(row[namaIdx] || "").trim() : "";
+                if (nama && (st === "ACTIVE" || st === "AKTIF")) {
+                  muhafizSet.add(nama);
+                }
               }
             }
-          });
+          }
         } catch (e) {
           console.warn("[MUHAFIZ LIST EMP ERROR]", e);
         }

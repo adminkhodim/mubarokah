@@ -110,6 +110,28 @@
                 }
             }
 
+            // Fallback ke direct Apps Script jika proxy Vercel mengembalikan error 5xx (misal 504 timeout)
+            if (!response.ok && (response.status >= 500 && response.status < 600) && targetUrl === proxyBase && WEB_APP_URL && WEB_APP_URL !== proxyBase) {
+                console.warn(`[apiPost] Proxy ${action} mengembalikan HTTP ${response.status}. Mencoba langsung ke Google Apps Script...`);
+                try {
+                    const fallbackRes = await fetch(WEB_APP_URL, {
+                        method: "POST",
+                        redirect: "follow",
+                        credentials: "omit",
+                        headers: {
+                            "Content-Type": "text/plain;charset=utf-8",
+                            "Accept": "application/json"
+                        },
+                        body: JSON.stringify(bodyPayload)
+                    });
+                    if (fallbackRes.ok) {
+                        return await fallbackRes.json();
+                    }
+                } catch (fbErr) {
+                    console.warn(`[apiPost] Fallback direct Apps Script juga gagal:`, fbErr);
+                }
+            }
+
             if (!response.ok) {
                 // Penanganan khusus Google Apps Script macros/echo:
                 // Saat browser membuka Google Apps Script, redirect ke script.googleusercontent.com/macros/echo
