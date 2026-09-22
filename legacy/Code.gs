@@ -12699,6 +12699,108 @@ function getOrCreateSoroganSheet(ss, sheetName, headers, bgHeaderColor) {
   return sheet;
 }
 
+/**
+ * Normalisasi dan deteksi indeks kolom tab Sorogan_Halaqah secara tangguh.
+ * Mengadopsi standar susunan kolom Tahfidz_Halaqah:
+ * [halaqah_id, nama_halaqah, kategori, muallim, target_kurikulum, student_ids, created_at]
+ */
+function getSoroganHalaqahColumnIndexes(headerRow) {
+  if (!headerRow || !headerRow.length) return { id: -1, nama: -1, kategori: -1, muallim: -1, target: -1, studentIds: -1, createdAt: -1 };
+  const normalized = headerRow.map(x => String(x || "").trim().toLowerCase().replace(/[\s\-_]+/g, ""));
+  const find = (keywords) => {
+    for (let i = 0; i < keywords.length; i++) {
+      const cleanK = keywords[i].replace(/[\s\-_]+/g, "");
+      const idx = normalized.indexOf(cleanK);
+      if (idx !== -1) return idx;
+    }
+    return -1;
+  };
+  return {
+    id: find(["halaqah_id", "halaqahid", "id_halaqah", "idhalaqah", "id", "kode_halaqah", "kode"]),
+    nama: find(["nama_halaqah", "namahalaqah", "nama", "halaqah", "nama_kelompok", "kelompok"]),
+    kategori: find(["kategori", "kategori_program", "kategoriprogram", "category", "program"]),
+    muallim: find(["muallim", "muhafiz", "muhafidz", "pembina", "ustadz", "guru"]),
+    target: find(["target_kurikulum", "targetkurikulum", "target", "kurikulum", "jadwal_sesi", "jadwalsesi", "jadwal", "deskripsi"]),
+    studentIds: find(["student_ids", "studentids", "anggota", "santri_ids", "santri", "siswa"]),
+    createdAt: find(["created_at", "createdat", "tanggal", "waktu"])
+  };
+}
+
+/**
+ * Otomatis migrasi header & susunan data sheet Sorogan_Halaqah ke format standar Tahfidz_Halaqah
+ * [halaqah_id, nama_halaqah, kategori, muallim, target_kurikulum, student_ids, created_at]
+ * Non-destruktif: tidak menghilangkan data halaqah yang sudah ada.
+ */
+function migrateSoroganHalaqahSheetIfNeeded(sheet) {
+  if (!sheet) return;
+  const lastCol = sheet.getLastColumn();
+  if (lastCol === 0) return;
+
+  const targetHeaders = ["halaqah_id", "nama_halaqah", "kategori", "muallim", "target_kurikulum", "student_ids", "created_at"];
+  const currentHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h || "").trim());
+
+  // Cek apakah sudah sesuai target
+  let isMatch = true;
+  for (let i = 0; i < targetHeaders.length; i++) {
+    if (!currentHeaders[i] || currentHeaders[i].toLowerCase() !== targetHeaders[i].toLowerCase()) {
+      isMatch = false;
+      break;
+    }
+  }
+  if (isMatch) return;
+
+  // Baca indeks lama
+  const oldColMap = getSoroganHalaqahColumnIndexes(currentHeaders);
+  const lastRow = sheet.getLastRow();
+  const newRows = [];
+
+  if (lastRow > 1) {
+    const dataRange = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+    for (let r = 0; r < dataRange.length; r++) {
+      const row = dataRange[r];
+      const hId = oldColMap.id !== -1 ? String(row[oldColMap.id] || "").trim() : "";
+      const hNama = oldColMap.nama !== -1 ? String(row[oldColMap.nama] || "").trim() : "";
+      if (!hId && !hNama) continue;
+
+      const hKat = (oldColMap.kategori !== -1 && row[oldColMap.kategori]) ? String(row[oldColMap.kategori]).trim() : "Pesantren Reguler Putra Putri";
+      const hMuallim = oldColMap.muallim !== -1 ? String(row[oldColMap.muallim] || "").trim() : "";
+      const hTarget = oldColMap.target !== -1 ? String(row[oldColMap.target] || "").trim() : "Sorogan Binnazhar Mushaf Pojok 30 Juz";
+      
+      let rawSids = oldColMap.studentIds !== -1 ? row[oldColMap.studentIds] : "";
+      let sidsStr = "";
+      if (typeof rawSids === "string") {
+        if (rawSids.trim().startsWith("[")) {
+          try {
+            const parsed = JSON.parse(rawSids);
+            sidsStr = Array.isArray(parsed) ? parsed.join(",") : rawSids;
+          } catch (e) {
+            sidsStr = rawSids;
+          }
+        } else {
+          sidsStr = rawSids;
+        }
+      } else if (Array.isArray(rawSids)) {
+        sidsStr = rawSids.join(",");
+      }
+
+      const hCreated = (oldColMap.createdAt !== -1 && row[oldColMap.createdAt]) ? row[oldColMap.createdAt] : new Date().toISOString();
+      newRows.push([hId, hNama, hKat, hMuallim, hTarget, sidsStr, hCreated]);
+    }
+  }
+
+  // Bersihkan dan tulis ulang susunan kolom persis format Tahfidz_Halaqah
+  sheet.clear();
+  sheet.getRange(1, 1, 1, targetHeaders.length).setValues([targetHeaders])
+    .setFontWeight("bold")
+    .setBackground("#4338ca")
+    .setFontColor("#ffffff");
+  sheet.setFrozenRows(1);
+
+  if (newRows.length > 0) {
+    sheet.getRange(2, 1, newRows.length, targetHeaders.length).setValues(newRows);
+  }
+}
+
 function initSoroganSheets(token) {
   try {
     if (token) {
@@ -12714,7 +12816,7 @@ function initSoroganSheets(token) {
 
     const headersLogs = ["log_id", "student_id", "nis", "student_name", "gender", "tanggal", "sesi", "juz", "halaman_list", "total_halaman", "status_setoran", "nilai", "muallim", "catatan", "created_at"];
     const headersCapaian = ["student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_khatam", "status_terakhir", "halaqah_id", "nama_halaqah", "muallim_pengampu", "updated_at"];
-    const headersHalaqah = ["halaqah_id", "nama_halaqah", "muallim", "jadwal_sesi", "student_ids", "kategori_program", "created_at"];
+    const headersHalaqah = ["halaqah_id", "nama_halaqah", "kategori", "muallim", "target_kurikulum", "student_ids", "created_at"];
     const headersTarget = ["student_id", "target_juz", "target_halaman_sesi", "target_halaman_pekan", "updated_at"];
     const headersSesi = ["sesi_id", "nama_sesi", "jenis_sesi", "status", "jam_mulai", "jam_selesai", "hari_list", "created_at"];
 
@@ -12736,6 +12838,9 @@ function initSoroganSheets(token) {
         s.setFrozenRows(1);
         created.push(item.name);
       } else {
+        if (item.name === SHEET_SOROGAN_HALAQAH) {
+          migrateSoroganHalaqahSheetIfNeeded(s);
+        }
         existing.push(item.name);
       }
     });
@@ -12766,8 +12871,8 @@ function initSoroganSheets(token) {
         }
       }
       const defaultHalaqah = [
-        ["SRG-HLQ-01", "Halaqah Sorogan Putra (Mushaf Besar)", ustadz, "Ba'da Subuh & Maghrib", "[]", "Pesantren Reguler Putra Putri", nowIso],
-        ["SRG-HLQ-02", "Halaqah Sorogan Putri (Mushaf Besar)", ustadzah, "Ba'da Ashar & Isya'", "[]", "Pesantren Reguler Putra Putri", nowIso]
+        ["SRG-HLQ-01", "Halaqah Sorogan Putra (Mushaf Besar)", "Pesantren Reguler Putra Putri", ustadz, "Sorogan Binnazhar Mushaf Pojok 30 Juz", "", nowIso],
+        ["SRG-HLQ-02", "Halaqah Sorogan Putri (Mushaf Besar)", "Pesantren Reguler Putra Putri", ustadzah, "Sorogan Binnazhar Mushaf Pojok 30 Juz", "", nowIso]
       ];
       hSheet.getRange(2, 1, defaultHalaqah.length, headersHalaqah.length).setValues(defaultHalaqah);
     }
@@ -12812,7 +12917,7 @@ function getSoroganDashboard(token) {
     // 0. Auto-ensure SEMUA sheet Sorogan Al-Qur'an tersedia di database
     const headersLogs = ["log_id", "student_id", "nis", "student_name", "gender", "tanggal", "sesi", "juz", "halaman_list", "total_halaman", "status_setoran", "nilai", "muallim", "catatan", "created_at"];
     const headersCapaian = ["student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_khatam", "status_terakhir", "halaqah_id", "nama_halaqah", "muallim_pengampu", "updated_at"];
-    const headersHalaqah = ["halaqah_id", "nama_halaqah", "muallim", "jadwal_sesi", "student_ids", "kategori_program", "created_at"];
+    const headersHalaqah = ["halaqah_id", "nama_halaqah", "kategori", "muallim", "target_kurikulum", "student_ids", "created_at"];
     const headersTarget = ["student_id", "target_juz", "target_halaman_sesi", "target_halaman_pekan", "updated_at"];
     const headersSesi = ["sesi_id", "nama_sesi", "jenis_sesi", "status", "jam_mulai", "jam_selesai", "hari_list", "created_at"];
 
@@ -12823,14 +12928,8 @@ function getSoroganDashboard(token) {
     const targetSheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_TARGET, headersTarget, "#f59e0b");
     const sesiSheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_SESI, headersSesi, "#0284c7");
 
-    // Auto-migrate kolom kategori_program pada Sorogan_Halaqah jika belum ada
-    if (halaqahSheet.getLastColumn() > 0) {
-      const hRow1 = halaqahSheet.getRange(1, 1, 1, halaqahSheet.getLastColumn()).getValues()[0];
-      const hasKat = hRow1.some(h => String(h || "").trim().toLowerCase().includes("kategori"));
-      if (!hasKat) {
-        halaqahSheet.getRange(1, halaqahSheet.getLastColumn() + 1).setValue("kategori_program").setFontWeight("bold").setBackground("#4338ca").setFontColor("#ffffff");
-      }
-    }
+    // Otomatis migrasi struktur kolom Sorogan_Halaqah agar persis Tahfidz_Halaqah
+    migrateSoroganHalaqahSheetIfNeeded(halaqahSheet);
 
     const nowIso = new Date().toISOString();
 
@@ -12887,8 +12986,8 @@ function getSoroganDashboard(token) {
     // Auto-seed default Halaqah jika sheet baru dibuat / kosong
     if (halaqahSheet.getLastRow() < 2) {
       const defaultHalaqah = [
-        ["SRG-HLQ-01", "Halaqah Sorogan Putra (Mushaf Besar)", defaultTeacher1, "Ba'da Subuh & Maghrib", "[]", defaultProg1, nowIso],
-        ["SRG-HLQ-02", "Halaqah Sorogan Putri (Mushaf Besar)", defaultTeacher2, "Ba'da Ashar & Isya'", "[]", defaultProg2, nowIso]
+        ["SRG-HLQ-01", "Halaqah Sorogan Putra (Mushaf Besar)", defaultProg1, defaultTeacher1, "Sorogan Binnazhar Mushaf Pojok 30 Juz", "", nowIso],
+        ["SRG-HLQ-02", "Halaqah Sorogan Putri (Mushaf Besar)", defaultProg2, defaultTeacher2, "Sorogan Binnazhar Mushaf Pojok 30 Juz", "", nowIso]
       ];
       halaqahSheet.getRange(2, 1, defaultHalaqah.length, headersHalaqah.length).setValues(defaultHalaqah);
     }
@@ -12958,11 +13057,7 @@ function getSoroganDashboard(token) {
     if (actor && actor.role === "WALI_SANTRI") {
       const linked = (typeof getLinkedStudentsForWali === "function") ? getLinkedStudentsForWali(actor.identityId) : [];
       const allowedIds = (linked || []).map(s => String(s.studentId || s.student_id || s.id || s.nis || "").trim().toLowerCase());
-      students = students.filter(st => {
-        const sId = String(st.studentId || "").toLowerCase();
-        const sNis = String(st.nis || "").toLowerCase();
-        return allowedIds.includes(sId) || allowedIds.includes(sNis);
-      });
+      students = students.filter(s => allowedIds.includes(String(s.studentId).toLowerCase()) || allowedIds.includes(String(s.nis).toLowerCase()));
     }
 
     // 2. Ambil data Capaian Sorogan
@@ -12997,31 +13092,43 @@ function getSoroganDashboard(token) {
       }
     }
 
-    // 3. Ambil data Halaqah Sorogan
+    // 3. Ambil data Halaqah Sorogan (Struktur Kolom Mengadopsi Tahfidz_Halaqah)
     const halaqahs = [];
     const hData = halaqahSheet.getDataRange().getValues();
     if (hData.length >= 2) {
-      const hHead = hData[0].map(h => String(h || "").trim().toLowerCase());
-      const idIdx = hHead.indexOf("halaqah_id");
-      const nameIdx = hHead.indexOf("nama_halaqah");
-      const mIdx = hHead.indexOf("muallim");
-      const jIdx = hHead.indexOf("jadwal_sesi");
-      const sidsIdx = hHead.indexOf("student_ids");
-      const katIdx = hHead.indexOf("kategori_program") !== -1 ? hHead.indexOf("kategori_program") : hHead.indexOf("kategori");
+      const colMap = getSoroganHalaqahColumnIndexes(hData[0]);
 
       for (let i = 1; i < hData.length; i++) {
+        const row = hData[i];
+        const hId = colMap.id !== -1 ? String(row[colMap.id] || "").trim() : "";
+        const hNama = colMap.nama !== -1 ? String(row[colMap.nama] || "").trim() : "";
+        if (!hId && !hNama) continue;
+
+        const rawSids = colMap.studentIds !== -1 ? row[colMap.studentIds] : "";
         let sids = [];
-        try { sids = JSON.parse(String(hData[i][sidsIdx] || "[]")); } catch (e) { sids = []; }
-        const mName = String(hData[i][mIdx] || "").trim();
-        const kName = katIdx !== -1 ? String(hData[i][katIdx] || "").trim() : "";
+        if (typeof rawSids === "string") {
+          if (rawSids.trim().startsWith("[")) {
+            try { sids = JSON.parse(rawSids); } catch (e) { sids = []; }
+          } else {
+            sids = rawSids.split(",").map(s => s.trim()).filter(Boolean);
+          }
+        } else if (Array.isArray(rawSids)) {
+          sids = rawSids;
+        }
+
+        const mName = colMap.muallim !== -1 ? String(row[colMap.muallim] || "").trim() : "";
+        const kName = colMap.kategori !== -1 ? String(row[colMap.kategori] || "").trim() : "";
+        const targetDesc = colMap.target !== -1 ? String(row[colMap.target] || "").trim() : "";
+
         halaqahs.push({
-          halaqahId: String(hData[i][idIdx] || "").trim(),
-          namaHalaqah: String(hData[i][nameIdx] || "").trim(),
+          halaqahId: hId,
+          namaHalaqah: hNama,
           muallim: mName,
           muallimPengampu: mName,
           kategori: kName,
           kategoriProgram: kName,
-          jadwalSesi: String(hData[i][jIdx] || "").trim(),
+          targetKurikulum: targetDesc,
+          jadwalSesi: targetDesc,
           studentIds: sids
         });
       }
@@ -13334,33 +13441,46 @@ function saveSoroganCapaian(data, token) {
 function getSoroganHalaqahList(token) {
   try {
     const ss = getDatabaseSpreadsheet();
-    const headersHalaqah = ["halaqah_id", "nama_halaqah", "muallim", "jadwal_sesi", "student_ids", "kategori_program", "created_at"];
+    const headersHalaqah = ["halaqah_id", "nama_halaqah", "kategori", "muallim", "target_kurikulum", "student_ids", "created_at"];
     const sheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_HALAQAH, headersHalaqah, "#4338ca");
+    migrateSoroganHalaqahSheetIfNeeded(sheet);
     const data = sheet.getDataRange().getValues();
     const list = [];
 
     if (data.length >= 2) {
-      const head = data[0].map(h => String(h || "").trim().toLowerCase());
-      const idIdx = head.indexOf("halaqah_id");
-      const nameIdx = head.indexOf("nama_halaqah");
-      const mIdx = head.indexOf("muallim");
-      const jIdx = head.indexOf("jadwal_sesi");
-      const sidsIdx = head.indexOf("student_ids");
-      const katIdx = head.indexOf("kategori_program") !== -1 ? head.indexOf("kategori_program") : head.indexOf("kategori");
+      const colMap = getSoroganHalaqahColumnIndexes(data[0]);
 
       for (let i = 1; i < data.length; i++) {
+        const row = data[i];
+        const hId = colMap.id !== -1 ? String(row[colMap.id] || "").trim() : "";
+        const hNama = colMap.nama !== -1 ? String(row[colMap.nama] || "").trim() : "";
+        if (!hId && !hNama) continue;
+
+        const rawSids = colMap.studentIds !== -1 ? row[colMap.studentIds] : "";
         let sids = [];
-        try { sids = JSON.parse(String(data[i][sidsIdx] || "[]")); } catch (e) { sids = []; }
-        const mName = String(data[i][mIdx] || "").trim();
-        const kName = katIdx !== -1 ? String(data[i][katIdx] || "").trim() : "";
+        if (typeof rawSids === "string") {
+          if (rawSids.trim().startsWith("[")) {
+            try { sids = JSON.parse(rawSids); } catch (e) { sids = []; }
+          } else {
+            sids = rawSids.split(",").map(s => s.trim()).filter(Boolean);
+          }
+        } else if (Array.isArray(rawSids)) {
+          sids = rawSids;
+        }
+
+        const mName = colMap.muallim !== -1 ? String(row[colMap.muallim] || "").trim() : "";
+        const kName = colMap.kategori !== -1 ? String(row[colMap.kategori] || "").trim() : "";
+        const targetDesc = colMap.target !== -1 ? String(row[colMap.target] || "").trim() : "";
+
         list.push({
-          halaqahId: String(data[i][idIdx] || "").trim(),
-          namaHalaqah: String(data[i][nameIdx] || "").trim(),
+          halaqahId: hId,
+          namaHalaqah: hNama,
           muallim: mName,
           muallimPengampu: mName,
           kategori: kName,
           kategoriProgram: kName,
-          jadwalSesi: String(data[i][jIdx] || "").trim(),
+          targetKurikulum: targetDesc,
+          jadwalSesi: targetDesc,
           studentIds: sids
         });
       }
@@ -13420,61 +13540,86 @@ function getSoroganHalaqahList(token) {
 function saveSoroganHalaqah(data, token) {
   return withScriptLock(() => {
     try {
-      const namaHalaqah = String(data.namaHalaqah || data.nama_halaqah || "").trim();
-      const muallim = String(data.muallim || data.muallimPengampu || "").trim();
-      const jadwal = String(data.jadwalSesi || data.jadwal || "Ba'da Subuh & Maghrib").trim();
-      const kategori = String(data.kategori || data.kategoriProgram || data.kategori_program || "").trim();
-      const studentIds = Array.isArray(data.studentIds) ? data.studentIds : [];
-      let halaqahId = String(data.halaqahId || data.id || "").trim();
-      const nowIso = new Date().toISOString();
-
-      if (!namaHalaqah) throw new Error("Nama halaqah sorogan wajib diisi.");
-
-      const ss = getDatabaseSpreadsheet();
-      const headersHalaqah = ["halaqah_id", "nama_halaqah", "muallim", "jadwal_sesi", "student_ids", "kategori_program", "created_at"];
-      const sheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_HALAQAH, headersHalaqah, "#4338ca");
-
-      const hData = sheet.getDataRange().getValues();
-      let hHeaders = (hData.length > 0) ? hData[0].map(h => String(h || "").trim().toLowerCase()) : [];
-      let katColIdx = hHeaders.indexOf("kategori_program") !== -1 ? hHeaders.indexOf("kategori_program") : hHeaders.indexOf("kategori");
-      if (katColIdx === -1 && hData.length > 0) {
-        const newCol = sheet.getLastColumn() + 1;
-        sheet.getRange(1, newCol).setValue("kategori_program").setFontWeight("bold").setBackground("#4338ca").setFontColor("#ffffff");
-        katColIdx = newCol - 1;
+      if (token) {
+        try {
+          const actor = authenticateSession(token);
+          authorizeRole(actor, ["ADMIN", "EDITOR"]);
+        } catch (authErr) {
+          verifySessionToken(token);
+        }
       }
 
-      let rowIndex = -1;
-      if (halaqahId && hData.length >= 2) {
-        const idIdx = hHeaders.indexOf("halaqah_id");
-        for (let i = 1; i < hData.length; i++) {
-          if (String(hData[i][idIdx] || "").trim() === halaqahId) {
-            rowIndex = i + 1;
+      const nama = String(data.namaHalaqah || data.nama_halaqah || data.nama || "").trim();
+      if (!nama) throw new Error("Nama halaqah sorogan wajib diisi.");
+
+      const ss = getDatabaseSpreadsheet();
+      const headersHalaqah = ["halaqah_id", "nama_halaqah", "kategori", "muallim", "target_kurikulum", "student_ids", "created_at"];
+      const sheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_HALAQAH, headersHalaqah, "#4338ca");
+      migrateSoroganHalaqahSheetIfNeeded(sheet);
+
+      let halaqahId = String(data.halaqahId || data.halaqah_id || data.id || "").trim();
+      if (!halaqahId) {
+        halaqahId = "SRG-HLQ-" + Utilities.formatDate(new Date(), "GMT+7", "yyyyMMdd-HHmmss") + "-" + Math.floor(100 + Math.random() * 900);
+      }
+
+      const kategori = String(data.kategori || data.kategoriProgram || data.kategori_program || "Pesantren Reguler Putra Putri").trim();
+      const muallim = String(data.muallim || data.muallimPengampu || "").trim();
+      const targetKurikulum = String(data.targetKurikulum || data.target_kurikulum || data.targetDeskripsi || data.jadwalSesi || data.jadwal || "Sorogan Binnazhar Mushaf Pojok 30 Juz").trim();
+
+      let rawStudents = data.studentIds || data.student_ids || [];
+      if (typeof rawStudents === "string") {
+        try {
+          if (rawStudents.startsWith("[")) {
+            rawStudents = JSON.parse(rawStudents);
+          } else {
+            rawStudents = rawStudents.split(",").map(s => s.trim()).filter(Boolean);
+          }
+        } catch (e) {
+          rawStudents = rawStudents.split(",").map(s => s.trim()).filter(Boolean);
+        }
+      }
+      const studentIdsStr = Array.isArray(rawStudents) ? rawStudents.join(",") : String(rawStudents || "");
+      const createdAt = new Date().toISOString();
+
+      const sheetData = sheet.getDataRange().getValues();
+      const colMap = getSoroganHalaqahColumnIndexes(sheetData[0]);
+
+      let foundRow = -1;
+      if (colMap.id !== -1) {
+        for (let i = 1; i < sheetData.length; i++) {
+          if (String(sheetData[i][colMap.id] || "").trim() === halaqahId) {
+            foundRow = i + 1;
             break;
           }
         }
       }
 
-      if (rowIndex !== -1) {
-        sheet.getRange(rowIndex, 2).setValue(namaHalaqah);
-        sheet.getRange(rowIndex, 3).setValue(muallim);
-        sheet.getRange(rowIndex, 4).setValue(jadwal);
-        sheet.getRange(rowIndex, 5).setValue(JSON.stringify(studentIds));
-        if (katColIdx !== -1) {
-          sheet.getRange(rowIndex, katColIdx + 1).setValue(kategori);
+      const headersCount = Math.max(sheetData[0].length, 7);
+      const rowValues = new Array(headersCount).fill("");
+
+      if (colMap.id !== -1) rowValues[colMap.id] = halaqahId;
+      if (colMap.nama !== -1) rowValues[colMap.nama] = nama;
+      if (colMap.kategori !== -1) rowValues[colMap.kategori] = kategori;
+      if (colMap.muallim !== -1) rowValues[colMap.muallim] = muallim;
+      if (colMap.target !== -1) rowValues[colMap.target] = targetKurikulum;
+      if (colMap.studentIds !== -1) rowValues[colMap.studentIds] = studentIdsStr;
+      if (colMap.createdAt !== -1) rowValues[colMap.createdAt] = createdAt;
+
+      if (foundRow > 0) {
+        if (colMap.createdAt !== -1 && sheetData[foundRow - 1][colMap.createdAt]) {
+          rowValues[colMap.createdAt] = sheetData[foundRow - 1][colMap.createdAt];
         }
+        sheet.getRange(foundRow, 1, 1, rowValues.length).setValues([rowValues]);
       } else {
-        if (!halaqahId) halaqahId = "SRG-HLQ-" + Utilities.getUuid().replace(/-/g, "").substring(0, 8).toUpperCase();
-        if (katColIdx !== -1) {
-          const rowVals = [halaqahId, namaHalaqah, muallim, jadwal, JSON.stringify(studentIds)];
-          rowVals[katColIdx] = kategori;
-          rowVals.push(nowIso);
-          sheet.appendRow(rowVals);
-        } else {
-          sheet.appendRow([halaqahId, namaHalaqah, muallim, jadwal, JSON.stringify(studentIds), kategori, nowIso]);
-        }
+        sheet.appendRow(rowValues);
       }
 
-      return { status: "success", success: true, message: `Halaqah ${namaHalaqah} berhasil disimpan.`, halaqahId: halaqahId };
+      return {
+        status: "success",
+        success: true,
+        halaqahId: halaqahId,
+        message: `Halaqah Sorogan ${nama} berhasil disimpan.`
+      };
     } catch (err) {
       return { status: "error", success: false, message: "Gagal menyimpan halaqah sorogan: " + err.message };
     }
@@ -13490,7 +13635,8 @@ function deleteSoroganHalaqah(halaqahId, token) {
       if (!sheet) throw new Error("Sheet Sorogan_Halaqah tidak ditemukan.");
 
       const data = sheet.getDataRange().getValues();
-      const idIdx = data[0].map(h => String(h).toLowerCase()).indexOf("halaqah_id");
+      const colMap = getSoroganHalaqahColumnIndexes(data[0]);
+      const idIdx = colMap.id !== -1 ? colMap.id : 0;
 
       for (let i = 1; i < data.length; i++) {
         if (String(data[i][idIdx] || "").trim() === String(halaqahId).trim()) {
@@ -13508,29 +13654,44 @@ function deleteSoroganHalaqah(halaqahId, token) {
 function saveSoroganPlotting(payload, token) {
   return withScriptLock(() => {
     try {
+      if (token) {
+        try {
+          const actor = authenticateSession(token);
+          authorizeRole(actor, ["ADMIN", "EDITOR"]);
+        } catch (authErr) {
+          verifySessionToken(token);
+        }
+      }
+
       const halaqahId = String(payload.halaqahId || payload.halaqah_id || "").trim();
       if (!halaqahId) throw new Error("ID Halaqah wajib disertakan.");
 
       let rawList = payload.studentIds || payload.student_ids || [];
       if (typeof rawList === "string") {
-        rawList = rawList.split(",");
+        if (rawList.trim().startsWith("[")) {
+          try { rawList = JSON.parse(rawList); } catch (e) { rawList = rawList.split(","); }
+        } else {
+          rawList = rawList.split(",");
+        }
       }
       const cleanStudentIds = Array.isArray(rawList) ? rawList.map(s => String(s).trim()).filter(Boolean) : [];
 
       const ss = getDatabaseSpreadsheet();
-      const sheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_HALAQAH, [
-        "halaqah_id", "nama_halaqah", "muallim", "jadwal_sesi", "student_ids", "created_at"
-      ], "#4338ca");
+      const headersHalaqah = ["halaqah_id", "nama_halaqah", "kategori", "muallim", "target_kurikulum", "student_ids", "created_at"];
+      const sheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_HALAQAH, headersHalaqah, "#4338ca");
+      migrateSoroganHalaqahSheetIfNeeded(sheet);
 
       const data = sheet.getDataRange().getValues();
       if (data.length <= 1) throw new Error("Data halaqah Sorogan tidak ditemukan.");
 
-      const idIdx = data[0].map(h => String(h).toLowerCase()).indexOf("halaqah_id");
-      const sidsIdx = data[0].map(h => String(h).toLowerCase()).indexOf("student_ids");
+      const colMap = getSoroganHalaqahColumnIndexes(data[0]);
+      if (colMap.id === -1 || colMap.studentIds === -1) {
+        throw new Error("Struktur kolom sheet Sorogan_Halaqah tidak valid.");
+      }
 
       let foundRow = -1;
       for (let i = 1; i < data.length; i++) {
-        if (String(data[i][idIdx] || "").trim() === halaqahId) {
+        if (String(data[i][colMap.id] || "").trim() === halaqahId) {
           foundRow = i + 1;
           break;
         }
@@ -13538,7 +13699,7 @@ function saveSoroganPlotting(payload, token) {
 
       if (foundRow <= 0) throw new Error("Halaqah Sorogan ID '" + halaqahId + "' tidak ditemukan.");
 
-      sheet.getRange(foundRow, sidsIdx + 1).setValue(JSON.stringify(cleanStudentIds));
+      sheet.getRange(foundRow, colMap.studentIds + 1).setValue(cleanStudentIds.join(","));
 
       return {
         status: "success",

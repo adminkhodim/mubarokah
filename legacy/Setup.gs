@@ -66,7 +66,7 @@ var AUTHORITATIVE_SCHEMAS_ = {
   "TPQ_Kelas": ["kelas_id", "nama_kelas", "ustadz_pengampu", "jadwal_sesi", "student_ids", "created_at"],
   "Sorogan_Logs": ["log_id", "student_id", "nis", "student_name", "gender", "tanggal", "sesi", "juz", "halaman_list", "total_halaman", "status_setoran", "nilai", "muallim", "catatan", "created_at"],
   "Sorogan_Capaian": ["student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_khatam", "status_terakhir", "halaqah_id", "nama_halaqah", "muallim_pengampu", "updated_at"],
-  "Sorogan_Halaqah": ["halaqah_id", "nama_halaqah", "muallim", "jadwal_sesi", "student_ids", "created_at"]
+  "Sorogan_Halaqah": ["halaqah_id", "nama_halaqah", "kategori", "muallim", "target_kurikulum", "student_ids", "created_at"]
 };
 
 // ============================================================

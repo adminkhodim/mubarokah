@@ -853,7 +853,7 @@ function renderSoroganHalaqahCards() {
                 <div>
                     <h4 class="font-black text-sm text-slate-800 dark:text-slate-100">${escapeHtml(h.namaHalaqah)}</h4>
                     <span class="inline-block mt-1 px-2 py-0.5 rounded text-[9px] font-bold bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300">
-                        ${escapeHtml(h.kategori || 'Sorogan Binnazhar')}
+                        ${escapeHtml(h.kategori || h.kategoriProgram || 'Sorogan Binnazhar')}
                     </span>
                 </div>
                 <div class="flex items-center space-x-1.5">
@@ -868,10 +868,10 @@ function renderSoroganHalaqahCards() {
             <div class="space-y-1 text-xs text-slate-600 dark:text-slate-300">
                 <p class="flex items-center gap-1.5 truncate font-semibold">
                     <i class="fa-solid fa-user-tie text-sky-600"></i>
-                    <span>${escapeHtml(h.muallimPengampu || 'Mu\'allim Pengampu')}</span>
+                    <span>${escapeHtml(h.muallim || h.muallimPengampu || 'Mu\'allim Pengampu')}</span>
                 </p>
                 <p class="text-[10px] text-slate-400 truncate">
-                    <i class="fa-regular fa-clock mr-1"></i> ${escapeHtml(h.jadwalSesi || 'Pagi (Ba\'da Subuh)')}
+                    <i class="fa-solid fa-book-open mr-1"></i> ${escapeHtml(h.targetKurikulum || h.jadwalSesi || 'Sorogan Binnazhar Mushaf Pojok 30 Juz')}
                 </p>
             </div>
             <div class="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-[#283a4e] text-xs">
@@ -918,11 +918,12 @@ async function submitNewSoroganHalaqah(e) {
         const res = await apiPost("saveSoroganHalaqah", {
             token,
             namaHalaqah,
-            muallim,
-            muallimPengampu: muallim,
-            jadwalSesi: targetDeskripsi || "Pagi (Ba'da Subuh)",
             kategori,
             kategoriProgram: kategori,
+            muallim,
+            muallimPengampu: muallim,
+            targetKurikulum: targetDeskripsi || "Sorogan Binnazhar Mushaf Pojok 30 Juz",
+            jadwalSesi: targetDeskripsi || "Sorogan Binnazhar Mushaf Pojok 30 Juz",
             studentIds: []
         });
 
@@ -934,9 +935,12 @@ async function submitNewSoroganHalaqah(e) {
             const newH = {
                 halaqahId: res.halaqahId || ("HLQ-SRG-" + Date.now().toString().substring(8)),
                 namaHalaqah,
-                muallimPengampu: muallim,
                 kategori,
-                jadwalSesi: targetDeskripsi || "Pagi (Ba'da Subuh)",
+                kategoriProgram: kategori,
+                muallim,
+                muallimPengampu: muallim,
+                targetKurikulum: targetDeskripsi || "Sorogan Binnazhar Mushaf Pojok 30 Juz",
+                jadwalSesi: targetDeskripsi || "Sorogan Binnazhar Mushaf Pojok 30 Juz",
                 studentIds: []
             };
             ASNSorogan.data.halaqahs = ASNSorogan.data.halaqahs || [];
@@ -1045,8 +1049,8 @@ function onSelectPlottingSoroganHalaqah(halaqahId) {
 
     const muallimEl = document.getElementById('tab2-sorogan-plotting-muallim');
     const targetEl = document.getElementById('tab2-sorogan-plotting-target');
-    if (muallimEl) muallimEl.innerText = halaqah.muallimPengampu || 'Belum Ditunjuk';
-    if (targetEl) targetEl.innerText = halaqah.jadwalSesi || halaqah.kategori || 'Sorogan';
+    if (muallimEl) muallimEl.innerText = halaqah.muallim || halaqah.muallimPengampu || 'Belum Ditunjuk';
+    if (targetEl) targetEl.innerText = halaqah.targetKurikulum || halaqah.jadwalSesi || halaqah.kategori || 'Sorogan Binnazhar';
 
     renderSoroganPlottingLists();
 }
