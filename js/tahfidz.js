@@ -337,12 +337,16 @@ function filterTahfidzList() {
             (st.halaqah && st.halaqah.muhafiz && st.halaqah.muhafiz.includes(muh)) ||
             (st.setoranTerakhir && st.setoranTerakhir.muhafiz && st.setoranTerakhir.muhafiz.includes(muh));
 
-        // Status On-Track
+        // Status On-Track / Mengulang
         let matchStatus = true;
         if (status === 'ON_TRACK') {
             matchStatus = st.progress && st.progress.onTrackStatus && st.progress.onTrackStatus.startsWith('On-Track');
         } else if (status === 'BELUM_SETOR') {
             matchStatus = st.progress && st.progress.onTrackStatus && st.progress.onTrackStatus.includes('Belum Setor');
+        } else if (status === 'ULANG') {
+            const isRepeat = (st.setoranTerakhir && (st.setoranTerakhir.statusSetoran === 'ULANG' || st.setoranTerakhir.nilai === 'DHAIF')) ||
+                (st.progress && st.progress.onTrackStatus && st.progress.onTrackStatus.includes('Mengulang'));
+            matchStatus = Boolean(isRepeat);
         }
 
         return matchQ && matchKat && matchHal && matchMuh && matchStatus;
@@ -386,6 +390,7 @@ function renderTahfidzStudentTable() {
             const targetMBulan = st.target?.murajaahBulan || 40;
 
             const last = st.setoranTerakhir;
+            const isUlang = last && (last.statusSetoran === 'ULANG' || last.nilai === 'DHAIF');
             const currentJuz = st.progress?.currentJuz || 1;
             const percent = st.progress?.percent || 3;
             const onTrackStatus = st.progress?.onTrackStatus || 'Belum Setor';
@@ -457,11 +462,22 @@ function renderTahfidzStudentTable() {
                 <td class="px-3.5 py-2.5">
                     ${last ? `
                     <div class="space-y-1">
-                        <span class="inline-block px-2 py-0.5 rounded-full text-[9px] font-extrabold ${last.tipe === 'ZIYADAH' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300' : (last.tipe === 'TASMI' ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300')}">
-                            ${escapeHtml(last.tipe)}
-                        </span>
+                        <div class="flex items-center gap-1 flex-wrap">
+                            <span class="inline-block px-2 py-0.5 rounded-full text-[9px] font-extrabold ${last.tipe === 'ZIYADAH' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300' : (last.tipe === 'TASMI' ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300')}">
+                                ${escapeHtml(last.tipe)}
+                            </span>
+                            ${isUlang ? `
+                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-900">
+                                <i class="fa-solid fa-rotate-left text-[8px]"></i> Wajib Ulang
+                            </span>
+                            ` : `
+                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-900/40">
+                                <i class="fa-solid fa-check text-[8px]"></i> Lulus
+                            </span>
+                            `}
+                        </div>
                         <div class="text-[10px] font-bold text-slate-600 dark:text-slate-300">
-                            Nilai: <span class="text-emerald-600 font-extrabold">${last.nilai === 'MUMTAZ' ? 'A (Mumtaz)' : (last.nilai === 'JAYYID_JIDDAN' ? 'B+ (Jayyid)' : (last.nilai === 'JAYYID' ? 'B (Jayyid)' : 'C (Dha\'if)'))}</span>
+                            Nilai: <span class="${isUlang ? 'text-rose-600 font-extrabold' : 'text-emerald-600 font-extrabold'}">${last.nilai === 'MUMTAZ' ? 'A (Mumtaz)' : (last.nilai === 'JAYYID_JIDDAN' ? 'B+ (Jayyid)' : (last.nilai === 'JAYYID' ? 'B (Jayyid)' : 'C (Dha\'if)'))}</span>
                         </div>
                     </div>
                     ` : `<span class="text-[10px] text-slate-400">-</span>`}
@@ -509,6 +525,7 @@ function renderTahfidzStudentTable() {
             const initials = (st.name || 'Santri').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'SN';
             const halaqahName = st.halaqah?.namaHalaqah || st.program || 'Tahfidz Dewasa';
             const last = st.setoranTerakhir;
+            const isUlang = last && (last.statusSetoran === 'ULANG' || last.nilai === 'DHAIF');
             const currentJuz = st.progress?.currentJuz || 1;
             const percent = st.progress?.percent || 3;
             const targetZ = st.target?.ziyadahSesi || 1;
@@ -553,7 +570,7 @@ function renderTahfidzStudentTable() {
                 </div>
 
                 <div class="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-[#253447] text-[10px] text-slate-400">
-                    <span>${last ? `Terakhir: Juz ${last.juz} (${last.tipe})` : 'Belum setor'}</span>
+                    <span>${last ? `Terakhir: Juz ${last.juz} (${last.tipe}) ${isUlang ? '• <span class="text-rose-600 font-extrabold">Wajib Ulang</span>' : ''}` : 'Belum setor'}</span>
                     <button type="button" onclick="openTahfidzStudentDetail('${st.studentId}')" class="text-emerald-600 font-bold hover:underline">
                         Lihat Mutaba'ah &gt;
                     </button>
@@ -569,6 +586,88 @@ function renderTahfidzStudentTable() {
 // ====================================================================
 
 /**
+ * Atur keputusan status setoran (LANJUT vs ULANG)
+ */
+function setTahfidzStatusDecision(decision) {
+    ASNTahfidz.catatState.statusSetoran = decision;
+
+    const radioLanjut = document.getElementById('radio-status-lanjut');
+    const radioUlang = document.getElementById('radio-status-ulang');
+    const labelLanjut = document.getElementById('label-status-lanjut');
+    const labelUlang = document.getElementById('label-status-ulang');
+    const badgePreview = document.getElementById('tahfidz-status-badge-preview');
+    const hint = document.getElementById('tahfidz-status-hint');
+
+    if (decision === 'ULANG') {
+        if (radioUlang) radioUlang.checked = true;
+        if (radioLanjut) radioLanjut.checked = false;
+        if (labelUlang) {
+            labelUlang.className = "flex items-center justify-center gap-2 p-2.5 rounded-xl border-2 border-rose-500 bg-rose-50/90 dark:bg-rose-950/50 text-rose-800 dark:text-rose-200 cursor-pointer font-bold text-xs transition";
+        }
+        if (labelLanjut) {
+            labelLanjut.className = "flex items-center justify-center gap-2 p-2.5 rounded-xl border-2 border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-slate-600 dark:text-slate-400 cursor-pointer font-bold text-xs transition hover:border-emerald-300";
+        }
+        if (badgePreview) {
+            badgePreview.innerText = "Wajib Ulang (I'adah)";
+            badgePreview.className = "text-[9px] font-black px-2 py-0.5 rounded-md uppercase bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300";
+        }
+        if (hint) {
+            hint.innerHTML = `<span class="text-rose-600 dark:text-rose-400 font-semibold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Santri dinilai belum lancar. Posisi capaian hafalan belum bertambah, santri wajib mengulang halaman ini pada sesi berikutnya.</span>`;
+        }
+    } else {
+        if (radioLanjut) radioLanjut.checked = true;
+        if (radioUlang) radioUlang.checked = false;
+        if (labelLanjut) {
+            labelLanjut.className = "flex items-center justify-center gap-2 p-2.5 rounded-xl border-2 border-emerald-500 bg-emerald-50/90 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-200 cursor-pointer font-bold text-xs transition";
+        }
+        if (labelUlang) {
+            labelUlang.className = "flex items-center justify-center gap-2 p-2.5 rounded-xl border-2 border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-slate-600 dark:text-slate-400 cursor-pointer font-bold text-xs transition hover:border-rose-300";
+        }
+        if (badgePreview) {
+            badgePreview.innerText = "Lulus & Lanjut";
+            badgePreview.className = "text-[9px] font-black px-2 py-0.5 rounded-md uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300";
+        }
+        if (hint) {
+            hint.innerText = "Santri dinyatakan tuntas dan berhak melanjutkan hafalan ke halaman berikutnya.";
+        }
+    }
+}
+
+/**
+ * Cek apakah santri sedang dalam status wajib mengulang dari setoran terakhir
+ */
+function checkAndApplyStudentRepeatState(studentId) {
+    const banner = document.getElementById('tahfidz-catat-ulang-banner');
+    const bannerInfo = document.getElementById('tahfidz-catat-ulang-info');
+    const selJuz = document.getElementById('tahfidz-catat-juz');
+
+    if (!studentId) {
+        if (banner) banner.classList.add('hidden');
+        setTahfidzStatusDecision('LANJUT');
+        return;
+    }
+
+    const st = (ASNTahfidz.data.students || []).find(s => (s.studentId === studentId || s.nis === studentId));
+    const last = st?.setoranTerakhir;
+
+    if (last && (last.statusSetoran === 'ULANG' || last.nilai === 'DHAIF')) {
+        if (banner) banner.classList.remove('hidden');
+        if (bannerInfo) {
+            bannerInfo.innerHTML = `Setoran terakhir santri pada <b>${escapeHtml(last.tanggal || 'sebelumnya')}</b> (Nilai: <b>${escapeHtml(last.nilai)}</b>) belum tuntas. Wajib mengulang <b>Juz ${last.juz || 1} ${escapeHtml(last.halaman || '')}</b>.`;
+        }
+        if (selJuz && last.juz) {
+            selJuz.value = String(last.juz);
+        }
+        // Prefill halaman yang diulang
+        const parsedPage = parseInt(String(last.halaman || '').replace(/\D+/g, '')) || 1;
+        ASNTahfidz.catatState.selectedPages = [parsedPage];
+        renderTahfidzPageSelector();
+    } else {
+        if (banner) banner.classList.add('hidden');
+    }
+}
+
+/**
  * Buka modal catat setoran cepat
  */
 function openTahfidzCatatModal(studentId = null) {
@@ -582,7 +681,8 @@ function openTahfidzCatatModal(studentId = null) {
         tipe: "ZIYADAH",
         selectedPages: [1],
         sesi: "Pagi (Ba'da Subuh)",
-        nilai: "MUMTAZ"
+        nilai: "MUMTAZ",
+        statusSetoran: "LANJUT"
     };
 
     // Populate Santri Select
@@ -594,6 +694,10 @@ function openTahfidzCatatModal(studentId = null) {
             optHtml += `<option value="${st.studentId}" ${selected}>${escapeHtml(st.name)} (${escapeHtml(st.nis || '-')})</option>`;
         });
         selSantri.innerHTML = optHtml;
+
+        selSantri.onchange = function() {
+            checkAndApplyStudentRepeatState(this.value);
+        };
     }
 
     // Set Tanggal hari ini
@@ -617,8 +721,32 @@ function openTahfidzCatatModal(studentId = null) {
         selJuz.value = "1";
     }
 
+    // Set Nilai Default & Listener
+    const nilaiSelect = document.getElementById('tahfidz-catat-nilai');
+    if (nilaiSelect) {
+        nilaiSelect.value = "MUMTAZ";
+        nilaiSelect.onchange = function() {
+            if (this.value === 'DHAIF') {
+                setTahfidzStatusDecision('ULANG');
+            } else {
+                setTahfidzStatusDecision('LANJUT');
+            }
+        };
+    }
+
+    // Set Keputusan Default: LANJUT
+    setTahfidzStatusDecision('LANJUT');
+
     // Render Grid Tombol Halaman 1-20 Mushaf Pojok
     renderTahfidzPageSelector();
+
+    // Jika studentId diberikan, cek apakah santri sedang mengulang
+    if (studentId) {
+        checkAndApplyStudentRepeatState(studentId);
+    } else {
+        const banner = document.getElementById('tahfidz-catat-ulang-banner');
+        if (banner) banner.classList.add('hidden');
+    }
 
     modal.classList.remove('hidden');
 }
@@ -764,6 +892,7 @@ async function submitTahfidzCatat(e) {
     const selectedPages = ASNTahfidz.catatState.selectedPages || [1];
     const halamanList = selectedPages.join(",");
     const totalHalaman = selectedPages.length;
+    const statusSetoran = document.querySelector('input[name="tahfidz-status-setoran"]:checked')?.value || ASNTahfidz.catatState.statusSetoran || (nilai === 'DHAIF' ? 'ULANG' : 'LANJUT');
 
     const btn = document.getElementById('btn-submit-tahfidz-catat');
     setTahfidzButtonLoading(btn, true, "Menyimpan Setoran...");
@@ -787,6 +916,8 @@ async function submitTahfidzCatat(e) {
             totalHalaman,
             total_halaman: totalHalaman,
             nilai,
+            statusSetoran,
+            status_setoran: statusSetoran,
             muhafiz: muhafiz || (student?.halaqah?.muhafiz || "Ustadz Pembina"),
             catatan
         };
@@ -795,7 +926,10 @@ async function submitTahfidzCatat(e) {
 
         if (response && (response.success || response.status === "success")) {
             if (typeof showToast === 'function') {
-                showToast(response.message || "✅ Setoran tahfidz santri berhasil disimpan!");
+                const toastMsg = statusSetoran === 'ULANG' 
+                    ? "⚠️ Setoran dicatat sebagai Wajib Mengulang (I'adah). Posisi capaian hafalan belum bertambah."
+                    : (response.message || "✅ Setoran tahfidz santri berhasil disimpan!");
+                showToast(toastMsg);
             }
 
             // Optimistic update pada data santri di memori lokal
@@ -810,14 +944,20 @@ async function submitTahfidzCatat(e) {
                     sesi: sesi,
                     tipe: ASNTahfidz.catatState.tipe,
                     nilai: nilai,
+                    statusSetoran: statusSetoran,
                     muhafiz: muhafiz || (st.halaqah?.muhafiz || "Ustadz Pembina")
                 };
                 if (!st.progress) st.progress = {};
-                if (juz > (st.progress.currentJuz || 0)) {
-                    st.progress.currentJuz = juz;
-                    st.progress.percent = Math.min(100, Math.round((juz / 30) * 100));
+                if (statusSetoran === 'LANJUT') {
+                    if (juz > (st.progress.currentJuz || 0)) {
+                        st.progress.currentJuz = juz;
+                        st.progress.percent = Math.min(100, Math.round((juz / 30) * 100));
+                    }
+                    st.progress.onTrackStatus = "On-Track (Lulus Setor)";
+                } else {
+                    // Santri Mengulang: Progres hafalan tidak dinaikkan
+                    st.progress.onTrackStatus = `Wajib Mengulang (Hlm ${halamanList})`;
                 }
-                st.progress.onTrackStatus = "On-Track (Baru Setor)";
                 st.totalSetoran = (st.totalSetoran || 0) + 1;
             };
 
@@ -1173,7 +1313,15 @@ function renderTahfidzStudentDetailView() {
                     <span class="text-slate-400 text-[10px]">(${escapeHtml(r.surah)})</span>
                 </td>
                 <td class="px-3 py-2.5">Halaman ${escapeHtml(r.halamanList || '1')} (${r.totalHalaman} Hlm)</td>
-                <td class="px-3 py-2.5 font-bold text-emerald-600">${escapeHtml(r.nilai)}</td>
+                <td class="px-3 py-2.5">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="font-bold ${r.statusSetoran === 'ULANG' ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}">${escapeHtml(r.nilai)}</span>
+                        ${r.statusSetoran === 'ULANG'
+                            ? '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60"><i class="fa-solid fa-rotate-left text-[8px]"></i> Wajib Ulang</span>'
+                            : '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/60"><i class="fa-solid fa-check text-[8px]"></i> Lulus</span>'
+                        }
+                    </div>
+                </td>
                 <td class="px-3 py-2.5 text-right">
                     ${isParentOrPengasuh ? '<span class="text-[9px] font-semibold text-slate-400">Tercatat</span>' : `
                     <button type="button" onclick="deleteTahfidzLogEntry('${r.logId}')" class="text-slate-400 hover:text-rose-600 text-xs p-1 transition" title="Hapus Riwayat">

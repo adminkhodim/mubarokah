@@ -6889,6 +6889,7 @@
                                             <option value="ALL">Semua Status</option>
                                             <option value="ON_TRACK">On-Track</option>
                                             <option value="BELUM_SETOR">Belum Setor</option>
+                                            <option value="ULANG">Wajib Mengulang (I'adah)</option>
                                         </select>
                                         <select id="tahfidz-filter-kategori" onchange="filterTahfidzList()"
                                             class="hidden lg:inline-block px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 transition">
@@ -8886,6 +8887,20 @@
             <form id="form-tahfidz-catat" onsubmit="submitTahfidzCatat(event)"
                 class="flex flex-col flex-1 overflow-hidden">
                 <div class="p-5 overflow-y-auto space-y-4 custom-scrollbar text-xs">
+                    <!-- Banner Peringatan Santri Wajib Mengulang (I'adah) -->
+                    <div id="tahfidz-catat-ulang-banner"
+                        class="hidden p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-900 dark:text-rose-200 text-xs flex items-start gap-2.5">
+                        <div class="w-7 h-7 rounded-xl bg-rose-100 dark:bg-rose-900/80 text-rose-600 dark:text-rose-300 flex items-center justify-center shrink-0 text-xs">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <span class="font-extrabold text-[11px] uppercase tracking-wider block text-rose-700 dark:text-rose-300">Status Terkini: Wajib Mengulang (I'adah)</span>
+                            <p id="tahfidz-catat-ulang-info" class="text-[10px] text-rose-800 dark:text-rose-200 mt-0.5">
+                                Setoran sebelumnya belum tuntas. Santri wajib mengulang hafalan halaman ini sampai dinyatakan tuntas/lulus.
+                            </p>
+                        </div>
+                    </div>
+
                     <!-- Dropdowns Row 1: Santri & Halaqah -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div class="sm:col-span-2">
@@ -9048,6 +9063,36 @@
                         <textarea id="tahfidz-catat-catatan" rows="2"
                             placeholder="Tuliskan catatan khusus makharijul huruf, mad jaiz, ghunnah, dll..."
                             class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white transition resize-none"></textarea>
+                    </div>
+
+                    <!-- Keputusan Hasil Setoran: LANJUT vs ULANG -->
+                    <div class="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-[#1c2836]/60 border border-slate-200/80 dark:border-[#253447] space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 text-xs">
+                                Keputusan Hasil Setoran <span class="text-rose-500">*</span>
+                            </label>
+                            <span id="tahfidz-status-badge-preview"
+                                class="text-[9px] font-black px-2 py-0.5 rounded-md uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                                Lulus & Lanjut
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label id="label-status-lanjut" onclick="setTahfidzStatusDecision('LANJUT')"
+                                class="flex items-center justify-center gap-2 p-2.5 rounded-xl border-2 border-emerald-500 bg-emerald-50/90 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-200 cursor-pointer font-bold text-xs transition">
+                                <input type="radio" name="tahfidz-status-setoran" id="radio-status-lanjut" value="LANJUT" checked class="hidden">
+                                <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                                <span>Lulus & Lanjut</span>
+                            </label>
+                            <label id="label-status-ulang" onclick="setTahfidzStatusDecision('ULANG')"
+                                class="flex items-center justify-center gap-2 p-2.5 rounded-xl border-2 border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-slate-600 dark:text-slate-400 cursor-pointer font-bold text-xs transition hover:border-rose-300">
+                                <input type="radio" name="tahfidz-status-setoran" id="radio-status-ulang" value="ULANG" class="hidden">
+                                <i class="fa-solid fa-rotate-left text-rose-500"></i>
+                                <span>Wajib Ulang (I'adah)</span>
+                            </label>
+                        </div>
+                        <p id="tahfidz-status-hint" class="text-[10px] text-slate-500 dark:text-slate-400">
+                            Santri dinyatakan tuntas dan berhak melanjutkan hafalan ke halaman berikutnya.
+                        </p>
                     </div>
                 </div>
 
@@ -9384,7 +9429,7 @@
                                         <th class="py-2.5 px-3">Tipe</th>
                                         <th class="py-2.5 px-3">Juz / Surah</th>
                                         <th class="py-2.5 px-3">Halaman</th>
-                                        <th class="py-2.5 px-3">Nilai</th>
+                                        <th class="py-2.5 px-3">Nilai / Status</th>
                                         <th class="py-2.5 px-3 text-right">Aksi</th>
                                     </tr>
                                 </thead>

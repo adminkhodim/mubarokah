@@ -8121,6 +8121,7 @@ function getLinkedStudentsForWali(waliId) {
         const tglIdx = hLogs.indexOf("tanggal");
         const nilaiIdx = hLogs.indexOf("nilai");
         const muhIdx = hLogs.indexOf("muhafiz");
+        const statusIdx = hLogs.indexOf("status_setoran");
         const createdIdx = hLogs.indexOf("created_at");
 
         for (let l = 1; l < logsData.length; l++) {
@@ -8129,9 +8130,13 @@ function getLinkedStudentsForWali(waliId) {
           if ((rowSId && rowSId === cleanId) || (rowNis && rowNis === cleanNis)) {
             totalLogs++;
             const jVal = Number(logsData[l][juzIdx] || 1);
-            if (jVal > maxJuz) maxJuz = jVal;
-
             const nVal = String(logsData[l][nilaiIdx] || "MUMTAZ").trim().toUpperCase();
+            const rawStatus = statusIdx !== -1 ? String(logsData[l][statusIdx] || "").trim().toUpperCase() : "";
+            const statusSetoran = rawStatus || (nVal === "DHAIF" ? "ULANG" : "LANJUT");
+
+            // Hanya tingkatkan capaian juz jika status bukan ULANG
+            if (statusSetoran !== "ULANG" && jVal > maxJuz) maxJuz = jVal;
+
             if (nVal === "MUMTAZ") scorePoints += 4;
             else if (nVal === "JAYYID_JIDDAN") scorePoints += 3;
             else if (nVal === "JAYYID") scorePoints += 2;
@@ -8145,6 +8150,7 @@ function getLinkedStudentsForWali(waliId) {
                 juz: jVal,
                 totalHalaman: halIdx !== -1 ? Number(logsData[l][halIdx] || 1) : 1,
                 nilai: nVal,
+                statusSetoran: statusSetoran,
                 muhafiz: muhIdx !== -1 ? String(logsData[l][muhIdx] || "").trim() : "",
                 createdAt: createdIdx !== -1 ? String(logsData[l][createdIdx] || "") : ""
               };
@@ -9699,7 +9705,7 @@ function initTahfidzSheets(token) {
     const headersLogs = [
       "log_id", "student_id", "nis", "student_name", "gender",
       "tanggal", "sesi", "tipe", "juz", "surah",
-      "halaman_list", "total_halaman", "nilai", "muhafiz", "catatan", "created_at"
+      "halaman_list", "total_halaman", "nilai", "muhafiz", "catatan", "status_setoran", "created_at"
     ];
     let sheetLogs = ss.getSheetByName(SHEET_TAHFIDZ_LOGS);
     if (!sheetLogs) {
@@ -9712,6 +9718,12 @@ function initTahfidzSheets(token) {
       sheetLogs.setFrozenRows(1);
       created.push(SHEET_TAHFIDZ_LOGS);
     } else {
+      // Pastikan kolom status_setoran sudah ada
+      const existingHeaders = sheetLogs.getRange(1, 1, 1, sheetLogs.getLastColumn() || 1).getValues()[0].map(h => String(h || "").trim().toLowerCase());
+      if (existingHeaders.indexOf("status_setoran") === -1) {
+        const nextCol = (sheetLogs.getLastColumn() || 0) + 1;
+        sheetLogs.getRange(1, nextCol).setValue("status_setoran").setFontWeight("bold").setBackground("#059669").setFontColor("#ffffff");
+      }
       existing.push(SHEET_TAHFIDZ_LOGS);
     }
 
@@ -9819,7 +9831,7 @@ function getTahfidzDashboard(token) {
     const logsSheet = getOrCreateTahfidzSheet(ss, SHEET_TAHFIDZ_LOGS, [
       "log_id", "student_id", "nis", "student_name", "gender",
       "tanggal", "sesi", "tipe", "juz", "surah",
-      "halaman_list", "total_halaman", "nilai", "muhafiz", "catatan", "created_at"
+      "halaman_list", "total_halaman", "nilai", "muhafiz", "catatan", "status_setoran", "created_at"
     ]);
 
     const targetSheet = getOrCreateTahfidzSheet(ss, SHEET_TAHFIDZ_TARGET, [
@@ -9851,10 +9863,15 @@ function getTahfidzDashboard(token) {
     const logRows = [];
     if (logsData && logsData.length > 1) {
       const hLogs = logsData[0].map(h => String(h || "").trim().toLowerCase());
+      const statusIdx = hLogs.indexOf("status_setoran");
       for (let i = 1; i < logsData.length; i++) {
         const r = logsData[i];
         const logId = String(r[hLogs.indexOf("log_id")] || "").trim();
         if (!logId) continue;
+        const nilai = String(r[hLogs.indexOf("nilai")] || "MUMTAZ").trim().toUpperCase();
+        const rawStatus = statusIdx !== -1 ? String(r[statusIdx] || "").trim().toUpperCase() : "";
+        const statusSetoran = rawStatus || (nilai === "DHAIF" ? "ULANG" : "LANJUT");
+
         logRows.push({
           logId: logId,
           studentId: String(r[hLogs.indexOf("student_id")] || "").trim(),
@@ -9868,7 +9885,8 @@ function getTahfidzDashboard(token) {
           surah: String(r[hLogs.indexOf("surah")] || "").trim(),
           halamanList: String(r[hLogs.indexOf("halaman_list")] || "1").trim(),
           totalHalaman: Number(r[hLogs.indexOf("total_halaman")] || 1),
-          nilai: String(r[hLogs.indexOf("nilai")] || "MUMTAZ").trim().toUpperCase(),
+          nilai: nilai,
+          statusSetoran: statusSetoran,
           muhafiz: String(r[hLogs.indexOf("muhafiz")] || "").trim(),
           catatan: String(r[hLogs.indexOf("catatan")] || "").trim(),
           createdAt: String(r[hLogs.indexOf("created_at")] || "")
@@ -9967,10 +9985,10 @@ function getTahfidzDashboard(token) {
       sLogs.sort((a, b) => new Date(b.tanggal || b.createdAt) - new Date(a.tanggal || a.createdAt));
       const latestLog = sLogs.length > 0 ? sLogs[0] : null;
 
-      // Hitung capaian Juz tertinggi
+      // Hitung capaian Juz tertinggi (hanya dari setoran yang lulus/LANJUT)
       let currentJuz = 0;
       sLogs.forEach(lg => {
-        if (lg.juz && lg.juz > currentJuz) {
+        if (lg.statusSetoran !== "ULANG" && lg.juz && lg.juz > currentJuz) {
           currentJuz = lg.juz;
         }
       });
@@ -10032,6 +10050,7 @@ function getTahfidzDashboard(token) {
           sesi: latestLog.sesi,
           tipe: latestLog.tipe,
           nilai: latestLog.nilai,
+          statusSetoran: latestLog.statusSetoran || (latestLog.nilai === "DHAIF" ? "ULANG" : "LANJUT"),
           muhafiz: latestLog.muhafiz || halaqah.muhafiz || "Ustadz Pembina"
         } : null,
         progress: {
@@ -10169,7 +10188,7 @@ function saveTahfidzLog(payload, token) {
     const sheet = getOrCreateTahfidzSheet(ss, SHEET_TAHFIDZ_LOGS, [
       "log_id", "student_id", "nis", "student_name", "gender",
       "tanggal", "sesi", "tipe", "juz", "surah",
-      "halaman_list", "total_halaman", "nilai", "muhafiz", "catatan", "created_at"
+      "halaman_list", "total_halaman", "nilai", "muhafiz", "catatan", "status_setoran", "created_at"
     ]);
 
     const studentId = String(payload.studentId || payload.student_id || "").trim();
@@ -10189,13 +10208,23 @@ function saveTahfidzLog(payload, token) {
     const halamanList = String(payload.halamanList || payload.halaman_list || payload.halaman || "1").trim();
     const totalHalaman = Number(payload.totalHalaman || payload.total_halaman || 1);
     const nilai = String(payload.nilai || "MUMTAZ").trim().toUpperCase();
+    const statusSetoran = String(payload.statusSetoran || payload.status_setoran || (nilai === "DHAIF" ? "ULANG" : "LANJUT")).trim().toUpperCase();
     const muhafiz = String(payload.muhafiz || "").trim();
     const catatan = String(payload.catatan || "").trim();
     const gender = String(payload.gender || "L").toUpperCase();
     const createdAt = new Date().toISOString();
 
     const data = sheet.getDataRange().getValues();
-    const headers = data[0].map(h => String(h || "").trim().toLowerCase());
+    let headers = data[0].map(h => String(h || "").trim().toLowerCase());
+    
+    // Pastikan kolom status_setoran ada
+    let statusColIdx = headers.indexOf("status_setoran");
+    if (statusColIdx === -1) {
+      const nextCol = (sheet.getLastColumn() || 0) + 1;
+      sheet.getRange(1, nextCol).setValue("status_setoran").setFontWeight("bold").setBackground("#059669").setFontColor("#ffffff");
+      headers.push("status_setoran");
+    }
+
     let idIdx = headers.indexOf("log_id");
     let foundRow = -1;
 
@@ -10208,11 +10237,27 @@ function saveTahfidzLog(payload, token) {
       }
     }
 
-    const rowValues = [
-      logId, studentId, nis, studentName, gender,
-      tanggal, sesi, tipe, juz, surah,
-      halamanList, totalHalaman, nilai, muhafiz, catatan, createdAt
-    ];
+    const rowMap = {
+      "log_id": logId,
+      "student_id": studentId,
+      "nis": nis,
+      "student_name": studentName,
+      "gender": gender,
+      "tanggal": tanggal,
+      "sesi": sesi,
+      "tipe": tipe,
+      "juz": juz,
+      "surah": surah,
+      "halaman_list": halamanList,
+      "total_halaman": totalHalaman,
+      "nilai": nilai,
+      "muhafiz": muhafiz,
+      "catatan": catatan,
+      "status_setoran": statusSetoran,
+      "created_at": createdAt
+    };
+
+    const rowValues = headers.map(h => rowMap[h] !== undefined ? rowMap[h] : "");
 
     if (foundRow > 0) {
       sheet.getRange(foundRow, 1, 1, rowValues.length).setValues([rowValues]);
@@ -10359,19 +10404,24 @@ function getTahfidzStudentDetail(studentId, token) {
     const logsSheet = getOrCreateTahfidzSheet(ss, SHEET_TAHFIDZ_LOGS, [
       "log_id", "student_id", "nis", "student_name", "gender",
       "tanggal", "sesi", "tipe", "juz", "surah",
-      "halaman_list", "total_halaman", "nilai", "muhafiz", "catatan", "created_at"
+      "halaman_list", "total_halaman", "nilai", "muhafiz", "catatan", "status_setoran", "created_at"
     ]);
     const logsData = logsSheet.getDataRange().getValues();
     const riwayat = [];
 
     if (logsData && logsData.length > 1) {
       const hLogs = logsData[0].map(h => String(h || "").trim().toLowerCase());
+      const statusIdx = hLogs.indexOf("status_setoran");
       for (let i = 1; i < logsData.length; i++) {
         const r = logsData[i];
         const sId = String(r[hLogs.indexOf("student_id")] || "").trim();
         const sNis = String(r[hLogs.indexOf("nis")] || "").trim();
 
         if (sId === cleanId || sNis === student.nis || sId === student.studentId) {
+          const nilai = String(r[hLogs.indexOf("nilai")] || "MUMTAZ").trim().toUpperCase();
+          const rawStatus = statusIdx !== -1 ? String(r[statusIdx] || "").trim().toUpperCase() : "";
+          const statusSetoran = rawStatus || (nilai === "DHAIF" ? "ULANG" : "LANJUT");
+
           riwayat.push({
             logId: String(r[hLogs.indexOf("log_id")] || "").trim(),
             tanggal: normalizeDateString(r[hLogs.indexOf("tanggal")]),
@@ -10381,7 +10431,8 @@ function getTahfidzStudentDetail(studentId, token) {
             surah: String(r[hLogs.indexOf("surah")] || "").trim(),
             halamanList: String(r[hLogs.indexOf("halaman_list")] || "1").trim(),
             totalHalaman: Number(r[hLogs.indexOf("total_halaman")] || 1),
-            nilai: String(r[hLogs.indexOf("nilai")] || "MUMTAZ").trim().toUpperCase(),
+            nilai: nilai,
+            statusSetoran: statusSetoran,
             muhafiz: String(r[hLogs.indexOf("muhafiz")] || "").trim(),
             catatan: String(r[hLogs.indexOf("catatan")] || "").trim(),
             createdAt: String(r[hLogs.indexOf("created_at")] || "")
@@ -10397,7 +10448,7 @@ function getTahfidzStudentDetail(studentId, token) {
     let currentJuz = 0;
     let totalScorePoints = 0;
     riwayat.forEach(r => {
-      if (r.juz && r.juz > currentJuz) currentJuz = r.juz;
+      if (r.statusSetoran !== "ULANG" && r.juz && r.juz > currentJuz) currentJuz = r.juz;
       if (r.nilai === "MUMTAZ") totalScorePoints += 4;
       else if (r.nilai === "JAYYID_JIDDAN") totalScorePoints += 3;
       else if (r.nilai === "JAYYID") totalScorePoints += 2;
