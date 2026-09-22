@@ -5676,7 +5676,7 @@ function verifyGoogleIdToken(idToken) {
  * dengan fallback aman ke getActiveSpreadsheet() kontainer bawaan.
  */
 function getDatabaseSpreadsheet() {
-  const explicitId = getServerSecret("SPREADSHEET_ID", "");
+  const explicitId = getServerSecret("SPREADSHEET_ID", "1cZSRh2rtKpT6E8m3GFJonVbiQG51fh24eN8J5JWtOJY");
   if (explicitId) {
     try {
       return SpreadsheetApp.openById(explicitId);
@@ -9685,6 +9685,9 @@ function getOrCreateTahfidzSheet(ss, sheetName, defaultHeaders, headerBgColor) {
         const cleanDh = String(dh).trim().toLowerCase().replace(/[\s\-_]+/g, "");
         if (existingHeaders.indexOf(cleanDh) === -1) {
           currentLastCol++;
+          if (currentLastCol > sheet.getMaxColumns()) {
+            sheet.insertColumnAfter(sheet.getMaxColumns());
+          }
           sheet.getRange(1, currentLastCol).setValue(dh)
             .setFontWeight("bold")
             .setBackground(headerBgColor || "#059669")
@@ -9769,10 +9772,16 @@ function initTahfidzSheets(token) {
       created.push(SHEET_TAHFIDZ_LOGS);
     } else {
       // Pastikan kolom status_setoran sudah ada
-      const existingHeaders = sheetLogs.getRange(1, 1, 1, sheetLogs.getLastColumn() || 1).getValues()[0].map(h => String(h || "").trim().toLowerCase());
-      if (existingHeaders.indexOf("status_setoran") === -1) {
-        const nextCol = (sheetLogs.getLastColumn() || 0) + 1;
-        sheetLogs.getRange(1, nextCol).setValue("status_setoran").setFontWeight("bold").setBackground("#059669").setFontColor("#ffffff");
+      const lastCol = sheetLogs.getLastColumn();
+      if (lastCol > 0) {
+        const existingHeaders = sheetLogs.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h || "").trim().toLowerCase());
+        if (existingHeaders.indexOf("status_setoran") === -1) {
+          const nextCol = lastCol + 1;
+          if (nextCol > sheetLogs.getMaxColumns()) {
+            sheetLogs.insertColumnAfter(sheetLogs.getMaxColumns());
+          }
+          sheetLogs.getRange(1, nextCol).setValue("status_setoran").setFontWeight("bold").setBackground("#059669").setFontColor("#ffffff");
+        }
       }
       existing.push(SHEET_TAHFIDZ_LOGS);
     }

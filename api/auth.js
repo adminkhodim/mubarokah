@@ -4,61 +4,64 @@
  * Supports both POST (auth/mutations) and GET (kabar/banners with edge caching).
  */
 
+const https = require('https');
+
 const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwhaT3ODh9d95YkEUOM5IwKYMcnOQWe63nCXzJRdEpWV414N62jscxO1VeT7vvetZzFlQ/exec";
 
-async function forwardToGoogleAppsScript(scriptUrl, bodyPayload) {
-    const res = await fetch(scriptUrl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'text/plain;charset=utf-8'
-        },
-        body: typeof bodyPayload === 'string' ? bodyPayload : JSON.stringify(bodyPayload),
-        redirect: 'manual'
-    });
+function requestGoogleAppsScript(targetUrl, method, payload) {
+    return new Promise((resolve, reject) => {
+        function execute(currentUrl, currentMethod, currentPayload, redirectsRemaining) {
+            if (redirectsRemaining <= 0) {
+                return reject(new Error('Terlalu banyak redirect dari Google Apps Script'));
+            }
 
-    if (res.status >= 300 && res.status < 400) {
-        const redirectUrl = res.headers.get('location');
-        if (redirectUrl) {
-            const res2 = await fetch(redirectUrl, {
-                method: 'GET',
-                redirect: 'manual'
+            const parsedUrl = new URL(currentUrl);
+            const isPost = currentMethod === 'POST';
+            let bodyData = null;
+            if (isPost && currentPayload) {
+                bodyData = typeof currentPayload === 'string' ? currentPayload : JSON.stringify(currentPayload);
+            }
+
+            const reqOptions = {
+                hostname: parsedUrl.hostname,
+                port: parsedUrl.port || 443,
+                path: parsedUrl.pathname + parsedUrl.search,
+                method: currentMethod,
+                agent: new https.Agent({ keepAlive: false }),
+                headers: {
+                    'Accept': 'application/json, text/plain, */*'
+                }
+            };
+
+            if (isPost && bodyData) {
+                reqOptions.headers['Content-Type'] = 'text/plain;charset=utf-8';
+                reqOptions.headers['Content-Length'] = Buffer.byteLength(bodyData);
+            }
+
+            const req = https.request(reqOptions, (res) => {
+                // Saat Google Apps Script mengembalikan 302/303 redirect:
+                if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                    // Sesuai standar Apps Script, ikuti redirect dengan GET ke URL target (macros/echo)
+                    return execute(res.headers.location, 'GET', null, redirectsRemaining - 1);
+                }
+
+                let responseData = '';
+                res.on('data', chunk => responseData += chunk);
+                res.on('end', () => {
+                    resolve({ status: res.statusCode, text: responseData });
+                });
             });
-            const text2 = await res2.text();
-            return { status: res2.status, text: text2 };
+
+            req.on('error', reject);
+
+            if (isPost && bodyData) {
+                req.write(bodyData);
+            }
+            req.end();
         }
-    }
 
-    const text = await res.text();
-    return { status: res.status, text: text };
-}
-
-async function forwardGetToGoogleAppsScript(scriptUrl, queryParams) {
-    const url = new URL(scriptUrl);
-    if (queryParams) {
-        Object.entries(queryParams).forEach(([k, v]) => {
-            if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
-        });
-    }
-
-    const res = await fetch(url.toString(), {
-        method: 'GET',
-        redirect: 'manual'
+        execute(targetUrl, method, payload, 5);
     });
-
-    if (res.status >= 300 && res.status < 400) {
-        const redirectUrl = res.headers.get('location');
-        if (redirectUrl) {
-            const res2 = await fetch(redirectUrl, {
-                method: 'GET',
-                redirect: 'manual'
-            });
-            const text2 = await res2.text();
-            return { status: res2.status, text: text2 };
-        }
-    }
-
-    const text = await res.text();
-    return { status: res.status, text: text };
 }
 
 module.exports = async function handler(req, res) {
@@ -82,7 +85,13 @@ module.exports = async function handler(req, res) {
             if (action === 'getKabar' || action === 'getBanner' || action === 'getGaleri' || action === 'getUnitKegiatan' || action === 'getNotifikasi') {
                 res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
             }
-            result = await forwardGetToGoogleAppsScript(scriptUrl, req.query);
+            const getUrl = new URL(scriptUrl);
+            if (req.query) {
+                Object.entries(req.query).forEach(([k, v]) => {
+                    if (v !== undefined && v !== null) getUrl.searchParams.set(k, String(v));
+                });
+            }
+            result = await requestGoogleAppsScript(getUrl.toString(), 'GET', null);
         } else {
             let payload = req.body;
             if (typeof payload === 'string') {
@@ -99,7 +108,7 @@ module.exports = async function handler(req, res) {
                 payload = {};
             }
 
-            result = await forwardToGoogleAppsScript(scriptUrl, payload);
+            result = await requestGoogleAppsScript(scriptUrl, 'POST', payload);
         }
 
         res.setHeader('Content-Type', 'application/json; charset=utf-8');

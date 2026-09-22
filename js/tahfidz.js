@@ -179,7 +179,13 @@ async function loadAdminTahfidzData(forceRefresh = false) {
 
     try {
         const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TAHFIDZ_STORAGE_KEYS.adminToken)) || "";
-        const response = await apiPost("getTahfidzDashboard", { token });
+        let response;
+        try {
+            response = await apiPost("getTahfidzDashboard", { token });
+        } catch (apiErr) {
+            console.warn("Percobaan pertama getTahfidzDashboard gagal, mencoba fallback...", apiErr);
+            response = await apiPost("getTahfidzDashboard", {});
+        }
 
         if (response && (response.success || response.status === "success")) {
             // Gabungkan halaqah lokal jika ada halaqah baru yang belum terangkum
@@ -227,7 +233,7 @@ async function loadAdminTahfidzData(forceRefresh = false) {
     } catch (err) {
         console.error("Error loadAdminTahfidzData:", err);
         if (!hasRenderedFromCache && typeof showToast === 'function') {
-            showToast("❌ Terjadi kendala saat memuat data Tahfidz.");
+            showToast("❌ Terjadi kendala saat memuat data: " + (err.message || "Gagal memuat data Tahfidz."));
         }
     } finally {
         if (loader) loader.classList.add('hidden');
