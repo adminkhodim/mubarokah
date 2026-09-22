@@ -34,6 +34,7 @@ const ASNSorogan = {
         students: [],
         halaqahs: [],
         muallimList: [],
+        programCategories: [],
         sesiList: [],
         targets: {}
     },
@@ -134,6 +135,8 @@ async function loadAdminSoroganData(forceRefresh = false) {
             ASNSorogan.data = cached;
             renderSoroganSummaryCards();
             populateSoroganFilters();
+            populateSoroganProgramDropdown();
+            populateSoroganMuallimDropdown();
             filterSoroganList();
             hasRenderedFromCache = true;
             if (emptyState && ASNSorogan.filteredStudents.length > 0) {
@@ -165,6 +168,8 @@ async function loadAdminSoroganData(forceRefresh = false) {
 
             renderSoroganSummaryCards();
             populateSoroganFilters();
+            populateSoroganProgramDropdown();
+            populateSoroganMuallimDropdown();
             filterSoroganList();
         } else if (response && (response.message || response.error)) {
             console.warn("Respon Sorogan gagal:", response.message || response.error);
@@ -711,6 +716,7 @@ function openSoroganHalaqahModal(defaultTab = 1) {
     const modal = document.getElementById('modal-sorogan-halaqah');
     if (!modal) return;
 
+    populateSoroganProgramDropdown();
     populateSoroganMuallimDropdown();
     modal.classList.remove('hidden');
     switchSoroganHalaqahTab(defaultTab || 1);
@@ -756,26 +762,55 @@ function switchSoroganHalaqahTab(tabNum) {
 }
 
 /**
- * Sinkronkan dropdown Mu'allim Pengampu dari data Pegawai / Asatidz
+ * Sinkronkan dropdown Kategori Program dari data resmi sheet "Programs" (OFFICIAL DB)
+ */
+function populateSoroganProgramDropdown() {
+    const sel = document.getElementById('input-sorogan-halaqah-kategori');
+    if (!sel) return;
+
+    let progs = [];
+    if (Array.isArray(ASNSorogan.data.programCategories) && ASNSorogan.data.programCategories.length > 0) {
+        progs = ASNSorogan.data.programCategories.map(p => (typeof p === 'string' ? p : (p.name || p.nama || p.id))).filter(Boolean);
+    } else if (typeof ASNAdmin !== 'undefined' && ASNAdmin.data && Array.isArray(ASNAdmin.data.programs) && ASNAdmin.data.programs.length > 0) {
+        progs = ASNAdmin.data.programs.map(p => p.name || p.nama || p.id).filter(Boolean);
+    }
+
+    const currentVal = sel.value;
+    if (progs.length === 0) {
+        sel.innerHTML = `<option value="">-- Belum ada data Programs --</option>`;
+    } else {
+        sel.innerHTML = `<option value="">-- Pilih Kategori Program --</option>` +
+            progs.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+    }
+
+    if (currentVal && progs.includes(currentVal)) {
+        sel.value = currentVal;
+    } else if (progs.length > 0 && !currentVal) {
+        sel.value = progs[0];
+    }
+}
+
+/**
+ * Sinkronkan dropdown Mu'allim Pengampu dari data resmi sheet "Pegawai" (OFFICIAL DB)
  */
 function populateSoroganMuallimDropdown() {
     const sel = document.getElementById('input-sorogan-halaqah-muallim');
     if (!sel) return;
 
     let teachers = [];
-    if (typeof ASNAdmin !== 'undefined' && ASNAdmin.data && Array.isArray(ASNAdmin.data.employees)) {
-        teachers = ASNAdmin.data.employees.map(e => e.name || e.nama).filter(Boolean);
-    }
-    if (teachers.length === 0 && Array.isArray(ASNSorogan.data.muallimList) && ASNSorogan.data.muallimList.length > 0) {
+    if (Array.isArray(ASNSorogan.data.muallimList) && ASNSorogan.data.muallimList.length > 0) {
         teachers = ASNSorogan.data.muallimList;
-    }
-    if (teachers.length === 0) {
-        teachers = ["Kyai Ahmad", "Ustadz Ridwan", "Ustadz Hasan", "Ustadzah Fatimah", "Ustadz Yusuf"];
+    } else if (typeof ASNAdmin !== 'undefined' && ASNAdmin.data && Array.isArray(ASNAdmin.data.employees) && ASNAdmin.data.employees.length > 0) {
+        teachers = ASNAdmin.data.employees.map(e => e.nama || e.name).filter(Boolean);
     }
 
     const currentVal = sel.value;
-    sel.innerHTML = `<option value="">-- Pilih Mu'allim Pengampu --</option>` +
-        teachers.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+    if (teachers.length === 0) {
+        sel.innerHTML = `<option value="">-- Belum ada data Pegawai --</option>`;
+    } else {
+        sel.innerHTML = `<option value="">-- Pilih Mu'allim Pengampu --</option>` +
+            teachers.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+    }
 
     if (currentVal && teachers.includes(currentVal)) {
         sel.value = currentVal;
@@ -864,7 +899,7 @@ async function submitNewSoroganHalaqah(e) {
     const btn = document.getElementById('btn-submit-sorogan-halaqah');
 
     const namaHalaqah = inputNama ? inputNama.value.trim() : "";
-    const kategori = inputKat ? inputKat.value : "Sorogan Binnazhar Putra";
+    const kategori = inputKat ? inputKat.value.trim() : "";
     const muallim = inputMuallim ? inputMuallim.value.trim() : "";
     const targetDeskripsi = inputTarget ? inputTarget.value.trim() : "";
 
@@ -883,9 +918,11 @@ async function submitNewSoroganHalaqah(e) {
         const res = await apiPost("saveSoroganHalaqah", {
             token,
             namaHalaqah,
+            muallim,
             muallimPengampu: muallim,
             jadwalSesi: targetDeskripsi || "Pagi (Ba'da Subuh)",
             kategori,
+            kategoriProgram: kategori,
             studentIds: []
         });
 

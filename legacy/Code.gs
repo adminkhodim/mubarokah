@@ -12714,7 +12714,7 @@ function initSoroganSheets(token) {
 
     const headersLogs = ["log_id", "student_id", "nis", "student_name", "gender", "tanggal", "sesi", "juz", "halaman_list", "total_halaman", "status_setoran", "nilai", "muallim", "catatan", "created_at"];
     const headersCapaian = ["student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_khatam", "status_terakhir", "halaqah_id", "nama_halaqah", "muallim_pengampu", "updated_at"];
-    const headersHalaqah = ["halaqah_id", "nama_halaqah", "muallim", "jadwal_sesi", "student_ids", "created_at"];
+    const headersHalaqah = ["halaqah_id", "nama_halaqah", "muallim", "jadwal_sesi", "student_ids", "kategori_program", "created_at"];
     const headersTarget = ["student_id", "target_juz", "target_halaman_sesi", "target_halaman_pekan", "updated_at"];
     const headersSesi = ["sesi_id", "nama_sesi", "jenis_sesi", "status", "jam_mulai", "jam_selesai", "hari_list", "created_at"];
 
@@ -12744,9 +12744,30 @@ function initSoroganSheets(token) {
 
     if (created.includes(SHEET_SOROGAN_HALAQAH)) {
       const hSheet = ss.getSheetByName(SHEET_SOROGAN_HALAQAH);
+      const pSheet = ss.getSheetByName("Pegawai") || ss.getSheetByName("pegawai");
+      let ustadz = "Ust.Nazirul Muhammad, AH.";
+      let ustadzah = "Nyai Hj. Nashichatul Fuadah, AH.";
+      if (pSheet) {
+        const pRows = pSheet.getDataRange().getValues();
+        if (pRows.length > 1) {
+          const pHead = pRows[0].map(h => String(h || "").trim().toLowerCase());
+          const nIdx = pHead.indexOf("nama") !== -1 ? pHead.indexOf("nama") : pHead.indexOf("name");
+          const gIdx = pHead.indexOf("gender");
+          if (nIdx !== -1) {
+            for (let r = 1; r < pRows.length; r++) {
+              const nm = String(pRows[r][nIdx] || "").trim();
+              const gd = gIdx !== -1 ? String(pRows[r][gIdx] || "L").toUpperCase() : "L";
+              if (nm) {
+                if (gd === "L" && ustadz === "Ust.Nazirul Muhammad, AH.") ustadz = nm;
+                if (gd === "P" && ustadzah === "Nyai Hj. Nashichatul Fuadah, AH.") ustadzah = nm;
+              }
+            }
+          }
+        }
+      }
       const defaultHalaqah = [
-        ["SRG-HLQ-01", "Halaqah Sorogan Putra (Mushaf Besar)", "Kyai / Ustadz Yusuf", "Ba'da Subuh & Maghrib", "[]", nowIso],
-        ["SRG-HLQ-02", "Halaqah Sorogan Putri (Mushaf Besar)", "Nyai / Ustadzah Maryam", "Ba'da Ashar & Isya'", "[]", nowIso]
+        ["SRG-HLQ-01", "Halaqah Sorogan Putra (Mushaf Besar)", ustadz, "Ba'da Subuh & Maghrib", "[]", "Pesantren Reguler Putra Putri", nowIso],
+        ["SRG-HLQ-02", "Halaqah Sorogan Putri (Mushaf Besar)", ustadzah, "Ba'da Ashar & Isya'", "[]", "Pesantren Reguler Putra Putri", nowIso]
       ];
       hSheet.getRange(2, 1, defaultHalaqah.length, headersHalaqah.length).setValues(defaultHalaqah);
     }
@@ -12791,7 +12812,7 @@ function getSoroganDashboard(token) {
     // 0. Auto-ensure SEMUA sheet Sorogan Al-Qur'an tersedia di database
     const headersLogs = ["log_id", "student_id", "nis", "student_name", "gender", "tanggal", "sesi", "juz", "halaman_list", "total_halaman", "status_setoran", "nilai", "muallim", "catatan", "created_at"];
     const headersCapaian = ["student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_khatam", "status_terakhir", "halaqah_id", "nama_halaqah", "muallim_pengampu", "updated_at"];
-    const headersHalaqah = ["halaqah_id", "nama_halaqah", "muallim", "jadwal_sesi", "student_ids", "created_at"];
+    const headersHalaqah = ["halaqah_id", "nama_halaqah", "muallim", "jadwal_sesi", "student_ids", "kategori_program", "created_at"];
     const headersTarget = ["student_id", "target_juz", "target_halaman_sesi", "target_halaman_pekan", "updated_at"];
     const headersSesi = ["sesi_id", "nama_sesi", "jenis_sesi", "status", "jam_mulai", "jam_selesai", "hari_list", "created_at"];
 
@@ -12802,13 +12823,72 @@ function getSoroganDashboard(token) {
     const targetSheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_TARGET, headersTarget, "#f59e0b");
     const sesiSheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_SESI, headersSesi, "#0284c7");
 
+    // Auto-migrate kolom kategori_program pada Sorogan_Halaqah jika belum ada
+    if (halaqahSheet.getLastColumn() > 0) {
+      const hRow1 = halaqahSheet.getRange(1, 1, 1, halaqahSheet.getLastColumn()).getValues()[0];
+      const hasKat = hRow1.some(h => String(h || "").trim().toLowerCase().includes("kategori"));
+      if (!hasKat) {
+        halaqahSheet.getRange(1, halaqahSheet.getLastColumn() + 1).setValue("kategori_program").setFontWeight("bold").setBackground("#4338ca").setFontColor("#ffffff");
+      }
+    }
+
     const nowIso = new Date().toISOString();
+
+    // Ambil data resmi Pegawai dari sheet "Pegawai" (Official DB)
+    let pegawaiSheet = ss.getSheetByName(SHEET_PEGAWAI) || ss.getSheetByName("Pegawai") || ss.getSheetByName("pegawai");
+    const muallimList = [];
+    if (pegawaiSheet) {
+      const pData = pegawaiSheet.getDataRange().getValues();
+      if (pData && pData.length > 1) {
+        const pHead = pData[0].map(h => String(h || "").trim().toLowerCase());
+        const pNamaIdx = pHead.indexOf("nama") !== -1 ? pHead.indexOf("nama") : pHead.indexOf("name");
+        const pStatusIdx = pHead.indexOf("status");
+        for (let i = 1; i < pData.length; i++) {
+          const row = pData[i];
+          const nama = pNamaIdx !== -1 ? String(row[pNamaIdx] || "").trim() : "";
+          const st = pStatusIdx !== -1 ? String(row[pStatusIdx] || "").trim().toUpperCase() : "ACTIVE";
+          if (nama && (st === "ACTIVE" || st === "AKTIF" || st === "")) {
+            if (!muallimList.includes(nama)) {
+              muallimList.push(nama);
+            }
+          }
+        }
+      }
+    }
+
+    // Ambil data resmi Program dari sheet "Programs" (Official DB)
+    let programsSheet = ss.getSheetByName("Programs") || ss.getSheetByName("Program");
+    const programCategories = [];
+    if (programsSheet) {
+      const prData = programsSheet.getDataRange().getValues();
+      if (prData && prData.length > 1) {
+        const prHead = prData[0].map(h => String(h || "").trim().toLowerCase());
+        const nameIdx = prHead.indexOf("name") !== -1 ? prHead.indexOf("name") : prHead.indexOf("nama");
+        const idIdx = prHead.indexOf("id");
+        for (let i = 1; i < prData.length; i++) {
+          const row = prData[i];
+          const prName = nameIdx !== -1 ? String(row[nameIdx] || "").trim() : "";
+          const prId = idIdx !== -1 ? String(row[idIdx] || "").trim() : "";
+          if (prName && !programCategories.some(p => p.name === prName)) {
+            programCategories.push({
+              id: prId || prName,
+              name: prName
+            });
+          }
+        }
+      }
+    }
+
+    const defaultTeacher1 = muallimList[0] || "Ust.Nazirul Muhammad, AH.";
+    const defaultTeacher2 = muallimList[1] || muallimList[0] || "Nyai Hj. Nashichatul Fuadah, AH.";
+    const defaultProg1 = (programCategories[0] && programCategories[0].name) || "Pesantren Reguler Putra Putri";
+    const defaultProg2 = (programCategories[1] && programCategories[1].name) || defaultProg1;
 
     // Auto-seed default Halaqah jika sheet baru dibuat / kosong
     if (halaqahSheet.getLastRow() < 2) {
       const defaultHalaqah = [
-        ["SRG-HLQ-01", "Halaqah Sorogan Putra (Mushaf Besar)", "Kyai / Ustadz Yusuf", "Ba'da Subuh & Maghrib", "[]", nowIso],
-        ["SRG-HLQ-02", "Halaqah Sorogan Putri (Mushaf Besar)", "Nyai / Ustadzah Maryam", "Ba'da Ashar & Isya'", "[]", nowIso]
+        ["SRG-HLQ-01", "Halaqah Sorogan Putra (Mushaf Besar)", defaultTeacher1, "Ba'da Subuh & Maghrib", "[]", defaultProg1, nowIso],
+        ["SRG-HLQ-02", "Halaqah Sorogan Putri (Mushaf Besar)", defaultTeacher2, "Ba'da Ashar & Isya'", "[]", defaultProg2, nowIso]
       ];
       halaqahSheet.getRange(2, 1, defaultHalaqah.length, headersHalaqah.length).setValues(defaultHalaqah);
     }
@@ -12927,14 +13007,20 @@ function getSoroganDashboard(token) {
       const mIdx = hHead.indexOf("muallim");
       const jIdx = hHead.indexOf("jadwal_sesi");
       const sidsIdx = hHead.indexOf("student_ids");
+      const katIdx = hHead.indexOf("kategori_program") !== -1 ? hHead.indexOf("kategori_program") : hHead.indexOf("kategori");
 
       for (let i = 1; i < hData.length; i++) {
         let sids = [];
         try { sids = JSON.parse(String(hData[i][sidsIdx] || "[]")); } catch (e) { sids = []; }
+        const mName = String(hData[i][mIdx] || "").trim();
+        const kName = katIdx !== -1 ? String(hData[i][katIdx] || "").trim() : "";
         halaqahs.push({
           halaqahId: String(hData[i][idIdx] || "").trim(),
           namaHalaqah: String(hData[i][nameIdx] || "").trim(),
-          muallim: String(hData[i][mIdx] || "").trim(),
+          muallim: mName,
+          muallimPengampu: mName,
+          kategori: kName,
+          kategoriProgram: kName,
           jadwalSesi: String(hData[i][jIdx] || "").trim(),
           studentIds: sids
         });
@@ -13065,7 +13151,8 @@ function getSoroganDashboard(token) {
       },
       students: enrichedStudents,
       halaqahs: halaqahs,
-      muallimList: Array.from(muallimSet),
+      muallimList: muallimList,
+      programCategories: programCategories,
       targets: targetMap,
       sesiList: sesiList
     };
@@ -13247,32 +13334,84 @@ function saveSoroganCapaian(data, token) {
 function getSoroganHalaqahList(token) {
   try {
     const ss = getDatabaseSpreadsheet();
-    const headersHalaqah = ["halaqah_id", "nama_halaqah", "muallim", "jadwal_sesi", "student_ids", "created_at"];
+    const headersHalaqah = ["halaqah_id", "nama_halaqah", "muallim", "jadwal_sesi", "student_ids", "kategori_program", "created_at"];
     const sheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_HALAQAH, headersHalaqah, "#4338ca");
     const data = sheet.getDataRange().getValues();
     const list = [];
 
     if (data.length >= 2) {
-      const head = data[0].map(h => String(h).toLowerCase());
+      const head = data[0].map(h => String(h || "").trim().toLowerCase());
       const idIdx = head.indexOf("halaqah_id");
       const nameIdx = head.indexOf("nama_halaqah");
       const mIdx = head.indexOf("muallim");
       const jIdx = head.indexOf("jadwal_sesi");
       const sidsIdx = head.indexOf("student_ids");
+      const katIdx = head.indexOf("kategori_program") !== -1 ? head.indexOf("kategori_program") : head.indexOf("kategori");
 
       for (let i = 1; i < data.length; i++) {
         let sids = [];
         try { sids = JSON.parse(String(data[i][sidsIdx] || "[]")); } catch (e) { sids = []; }
+        const mName = String(data[i][mIdx] || "").trim();
+        const kName = katIdx !== -1 ? String(data[i][katIdx] || "").trim() : "";
         list.push({
           halaqahId: String(data[i][idIdx] || "").trim(),
           namaHalaqah: String(data[i][nameIdx] || "").trim(),
-          muallim: String(data[i][mIdx] || "").trim(),
+          muallim: mName,
+          muallimPengampu: mName,
+          kategori: kName,
+          kategoriProgram: kName,
           jadwalSesi: String(data[i][jIdx] || "").trim(),
           studentIds: sids
         });
       }
     }
-    return { status: "success", success: true, halaqahs: list };
+
+    // Ambil data Pegawai & Programs
+    const pegawaiSheet = ss.getSheetByName(SHEET_PEGAWAI) || ss.getSheetByName("Pegawai") || ss.getSheetByName("pegawai");
+    const muallimList = [];
+    if (pegawaiSheet) {
+      const pData = pegawaiSheet.getDataRange().getValues();
+      if (pData && pData.length > 1) {
+        const pHead = pData[0].map(h => String(h || "").trim().toLowerCase());
+        const pNamaIdx = pHead.indexOf("nama") !== -1 ? pHead.indexOf("nama") : pHead.indexOf("name");
+        const pStatusIdx = pHead.indexOf("status");
+        for (let i = 1; i < pData.length; i++) {
+          const row = pData[i];
+          const nama = pNamaIdx !== -1 ? String(row[pNamaIdx] || "").trim() : "";
+          const st = pStatusIdx !== -1 ? String(row[pStatusIdx] || "").trim().toUpperCase() : "ACTIVE";
+          if (nama && (st === "ACTIVE" || st === "AKTIF" || st === "")) {
+            if (!muallimList.includes(nama)) muallimList.push(nama);
+          }
+        }
+      }
+    }
+
+    const programsSheet = ss.getSheetByName("Programs") || ss.getSheetByName("Program");
+    const programCategories = [];
+    if (programsSheet) {
+      const prData = programsSheet.getDataRange().getValues();
+      if (prData && prData.length > 1) {
+        const prHead = prData[0].map(h => String(h || "").trim().toLowerCase());
+        const nameIdx = prHead.indexOf("name") !== -1 ? prHead.indexOf("name") : prHead.indexOf("nama");
+        const idIdx = prHead.indexOf("id");
+        for (let i = 1; i < prData.length; i++) {
+          const row = prData[i];
+          const prName = nameIdx !== -1 ? String(row[nameIdx] || "").trim() : "";
+          const prId = idIdx !== -1 ? String(row[idIdx] || "").trim() : "";
+          if (prName && !programCategories.some(p => p.name === prName)) {
+            programCategories.push({ id: prId || prName, name: prName });
+          }
+        }
+      }
+    }
+
+    return {
+      status: "success",
+      success: true,
+      halaqahs: list,
+      muallimList: muallimList,
+      programCategories: programCategories
+    };
   } catch (err) {
     return { status: "error", success: false, message: err.message };
   }
@@ -13282,8 +13421,9 @@ function saveSoroganHalaqah(data, token) {
   return withScriptLock(() => {
     try {
       const namaHalaqah = String(data.namaHalaqah || data.nama_halaqah || "").trim();
-      const muallim = String(data.muallim || "").trim();
+      const muallim = String(data.muallim || data.muallimPengampu || "").trim();
       const jadwal = String(data.jadwalSesi || data.jadwal || "Ba'da Subuh & Maghrib").trim();
+      const kategori = String(data.kategori || data.kategoriProgram || data.kategori_program || "").trim();
       const studentIds = Array.isArray(data.studentIds) ? data.studentIds : [];
       let halaqahId = String(data.halaqahId || data.id || "").trim();
       const nowIso = new Date().toISOString();
@@ -13291,14 +13431,21 @@ function saveSoroganHalaqah(data, token) {
       if (!namaHalaqah) throw new Error("Nama halaqah sorogan wajib diisi.");
 
       const ss = getDatabaseSpreadsheet();
-      const headersHalaqah = ["halaqah_id", "nama_halaqah", "muallim", "jadwal_sesi", "student_ids", "created_at"];
+      const headersHalaqah = ["halaqah_id", "nama_halaqah", "muallim", "jadwal_sesi", "student_ids", "kategori_program", "created_at"];
       const sheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_HALAQAH, headersHalaqah, "#4338ca");
 
       const hData = sheet.getDataRange().getValues();
-      let rowIndex = -1;
+      let hHeaders = (hData.length > 0) ? hData[0].map(h => String(h || "").trim().toLowerCase()) : [];
+      let katColIdx = hHeaders.indexOf("kategori_program") !== -1 ? hHeaders.indexOf("kategori_program") : hHeaders.indexOf("kategori");
+      if (katColIdx === -1 && hData.length > 0) {
+        const newCol = sheet.getLastColumn() + 1;
+        sheet.getRange(1, newCol).setValue("kategori_program").setFontWeight("bold").setBackground("#4338ca").setFontColor("#ffffff");
+        katColIdx = newCol - 1;
+      }
 
+      let rowIndex = -1;
       if (halaqahId && hData.length >= 2) {
-        const idIdx = hData[0].map(h => String(h).toLowerCase()).indexOf("halaqah_id");
+        const idIdx = hHeaders.indexOf("halaqah_id");
         for (let i = 1; i < hData.length; i++) {
           if (String(hData[i][idIdx] || "").trim() === halaqahId) {
             rowIndex = i + 1;
@@ -13312,9 +13459,19 @@ function saveSoroganHalaqah(data, token) {
         sheet.getRange(rowIndex, 3).setValue(muallim);
         sheet.getRange(rowIndex, 4).setValue(jadwal);
         sheet.getRange(rowIndex, 5).setValue(JSON.stringify(studentIds));
+        if (katColIdx !== -1) {
+          sheet.getRange(rowIndex, katColIdx + 1).setValue(kategori);
+        }
       } else {
         if (!halaqahId) halaqahId = "SRG-HLQ-" + Utilities.getUuid().replace(/-/g, "").substring(0, 8).toUpperCase();
-        sheet.appendRow([halaqahId, namaHalaqah, muallim, jadwal, JSON.stringify(studentIds), nowIso]);
+        if (katColIdx !== -1) {
+          const rowVals = [halaqahId, namaHalaqah, muallim, jadwal, JSON.stringify(studentIds)];
+          rowVals[katColIdx] = kategori;
+          rowVals.push(nowIso);
+          sheet.appendRow(rowVals);
+        } else {
+          sheet.appendRow([halaqahId, namaHalaqah, muallim, jadwal, JSON.stringify(studentIds), kategori, nowIso]);
+        }
       }
 
       return { status: "success", success: true, message: `Halaqah ${namaHalaqah} berhasil disimpan.`, halaqahId: halaqahId };
