@@ -11473,8 +11473,12 @@ function saveTahfidzHalaqah(payload, token) {
       }
     }
 
-    const nama = String(payload.namaHalaqah || payload.nama_halaqah || payload.nama || "").trim();
-    if (!nama) throw new Error("Nama halaqah wajib diisi.");
+    const muhafiz = String(payload.muhafiz || "").trim();
+    let nama = String(payload.namaHalaqah || payload.nama_halaqah || payload.nama || "").trim();
+    if (!nama && muhafiz) {
+      nama = "Halaqah " + muhafiz;
+    }
+    if (!nama) throw new Error("Ustadz Muhafiz Pembina wajib dipilih.");
 
     const ss = getDatabaseSpreadsheet();
     const sheet = getOrCreateTahfidzSheet(ss, SHEET_TAHFIDZ_HALAQAH, [
@@ -11482,9 +11486,8 @@ function saveTahfidzHalaqah(payload, token) {
     ]);
 
     const halaqahId = payload.halaqahId || payload.halaqah_id || ("HLQ-" + Utilities.formatDate(new Date(), "GMT+7", "yyyyMMdd-HHmmss") + "-" + Math.floor(100 + Math.random() * 900));
-    const kategori = String(payload.kategori || "Tahfidz Dewasa").trim();
-    const muhafiz = String(payload.muhafiz || "").trim();
-    const targetKurikulum = String(payload.targetKurikulum || payload.target_kurikulum || "").trim();
+    const kategori = String(payload.kategori || "Tahfidz Al-Qur'an").trim();
+    const targetKurikulum = String(payload.targetKurikulum || payload.target_kurikulum || "Target Tahfidz Standar").trim();
     const studentIds = Array.isArray(payload.studentIds) ? payload.studentIds.join(",") : String(payload.studentIds || "");
     const createdAt = new Date().toISOString();
 
@@ -13705,8 +13708,12 @@ function saveSoroganHalaqah(data, token) {
         }
       }
 
-      const nama = String(data.namaHalaqah || data.nama_halaqah || data.nama || "").trim();
-      if (!nama) throw new Error("Nama halaqah sorogan wajib diisi.");
+      const muallim = String(data.muallim || data.muallimPengampu || "").trim();
+      let nama = String(data.namaHalaqah || data.nama_halaqah || data.nama || "").trim();
+      if (!nama && muallim) {
+        nama = "Halaqah " + muallim;
+      }
+      if (!nama) throw new Error("Mu'allim Pengampu atau nama halaqah sorogan wajib diisi.");
 
       const ss = getDatabaseSpreadsheet();
       const headersHalaqah = ["halaqah_id", "nama_halaqah", "kategori", "muallim", "target_kurikulum", "student_ids", "created_at"];
@@ -13719,7 +13726,6 @@ function saveSoroganHalaqah(data, token) {
       }
 
       const kategori = String(data.kategori || data.kategoriProgram || data.kategori_program || "Pesantren Reguler Putra Putri").trim();
-      const muallim = String(data.muallim || data.muallimPengampu || "").trim();
       const targetKurikulum = String(data.targetKurikulum || data.target_kurikulum || data.targetDeskripsi || data.jadwalSesi || data.jadwal || "Sorogan Binnazhar Mushaf Pojok 30 Juz").trim();
 
       let rawStudents = data.studentIds || data.student_ids || [];

@@ -3275,15 +3275,16 @@ async function deleteTahfidzHalaqahConfirm(halaqahId, namaHalaqah) {
 async function submitNewHalaqah(e) {
     if (e) e.preventDefault();
 
-    const nama = document.getElementById('input-halaqah-nama')?.value || '';
-    const kat = document.getElementById('input-halaqah-kategori')?.value || 'Tahfidz Anak';
-    const muh = document.getElementById('input-halaqah-muhafiz')?.value || '';
-    const target = document.getElementById('input-halaqah-target')?.value || '';
+    const muh = (document.getElementById('input-halaqah-muhafiz')?.value || '').trim();
+    const target = (document.getElementById('input-halaqah-target')?.value || '').trim();
 
-    if (!nama) {
-        if (typeof showToast === 'function') showToast("⚠️ Nama Halaqah wajib diisi.");
+    if (!muh) {
+        if (typeof showToast === 'function') showToast("⚠️ Silakan pilih Ustadz Muhafiz Pembina terlebih dahulu.");
         return;
     }
+
+    const nama = `Halaqah ${muh}`;
+    const kat = 'Tahfidz Al-Qur\'an';
 
     const btn = document.getElementById('btn-submit-tahfidz-halaqah');
     setTahfidzButtonLoading(btn, true, "Menyimpan Halaqah...");
@@ -3295,12 +3296,12 @@ async function submitNewHalaqah(e) {
             namaHalaqah: nama,
             kategori: kat,
             muhafiz: muh,
-            targetKurikulum: target
+            targetKurikulum: target || "Target Tahfidz Standar"
         });
 
         if (res && (res.success || res.status === "success")) {
             if (typeof showToast === 'function') showToast("✅ Halaqah baru berhasil dibuat!");
-            if (document.getElementById('input-halaqah-nama')) document.getElementById('input-halaqah-nama').value = '';
+            if (document.getElementById('input-halaqah-muhafiz')) document.getElementById('input-halaqah-muhafiz').value = '';
             if (document.getElementById('input-halaqah-target')) document.getElementById('input-halaqah-target').value = '';
             
             const newHalaqah = {
@@ -3308,7 +3309,7 @@ async function submitNewHalaqah(e) {
                 namaHalaqah: nama,
                 kategori: kat,
                 muhafiz: muh,
-                targetKurikulum: target,
+                targetKurikulum: target || "Target Tahfidz Standar",
                 studentCount: 0
             };
 
