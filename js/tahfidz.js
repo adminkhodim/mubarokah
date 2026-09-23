@@ -936,8 +936,23 @@ function openTahfidzCatatModal(studentId = null) {
     if (selSantri && ASNTahfidz.data.students) {
         let optHtml = `<option value="">-- Pilih Santri --</option>`;
         ASNTahfidz.data.students.forEach(st => {
-            const selected = (studentId && st.studentId === studentId) ? 'selected' : '';
-            optHtml += `<option value="${st.studentId}" ${selected}>${escapeHtml(st.name)} (${escapeHtml(st.nis || '-')})</option>`;
+            const sId = st.studentId || st.student_id || st.id || "";
+            const sName = st.name || st.nama || "";
+            const sNis = st.nis || "";
+            const sGender = st.gender || "L";
+            const sHalaqahId = st.halaqah?.halaqahId || "";
+            const sHalaqahName = st.halaqah?.namaHalaqah || "";
+            const sMuhafiz = st.halaqah?.muhafiz || "";
+            const selected = (studentId && (sId === studentId || sNis === studentId)) ? 'selected' : '';
+            optHtml += `<option value="${escapeHtml(sId)}" 
+                data-name="${escapeHtml(sName)}" 
+                data-nis="${escapeHtml(sNis)}" 
+                data-gender="${escapeHtml(sGender)}" 
+                data-halaqah-id="${escapeHtml(sHalaqahId)}" 
+                data-halaqah-name="${escapeHtml(sHalaqahName)}" 
+                data-muhafiz="${escapeHtml(sMuhafiz)}" ${selected}>
+                ${escapeHtml(sName || sId)} (${escapeHtml(sNis || '-')})
+            </option>`;
         });
         selSantri.innerHTML = optHtml;
 
@@ -1131,7 +1146,27 @@ async function submitTahfidzCatat(e) {
         return;
     }
 
-    const student = (ASNTahfidz.data.students || []).find(s => s.studentId === studentId);
+    const selectedOption = (selSantri && selSantri.options) ? selSantri.options[selSantri.selectedIndex] : null;
+    const optName = selectedOption?.dataset?.name || "";
+    const optNis = selectedOption?.dataset?.nis || "";
+    const optGender = selectedOption?.dataset?.gender || "L";
+    const optHalaqahId = selectedOption?.dataset?.halaqahId || "";
+    const optHalaqahName = selectedOption?.dataset?.halaqahName || "";
+    const optMuhafiz = selectedOption?.dataset?.muhafiz || "";
+
+    const student = (ASNTahfidz.data.students || []).find(s => 
+        (s.studentId && s.studentId === studentId) ||
+        (s.student_id && s.student_id === studentId) ||
+        (s.id && s.id === studentId) ||
+        (s.nis && s.nis === studentId)
+    );
+
+    const studentName = (student?.name || student?.nama || optName || (selectedOption ? selectedOption.text.split('(')[0].trim() : "")).trim();
+    const nis = (student?.nis || optNis || "").trim();
+    const gender = (student?.gender || optGender || "L").toUpperCase();
+    const halaqahId = student?.halaqah?.halaqahId || optHalaqahId || "";
+    const namaHalaqah = student?.halaqah?.namaHalaqah || optHalaqahName || "";
+
     const tanggal = document.getElementById('tahfidz-catat-tanggal')?.value || "";
     const sesi = document.getElementById('tahfidz-catat-sesi')?.value || "Pagi (Ba'da Subuh)";
     const juz = Number(document.getElementById('tahfidz-catat-juz')?.value || 1);
@@ -1158,9 +1193,15 @@ async function submitTahfidzCatat(e) {
             token,
             studentId,
             student_id: studentId,
-            nis: student?.nis || "",
-            studentName: student?.name || "",
-            gender: student?.gender || "L",
+            nis: nis,
+            studentName: studentName,
+            student_name: studentName,
+            name: studentName,
+            gender: gender,
+            halaqahId: halaqahId,
+            halaqah_id: halaqahId,
+            namaHalaqah: namaHalaqah,
+            nama_halaqah: namaHalaqah,
             tanggal,
             sesi,
             tipe: ASNTahfidz.catatState.tipe,
@@ -1173,7 +1214,7 @@ async function submitTahfidzCatat(e) {
             nilai,
             statusSetoran,
             status_setoran: statusSetoran,
-            muhafiz: muhafiz || (student?.halaqah?.muhafiz || "Ustadz Pembina"),
+            muhafiz: muhafiz || optMuhafiz || (student?.halaqah?.muhafiz || "Ustadz Pembina"),
             catatan
         };
 

@@ -10216,6 +10216,110 @@ function getHalaqahColumnIndexes(headerRow) {
 }
 
 /**
+ * Helper internal untuk resolusi data lengkap santri (Nama, NIS, Gender) dari Sheet Students
+ */
+function resolveStudentIdentity_(ss, studentId, nis, studentName) {
+  let resName = String(studentName || "").trim();
+  let resNis = String(nis || "").trim();
+  let resGender = "L";
+  let resId = String(studentId || "").trim();
+
+  try {
+    const studentSheet = (typeof getAuthSheet === "function" ? getAuthSheet(ss, SHEET_STUDENTS) : null) || ss.getSheetByName(SHEET_STUDENTS);
+    if (studentSheet) {
+      const sData = studentSheet.getDataRange().getValues();
+      if (sData && sData.length > 1) {
+        const sHeaders = sData[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s\-_]+/g, ""));
+        const sIdIdx = sHeaders.findIndex(h => h === "studentid" || h === "id");
+        const sNisIdx = sHeaders.findIndex(h => h === "nis" || h === "nisn" || h.includes("nis"));
+        const sNameIdx = sHeaders.findIndex(h => h === "name" || h === "nama" || h.includes("name") || h.includes("nama"));
+        const sGenderIdx = sHeaders.findIndex(h => h === "gender" || h === "jeniskelamin" || h === "jenis");
+
+        for (let i = 1; i < sData.length; i++) {
+          const row = sData[i];
+          const rowId = sIdIdx !== -1 ? String(row[sIdIdx] || "").trim() : "";
+          const rowNis = sNisIdx !== -1 ? String(row[sNisIdx] || "").trim() : "";
+          const rowName = sNameIdx !== -1 ? String(row[sNameIdx] || "").trim() : "";
+
+          const matchId = resId && (rowId.toLowerCase() === resId.toLowerCase() || rowNis.toLowerCase() === resId.toLowerCase());
+          const matchNis = resNis && (rowNis.toLowerCase() === resNis.toLowerCase() || rowId.toLowerCase() === resNis.toLowerCase());
+          const matchName = resName && rowName && (rowName.toLowerCase() === resName.toLowerCase());
+
+          if (matchId || matchNis || matchName) {
+            if (!resName && rowName) resName = rowName;
+            if (!resNis && rowNis) resNis = rowNis;
+            if (!resId && rowId) resId = rowId;
+            if (sGenderIdx !== -1 && row[sGenderIdx]) {
+              const gRaw = String(row[sGenderIdx] || "").toUpperCase();
+              resGender = (gRaw === "P" || gRaw === "PEREMPUAN" || gRaw === "PUTRI") ? "P" : "L";
+            }
+            break;
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("[RESOLVE STUDENT IDENTITY WARN]", err);
+  }
+
+  return {
+    studentId: resId,
+    nis: resNis,
+    studentName: resName,
+    gender: resGender
+  };
+}
+
+/**
+ * Helper internal untuk resolusi Halaqah santri dari Sheet Tahfidz_Halaqah
+ */
+function resolveStudentHalaqah_(ss, studentId, nis, customHalaqahId, customNamaHalaqah, customMuhafiz) {
+  let resHalaqahId = String(customHalaqahId || "").trim();
+  let resNamaHalaqah = String(customNamaHalaqah || "").trim();
+  let resMuhafiz = String(customMuhafiz || "").trim();
+
+  try {
+    const halaqahSheet = ss.getSheetByName(SHEET_TAHFIDZ_HALAQAH);
+    if (halaqahSheet) {
+      const hData = halaqahSheet.getDataRange().getValues();
+      if (hData && hData.length > 1) {
+        const colMap = getHalaqahColumnIndexes(hData[0]);
+        const sIdLower = String(studentId || "").trim().toLowerCase();
+        const nisLower = String(nis || "").trim().toLowerCase();
+
+        for (let i = 1; i < hData.length; i++) {
+          const r = hData[i];
+          const stIds = colMap.studentIds !== -1 
+            ? String(r[colMap.studentIds] || "").split(",").map(x => x.trim().toLowerCase()).filter(Boolean) 
+            : [];
+
+          if ((sIdLower && stIds.includes(sIdLower)) || (nisLower && stIds.includes(nisLower))) {
+            if (!resHalaqahId && colMap.id !== -1) resHalaqahId = String(r[colMap.id] || "").trim();
+            if (!resNamaHalaqah && colMap.nama !== -1) resNamaHalaqah = String(r[colMap.nama] || "").trim();
+            if ((!resMuhafiz || resMuhafiz === "Ustadz Pembina" || resMuhafiz === "-") && colMap.muhafiz !== -1) {
+              const hMuh = String(r[colMap.muhafiz] || "").trim();
+              if (hMuh) resMuhafiz = hMuh;
+            }
+            break;
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("[RESOLVE STUDENT HALAQAH WARN]", err);
+  }
+
+  if (!resNamaHalaqah) resNamaHalaqah = resHalaqahId ? `Halaqah ${resHalaqahId}` : "Halaqah Binaan";
+  if (!resMuhafiz || resMuhafiz === "-") resMuhafiz = "Ustadz Pembina";
+
+  return {
+    halaqahId: resHalaqahId,
+    namaHalaqah: resNamaHalaqah,
+    muhafiz: resMuhafiz
+  };
+}
+
+/**
  * FUNGSI UTAMA INISIALISASI TAB SHEET TAHFIDZ
  * Dapat dijalankan langsung dari menu Run Apps Script Editor (pilih: initTahfidzSheets)
  * Atau dipanggil via API Frontend / Web App.
@@ -10563,6 +10667,64 @@ function getTahfidzDashboard(token) {
       }
     }
 
+    // Auto-heal / Backfill data kosong di Tahfidz_Capaian & Tahfidz_Logs jika ada
+    try {
+      let needCapaianFlush = false;
+      if (capaianSheet && cData && cData.length > 1) {
+        const hCap = cData[0].map(h => String(h || "").trim().toLowerCase());
+        const sIdIdx = hCap.indexOf("student_id");
+        const sNmIdx = hCap.indexOf("student_name");
+        const hlqIdIdx = hCap.indexOf("halaqah_id");
+        const hlqNmIdx = hCap.indexOf("nama_halaqah");
+        const muhIdx = hCap.indexOf("muhafiz_pembina");
+
+        for (let i = 1; i < cData.length; i++) {
+          const sId = sIdIdx !== -1 ? String(cData[i][sIdIdx] || "").trim() : "";
+          if (!sId) continue;
+          const currName = sNmIdx !== -1 ? String(cData[i][sNmIdx] || "").trim() : "";
+          const currHlq = hlqIdIdx !== -1 ? String(cData[i][hlqIdIdx] || "").trim() : "";
+
+          if (!currName || !currHlq) {
+            const foundSt = allStudents.find(s => 
+              String(s.studentId).toLowerCase() === sId.toLowerCase() || 
+              String(s.nis).toLowerCase() === sId.toLowerCase()
+            );
+            const foundHlq = studentHalaqahMap[sId] || studentHalaqahMap[sId.toLowerCase()] || (foundSt && (studentHalaqahMap[foundSt.studentId] || studentHalaqahMap[foundSt.nis])) || null;
+
+            if (!currName && foundSt && foundSt.name && sNmIdx !== -1) {
+              capaianSheet.getRange(i + 1, sNmIdx + 1).setValue(foundSt.name);
+              cData[i][sNmIdx] = foundSt.name;
+              needCapaianFlush = true;
+            }
+            if (!currHlq && foundHlq && hlqIdIdx !== -1) {
+              if (foundHlq.halaqahId) {
+                capaianSheet.getRange(i + 1, hlqIdIdx + 1).setValue(foundHlq.halaqahId);
+                cData[i][hlqIdIdx] = foundHlq.halaqahId;
+              }
+              if (foundHlq.namaHalaqah && hlqNmIdx !== -1) {
+                capaianSheet.getRange(i + 1, hlqNmIdx + 1).setValue(foundHlq.namaHalaqah);
+                cData[i][hlqNmIdx] = foundHlq.namaHalaqah;
+              }
+              if (foundHlq.muhafiz && muhIdx !== -1) {
+                capaianSheet.getRange(i + 1, muhIdx + 1).setValue(foundHlq.muhafiz);
+                cData[i][muhIdx] = foundHlq.muhafiz;
+              }
+              needCapaianFlush = true;
+            }
+            if (capaianMap[sId]) {
+              if (foundSt && foundSt.name) capaianMap[sId].studentName = foundSt.name;
+              if (foundHlq && foundHlq.halaqahId) capaianMap[sId].halaqahId = foundHlq.halaqahId;
+              if (foundHlq && foundHlq.namaHalaqah) capaianMap[sId].namaHalaqah = foundHlq.namaHalaqah;
+              if (foundHlq && foundHlq.muhafiz) capaianMap[sId].muhafiz = foundHlq.muhafiz;
+            }
+          }
+        }
+      }
+      if (needCapaianFlush) SpreadsheetApp.flush();
+    } catch (healErr) {
+      console.warn("[AUTO-HEAL TAHFIDZ CAPAIAN WARN]", healErr);
+    }
+
     // 5. Agregasi Riwayat Logs Super Cepat (Single-pass O(N) Reverse Scan)
     // Mengeliminasi in-memory sorting ribuan log per santri
     const latestLogMap = {};
@@ -10579,6 +10741,7 @@ function getTahfidzDashboard(token) {
         const hLogs = logsData[0].map(h => String(h || "").trim().toLowerCase());
         const idIdx = hLogs.indexOf("student_id");
         const nisIdx = hLogs.indexOf("nis");
+        const sNmLogsIdx = hLogs.indexOf("student_name");
         const statusIdx = hLogs.indexOf("status_setoran");
         const nilaiIdx = hLogs.indexOf("nilai");
         const juzIdx = hLogs.indexOf("juz");
@@ -10590,6 +10753,7 @@ function getTahfidzDashboard(token) {
         const totHalIdx = hLogs.indexOf("total_halaman");
         const sesiIdx = hLogs.indexOf("sesi");
         const muhIdx = hLogs.indexOf("muhafiz");
+        let needLogsFlush = false;
 
         // Scan dari baris paling bawah ke atas (log terbaru ada di baris bawah)
         for (let i = logsData.length - 1; i >= 1; i--) {
@@ -10597,6 +10761,25 @@ function getTahfidzDashboard(token) {
           const sId = idIdx !== -1 ? String(r[idIdx] || "").trim() : "";
           const sNis = nisIdx !== -1 ? String(r[nisIdx] || "").trim() : "";
           if (!sId && !sNis) continue;
+
+          // Auto-heal baris log jika nis atau student_name kosong
+          const currLogName = sNmLogsIdx !== -1 ? String(r[sNmLogsIdx] || "").trim() : "";
+          if (!currLogName || !sNis) {
+            const foundSt = allStudents.find(s => 
+              (sId && (String(s.studentId).toLowerCase() === sId.toLowerCase() || String(s.nis).toLowerCase() === sId.toLowerCase())) ||
+              (sNis && (String(s.nis).toLowerCase() === sNis.toLowerCase() || String(s.studentId).toLowerCase() === sNis.toLowerCase()))
+            );
+            if (foundSt) {
+              if (!currLogName && foundSt.name && sNmLogsIdx !== -1) {
+                logsSheet.getRange(i + 1, sNmLogsIdx + 1).setValue(foundSt.name);
+                needLogsFlush = true;
+              }
+              if (!sNis && foundSt.nis && nisIdx !== -1) {
+                logsSheet.getRange(i + 1, nisIdx + 1).setValue(foundSt.nis);
+                needLogsFlush = true;
+              }
+            }
+          }
 
           const sKeys = [sId, sNis].filter(Boolean);
           const nilai = nilaiIdx !== -1 ? String(r[nilaiIdx] || "MUMTAZ").trim().toUpperCase() : "MUMTAZ";
@@ -10877,13 +11060,36 @@ function saveTahfidzLog(payload, token) {
       "halaman_list", "total_halaman", "nilai", "muhafiz", "catatan", "status_setoran", "created_at"
     ]);
 
-    const studentId = String(payload.studentId || payload.student_id || "").trim();
-    const nis = String(payload.nis || "").trim();
-    const studentName = String(payload.studentName || payload.student_name || payload.name || "").trim();
+    let studentId = String(payload.studentId || payload.student_id || "").trim();
+    let nis = String(payload.nis || "").trim();
+    let studentName = String(payload.studentName || payload.student_name || payload.name || "").trim();
+    let gender = String(payload.gender || "L").toUpperCase();
 
-    if (!studentId && !studentName) {
+    if (!studentId && !studentName && !nis) {
       throw new Error("Santri wajib dipilih.");
     }
+
+    // 1. Resolusi Otomatis Identitas Santri dari Master Students
+    const studentInfo = resolveStudentIdentity_(ss, studentId, nis, studentName);
+    if (studentInfo.studentId) studentId = studentInfo.studentId;
+    if (studentInfo.nis) nis = studentInfo.nis;
+    if (studentInfo.studentName) studentName = studentInfo.studentName;
+    if (studentInfo.gender) gender = studentInfo.gender;
+
+    // 2. Resolusi Otomatis Halaqah dari Master Tahfidz_Halaqah
+    const halaqahInfo = resolveStudentHalaqah_(
+      ss, 
+      studentId, 
+      nis, 
+      payload.halaqahId || payload.halaqah_id, 
+      payload.namaHalaqah || payload.nama_halaqah, 
+      payload.muhafiz
+    );
+    const halaqahId = halaqahInfo.halaqahId;
+    const namaHalaqah = halaqahInfo.namaHalaqah;
+    const muhafiz = (payload.muhafiz && payload.muhafiz !== "Ustadz Pembina" && payload.muhafiz !== "-") 
+      ? String(payload.muhafiz).trim() 
+      : halaqahInfo.muhafiz;
 
     const logId = payload.logId || payload.log_id || ("TFZ-" + Utilities.formatDate(new Date(), "GMT+7", "yyyyMMdd-HHmmss") + "-" + Math.floor(1000 + Math.random() * 9000));
     const tanggal = payload.tanggal ? normalizeDateString(payload.tanggal) : Utilities.formatDate(new Date(), "GMT+7", "yyyy-MM-dd");
@@ -10895,9 +11101,7 @@ function saveTahfidzLog(payload, token) {
     const totalHalaman = Number(payload.totalHalaman || payload.total_halaman || 1);
     const nilai = String(payload.nilai || "MUMTAZ").trim().toUpperCase();
     const statusSetoran = String(payload.statusSetoran || payload.status_setoran || (nilai === "DHAIF" ? "ULANG" : "LANJUT")).trim().toUpperCase();
-    const muhafiz = String(payload.muhafiz || "").trim();
     const catatan = String(payload.catatan || "").trim();
-    const gender = String(payload.gender || "L").toUpperCase();
     const createdAt = new Date().toISOString();
 
     const data = sheet.getDataRange().getValues();
@@ -10952,6 +11156,30 @@ function saveTahfidzLog(payload, token) {
       sheet.appendRow(rowValues);
     }
 
+    // Auto-heal baris log terdahulu untuk santri ini jika student_name atau nis masih kosong
+    try {
+      if (data && data.length > 1) {
+        const sIdColIdx = headers.indexOf("student_id");
+        const nisColIdx = headers.indexOf("nis");
+        const nameColIdx = headers.indexOf("student_name");
+        if (sIdColIdx !== -1 && (nisColIdx !== -1 || nameColIdx !== -1)) {
+          for (let i = 1; i < data.length; i++) {
+            const rowSid = String(data[i][sIdColIdx] || "").trim();
+            if (rowSid && (rowSid.toLowerCase() === studentId.toLowerCase() || (nis && rowSid.toLowerCase() === nis.toLowerCase()))) {
+              if (nameColIdx !== -1 && !String(data[i][nameColIdx] || "").trim() && studentName) {
+                sheet.getRange(i + 1, nameColIdx + 1).setValue(studentName);
+              }
+              if (nisColIdx !== -1 && !String(data[i][nisColIdx] || "").trim() && nis) {
+                sheet.getRange(i + 1, nisColIdx + 1).setValue(nis);
+              }
+            }
+          }
+        }
+      }
+    } catch (healLogErr) {
+      console.warn("[AUTO-HEAL LOG ROW WARN]", healLogErr);
+    }
+
     // Auto-update / Sync ke Sheet Tahfidz_Capaian
     try {
       const headersCapaian = [
@@ -10968,7 +11196,7 @@ function saveTahfidzLog(payload, token) {
         const totIdx = cHeaders.indexOf("total_halaman_tuntas");
         for (let i = 1; i < cData.length; i++) {
           const rowId = sIdIdx !== -1 ? String(cData[i][sIdIdx] || "").trim() : "";
-          if (rowId === studentId || (nis && rowId === nis)) {
+          if (rowId.toLowerCase() === studentId.toLowerCase() || (nis && rowId.toLowerCase() === nis.toLowerCase())) {
             capaianRowIdx = i + 1;
             prevTotalHalaman = totIdx !== -1 ? (Number(cData[i][totIdx]) || 0) : 0;
             break;
@@ -11003,6 +11231,8 @@ function saveTahfidzLog(payload, token) {
         capaianSheet.getRange(capaianRowIdx, 4).setValue(nextHalaman);
         capaianSheet.getRange(capaianRowIdx, 5).setValue(updatedTotalHalaman);
         capaianSheet.getRange(capaianRowIdx, 6).setValue(statusSetoran);
+        if (halaqahId) capaianSheet.getRange(capaianRowIdx, 7).setValue(halaqahId);
+        if (namaHalaqah) capaianSheet.getRange(capaianRowIdx, 8).setValue(namaHalaqah);
         if (muhafiz && muhafiz !== "-") capaianSheet.getRange(capaianRowIdx, 9).setValue(muhafiz);
         capaianSheet.getRange(capaianRowIdx, 10).setValue(createdAt);
       } else {
@@ -11013,9 +11243,9 @@ function saveTahfidzLog(payload, token) {
           nextHalaman,
           updatedTotalHalaman,
           statusSetoran,
-          "",
-          "Halaqah Binaan",
-          muhafiz || "Ustadz Pembina",
+          halaqahId,
+          namaHalaqah,
+          muhafiz,
           createdAt
         ]);
       }
@@ -11067,19 +11297,39 @@ function saveTahfidzCapaian(data, token) {
       }
     }
 
-    const studentId = String(data.studentId || data.student_id || "").trim();
-    const studentName = String(data.studentName || data.student_name || "").trim();
+    let studentId = String(data.studentId || data.student_id || "").trim();
+    let studentName = String(data.studentName || data.student_name || "").trim();
+    let nis = String(data.nis || "").trim();
     const juz = Number(data.juzAktif || data.juz_aktif || data.juz) || 1;
     const halaman = Number(data.halamanTerakhir || data.halaman_terakhir || data.halaman) || 1;
-    const halaqahId = String(data.halaqahId || data.halaqah_id || "").trim();
-    const namaHalaqah = String(data.namaHalaqah || data.nama_halaqah || "").trim();
-    const muhafiz = String(data.muhafiz || data.muhafiz_pembina || "").trim();
     const status = String(data.statusTerakhir || data.status_terakhir || "LANJUT").trim();
     const nowIso = new Date().toISOString();
 
-    if (!studentId) throw new Error("ID Santri wajib disertakan.");
+    if (!studentId && !studentName && !nis) throw new Error("Identitas Santri wajib disertakan.");
 
     const ss = getDatabaseSpreadsheet();
+
+    // 1. Resolusi Otomatis Identitas Santri dari Master Students
+    const studentInfo = resolveStudentIdentity_(ss, studentId, nis, studentName);
+    if (studentInfo.studentId) studentId = studentInfo.studentId;
+    if (studentInfo.studentName) studentName = studentInfo.studentName;
+    if (studentInfo.nis) nis = studentInfo.nis;
+
+    // 2. Resolusi Otomatis Halaqah dari Master Tahfidz_Halaqah
+    const halaqahInfo = resolveStudentHalaqah_(
+      ss, 
+      studentId, 
+      nis, 
+      data.halaqahId || data.halaqah_id, 
+      data.namaHalaqah || data.nama_halaqah, 
+      data.muhafiz || data.muhafiz_pembina
+    );
+    const halaqahId = halaqahInfo.halaqahId;
+    const namaHalaqah = halaqahInfo.namaHalaqah;
+    const muhafiz = (data.muhafiz && data.muhafiz !== "Ustadz Pembina" && data.muhafiz !== "-") 
+      ? String(data.muhafiz).trim() 
+      : halaqahInfo.muhafiz;
+
     const headersCapaian = [
       "student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_tuntas", "status_terakhir", "halaqah_id", "nama_halaqah", "muhafiz_pembina", "updated_at"
     ];
@@ -11092,7 +11342,8 @@ function saveTahfidzCapaian(data, token) {
       const idIdx = cData[0].map(h => String(h).toLowerCase()).indexOf("student_id");
       const totIdx = cData[0].map(h => String(h).toLowerCase()).indexOf("total_halaman_tuntas");
       for (let i = 1; i < cData.length; i++) {
-        if (String(cData[i][idIdx] || "").trim() === studentId) {
+        const rowId = String(cData[i][idIdx] || "").trim();
+        if (rowId.toLowerCase() === studentId.toLowerCase() || (nis && rowId.toLowerCase() === nis.toLowerCase())) {
           rowIndex = i + 1;
           prevTotal = totIdx !== -1 ? (Number(cData[i][totIdx]) || 0) : 0;
           break;
