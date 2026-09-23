@@ -171,6 +171,7 @@ async function loadAdminTahfidzData(forceRefresh = false) {
             renderTahfidzHalaqahCards();
             populatePlottingHalaqahSelector();
             renderTahfidzMatriksBeban();
+            populateTahfidzCatatSesiDropdown();
             hasRenderedFromCache = true;
 
             if (emptyState && ASNTahfidz.filteredStudents.length > 0) {
@@ -220,6 +221,7 @@ async function loadAdminTahfidzData(forceRefresh = false) {
             renderTahfidzHalaqahCards();
             populatePlottingHalaqahSelector();
             renderTahfidzMatriksBeban();
+            populateTahfidzCatatSesiDropdown();
 
             if (forceRefresh && typeof showToast === 'function') {
                 showToast("✅ Data Tahfidz berhasil diperbarui.");
@@ -854,6 +856,50 @@ function checkAndApplyStudentRepeatState(studentId) {
 }
 
 /**
+ * Mengisi dropdown Sesi Waktu di modal Catat Setoran sesuai DAFTAR JADWAL SESI WAKTU AKTIF
+ */
+function populateTahfidzCatatSesiDropdown(selectedSesi = null) {
+    const selSesi = document.getElementById('tahfidz-catat-sesi');
+    if (!selSesi) return;
+
+    let sesiList = ASNTahfidz.data.sesiList;
+    if (!sesiList || sesiList.length === 0) {
+        sesiList = [
+            { sesiId: "SESI-01", id: "SESI-01", namaSesi: "Pagi (Ba'da Subuh)", nama: "Pagi (Ba'da Subuh)", jamMulai: "05:00", jamSelesai: "06:00", status: "Aktif Digunakan" },
+            { sesiId: "SESI-02", id: "SESI-02", namaSesi: "Pagi (MA Tahfidz)", nama: "Pagi (MA Tahfidz)", jamMulai: "08:00", jamSelesai: "09:00", status: "Aktif Digunakan" },
+            { sesiId: "SESI-03", id: "SESI-03", namaSesi: "Sore (Ba'da Ashar)", nama: "Sore (Ba'da Ashar)", jamMulai: "16:00", jamSelesai: "17:00", status: "Aktif Digunakan" }
+        ];
+    }
+
+    // Filter hanya sesi yang AKTIF (status mengandung 'Aktif' dan bukan 'Nonaktif')
+    const activeList = sesiList.filter(s => {
+        const st = String(s.status || 'Aktif Digunakan').toLowerCase();
+        return st.includes('aktif') && !st.includes('nonaktif');
+    });
+
+    const listToRender = activeList.length > 0 ? activeList : sesiList;
+    const currentVal = selectedSesi || selSesi.value || ASNTahfidz.catatState.sesi || "";
+
+    selSesi.innerHTML = listToRender.map((s, idx) => {
+        const nama = s.namaSesi || s.nama || `Sesi 0${idx + 1}`;
+        const jmMulai = typeof cleanSesiTime === 'function' ? cleanSesiTime(s.jamMulai, '05:00') : (s.jamMulai || '05:00');
+        const jmSelesai = typeof cleanSesiTime === 'function' ? cleanSesiTime(s.jamSelesai, '06:00') : (s.jamSelesai || '06:00');
+        const timeStr = `${jmMulai} - ${jmSelesai} WIB`;
+        const label = `${nama} ${timeStr}`;
+        const isSelected = (currentVal && (currentVal === nama || currentVal === label)) ? 'selected' : (idx === 0 && !currentVal ? 'selected' : '');
+        return `<option value="${escapeHtml(nama)}" ${isSelected}>${escapeHtml(label)}</option>`;
+    }).join('');
+
+    if (selSesi.value) {
+        ASNTahfidz.catatState.sesi = selSesi.value;
+    }
+
+    selSesi.onchange = function() {
+        ASNTahfidz.catatState.sesi = this.value;
+    };
+}
+
+/**
  * Buka modal catat setoran cepat
  */
 function openTahfidzCatatModal(studentId = null) {
@@ -870,6 +916,13 @@ function openTahfidzCatatModal(studentId = null) {
         nilai: "MUMTAZ",
         statusSetoran: "LANJUT"
     };
+
+    // Reset Catatan Khusus Tajwid
+    const catatanInput = document.getElementById('tahfidz-catat-catatan');
+    if (catatanInput) catatanInput.value = "";
+
+    // Populate Sesi Dropdown dari Jadwal Sesi Aktif
+    populateTahfidzCatatSesiDropdown();
 
     // Populate Santri Select
     const selSantri = document.getElementById('tahfidz-catat-santri');
@@ -1080,6 +1133,9 @@ async function submitTahfidzCatat(e) {
     if (muhafiz === '__CUSTOM__') {
         muhafiz = (document.getElementById('tahfidz-catat-muhafiz-manual')?.value || '').trim();
     }
+
+    const nilai = document.getElementById('tahfidz-catat-nilai')?.value || ASNTahfidz.catatState.nilai || "MUMTAZ";
+    const catatan = (document.getElementById('tahfidz-catat-catatan')?.value || "").trim();
 
     const selectedPages = ASNTahfidz.catatState.selectedPages || [1];
     const halamanList = selectedPages.join(",");
@@ -3126,6 +3182,7 @@ async function submitTahfidzSesi(e) {
 
             resetTahfidzSesiForm();
             renderTahfidzSesiCards();
+            populateTahfidzCatatSesiDropdown();
             loadAdminTahfidzData(true);
         } else {
             if (typeof showToast === 'function') showToast("❌ Gagal menyimpan sesi: " + ((res && res.message) || "Terjadi kesalahan"));
@@ -3203,6 +3260,7 @@ async function deleteTahfidzSesiConfirm(sesiId, namaSesi) {
             }
             resetTahfidzSesiForm();
             renderTahfidzSesiCards();
+            populateTahfidzCatatSesiDropdown();
             loadAdminTahfidzData(true);
         } else {
             if (typeof showToast === 'function') showToast("❌ Gagal menghapus sesi: " + ((res && res.message) || "Terjadi kesalahan"));
@@ -3578,6 +3636,7 @@ window.triggerInitTahfidzSheets = triggerInitTahfidzSheets;
 window.filterTahfidzList = filterTahfidzList;
 window.openTahfidzCatatModal = openTahfidzCatatModal;
 window.closeTahfidzCatatModal = closeTahfidzCatatModal;
+window.populateTahfidzCatatSesiDropdown = populateTahfidzCatatSesiDropdown;
 window.setTahfidzCatatTipe = setTahfidzCatatTipe;
 window.toggleTahfidzPage = toggleTahfidzPage;
 window.applyTahfidzQuickChip = applyTahfidzQuickChip;
