@@ -487,6 +487,12 @@ function doPost(e) {
       return createJsonResponse(getSoroganDashboard(token));
     }
 
+    if (action === "getSoroganStudentDetail" || action === "sorogan.studentDetail" || action === "auth.sorogan.studentDetail") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      const studentId = payload.studentId || payload.student_id || (payload.data && (payload.data.studentId || payload.data.student_id)) || null;
+      return createJsonResponse(getSoroganStudentDetail(studentId, token));
+    }
+
     if (action === "saveSoroganLog" || action === "sorogan.saveLog") {
       const token = payload.token || (payload.data && payload.data.token) || null;
       try {
@@ -1574,6 +1580,12 @@ function doGet(e) {
     if (action === "getSoroganDashboard" || action === "sorogan.dashboard") {
       const token = e.parameter.token || null;
       return createJsonResponse(getSoroganDashboard(token));
+    }
+
+    if (action === "getSoroganStudentDetail" || action === "sorogan.studentDetail") {
+      const token = e.parameter.token || null;
+      const studentId = e.parameter.studentId || e.parameter.student_id || null;
+      return createJsonResponse(getSoroganStudentDetail(studentId, token));
     }
 
     if (action === "getSoroganHalaqahList" || action === "sorogan.getHalaqah") {
@@ -9949,6 +9961,88 @@ function handleAuthApiAction(action, payload, e) {
     }
 
     // ----------------------------------------------------
+    // 15b. SOROGAN AL-QUR'AN (BINNAZHAR)
+    // ----------------------------------------------------
+    if (action === "auth.sorogan.dashboard" || action === "sorogan.dashboard" || action === "getSoroganDashboard") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(getSoroganDashboard(token));
+    }
+
+    if (action === "auth.sorogan.studentDetail" || action === "sorogan.studentDetail" || action === "getSoroganStudentDetail") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      const studentId = payload.studentId || payload.student_id || (payload.data && (payload.data.studentId || payload.data.student_id));
+      return createJsonResponse(getSoroganStudentDetail(studentId, token));
+    }
+
+    if (action === "auth.sorogan.saveLog" || action === "sorogan.saveLog" || action === "saveSoroganLog") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(saveSoroganLog(payload.data || payload, token));
+    }
+
+    if (action === "auth.sorogan.deleteLog" || action === "sorogan.deleteLog" || action === "deleteSoroganLog") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      const logId = payload.logId || payload.log_id || (payload.data && (payload.data.logId || payload.data.log_id));
+      return createJsonResponse(deleteSoroganLog(logId, token));
+    }
+
+    if (action === "auth.sorogan.saveCapaian" || action === "sorogan.saveCapaian" || action === "saveSoroganCapaian") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(saveSoroganCapaian(payload.data || payload, token));
+    }
+
+    if (action === "auth.sorogan.saveTarget" || action === "sorogan.saveTarget" || action === "saveSoroganTarget") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(saveSoroganTarget(payload.data || payload, token));
+    }
+
+    if (action === "auth.sorogan.saveBulkTarget" || action === "sorogan.saveBulkTarget" || action === "saveBulkSoroganTarget" || action === "saveSoroganTargetBulk") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(saveBulkSoroganTarget(payload.data || payload, token));
+    }
+
+    if (action === "auth.sorogan.getHalaqah" || action === "sorogan.getHalaqah" || action === "getSoroganHalaqahList") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(getSoroganHalaqahList(token));
+    }
+
+    if (action === "auth.sorogan.saveHalaqah" || action === "sorogan.saveHalaqah" || action === "saveSoroganHalaqah") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(saveSoroganHalaqah(payload.data || payload, token));
+    }
+
+    if (action === "auth.sorogan.savePlotting" || action === "sorogan.savePlotting" || action === "saveSoroganPlotting") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(saveSoroganPlotting(payload.data || payload, token));
+    }
+
+    if (action === "auth.sorogan.deleteHalaqah" || action === "sorogan.deleteHalaqah" || action === "deleteSoroganHalaqah") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      const hId = payload.halaqahId || (payload.data && payload.data.halaqahId) || "";
+      return createJsonResponse(deleteSoroganHalaqah(hId, token));
+    }
+
+    if (action === "auth.sorogan.initSheets" || action === "sorogan.initSheets" || action === "initSoroganSheets") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(initSoroganSheets(token));
+    }
+
+    if (action === "auth.sorogan.getSesi" || action === "sorogan.getSesi" || action === "getSoroganSesiList") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(getSoroganSesiList(token));
+    }
+
+    if (action === "auth.sorogan.saveSesi" || action === "sorogan.saveSesi" || action === "saveSoroganSesi") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(saveSoroganSesi(payload.data || payload, token));
+    }
+
+    if (action === "auth.sorogan.deleteSesi" || action === "sorogan.deleteSesi" || action === "deleteSoroganSesi") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      const sId = payload.sesiId || (payload.data && payload.data.sesiId) || "";
+      return createJsonResponse(deleteSoroganSesi(sId, token));
+    }
+
+    // ----------------------------------------------------
     // 16. DATA PEGAWAI (ASATIDZ & KARYAWAN)
     // ----------------------------------------------------
     if (action === "auth.employee.list" || action === "employee.list" || action === "getEmployees") {
@@ -13926,3 +14020,362 @@ function deleteSoroganSesi(sesiId, token) {
     }
   });
 }
+
+/**
+ * Mengambil detail lengkap mutaba'ah individual santri Sorogan Al-Qur'an (Binnazhar 30 Juz)
+ * Termasuk indikator capaian harian, pekanan, bulanan, riwayat simakan, dan estimasi waktu khatam.
+ */
+function getSoroganStudentDetail(studentId, token) {
+  try {
+    let actor = null;
+    if (token) {
+      try {
+        actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PENGASUH"]);
+      } catch (authErr) {
+        verifySessionToken(token);
+      }
+    }
+
+    const cleanId = String(studentId || "").trim();
+    if (!cleanId) throw new Error("ID Santri wajib disertakan.");
+
+    const ss = getDatabaseSpreadsheet();
+
+    // 1. Ambil Data Santri secara fleksibel dari master Students
+    let student = null;
+    const studentsSheet = (typeof getAuthSheet === "function" ? getAuthSheet(ss, SHEET_STUDENTS) : null) || ss.getSheetByName(SHEET_STUDENTS);
+    if (studentsSheet) {
+      const sData = studentsSheet.getDataRange().getValues();
+      if (sData && sData.length > 1) {
+        const sHeaders = sData[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s\-_]+/g, ""));
+        const sIdIdx = sHeaders.findIndex(h => h === "studentid" || h === "id");
+        const sNisIdx = sHeaders.findIndex(h => h === "nis" || h === "nisn");
+        const sNameIdx = sHeaders.findIndex(h => h === "name" || h === "nama");
+        const sGenderIdx = sHeaders.findIndex(h => h === "gender" || h === "jeniskelamin" || h === "jenis");
+        const sPhotoIdx = sHeaders.findIndex(h => h.includes("photo") || h.includes("foto"));
+        const sStatusIdx = sHeaders.findIndex(h => h === "status");
+
+        for (let i = 1; i < sData.length; i++) {
+          const row = sData[i];
+          const stId = sIdIdx !== -1 ? String(row[sIdIdx] || "").trim() : "";
+          const stNis = sNisIdx !== -1 ? String(row[sNisIdx] || "").trim() : "";
+          const stName = sNameIdx !== -1 ? String(row[sNameIdx] || "").trim() : "";
+
+          if (stId === cleanId || stNis === cleanId || (cleanId.length > 3 && stName.toLowerCase() === cleanId.toLowerCase())) {
+            student = {
+              studentId: stId || cleanId,
+              nis: stNis || "-",
+              name: stName || "Santri",
+              gender: sGenderIdx !== -1 ? String(row[sGenderIdx] || "L").trim().toUpperCase() : "L",
+              photoUrl: sPhotoIdx !== -1 ? String(row[sPhotoIdx] || "").trim() : "",
+              status: sStatusIdx !== -1 ? String(row[sStatusIdx] || "ACTIVE").trim().toUpperCase() : "ACTIVE"
+            };
+            break;
+          }
+        }
+      }
+    }
+
+    if (!student) {
+      student = {
+        studentId: cleanId,
+        nis: "-",
+        name: "Santri",
+        gender: "L",
+        photoUrl: "",
+        status: "ACTIVE"
+      };
+    }
+
+    // 2. Ambil Target Santri dari Sorogan_Target
+    const targetSheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_TARGET, [
+      "student_id", "target_juz", "target_halaman_sesi", "target_halaman_pekan", "updated_at"
+    ], "#f59e0b");
+    const targetData = targetSheet.getDataRange().getValues();
+    let target = {
+      targetJuz: 30,
+      targetHalamanSesi: 2,
+      targetHalamanPekan: 12
+    };
+
+    if (targetData && targetData.length > 1) {
+      const hTarget = targetData[0].map(h => String(h || "").trim().toLowerCase());
+      const sIdIdx = hTarget.indexOf("student_id");
+      const juzIdx = hTarget.indexOf("target_juz");
+      const sesiIdx = hTarget.indexOf("target_halaman_sesi");
+      const pekanIdx = hTarget.indexOf("target_halaman_pekan");
+
+      for (let i = 1; i < targetData.length; i++) {
+        const sId = String(targetData[i][sIdIdx] || "").trim();
+        if (sId === cleanId || (student && sId === student.nis)) {
+          target = {
+            targetJuz: Number(targetData[i][juzIdx] || 30),
+            targetHalamanSesi: Number(targetData[i][sesiIdx] || 2),
+            targetHalamanPekan: Number(targetData[i][pekanIdx] || 12)
+          };
+          break;
+        }
+      }
+    }
+
+    // 3. Ambil Riwayat Logs Santri dari Sorogan_Logs
+    const logsSheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_LOGS, [
+      "log_id", "student_id", "nis", "student_name", "gender",
+      "tanggal", "sesi", "juz", "halaman_list", "total_halaman",
+      "status_setoran", "nilai", "muallim", "catatan", "created_at"
+    ], "#0369a1");
+    const logsData = logsSheet.getDataRange().getValues();
+    const riwayat = [];
+
+    if (logsData && logsData.length > 1) {
+      const hLogs = logsData[0].map(h => String(h || "").trim().toLowerCase());
+      const logIdIdx = hLogs.indexOf("log_id");
+      const stIdIdx = hLogs.indexOf("student_id");
+      const nisIdx = hLogs.indexOf("nis");
+      const tglIdx = hLogs.indexOf("tanggal");
+      const sesiIdx = hLogs.indexOf("sesi");
+      const juzIdx = hLogs.indexOf("juz");
+      const halListIdx = hLogs.indexOf("halaman_list");
+      const totalHalIdx = hLogs.indexOf("total_halaman");
+      const statusIdx = hLogs.indexOf("status_setoran");
+      const nilaiIdx = hLogs.indexOf("nilai");
+      const muallimIdx = hLogs.indexOf("muallim");
+      const catIdx = hLogs.indexOf("catatan");
+      const createdIdx = hLogs.indexOf("created_at");
+
+      for (let i = 1; i < logsData.length; i++) {
+        const r = logsData[i];
+        const sId = String(r[stIdIdx !== -1 ? stIdIdx : 1] || "").trim();
+        const sNis = nisIdx !== -1 ? String(r[nisIdx] || "").trim() : "";
+
+        if (sId === cleanId || (student && (sNis === student.nis || sId === student.studentId))) {
+          const rawStatus = statusIdx !== -1 ? String(r[statusIdx] || "").trim().toUpperCase() : "";
+          const nilai = nilaiIdx !== -1 ? String(r[nilaiIdx] || "MUMTAZ").trim().toUpperCase() : "MUMTAZ";
+          const statusSetoran = rawStatus || (nilai === "DHAIF" ? "ULANG" : "LANCAR");
+
+          riwayat.push({
+            logId: logIdIdx !== -1 ? String(r[logIdIdx] || "").trim() : "",
+            tanggal: normalizeDateString(tglIdx !== -1 ? r[tglIdx] : ""),
+            sesi: sesiIdx !== -1 ? String(r[sesiIdx] || "Pagi").trim() : "Pagi",
+            juz: juzIdx !== -1 ? Number(r[juzIdx] || 1) : 1,
+            halamanList: halListIdx !== -1 ? String(r[halListIdx] || "1").trim() : "1",
+            totalHalaman: totalHalIdx !== -1 ? Number(r[totalHalIdx] || 1) : 1,
+            nilai: nilai,
+            statusSetoran: statusSetoran,
+            muallim: muallimIdx !== -1 ? String(r[muallimIdx] || "").trim() : "",
+            catatan: catIdx !== -1 ? String(r[catIdx] || "").trim() : "",
+            createdAt: createdIdx !== -1 ? String(r[createdIdx] || "") : ""
+          });
+        }
+      }
+    }
+
+    // Urutkan riwayat dari yang terbaru
+    riwayat.sort((a, b) => new Date(b.tanggal || b.createdAt) - new Date(a.tanggal || a.createdAt));
+
+    // 4. Ambil Capaian dari Sorogan_Capaian
+    const capaianSheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_CAPAIAN, [
+      "student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_khatam", "status_terakhir", "halaqah_id", "nama_halaqah", "muallim_pengampu", "updated_at"
+    ], "#0f766e");
+    const capData = capaianSheet.getDataRange().getValues();
+    let currentJuz = 1;
+    let halTerakhir = 1;
+    let halKhatam = 1;
+    let statusTerakhir = "LANCAR";
+    let studentHalaqah = "";
+    let studentMuallim = "";
+
+    if (capData && capData.length > 1) {
+      const hCap = capData[0].map(h => String(h || "").trim().toLowerCase());
+      const cIdIdx = hCap.indexOf("student_id");
+      const cJuzIdx = hCap.indexOf("juz_aktif");
+      const cHalIdx = hCap.indexOf("halaman_terakhir");
+      const cKhatamIdx = hCap.indexOf("total_halaman_khatam");
+      const cStIdx = hCap.indexOf("status_terakhir");
+      const cHalNameIdx = hCap.indexOf("nama_halaqah");
+      const cMuhIdx = hCap.indexOf("muallim_pengampu");
+
+      for (let i = 1; i < capData.length; i++) {
+        const cId = String(capData[i][cIdIdx] || "").trim();
+        if (cId === cleanId || (student && cId === student.nis)) {
+          currentJuz = Number(capData[i][cJuzIdx] || 1);
+          halTerakhir = Number(capData[i][cHalIdx] || 1);
+          halKhatam = Number(capData[i][cKhatamIdx] || Math.max(1, ((currentJuz - 1) * 20) + halTerakhir));
+          statusTerakhir = String(capData[i][cStIdx] || "LANCAR").trim().toUpperCase();
+          if (cHalNameIdx !== -1 && capData[i][cHalNameIdx]) studentHalaqah = String(capData[i][cHalNameIdx]).trim();
+          if (cMuhIdx !== -1 && capData[i][cMuhIdx]) studentMuallim = String(capData[i][cMuhIdx]).trim();
+          break;
+        }
+      }
+    }
+
+    // Jika belum ada di Sorogan_Capaian, hitung dari riwayat simakan
+    if (riwayat.length > 0) {
+      const latestValid = riwayat.find(r => r.statusSetoran !== "ULANG") || riwayat[0];
+      if (latestValid) {
+        if (currentJuz === 1 && halTerakhir === 1 && latestValid.juz) {
+          currentJuz = latestValid.juz;
+          const pages = String(latestValid.halamanList || "").split(",").map(p => Number(p.trim())).filter(p => !isNaN(p));
+          halTerakhir = pages.length > 0 ? Math.max(...pages) : 1;
+        }
+      }
+    }
+
+    // Rata-rata nilai
+    let totalScorePoints = 0;
+    riwayat.forEach(r => {
+      if (r.nilai === "MUMTAZ") totalScorePoints += 4;
+      else if (r.nilai === "JAYYID_JIDDAN") totalScorePoints += 3;
+      else if (r.nilai === "JAYYID") totalScorePoints += 2;
+      else totalScorePoints += 1;
+    });
+
+    let avgNilaiText = "Mumtaz (A)";
+    if (riwayat.length > 0) {
+      const avgScore = totalScorePoints / riwayat.length;
+      if (avgScore >= 3.5) avgNilaiText = "Mumtaz (A)";
+      else if (avgScore >= 2.8) avgNilaiText = "Jayyid Jiddan (B+)";
+      else if (avgScore >= 2.0) avgNilaiText = "Jayyid (B)";
+      else avgNilaiText = "Dha'if (C)";
+    }
+
+    // 5. Kalkulasi 3 Indikator (Harian, Pekanan, Bulanan)
+    const todayStr = Utilities.formatDate(new Date(), "GMT+7", "yyyy-MM-dd");
+    const todayDate = new Date();
+    const startOfWeek = new Date();
+    startOfWeek.setDate(todayDate.getDate() - 6);
+    const startOfMonth = new Date(todayDate.getFullYear(), todayDate.getMonth(), 1);
+
+    let harianReal = 0, harianCount = 0;
+    let pekanReal = 0, pekanCount = 0;
+    let bulanReal = 0, bulanCount = 0;
+
+    riwayat.forEach(r => {
+      const d = new Date(r.tanggal || r.createdAt);
+      const hal = r.totalHalaman || 1;
+
+      if (r.tanggal === todayStr) {
+        harianCount++;
+        harianReal += hal;
+      }
+
+      if (d >= startOfWeek) {
+        pekanCount++;
+        pekanReal += hal;
+      }
+
+      if (d >= startOfMonth) {
+        bulanCount++;
+        bulanReal += hal;
+      }
+    });
+
+    const targetHarian = target.targetHalamanSesi || 2;
+    const targetPekan = target.targetHalamanPekan || (targetHarian * 6);
+    const targetBulan = targetPekan * 4;
+
+    const pekanPercent = targetPekan > 0 ? Math.min(100, Math.round((pekanReal / targetPekan) * 100)) : 0;
+    const bulanPercent = targetBulan > 0 ? Math.min(100, Math.round((bulanReal / targetBulan) * 100)) : 0;
+
+    // 6. Halaqah & Muallim mapping
+    const halaqahSheet = ss.getSheetByName(SHEET_SOROGAN_HALAQAH);
+    const halaqahData = halaqahSheet ? halaqahSheet.getDataRange().getValues() : null;
+    if (halaqahData && halaqahData.length > 1) {
+      const colMap = getSoroganHalaqahColumnIndexes(halaqahData[0]);
+      for (let h = 1; h < halaqahData.length; h++) {
+        const row = halaqahData[h];
+        const members = colMap.studentIds !== -1 ? String(row[colMap.studentIds] || "").split(",").map(m => m.trim().toLowerCase()) : [];
+        const cleanIdLower = cleanId.toLowerCase();
+        const cleanNisLower = String(student.nis || "").trim().toLowerCase();
+        const cleanNameLower = String(student.name || "").trim().toLowerCase();
+
+        const isMatch = members.some(m => {
+          if (!m) return false;
+          return m === cleanIdLower ||
+                 m === cleanNisLower ||
+                 (cleanNameLower && m === cleanNameLower) ||
+                 m.replace(/[^a-z0-9]/g, "") === cleanIdLower.replace(/[^a-z0-9]/g, "");
+        });
+
+        if (isMatch) {
+          if (!studentHalaqah && colMap.name !== -1 && row[colMap.name]) {
+            studentHalaqah = String(row[colMap.name]).trim();
+          }
+          if (!studentMuallim && colMap.muallim !== -1 && row[colMap.muallim]) {
+            studentMuallim = String(row[colMap.muallim]).trim();
+          }
+          break;
+        }
+      }
+    }
+
+    if (!studentMuallim && riwayat.length > 0 && riwayat[0].muallim) {
+      studentMuallim = riwayat[0].muallim;
+    }
+
+    if (!studentHalaqah) studentHalaqah = "Halaqah Sorogan Binnazhar";
+    if (!studentMuallim) studentMuallim = "Asatidz Sorogan";
+
+    const halamanTuntas = Math.min(600, Math.max(1, ((currentJuz - 1) * 20) + halTerakhir));
+    const percentOverall = Math.min(100, Math.round((halamanTuntas / 600) * 100));
+
+    return {
+      status: "success",
+      success: true,
+      student: {
+        studentId: student.studentId || cleanId,
+        nis: student.nis || "-",
+        name: student.name || "Santri",
+        gender: student.gender || "L",
+        photoUrl: student.photoUrl || "",
+        program: "Sorogan Al-Qur'an (Binnazhar)",
+        status: student.status || "ACTIVE",
+        halaqah: studentHalaqah,
+        muallim: studentMuallim
+      },
+      halaqah: studentHalaqah,
+      muallim: studentMuallim,
+      stats: {
+        progressJuz: currentJuz,
+        halamanTerakhir: halTerakhir,
+        totalHalamanKhatam: halamanTuntas,
+        capaianSaatIni: `Juz ${currentJuz} Hal ${halTerakhir} (${percentOverall}%)`,
+        targetCapaian: "30 Juz Mushaf Pojok",
+        totalSetoran: `${riwayat.length} Kali`,
+        rataRataNilai: avgNilaiText,
+        progressMax: 30,
+        progressPercent: percentOverall
+      },
+      target: target,
+      indikator: {
+        harian: {
+          targetText: `${targetHarian} Halaman / Sesi`,
+          realitaText: `${harianReal} Halaman (${harianCount}x Simak)`,
+          status: harianCount > 0 ? "Ada Simakan Hari Ini" : "Belum Ada Simakan"
+        },
+        pekanan: {
+          targetText: `${targetPekan} Halaman / Pekan`,
+          realitaText: `${pekanReal} Halaman (${pekanCount}x Simak)`,
+          percent: pekanPercent,
+          status: pekanPercent >= 100 ? "Target Pekan Tercapai" : (pekanPercent > 0 ? `${pekanPercent}% Capaian` : "0% Capaian")
+        },
+        bulanan: {
+          targetText: `${targetBulan} Halaman / Bulan`,
+          realitaText: `${bulanReal} Halaman (${bulanCount}x Simak)`,
+          percent: bulanPercent,
+          status: bulanPercent >= 100 ? "Target Bulan Tercapai" : (bulanPercent > 0 ? `${bulanPercent}% Capaian` : "0% Capaian")
+        }
+      },
+      riwayat: riwayat
+    };
+
+  } catch (err) {
+    return {
+      status: "error",
+      success: false,
+      message: "Gagal memuat detail santri Sorogan: " + err.message
+    };
+  }
+}
+
