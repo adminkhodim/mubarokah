@@ -899,7 +899,7 @@ function doPost(e) {
 
     return createJsonResponse({
       status: "error",
-      message: "Terjadi kesalahan pada server."
+      message: (error && error.message) ? error.message : "Terjadi kesalahan pada server."
     });
   }
 }
@@ -5759,6 +5759,30 @@ function withAuthScriptLock(callback, timeoutMs = 10000) {
       lock.releaseLock();
     } catch (e) {
       console.warn("Gagal melepaskan script lock:", e);
+    }
+  }
+}
+
+/**
+ * Generic Concurrency Lock Wrapper menggunakan LockService untuk Modul Operasional (Sorogan, TPQ, dll)
+ */
+function withScriptLock(callback, timeoutMs = 10000) {
+  const lock = LockService.getScriptLock();
+  let acquired = false;
+  try {
+    acquired = lock.tryLock(timeoutMs);
+  } catch (lockErr) {
+    console.warn("LockService tryLock warning:", lockErr);
+  }
+  try {
+    return callback();
+  } finally {
+    if (acquired) {
+      try {
+        lock.releaseLock();
+      } catch (e) {
+        console.warn("Gagal melepaskan script lock:", e);
+      }
     }
   }
 }
