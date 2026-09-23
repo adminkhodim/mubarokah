@@ -276,14 +276,15 @@
         function checkIsAdminLoggedIn() {
             try {
                 if (typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn === true) return true;
-                if (typeof ASNIdentity !== 'undefined' && (ASNIdentity.currentRole === 'admin' || ASNIdentity.currentRole === 'editor' || (typeof ASN_ROLES !== 'undefined' && ASNIdentity.currentRole === ASN_ROLES.ADMIN))) {
-                    return true;
+                if (typeof ASNIdentity !== 'undefined') {
+                    const r = String(ASNIdentity.currentRole || '').toUpperCase();
+                    if (['SUPER_ADMIN', 'ADMIN', 'PEGAWAI', 'EDITOR'].includes(r)) return true;
                 }
                 const tokenKey = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.storage && APP_CONFIG.storage.keys) ? APP_CONFIG.storage.keys.adminToken : "mubarokah_admin_token";
                 const token = sessionStorage.getItem(tokenKey) || localStorage.getItem(tokenKey);
                 const roleKey = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.storage && APP_CONFIG.storage.keys) ? APP_CONFIG.storage.keys.adminRole : "mubarokah_admin_role";
                 const role = String(sessionStorage.getItem(roleKey) || localStorage.getItem(roleKey) || '').toLowerCase();
-                if (token && (role === 'admin' || role === 'editor' || role === '')) {
+                if (token && (['super_admin', 'admin', 'pegawai', 'editor'].includes(role) || role === '')) {
                     return true;
                 }
             } catch (e) {}
@@ -296,7 +297,7 @@
                 const token = sessionStorage.getItem(tokenKey) || localStorage.getItem(tokenKey);
                 const roleKey = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.storage && APP_CONFIG.storage.keys) ? APP_CONFIG.storage.keys.adminRole : "mubarokah_admin_role";
                 const role = String(sessionStorage.getItem(roleKey) || localStorage.getItem(roleKey) || '').toLowerCase();
-                return Boolean(token && (role === 'admin' || role === 'editor' || role === ''));
+                return Boolean(token && (['super_admin', 'admin', 'pegawai', 'editor'].includes(role) || role === ''));
             } catch (e) {
                 return false;
             }

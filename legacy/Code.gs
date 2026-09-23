@@ -5641,7 +5641,7 @@ function syncUserToRoleIdentitySheet(ss, userId, email, phone, name, role, statu
           photoUrl || ""
         ]);
       }
-    } else if (normalizedRole === "ADMIN" || normalizedRole === "EDITOR") {
+    } else if (normalizedRole === "SUPER_ADMIN" || normalizedRole === "ADMIN" || normalizedRole === "PEGAWAI" || normalizedRole === "EDITOR") {
       const sheet = getAuthSheet(ss, SHEET_ADMIN_IDENTITIES);
       if (!sheet) return;
       const data = sheet.getDataRange().getValues();
@@ -7527,7 +7527,9 @@ function getAllUsersWithLinkedStudents(token) {
         total: users.length,
         wali: users.filter(u => u.role === "WALI_SANTRI").length,
         pengasuh: users.filter(u => u.role === "PENGASUH").length,
-        admin: users.filter(u => u.role === "ADMIN" || u.role === "EDITOR").length
+        pegawai: users.filter(u => u.role === "PEGAWAI" || u.role === "EDITOR").length,
+        admin: users.filter(u => u.role === "ADMIN").length,
+        superAdmin: users.filter(u => u.role === "SUPER_ADMIN").length
       }
     };
   } catch (err) {
@@ -7549,7 +7551,7 @@ function saveAdminUserData(payload, token) {
     if (token) {
       try {
         actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN", "EDITOR"]);
+        authorizeRole(actor, ["ADMIN", "PEGAWAI"]);
       } catch (authErr) {
         verifySessionToken(token);
       }
@@ -7563,6 +7565,16 @@ function saveAdminUserData(payload, token) {
     const status = String(userData.status || "ACTIVE").trim().toUpperCase();
     const targetUserId = String(userData.userId || userData.user_id || userData.identityId || "").trim();
     const studentNis = String(userData.studentNis || userData.nis || "").trim();
+    const actorRole = actor ? String(actor.role || "").toUpperCase() : "";
+
+    // Proteksi: Hanya SUPER_ADMIN yang berhak membuat atau memberikan role SUPER_ADMIN
+    if (role === "SUPER_ADMIN" && actorRole !== "SUPER_ADMIN") {
+      return {
+        success: false,
+        status: "error",
+        message: "Hanya akun dengan peran SUPER_ADMIN yang memiliki wewenang untuk menetapkan atau mengedit akun SUPER_ADMIN."
+      };
+    }
 
     if (!email || !email.includes("@")) {
       return { success: false, status: "error", message: "Alamat email pengguna wajib diisi dengan format valid." };
@@ -7606,6 +7618,18 @@ function saveAdminUserData(payload, token) {
         foundRow = i + 1;
         actualUserId = rowId || actualUserId;
         break;
+      }
+    }
+
+    // Proteksi: Jika akun yang diedit adalah SUPER_ADMIN, pastikan aktor adalah SUPER_ADMIN
+    if (foundRow !== -1) {
+      const existingRole = roleIdx !== -1 ? String(usersData[foundRow - 1][roleIdx] || "").toUpperCase() : "";
+      if (existingRole === "SUPER_ADMIN" && actorRole !== "SUPER_ADMIN") {
+        return {
+          success: false,
+          status: "error",
+          message: "Akun SUPER_ADMIN hanya dapat dimodifikasi oleh sesama SUPER_ADMIN."
+        };
       }
     }
 
@@ -8750,7 +8774,25 @@ function authorizeRole(actor, allowedRoles = []) {
   if (!actor || !actor.role) {
     throw new AuthorizationError("Authentication required.");
   }
-  if (!allowedRoles.includes(actor.role)) {
+  const actorRole = String(actor.role).trim().toUpperCase();
+
+  // SUPER_ADMIN mewarisi semua akses administratif, operasional, konten & akademik
+  if (actorRole === "SUPER_ADMIN") {
+    return true;
+  }
+
+  // Normalisasi array peran yang diizinkan
+  const normalizedAllowed = allowedRoles.map(r => String(r || "").trim().toUpperCase());
+
+  // Kompatibilitas mundur & alias: PEGAWAI <-> EDITOR
+  if (normalizedAllowed.includes("PEGAWAI") && !normalizedAllowed.includes("EDITOR")) {
+    normalizedAllowed.push("EDITOR");
+  }
+  if (normalizedAllowed.includes("EDITOR") && !normalizedAllowed.includes("PEGAWAI")) {
+    normalizedAllowed.push("PEGAWAI");
+  }
+
+  if (!normalizedAllowed.includes(actorRole)) {
     throw new AuthorizationError(`Role '${actor.role}' is forbidden from accessing this resource.`);
   }
   return true;

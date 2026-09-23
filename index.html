@@ -6403,6 +6403,10 @@
                                             data-role-filter="WALI_SANTRI"
                                             class="admin-user-tab px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836] transition shrink-0">Wali
                                             Santri (<span id="user-tab-count-wali">0</span>)</button>
+                                        <button type="button" onclick="filterAdminUsers('PEGAWAI')"
+                                            data-role-filter="PEGAWAI"
+                                            class="admin-user-tab px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836] transition shrink-0">Pegawai
+                                            (<span id="user-tab-count-pegawai">0</span>)</button>
                                         <button type="button" onclick="filterAdminUsers('PENGASUH')"
                                             data-role-filter="PENGASUH"
                                             class="admin-user-tab px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836] transition shrink-0">Pengasuh
@@ -6411,6 +6415,10 @@
                                             data-role-filter="ADMIN"
                                             class="admin-user-tab px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836] transition shrink-0">Admin
                                             (<span id="user-tab-count-admin">0</span>)</button>
+                                        <button type="button" onclick="filterAdminUsers('SUPER_ADMIN')"
+                                            data-role-filter="SUPER_ADMIN"
+                                            class="admin-user-tab px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836] transition shrink-0">Super Admin
+                                            (<span id="user-tab-count-super-admin">0</span>)</button>
                                     </div>
 
                                     <div class="relative w-full sm:w-64 shrink-0">
@@ -9134,9 +9142,10 @@
                         <select id="admin-user-form-role" onchange="handleUserFormRoleChange(this.value)"
                             class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white transition">
                             <option value="WALI_SANTRI">Wali Santri</option>
+                            <option value="PEGAWAI">Pegawai / Staf Operasional</option>
                             <option value="PENGASUH">Pengasuh / Dewan Masyayikh</option>
                             <option value="ADMIN">Administrator</option>
-                            <option value="EDITOR">Staf / Editor</option>
+                            <option value="SUPER_ADMIN">Super Administrator (Akses Penuh)</option>
                         </select>
                     </div>
 

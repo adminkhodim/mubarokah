@@ -5,10 +5,12 @@
  */
 const ASN_ROLES = Object.freeze({
     PUBLIC: 'PUBLIC',
+    SUPER_ADMIN: 'SUPER_ADMIN',
     ADMIN: 'ADMIN',
-    EDITOR: 'EDITOR',
-    WALI_SANTRI: 'WALI_SANTRI',
-    PENGASUH: 'PENGASUH'
+    PEGAWAI: 'PEGAWAI',
+    EDITOR: 'PEGAWAI', // Alias for backward compatibility
+    PENGASUH: 'PENGASUH',
+    WALI_SANTRI: 'WALI_SANTRI'
 });
 
 /**
@@ -178,11 +180,14 @@ const ASNAuthAPI = {
                 password: password
             });
             if (response && response.success && response.token) {
+                const role = response.role || (response.identity && response.identity.role) || ASN_ROLES.ADMIN;
+                const adminObj = response.identity || (response.data && response.data.admin) || { email, name: 'Administrator' };
+                adminObj.role = role === 'EDITOR' ? ASN_ROLES.PEGAWAI : (ASN_ROLES[role] || role);
                 return {
                     success: true,
                     token: response.token,
-                    role: response.role || ASN_ROLES.ADMIN,
-                    admin: response.identity || (response.data && response.data.admin) || { email, name: 'Administrator' }
+                    role: adminObj.role,
+                    admin: adminObj
                 };
             }
             return {
@@ -303,8 +308,10 @@ const ASNAuthAPI = {
 
             if (response && response.success) {
                 const token = response.token || (response.data && response.data.token);
-                const role = response.role || (response.data && response.data.role) || ASN_ROLES.ADMIN;
+                const rawRole = response.role || (response.data && response.data.role) || (response.identity && response.identity.role) || ASN_ROLES.ADMIN;
+                const role = rawRole === 'EDITOR' ? ASN_ROLES.PEGAWAI : (ASN_ROLES[rawRole] || rawRole);
                 const adminData = response.identity || (response.data && response.data.admin) || { email: email, name: 'Administrator' };
+                adminData.role = role;
 
                 if (token) {
                     return {
@@ -559,12 +566,12 @@ const ASNIdentity = {
                 if (saved) this.currentUser = JSON.parse(saved);
             } catch (e) {}
         } else if (adminToken) {
-            this.currentRole = ASN_ROLES.ADMIN;
+            const savedRole = sessionStorage.getItem(ASN_STORAGE_KEYS.ADMIN_ROLE) || localStorage.getItem(ASN_STORAGE_KEYS.ADMIN_ROLE);
+            this.currentRole = savedRole === 'EDITOR' ? ASN_ROLES.PEGAWAI : (ASN_ROLES[savedRole] || savedRole || ASN_ROLES.ADMIN);
             this.currentState = ASN_STATES.ADMIN_AUTH_ACTIVE;
             try {
-                const savedRole = sessionStorage.getItem(ASN_STORAGE_KEYS.ADMIN_ROLE) || localStorage.getItem(ASN_STORAGE_KEYS.ADMIN_ROLE);
                 const savedData = sessionStorage.getItem(ASN_STORAGE_KEYS.ADMIN_DATA) || localStorage.getItem(ASN_STORAGE_KEYS.ADMIN_DATA);
-                this.currentUser = savedData ? JSON.parse(savedData) : { name: 'Administrator Pesantren', email: '', role: savedRole || 'ADMIN' };
+                this.currentUser = savedData ? JSON.parse(savedData) : { name: 'Administrator Pesantren', email: '', role: this.currentRole };
             } catch (e) {}
             if (typeof isAdminLoggedIn !== 'undefined') isAdminLoggedIn = true;
         } else if (parentToken) {
@@ -648,15 +655,16 @@ const ASNIdentity = {
                 this.currentState = ASN_STATES.PENGASUH_AUTH_ACTIVE;
                 this.isHydrating = false;
                 this.renderAccountCenterUI();
-            } else if (serverRole === 'ADMIN' || serverRole === 'EDITOR') {
-                this.currentRole = ASN_ROLES.ADMIN;
+            } else if (serverRole === 'SUPER_ADMIN' || serverRole === 'ADMIN' || serverRole === 'PEGAWAI' || serverRole === 'EDITOR') {
+                const normalizedRole = serverRole === 'EDITOR' ? ASN_ROLES.PEGAWAI : (ASN_ROLES[serverRole] || serverRole);
+                this.currentRole = normalizedRole;
                 this.currentUser = verifyRes.identity || {
                     name: 'Administrator Pesantren',
                     email: '',
-                    role: serverRole
+                    role: normalizedRole
                 };
-                sessionStorage.setItem(ASN_STORAGE_KEYS.ADMIN_ROLE, serverRole);
-                localStorage.setItem(ASN_STORAGE_KEYS.ADMIN_ROLE, serverRole);
+                sessionStorage.setItem(ASN_STORAGE_KEYS.ADMIN_ROLE, normalizedRole);
+                localStorage.setItem(ASN_STORAGE_KEYS.ADMIN_ROLE, normalizedRole);
                 sessionStorage.setItem(ASN_STORAGE_KEYS.ADMIN_DATA, JSON.stringify(this.currentUser));
                 localStorage.setItem(ASN_STORAGE_KEYS.ADMIN_DATA, JSON.stringify(this.currentUser));
                 if (typeof isAdminLoggedIn !== 'undefined') isAdminLoggedIn = true;
@@ -740,15 +748,18 @@ const ASNIdentity = {
         this.renderAccountCenterUI();
     },
 
-    setAdminSession(token, adminData) {
+    setAdminSession(token, adminData, roleOverride) {
         if (!token) return;
+        const rawRole = roleOverride || (adminData && adminData.role) || sessionStorage.getItem(ASN_STORAGE_KEYS.ADMIN_ROLE) || 'ADMIN';
+        const role = rawRole === 'EDITOR' ? ASN_ROLES.PEGAWAI : (ASN_ROLES[rawRole] || rawRole);
+        if (adminData && typeof adminData === 'object') adminData.role = role;
         sessionStorage.setItem(ASN_STORAGE_KEYS.ADMIN_TOKEN, token);
         localStorage.setItem(ASN_STORAGE_KEYS.ADMIN_TOKEN, token);
-        sessionStorage.setItem(ASN_STORAGE_KEYS.ADMIN_ROLE, ASN_ROLES.ADMIN);
-        localStorage.setItem(ASN_STORAGE_KEYS.ADMIN_ROLE, ASN_ROLES.ADMIN);
+        sessionStorage.setItem(ASN_STORAGE_KEYS.ADMIN_ROLE, role);
+        localStorage.setItem(ASN_STORAGE_KEYS.ADMIN_ROLE, role);
         sessionStorage.setItem(ASN_STORAGE_KEYS.ADMIN_DATA, JSON.stringify(adminData || {}));
         localStorage.setItem(ASN_STORAGE_KEYS.ADMIN_DATA, JSON.stringify(adminData || {}));
-        this.currentRole = ASN_ROLES.ADMIN;
+        this.currentRole = role;
         this.currentUser = adminData;
         if (typeof isAdminLoggedIn !== 'undefined') isAdminLoggedIn = true;
         this.currentState = ASN_STATES.ADMIN_AUTH_ACTIVE;
@@ -909,7 +920,7 @@ const ASNIdentity = {
                 if (emailEl) emailEl.innerHTML = `<i class="fa-regular fa-envelope mr-1.5 text-amber-400"></i> ${escapeHtml((this.currentUser && this.currentUser.email) || '-')}`;
                 this.updateAvatarUI(ASN_ROLES.PENGASUH, (this.currentUser && (this.currentUser.photoUrl || this.currentUser.photo_url)) || '');
             }
-        } else if (this.currentRole === ASN_ROLES.ADMIN || this.currentRole === ASN_ROLES.EDITOR) {
+        } else if (this.currentRole === ASN_ROLES.SUPER_ADMIN || this.currentRole === ASN_ROLES.ADMIN || this.currentRole === ASN_ROLES.PEGAWAI || this.currentRole === 'EDITOR') {
             if (window.innerWidth >= 768) {
                 const pagePengaturan = document.getElementById('page-pengaturan');
                 if (pagePengaturan && !pagePengaturan.classList.contains('hidden')) {
@@ -922,9 +933,14 @@ const ASNIdentity = {
             adminStateEl.classList.remove('hidden');
             const nameEl = document.getElementById('admin-display-name');
             const emailEl = document.getElementById('admin-display-email');
+            const roleBadgeEl = document.getElementById('admin-display-role-badge');
             if (nameEl) nameEl.innerText = (this.currentUser && this.currentUser.name) || 'Administrator';
             if (emailEl) emailEl.innerHTML = `<i class="fa-regular fa-envelope mr-1"></i> ${escapeHtml((this.currentUser && this.currentUser.email) || '')}`;
-            this.updateAvatarUI(ASN_ROLES.ADMIN, (this.currentUser && (this.currentUser.photoUrl || this.currentUser.photo_url)) || '');
+            if (roleBadgeEl) {
+                const displayRole = this.currentRole === ASN_ROLES.SUPER_ADMIN ? 'Super Admin' : (this.currentRole === ASN_ROLES.PEGAWAI ? 'Pegawai' : 'Admin');
+                roleBadgeEl.innerText = displayRole;
+            }
+            this.updateAvatarUI(this.currentRole, (this.currentUser && (this.currentUser.photoUrl || this.currentUser.photo_url)) || '');
         } else if (this.currentRole === ASN_ROLES.WALI_SANTRI) {
             waliStateEl.classList.remove('hidden');
             const nameEl = document.getElementById('parent-display-name');
@@ -951,8 +967,9 @@ const ASNIdentity = {
             label.innerText = 'Pengasuh';
             if (icon) icon.className = 'fa-solid fa-kaaba text-xs text-amber-300';
             btn.className = 'bg-emerald-950 hover:bg-emerald-900 text-amber-200 border border-amber-500/40 px-3.5 py-2 rounded-xl font-bold text-xs shadow-sm transition-all duration-200 flex items-center space-x-1.5';
-        } else if (this.currentRole === ASN_ROLES.ADMIN || this.currentRole === ASN_ROLES.EDITOR) {
-            label.innerText = 'Pengelola';
+        } else if (this.currentRole === ASN_ROLES.SUPER_ADMIN || this.currentRole === ASN_ROLES.ADMIN || this.currentRole === ASN_ROLES.PEGAWAI || this.currentRole === 'EDITOR') {
+            const roleLabel = this.currentRole === ASN_ROLES.SUPER_ADMIN ? 'Super Admin' : (this.currentRole === ASN_ROLES.PEGAWAI ? 'Pegawai' : 'Pengelola');
+            label.innerText = roleLabel;
             if (icon) icon.className = 'fa-solid fa-shield-halved text-xs text-emerald-300';
             btn.className = 'bg-brand-800 hover:bg-brand-700 text-emerald-300 border border-emerald-500/30 px-3.5 py-2 rounded-xl font-bold text-xs shadow-sm transition-all duration-200 flex items-center space-x-1.5';
         } else if (this.currentRole === ASN_ROLES.WALI_SANTRI) {
@@ -1313,7 +1330,7 @@ const ASNIdentity = {
         if (normalizedRole === ASN_ROLES.PENGASUH) {
             imgId = 'pengasuh-avatar-img';
             iconId = 'pengasuh-avatar-icon';
-        } else if (normalizedRole === ASN_ROLES.ADMIN || normalizedRole === ASN_ROLES.EDITOR) {
+        } else if (normalizedRole === ASN_ROLES.SUPER_ADMIN || normalizedRole === ASN_ROLES.ADMIN || normalizedRole === ASN_ROLES.PEGAWAI || normalizedRole === 'EDITOR') {
             imgId = 'admin-avatar-img';
             iconId = 'admin-avatar-icon';
         } else {
@@ -1391,7 +1408,7 @@ const ASNIdentity = {
                     if (role === ASN_ROLES.PENGASUH) {
                         sessionStorage.setItem(ASN_STORAGE_KEYS.PENGASUH_DATA, JSON.stringify(this.currentUser || {}));
                         localStorage.setItem(ASN_STORAGE_KEYS.PENGASUH_DATA, JSON.stringify(this.currentUser || {}));
-                    } else if (role === ASN_ROLES.ADMIN || role === ASN_ROLES.EDITOR) {
+                    } else if (role === ASN_ROLES.SUPER_ADMIN || role === ASN_ROLES.ADMIN || role === ASN_ROLES.PEGAWAI || role === 'EDITOR') {
                         sessionStorage.setItem(ASN_STORAGE_KEYS.ADMIN_DATA, JSON.stringify(this.currentUser || {}));
                         localStorage.setItem(ASN_STORAGE_KEYS.ADMIN_DATA, JSON.stringify(this.currentUser || {}));
                     } else if (role === ASN_ROLES.WALI_SANTRI) {
@@ -2712,8 +2729,11 @@ async function handleCredentialResponse(response) {
                 ASNIdentity.setPengasuhSession(ssoResult.token, ssoResult.pengasuh || ssoResult.identity);
                 if (typeof closePengasuhAuthModal === 'function') closePengasuhAuthModal();
                 if (typeof showToast === 'function') showToast(`Ahlan wa Sahlan, ${ssoResult.identity?.name || 'Pengasuh'}`);
-            } else if (role === 'ADMIN' || role === 'EDITOR') {
-                ASNIdentity.setAdminSession(ssoResult.token, ssoResult.admin || ssoResult.identity);
+            } else if (role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'PEGAWAI' || role === 'EDITOR') {
+                const adminObj = ssoResult.admin || ssoResult.identity || {};
+                const normalizedRole = role === 'EDITOR' ? ASN_ROLES.PEGAWAI : (ASN_ROLES[role] || role);
+                adminObj.role = normalizedRole;
+                ASNIdentity.setAdminSession(ssoResult.token, adminObj, normalizedRole);
                 if (typeof closeAdminAuthModal === 'function') closeAdminAuthModal();
                 if (typeof showToast === 'function') showToast('Login Pengelola Berhasil!');
                 if (window.innerWidth >= 1024 && (window.location.pathname.replace(/\/+$/, '') === '/administrator' || document.getElementById('page-admin')?.classList.contains('block'))) {
