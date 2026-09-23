@@ -852,6 +852,13 @@ function checkAndApplyStudentRepeatState(studentId) {
         renderTahfidzPageSelector();
     } else {
         if (banner) banner.classList.add('hidden');
+        // Pre-select juz & halaman rekomendasi berikutnya dari Tahfidz_Capaian
+        if (st?.capaian && st.capaian.juzAktif) {
+            if (selJuz) selJuz.value = String(st.capaian.juzAktif);
+            const targetPage = Math.min(20, Math.max(1, Number(st.capaian.halamanTerakhir) || 1));
+            ASNTahfidz.catatState.selectedPages = [targetPage];
+            renderTahfidzPageSelector();
+        }
     }
 }
 
@@ -3602,7 +3609,7 @@ function openTahfidzPengasuhView() {
  * Inisialisasi Tab Sheet Database Tahfidz di Google Spreadsheet
  */
 async function triggerInitTahfidzSheets() {
-    const ok = confirm("Inisialisasi Database Tahfidz di Google Spreadsheet?\n\nSistem akan membuat 3 tab sheet baru secara otomatis jika belum ada:\n1. Tahfidz_Logs (Riwayat Setoran)\n2. Tahfidz_Target (Target Individual)\n3. Tahfidz_Halaqah (Kelompok Halaqah)\n\nLanjutkan?");
+    const ok = confirm("Inisialisasi Database Tahfidz di Google Spreadsheet?\n\nSistem akan membuat 5 tab sheet resmi secara otomatis jika belum ada:\n1. Tahfidz_Logs (Riwayat Setoran)\n2. Tahfidz_Capaian (Snapshot Posisi Capaian Santri)\n3. Tahfidz_Target (Target Individual Santri)\n4. Tahfidz_Halaqah (Kelompok Halaqah)\n5. Tahfidz_Jadwal_Sesi (Jadwal Sesi Waktu Aktif)\n\nLanjutkan?");
     if (!ok) return;
 
     try {

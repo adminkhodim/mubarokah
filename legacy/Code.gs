@@ -224,6 +224,17 @@ function doPost(e) {
       return createJsonResponse(saveTahfidzLog(payload.data || payload, token));
     }
 
+    if (action === "saveTahfidzCapaian" || action === "tahfidz.saveCapaian") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      return createJsonResponse(saveTahfidzCapaian(payload.data || payload, token));
+    }
+
     if (action === "deleteTahfidzLog" || action === "tahfidz.deleteLog") {
       const token = payload.token || (payload.data && payload.data.token) || null;
       try {
@@ -9934,6 +9945,11 @@ function handleAuthApiAction(action, payload, e) {
       return createJsonResponse(saveTahfidzLog(payload.data || payload, token));
     }
 
+    if (action === "auth.tahfidz.saveCapaian" || action === "tahfidz.saveCapaian" || action === "saveTahfidzCapaian") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(saveTahfidzCapaian(payload.data || payload, token));
+    }
+
     if (action === "auth.tahfidz.deleteLog" || action === "tahfidz.deleteLog" || action === "deleteTahfidzLog") {
       const token = payload.token || (payload.data && payload.data.token) || "";
       const logId = payload.logId || payload.log_id || (payload.data && (payload.data.logId || payload.data.log_id));
@@ -10122,6 +10138,7 @@ function handleAuthApiAction(action, payload, e) {
 // ====================================================================
 
 const SHEET_TAHFIDZ_LOGS = "Tahfidz_Logs";
+const SHEET_TAHFIDZ_CAPAIAN = "Tahfidz_Capaian";
 const SHEET_TAHFIDZ_TARGET = "Tahfidz_Target";
 const SHEET_TAHFIDZ_HALAQAH = "Tahfidz_Halaqah";
 const SHEET_TAHFIDZ_SESI = "Tahfidz_Jadwal_Sesi";
@@ -10252,7 +10269,25 @@ function initTahfidzSheets(token) {
       existing.push(SHEET_TAHFIDZ_LOGS);
     }
 
-    // 2. Tab: Tahfidz_Target
+    // 2. Tab: Tahfidz_Capaian (Snapshot posisi hafalan terakhir per santri)
+    const headersCapaian = [
+      "student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_tuntas", "status_terakhir", "halaqah_id", "nama_halaqah", "muhafiz_pembina", "updated_at"
+    ];
+    let sheetCapaian = ss.getSheetByName(SHEET_TAHFIDZ_CAPAIAN);
+    if (!sheetCapaian) {
+      sheetCapaian = ss.insertSheet(SHEET_TAHFIDZ_CAPAIAN);
+      sheetCapaian.getRange(1, 1, 1, headersCapaian.length).setValues([headersCapaian]);
+      sheetCapaian.getRange(1, 1, 1, headersCapaian.length)
+        .setFontWeight("bold")
+        .setBackground("#059669")
+        .setFontColor("#ffffff");
+      sheetCapaian.setFrozenRows(1);
+      created.push(SHEET_TAHFIDZ_CAPAIAN);
+    } else {
+      existing.push(SHEET_TAHFIDZ_CAPAIAN);
+    }
+
+    // 3. Tab: Tahfidz_Target
     const headersTarget = [
       "student_id", "student_name", "target_ziyadah_sesi", "target_ziyadah_pekan", "target_murajaah_sesi", "target_murajaah_pekan", "target_juz", "updated_at"
     ];
@@ -10362,6 +10397,10 @@ function getTahfidzDashboard(token) {
 
     // 1. Dapatkan referensi sheet langsung tanpa remote RPC auto-schema check
     const logsSheet = ss.getSheetByName(SHEET_TAHFIDZ_LOGS);
+    const headersCapaian = [
+      "student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_tuntas", "status_terakhir", "halaqah_id", "nama_halaqah", "muhafiz_pembina", "updated_at"
+    ];
+    const capaianSheet = getOrCreateTahfidzSheet(ss, SHEET_TAHFIDZ_CAPAIAN, headersCapaian, "#059669");
     const targetSheet = ss.getSheetByName(SHEET_TAHFIDZ_TARGET);
     const halaqahSheet = ss.getSheetByName(SHEET_TAHFIDZ_HALAQAH);
     const sesiSheet = ss.getSheetByName(SHEET_TAHFIDZ_SESI);
@@ -10440,6 +10479,39 @@ function getTahfidzDashboard(token) {
             targetZiyadahPekan: zPekanIdx !== -1 ? (Number(targetData[i][zPekanIdx]) || 10) : 10,
             targetMurajaahSesi: mSesiIdx !== -1 ? (Number(targetData[i][mSesiIdx]) || 2) : 2,
             targetMurajaahPekan: mPekanIdx !== -1 ? (Number(targetData[i][mPekanIdx]) || 10) : 10
+          };
+        }
+      }
+    }
+
+    // 3b. Baca Data Capaian Santri dari Tahfidz_Capaian
+    const capaianMap = {};
+    if (capaianSheet) {
+      const cData = capaianSheet.getDataRange().getValues();
+      if (cData && cData.length > 1) {
+        const hCap = cData[0].map(h => String(h || "").trim().toLowerCase());
+        const sIdIdx = hCap.indexOf("student_id");
+        const juzIdx = hCap.indexOf("juz_aktif");
+        const halIdx = hCap.indexOf("halaman_terakhir");
+        const totIdx = hCap.indexOf("total_halaman_tuntas");
+        const stIdx = hCap.indexOf("status_terakhir");
+        const hlqIdIdx = hCap.indexOf("halaqah_id");
+        const hlqNmIdx = hCap.indexOf("nama_halaqah");
+        const muhIdx = hCap.indexOf("muhafiz_pembina");
+        const updIdx = hCap.indexOf("updated_at");
+
+        for (let i = 1; i < cData.length; i++) {
+          const sId = sIdIdx !== -1 ? String(cData[i][sIdIdx] || "").trim() : "";
+          if (!sId) continue;
+          capaianMap[sId] = {
+            juzAktif: juzIdx !== -1 ? (Number(cData[i][juzIdx]) || 1) : 1,
+            halamanTerakhir: halIdx !== -1 ? (Number(cData[i][halIdx]) || 1) : 1,
+            totalHalamanTuntas: totIdx !== -1 ? (Number(cData[i][totIdx]) || 0) : 0,
+            statusTerakhir: stIdx !== -1 ? String(cData[i][stIdx] || "LANJUT").trim() : "LANJUT",
+            halaqahId: hlqIdIdx !== -1 ? String(cData[i][hlqIdIdx] || "").trim() : "",
+            namaHalaqah: hlqNmIdx !== -1 ? String(cData[i][hlqNmIdx] || "").trim() : "",
+            muhafiz: muhIdx !== -1 ? String(cData[i][muhIdx] || "").trim() : "",
+            updatedAt: updIdx !== -1 ? String(cData[i][updIdx] || "").trim() : ""
           };
         }
       }
@@ -10585,7 +10657,8 @@ function getTahfidzDashboard(token) {
       const sNis = String(st.nis || "").trim();
       const latestLog = latestLogMap[sId] || latestLogMap[sNis] || null;
 
-      let currentJuz = maxJuzMap[sId] || maxJuzMap[sNis] || 0;
+      const cap = capaianMap[sId] || capaianMap[sNis] || null;
+      let currentJuz = cap ? cap.juzAktif : (maxJuzMap[sId] || maxJuzMap[sNis] || 0);
       if (currentJuz === 0 && st.program && st.program.toLowerCase().includes("tahfidz")) {
         currentJuz = 1;
       }
@@ -10630,6 +10703,7 @@ function getTahfidzDashboard(token) {
         status: st.status || "ACTIVE",
         halaqah: halaqah,
         isInHalaqah: isInHalaqah,
+        capaian: cap,
         target: {
           ziyadahSesi: target.targetZiyadahSesi,
           ziyadahPekan: target.targetZiyadahPekan,
@@ -10644,6 +10718,7 @@ function getTahfidzDashboard(token) {
         } : null,
         progress: {
           currentJuz: currentJuz,
+          currentHalaman: cap ? cap.halamanTerakhir : (latestLog ? Number(String(latestLog.halaman || "1").replace(/\D/g, "")) || 1 : 1),
           totalJuz: 30,
           percent: Math.min(100, Math.round((currentJuz / 30) * 100)),
           onTrackStatus: onTrack
@@ -10870,8 +10945,87 @@ function saveTahfidzLog(payload, token) {
 
     const rowValues = headers.map(h => rowMap[h] !== undefined ? rowMap[h] : "");
 
+    // Tulis data log setoran
     if (foundRow > 0) {
       sheet.getRange(foundRow, 1, 1, rowValues.length).setValues([rowValues]);
+    } else {
+      sheet.appendRow(rowValues);
+    }
+
+    // Auto-update / Sync ke Sheet Tahfidz_Capaian
+    try {
+      const headersCapaian = [
+        "student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_tuntas", "status_terakhir", "halaqah_id", "nama_halaqah", "muhafiz_pembina", "updated_at"
+      ];
+      const capaianSheet = getOrCreateTahfidzSheet(ss, SHEET_TAHFIDZ_CAPAIAN, headersCapaian, "#059669");
+      const cData = capaianSheet.getDataRange().getValues();
+      let capaianRowIdx = -1;
+      let prevTotalHalaman = 0;
+
+      if (cData && cData.length > 1) {
+        const cHeaders = cData[0].map(h => String(h || "").trim().toLowerCase());
+        const sIdIdx = cHeaders.indexOf("student_id");
+        const totIdx = cHeaders.indexOf("total_halaman_tuntas");
+        for (let i = 1; i < cData.length; i++) {
+          const rowId = sIdIdx !== -1 ? String(cData[i][sIdIdx] || "").trim() : "";
+          if (rowId === studentId || (nis && rowId === nis)) {
+            capaianRowIdx = i + 1;
+            prevTotalHalaman = totIdx !== -1 ? (Number(cData[i][totIdx]) || 0) : 0;
+            break;
+          }
+        }
+      }
+
+      // Hitung posisi capaian lanjutan
+      let nextJuz = juz;
+      let nextHalaman = 1;
+      const pagesArr = halamanList.split(",").map(p => Number(p.trim())).filter(p => !isNaN(p) && p > 0);
+      const lastPage = pagesArr.length > 0 ? Math.max(...pagesArr) : 1;
+
+      if (statusSetoran === "LANJUT") {
+        if (lastPage >= 20) {
+          nextJuz = Math.min(30, juz + 1);
+          nextHalaman = 1;
+        } else {
+          nextHalaman = lastPage + 1;
+        }
+      } else {
+        // Santri Mengulang: tetap pada halaman berjalan
+        nextJuz = juz;
+        nextHalaman = lastPage;
+      }
+
+      const updatedTotalHalaman = statusSetoran === "LANJUT" ? (prevTotalHalaman + totalHalaman) : prevTotalHalaman;
+
+      if (capaianRowIdx > 0) {
+        capaianSheet.getRange(capaianRowIdx, 2).setValue(studentName);
+        capaianSheet.getRange(capaianRowIdx, 3).setValue(nextJuz);
+        capaianSheet.getRange(capaianRowIdx, 4).setValue(nextHalaman);
+        capaianSheet.getRange(capaianRowIdx, 5).setValue(updatedTotalHalaman);
+        capaianSheet.getRange(capaianRowIdx, 6).setValue(statusSetoran);
+        if (muhafiz && muhafiz !== "-") capaianSheet.getRange(capaianRowIdx, 9).setValue(muhafiz);
+        capaianSheet.getRange(capaianRowIdx, 10).setValue(createdAt);
+      } else {
+        capaianSheet.appendRow([
+          studentId,
+          studentName,
+          nextJuz,
+          nextHalaman,
+          updatedTotalHalaman,
+          statusSetoran,
+          "",
+          "Halaqah Binaan",
+          muhafiz || "Ustadz Pembina",
+          createdAt
+        ]);
+      }
+    } catch (capaianErr) {
+      console.warn("[SYNC TAHFIDZ CAPAIAN ERROR]", capaianErr);
+    }
+
+    SpreadsheetApp.flush();
+
+    if (foundRow > 0) {
       return {
         status: "success",
         success: true,
@@ -10879,7 +11033,6 @@ function saveTahfidzLog(payload, token) {
         message: `Catatan mutaba'ah untuk ${studentName} berhasil diperbarui.`
       };
     } else {
-      sheet.appendRow(rowValues);
       return {
         status: "success",
         success: true,
@@ -10895,6 +11048,85 @@ function saveTahfidzLog(payload, token) {
       success: false,
       message: "Gagal menyimpan setoran: " + err.message
     };
+  }
+}
+
+/**
+ * 2b. Simpan / Override Capaian Santri Tahfidz secara langsung
+ * Berguna untuk penempatan awal santri baru atau santri pindahan
+ */
+function saveTahfidzCapaian(data, token) {
+  try {
+    let actor = null;
+    if (token) {
+      try {
+        actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PENGASUH"]);
+      } catch (authErr) {
+        verifySessionToken(token);
+      }
+    }
+
+    const studentId = String(data.studentId || data.student_id || "").trim();
+    const studentName = String(data.studentName || data.student_name || "").trim();
+    const juz = Number(data.juzAktif || data.juz_aktif || data.juz) || 1;
+    const halaman = Number(data.halamanTerakhir || data.halaman_terakhir || data.halaman) || 1;
+    const halaqahId = String(data.halaqahId || data.halaqah_id || "").trim();
+    const namaHalaqah = String(data.namaHalaqah || data.nama_halaqah || "").trim();
+    const muhafiz = String(data.muhafiz || data.muhafiz_pembina || "").trim();
+    const status = String(data.statusTerakhir || data.status_terakhir || "LANJUT").trim();
+    const nowIso = new Date().toISOString();
+
+    if (!studentId) throw new Error("ID Santri wajib disertakan.");
+
+    const ss = getDatabaseSpreadsheet();
+    const headersCapaian = [
+      "student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_tuntas", "status_terakhir", "halaqah_id", "nama_halaqah", "muhafiz_pembina", "updated_at"
+    ];
+    const sheet = getOrCreateTahfidzSheet(ss, SHEET_TAHFIDZ_CAPAIAN, headersCapaian, "#059669");
+
+    const cData = sheet.getDataRange().getValues();
+    let rowIndex = -1;
+    let prevTotal = 0;
+    if (cData && cData.length >= 2) {
+      const idIdx = cData[0].map(h => String(h).toLowerCase()).indexOf("student_id");
+      const totIdx = cData[0].map(h => String(h).toLowerCase()).indexOf("total_halaman_tuntas");
+      for (let i = 1; i < cData.length; i++) {
+        if (String(cData[i][idIdx] || "").trim() === studentId) {
+          rowIndex = i + 1;
+          prevTotal = totIdx !== -1 ? (Number(cData[i][totIdx]) || 0) : 0;
+          break;
+        }
+      }
+    }
+
+    const totalHalaman = Number(data.totalHalamanTuntas || data.total_halaman_tuntas) || prevTotal || ((juz - 1) * 20 + halaman);
+
+    if (rowIndex !== -1) {
+      sheet.getRange(rowIndex, 2).setValue(studentName);
+      sheet.getRange(rowIndex, 3).setValue(juz);
+      sheet.getRange(rowIndex, 4).setValue(halaman);
+      sheet.getRange(rowIndex, 5).setValue(totalHalaman);
+      sheet.getRange(rowIndex, 6).setValue(status);
+      if (halaqahId) sheet.getRange(rowIndex, 7).setValue(halaqahId);
+      if (namaHalaqah) sheet.getRange(rowIndex, 8).setValue(namaHalaqah);
+      if (muhafiz) sheet.getRange(rowIndex, 9).setValue(muhafiz);
+      sheet.getRange(rowIndex, 10).setValue(nowIso);
+    } else {
+      sheet.appendRow([
+        studentId, studentName, juz, halaman, totalHalaman, status, halaqahId, namaHalaqah, muhafiz, nowIso
+      ]);
+    }
+    SpreadsheetApp.flush();
+
+    return {
+      status: "success",
+      success: true,
+      message: `Capaian hafalan santri ${studentName} berhasil diperbarui: Juz ${juz} Halaman ${halaman}.`
+    };
+  } catch (err) {
+    console.error("[SAVE TAHFIDZ CAPAIAN ERROR]", err);
+    return { status: "error", success: false, message: "Gagal menyimpan capaian: " + err.message };
   }
 }
 
