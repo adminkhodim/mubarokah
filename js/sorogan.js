@@ -1390,6 +1390,34 @@ function renderSoroganMatriksBeban() {
 /**
  * TAB 4: Jadwal & Sesi Bimbingan Sorogan
  */
+
+/**
+ * Membersihkan format waktu sesi (HH:mm) dari Date object atau string format Google Sheets
+ * (mencegah kebocoran string Date bawaan Google Sheets: Sat Dec 30 1899 05:15:00 GMT+0707...)
+ */
+function cleanSoroganSesiTime(timeVal, defaultVal = "00:00") {
+    if (!timeVal && timeVal !== 0) return defaultVal;
+    if (typeof timeVal === 'object' && timeVal instanceof Date && !isNaN(timeVal.getTime())) {
+        const hh = String(timeVal.getHours()).padStart(2, '0');
+        const mm = String(timeVal.getMinutes()).padStart(2, '0');
+        return `${hh}:${mm}`;
+    }
+    const str = String(timeVal).trim();
+    if (/^\d{1,2}:\d{2}$/.test(str)) {
+        const parts = str.split(':');
+        return `${parts[0].padStart(2, '0')}:${parts[1]}`;
+    }
+    const match = str.match(/(?:(?:1899|1900|\d{4})[^\d]+)?(\d{1,2}):(\d{2})(?::\d{2})?/);
+    if (match) {
+        return `${match[1].padStart(2, '0')}:${match[2].padStart(2, '0')}`;
+    }
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+        return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    }
+    return defaultVal;
+}
+
 function resetSoroganSesiForm() {
     const idInput = document.getElementById('input-sorogan-sesi-id');
     const namaInput = document.getElementById('input-sorogan-sesi-nama');
@@ -1441,6 +1469,9 @@ function renderSoroganSesiCards() {
         const hariList = Array.isArray(rawHari) ? rawHari : String(rawHari).split(',').map(h => h.trim()).filter(Boolean);
         const hariStr = hariList.join(', ');
 
+        const jamMulaiClean = cleanSoroganSesiTime(s.jamMulai, '05:15');
+        const jamSelesaiClean = cleanSoroganSesiTime(s.jamSelesai, '06:30');
+
         return `
         <div class="p-3.5 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200 dark:border-[#283a4e] space-y-2 relative group">
             <div class="flex items-center justify-between">
@@ -1468,8 +1499,8 @@ function renderSoroganSesiCards() {
                     <span>${escapeHtml(jenis)}</span>
                 </p>
                 <div class="flex items-center justify-between text-[11px] pt-1">
-                    <span class="font-bold flex items-center gap-1">
-                        <i class="fa-regular fa-clock text-sky-600"></i> ${escapeHtml(s.jamMulai || '05:15')} - ${escapeHtml(s.jamSelesai || '06:30')} WIB
+                    <span class="font-bold flex items-center gap-1 text-slate-700 dark:text-slate-200">
+                        <i class="fa-regular fa-clock text-sky-600"></i> ${escapeHtml(jamMulaiClean)} - ${escapeHtml(jamSelesaiClean)} WIB
                     </span>
                     <span class="text-slate-400 text-[10px]">${hariStr || 'Setiap Hari'}</span>
                 </div>
@@ -1496,8 +1527,8 @@ function editSoroganSesi(sesiId) {
     if (namaInput) namaInput.value = sesi.namaSesi || '';
     if (tipeInput) tipeInput.value = sesi.jenisSesi || 'Sorogan Binnazhar Reguler';
     if (statusInput) statusInput.value = sesi.status || 'Aktif Digunakan';
-    if (jamMulaiInput) jamMulaiInput.value = sesi.jamMulai || '05:15';
-    if (jamSelesaiInput) jamSelesaiInput.value = sesi.jamSelesai || '06:30';
+    if (jamMulaiInput) jamMulaiInput.value = cleanSoroganSesiTime(sesi.jamMulai, '05:15');
+    if (jamSelesaiInput) jamSelesaiInput.value = cleanSoroganSesiTime(sesi.jamSelesai, '06:30');
     if (btnText) btnText.innerText = "Perbarui Sesi";
     if (btnCancel) btnCancel.classList.remove('hidden');
 
@@ -1522,13 +1553,16 @@ async function submitSoroganSesi(e) {
     const hariList = [];
     document.querySelectorAll('input[name="sorogan-sesi-hari"]:checked').forEach(chk => hariList.push(chk.value));
 
+    const jamMulaiClean = cleanSoroganSesiTime(jamMulaiInput ? jamMulaiInput.value : "05:15", "05:15");
+    const jamSelesaiClean = cleanSoroganSesiTime(jamSelesaiInput ? jamSelesaiInput.value : "06:30", "06:30");
+
     const payload = {
         sesiId: idInput ? idInput.value.trim() : "",
         namaSesi: namaInput ? namaInput.value.trim() : "",
         jenisSesi: tipeInput ? tipeInput.value : "Sorogan Binnazhar Reguler",
         status: statusInput ? statusInput.value : "Aktif Digunakan",
-        jamMulai: jamMulaiInput ? jamMulaiInput.value : "05:15",
-        jamSelesai: jamSelesaiInput ? jamSelesaiInput.value : "06:30",
+        jamMulai: jamMulaiClean,
+        jamSelesai: jamSelesaiClean,
         hariList
     };
 
@@ -1551,11 +1585,16 @@ async function submitSoroganSesi(e) {
             resetSoroganSesiForm();
 
             if (!ASNSorogan.data.sesiList) ASNSorogan.data.sesiList = [];
+            const cleanPayload = {
+                ...payload,
+                jamMulai: jamMulaiClean,
+                jamSelesai: jamSelesaiClean
+            };
             const existingIdx = ASNSorogan.data.sesiList.findIndex(s => s.sesiId === payload.sesiId);
             if (existingIdx >= 0) {
-                ASNSorogan.data.sesiList[existingIdx] = { ...ASNSorogan.data.sesiList[existingIdx], ...payload };
+                ASNSorogan.data.sesiList[existingIdx] = { ...ASNSorogan.data.sesiList[existingIdx], ...cleanPayload };
             } else {
-                ASNSorogan.data.sesiList.push({ ...payload, sesiId: res.sesiId || ("SRG-SESI-" + Date.now().toString().substring(8)) });
+                ASNSorogan.data.sesiList.push({ ...cleanPayload, sesiId: res.sesiId || ("SRG-SESI-" + Date.now().toString().substring(8)) });
             }
             renderSoroganSesiCards();
         } else {
@@ -2605,3 +2644,5 @@ window.printSoroganStudentCard = printSoroganStudentCard;
 window.printSoroganRekap = printSoroganRekap;
 window.exportSoroganDataXLSX = exportSoroganDataXLSX;
 window.exportSoroganDataCSV = exportSoroganDataCSV;
+window.cleanSoroganSesiTime = cleanSoroganSesiTime;
+if (!window.cleanSesiTime) window.cleanSesiTime = cleanSoroganSesiTime;

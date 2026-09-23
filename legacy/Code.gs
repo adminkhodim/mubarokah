@@ -599,6 +599,11 @@ function doPost(e) {
       return createJsonResponse(saveBulkSoroganTarget(payload.data || payload, token));
     }
 
+    if (action === "getSoroganSesiList" || action === "sorogan.getSesi" || action === "getSoroganSesi") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      return createJsonResponse(getSoroganSesiList(token));
+    }
+
     if (action === "saveSoroganSesi" || action === "sorogan.saveSesi") {
       const token = payload.token || (payload.data && payload.data.token) || null;
       try {
@@ -1591,6 +1596,11 @@ function doGet(e) {
     if (action === "getSoroganHalaqahList" || action === "sorogan.getHalaqah") {
       const token = e.parameter.token || null;
       return createJsonResponse(getSoroganHalaqahList(token));
+    }
+
+    if (action === "getSoroganSesiList" || action === "sorogan.getSesi" || action === "getSoroganSesi") {
+      const token = e.parameter.token || null;
+      return createJsonResponse(getSoroganSesiList(token));
     }
 
     if (action === "getEmployees" || action === "employee.list") {
@@ -6996,6 +7006,34 @@ function normalizeDateString(val) {
     return `${mDmy[3]}-${String(mDmy[2]).padStart(2, "0")}-${String(mDmy[1]).padStart(2, "0")}`;
   }
   return s;
+}
+
+/**
+ * Normalisasi format waktu sesi menjadi format bersih HH:mm
+ * Mencegah kebocoran string Date bawaan Google Sheets (misal: "Sat Dec 30 1899 05:15:00 GMT+0707...")
+ */
+function normalizeTimeString(val, defaultVal) {
+  if (defaultVal === undefined) defaultVal = "00:00";
+  if (!val && val !== 0) return defaultVal;
+  if (val instanceof Date && !isNaN(val.getTime())) {
+    const hh = String(val.getHours()).padStart(2, "0");
+    const mm = String(val.getMinutes()).padStart(2, "0");
+    return `${hh}:${mm}`;
+  }
+  const s = String(val).trim();
+  if (/^\d{1,2}:\d{2}$/.test(s)) {
+    const parts = s.split(":");
+    return `${parts[0].padStart(2, "0")}:${parts[1]}`;
+  }
+  const match = s.match(/(?:(?:1899|1900|\d{4})[^\d]+)?(\d{1,2}):(\d{2})(?::\d{2})?/);
+  if (match) {
+    return `${match[1].padStart(2, "0")}:${match[2].padStart(2, "0")}`;
+  }
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) {
+    return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  }
+  return s || defaultVal;
 }
 
 // =====================================================================
@@ -13295,8 +13333,8 @@ function getSoroganDashboard(token) {
           namaSesi: String(sesiData[i][nameIdx] || "").trim(),
           jenisSesi: String(sesiData[i][typeIdx] || "").trim(),
           status: String(sesiData[i][stIdx] || "Aktif Digunakan").trim(),
-          jamMulai: String(sesiData[i][jmIdx] || "05:15").trim(),
-          jamSelesai: String(sesiData[i][jsIdx] || "06:30").trim(),
+          jamMulai: normalizeTimeString(sesiData[i][jmIdx], "05:15"),
+          jamSelesai: normalizeTimeString(sesiData[i][jsIdx], "06:30"),
           hariList: hariList
         });
       }
@@ -13942,6 +13980,63 @@ function saveBulkSoroganTarget(payload, token) {
   });
 }
 
+function getSoroganSesiList(token) {
+  try {
+    let actor = null;
+    if (token) {
+      try {
+        actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PENGASUH"]);
+      } catch (authErr) {
+        verifySessionToken(token);
+      }
+    }
+
+    const ss = getDatabaseSpreadsheet();
+    const headers = ["sesi_id", "nama_sesi", "jenis_sesi", "status", "jam_mulai", "jam_selesai", "hari_list", "created_at"];
+    const sheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_SESI, headers, "#0284c7");
+
+    const data = sheet.getDataRange().getValues();
+    const list = [];
+    if (data && data.length > 1) {
+      const h = data[0].map(x => String(x || "").trim().toLowerCase());
+      const idIdx = h.indexOf("sesi_id");
+      const nameIdx = h.indexOf("nama_sesi");
+      const typeIdx = h.indexOf("jenis_sesi");
+      const stIdx = h.indexOf("status");
+      const jmIdx = h.indexOf("jam_mulai");
+      const jsIdx = h.indexOf("jam_selesai");
+      const hIdx = h.indexOf("hari_list");
+      const crIdx = h.indexOf("created_at");
+
+      for (let i = 1; i < data.length; i++) {
+        const id = idIdx !== -1 ? String(data[i][idIdx] || "").trim() : "";
+        if (!id) continue;
+        const rawHari = hIdx !== -1 ? data[i][hIdx] : "";
+        const hariList = Array.isArray(rawHari) ? rawHari : String(rawHari || "Sen,Sel,Rab,Kam,Sab,Min").split(",").map(x => x.trim()).filter(Boolean);
+        list.push({
+          sesiId: id,
+          namaSesi: nameIdx !== -1 ? String(data[i][nameIdx] || "").trim() : "",
+          jenisSesi: typeIdx !== -1 ? String(data[i][typeIdx] || "Sorogan Binnazhar Reguler").trim() : "Sorogan Binnazhar Reguler",
+          status: stIdx !== -1 ? String(data[i][stIdx] || "Aktif Digunakan").trim() : "Aktif Digunakan",
+          jamMulai: normalizeTimeString(jmIdx !== -1 ? data[i][jmIdx] : "05:15", "05:15"),
+          jamSelesai: normalizeTimeString(jsIdx !== -1 ? data[i][jsIdx] : "06:30", "06:30"),
+          hariList: hariList,
+          createdAt: crIdx !== -1 ? String(data[i][crIdx] || "") : ""
+        });
+      }
+    }
+
+    return {
+      status: "success",
+      success: true,
+      data: list
+    };
+  } catch (err) {
+    return { status: "error", success: false, message: err.message };
+  }
+}
+
 function saveSoroganSesi(payload, token) {
   return withScriptLock(() => {
     try {
@@ -13957,8 +14052,8 @@ function saveSoroganSesi(payload, token) {
       const sesiId = rawId || ("SRG-SESI-" + Utilities.formatDate(new Date(), "GMT+7", "yyyyMMdd-HHmm"));
       const jenisSesi = String(p.jenisSesi || p.jenis_sesi || p.jenis || "Sorogan Binnazhar Reguler").trim();
       const status = String(p.status || "Aktif Digunakan").trim();
-      const jamMulai = String(p.jamMulai || p.jam_mulai || "05:15").trim();
-      const jamSelesai = String(p.jamSelesai || p.jam_selesai || "06:30").trim();
+      const jamMulai = normalizeTimeString(p.jamMulai || p.jam_mulai, "05:15");
+      const jamSelesai = normalizeTimeString(p.jamSelesai || p.jam_selesai, "06:30");
       const rawHari = p.hariList || p.hari || "Sen,Sel,Rab,Kam,Sab,Min";
       const hariList = Array.isArray(rawHari) ? rawHari.join(",") : String(rawHari);
       const createdAt = new Date().toISOString();
