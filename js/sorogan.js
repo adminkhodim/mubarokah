@@ -2292,11 +2292,85 @@ function renderSoroganStudentDetailView() {
         elJuzGrid.innerHTML = gridHtml;
     }
 
-    // Tab 2 Riwayat Simakan
+    // Tab 2 Riwayat Simakan - Dual View: Kartu Responsif (Default HP) & Tabel Lengkap
     const tbody = document.getElementById('sorogan-detail-riwayat-tbody');
-    const elRiwayatCount = document.getElementById('sorogan-detail-riwayat-count');
-    if (elRiwayatCount) elRiwayatCount.innerText = `${riwayat.length} Catatan`;
+    const riwayatCardList = document.getElementById('sorogan-detail-riwayat-card-list');
+    const countBadge = document.getElementById('sorogan-detail-riwayat-count-badge');
+    const isParentOrPengasuh = ASNSorogan.viewerRole === 'parent' || ASNSorogan.viewerRole === 'pengasuh';
 
+    if (countBadge) {
+        countBadge.innerText = `${riwayat.length} Simakan`;
+    }
+
+    // 1. Render Tampilan Kartu (Optimal untuk HP agar tampil 100% utuh tanpa scroll kanan)
+    if (riwayatCardList) {
+        if (riwayat.length === 0) {
+            riwayatCardList.innerHTML = `
+            <div class="py-8 text-center text-xs text-slate-400 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-dashed border-slate-200 dark:border-[#283a4e]">
+                <i class="fa-solid fa-clock-rotate-left text-2xl text-slate-300 dark:text-slate-600 mb-2 block"></i>
+                Belum ada riwayat simakan sorogan untuk santri ini.
+            </div>`;
+        } else {
+            riwayatCardList.innerHTML = riwayat.map(r => {
+                const isUlang = r.statusSetoran === 'ULANG';
+                const statusBadge = isUlang
+                    ? '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60"><i class="fa-solid fa-rotate-left text-[8px]"></i> Ulang</span>'
+                    : '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-900/60"><i class="fa-solid fa-check text-[8px]"></i> Lancar</span>';
+
+                const deleteBtn = isParentOrPengasuh ? '' : `
+                    <button type="button" onclick="deleteSoroganSimakanLog('${escapeHtml(r.logId || "")}')" class="w-6 h-6 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-300 flex items-center justify-center text-[10px] transition shrink-0 ml-1" title="Hapus Catatan Ini">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>`;
+
+                const surahRef = SOROGAN_JUZ_SURAH_REF[r.juz] || "Al-Qur'an 30 Juz";
+
+                return `
+                <div class="p-3 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200/80 dark:border-[#283a4e] space-y-2 transition hover:border-sky-500/40">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-1.5 flex-wrap min-w-0">
+                            <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider shrink-0 bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300">
+                                ${escapeHtml(r.sesi || "Pagi")}
+                            </span>
+                            <span class="text-[11px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1">
+                                <i class="fa-regular fa-calendar text-[10px] text-slate-400"></i>
+                                <span>${escapeHtml(r.tanggal || "-")}</span>
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-1 shrink-0">
+                            <span class="font-extrabold text-xs ${isUlang ? 'text-rose-600 dark:text-rose-400' : 'text-sky-600 dark:text-sky-400'}">
+                                ${escapeHtml(r.nilai || "MUMTAZ")}
+                            </span>
+                            ${statusBadge}
+                            ${deleteBtn}
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-200/60 dark:border-[#283a4e]/60 text-xs">
+                        <div class="min-w-0">
+                            <span class="font-black text-sky-700 dark:text-sky-400 text-xs">Juz ${r.juz || 1}</span>
+                            <span class="text-slate-600 dark:text-slate-300 text-[11px] font-medium ml-1 truncate" title="${escapeHtml(surahRef)}">
+                                (${escapeHtml(surahRef)})
+                            </span>
+                        </div>
+                        <div class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 shrink-0 bg-white dark:bg-[#15202d] px-2 py-0.5 rounded-lg border border-slate-200/60 dark:border-[#283a4e]">
+                            Hal ${escapeHtml(r.halamanList || "1")} (${r.totalHalaman || 1} Hal)
+                        </div>
+                    </div>
+
+                    ${(r.muallim || r.catatan) ? `
+                    <div class="flex items-center justify-between gap-2 text-[10px] text-slate-400 pt-0.5">
+                        <div class="truncate">
+                            <i class="fa-solid fa-chalkboard-user text-[9px] text-sky-600 mr-1"></i>
+                            <span class="font-semibold text-slate-600 dark:text-slate-300">${escapeHtml(r.muallim || "-")}</span>
+                        </div>
+                        ${r.catatan ? `<div class="italic truncate max-w-[160px]" title="${escapeHtml(r.catatan)}">${escapeHtml(r.catatan)}</div>` : ''}
+                    </div>` : ''}
+                </div>`;
+            }).join('');
+        }
+    }
+
+    // 2. Render Tampilan Tabel Lengkap (Bisa dialihkan via toggle)
     if (tbody) {
         if (riwayat.length === 0) {
             tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-400">Belum ada riwayat simakan sorogan.</td></tr>`;
@@ -2326,15 +2400,19 @@ function renderSoroganStudentDetailView() {
                         <div class="text-[10px] text-slate-400 italic">${escapeHtml(r.catatan || "-")}</div>
                     </td>
                     <td class="py-2.5 px-3 text-right">
+                        ${isParentOrPengasuh ? '<span class="text-[9px] font-semibold text-slate-400">Tercatat</span>' : `
                         <button type="button" onclick="deleteSoroganSimakanLog('${escapeHtml(r.logId || "")}')" class="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition" title="Hapus Catatan Ini">
                             <i class="fa-solid fa-trash text-xs"></i>
-                        </button>
+                        </button>`}
                     </td>
                 </tr>
                 `;
             }).join('');
         }
     }
+
+    // Set mode tampilan default
+    setSoroganRiwayatView(soroganRiwayatViewMode);
 
     // Tab 3 Estimasi Khatam
     renderSoroganEstimasiKhatam();
@@ -2485,6 +2563,32 @@ async function deleteSoroganSimakanLog(logId) {
         alert("Kesalahan jaringan saat menghapus catatan: " + e.message);
     }
 }
+
+let soroganRiwayatViewMode = 'card';
+
+/**
+ * Ganti mode tampilan riwayat simakan sorogan: 'card' (optimal HP tanpa scroll) atau 'table' (tabel lengkap)
+ */
+function setSoroganRiwayatView(mode) {
+    soroganRiwayatViewMode = mode || 'card';
+    const cardList = document.getElementById('sorogan-detail-riwayat-card-list');
+    const tableWrapper = document.getElementById('sorogan-detail-riwayat-table-wrapper');
+    const btnCard = document.getElementById('btn-sorogan-riwayat-view-card');
+    const btnTable = document.getElementById('btn-sorogan-riwayat-view-table');
+
+    if (soroganRiwayatViewMode === 'card') {
+        if (cardList) cardList.classList.remove('hidden');
+        if (tableWrapper) tableWrapper.classList.add('hidden');
+        if (btnCard) btnCard.className = "px-2.5 py-1 rounded-md text-[10px] font-bold transition bg-white dark:bg-[#15202d] text-sky-700 dark:text-sky-400 shadow-sm";
+        if (btnTable) btnTable.className = "px-2.5 py-1 rounded-md text-[10px] font-bold transition text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200";
+    } else {
+        if (cardList) cardList.classList.add('hidden');
+        if (tableWrapper) tableWrapper.classList.remove('hidden');
+        if (btnTable) btnTable.className = "px-2.5 py-1 rounded-md text-[10px] font-bold transition bg-white dark:bg-[#15202d] text-sky-700 dark:text-sky-400 shadow-sm";
+        if (btnCard) btnCard.className = "px-2.5 py-1 rounded-md text-[10px] font-bold transition text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200";
+    }
+}
+window.setSoroganRiwayatView = setSoroganRiwayatView;
 
 // ====================================================================
 // EXPORT & PRINT SOROGAN
@@ -2646,3 +2750,4 @@ window.exportSoroganDataXLSX = exportSoroganDataXLSX;
 window.exportSoroganDataCSV = exportSoroganDataCSV;
 window.cleanSoroganSesiTime = cleanSoroganSesiTime;
 if (!window.cleanSesiTime) window.cleanSesiTime = cleanSoroganSesiTime;
+window.setSoroganRiwayatView = setSoroganRiwayatView;
