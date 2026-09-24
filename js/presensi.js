@@ -218,9 +218,9 @@ function switchPresensiMainTab(tabName) {
         const panel = document.getElementById(`panel-presensi-${t}`);
         if (btn) {
             if (t === tabName) {
-                btn.className = "flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs bg-emerald-600 text-white shadow-sm transition active:scale-95";
+                btn.className = "flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs bg-emerald-600 text-white shadow-sm transition active:scale-95 shrink-0";
             } else {
-                btn.className = "flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836] transition active:scale-95";
+                btn.className = "flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836] transition active:scale-95 shrink-0";
             }
         }
         if (panel) {

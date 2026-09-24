@@ -14694,8 +14694,10 @@
                 </button>
             </div>
         </div>
+    </div>
+
     <!-- ==================== MODAL: BUKA SESI PRESENSI BARU ==================== -->
-    <div id="modal-presensi-buka-sesi" class="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/60 backdrop-blur-xs hidden">
+    <div id="modal-presensi-buka-sesi" onclick="if(event.target === this) closePresensiBukaSesiModal()" class="fixed inset-0 z-[9999] flex items-center justify-center p-3 bg-black/60 backdrop-blur-xs hidden">
         <div class="bg-white dark:bg-[#15202d] rounded-2xl shadow-xl w-full max-w-md border border-slate-100 dark:border-[#253447] overflow-hidden animate-scale-up">
             <!-- Modal Header -->
             <div class="px-5 py-4 border-b border-slate-100 dark:border-[#253447] flex items-center justify-between bg-slate-50/50 dark:bg-[#182332]">
@@ -14758,7 +14760,7 @@
     </div>
 
     <!-- ==================== MODAL: FORM MASTER KEGIATAN PRESENSI ==================== -->
-    <div id="modal-presensi-kegiatan" class="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/60 backdrop-blur-xs hidden">
+    <div id="modal-presensi-kegiatan" onclick="if(event.target === this) closePresensiKegiatanModal()" class="fixed inset-0 z-[9999] flex items-center justify-center p-3 bg-black/60 backdrop-blur-xs hidden">
         <div class="bg-white dark:bg-[#15202d] rounded-2xl shadow-xl w-full max-w-md border border-slate-100 dark:border-[#253447] overflow-hidden animate-scale-up">
             <!-- Modal Header -->
             <div class="px-5 py-4 border-b border-slate-100 dark:border-[#253447] flex items-center justify-between bg-slate-50/50 dark:bg-[#182332]">
