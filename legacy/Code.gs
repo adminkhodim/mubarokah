@@ -12702,6 +12702,7 @@ function resolveTPQKelas_(ss, studentId, nis, customKelasId, customNamaKelas, cu
     if (ss) {
       const kSheet = ss.getSheetByName(SHEET_TPQ_KELAS);
       if (kSheet) {
+        migrateTPQKelasSheetIfNeeded(kSheet);
         const kData = kSheet.getDataRange().getValues();
         if (kData.length >= 2) {
           const kHead = kData[0].map(h => String(h || "").trim().toLowerCase());
@@ -13007,36 +13008,30 @@ function getTPQDashboard(token) {
     // 3. Ambil data Kelas TPQ
     const headersKelas = ["kelas_id", "ustadz_pengampu", "deskripsi", "student_ids", "created_at"];
     const kelasSheet = getOrCreateTPQSheet(ss, SHEET_TPQ_KELAS, headersKelas, "#0284c7");
+    migrateTPQKelasSheetIfNeeded(kelasSheet);
+
     const kelasList = [];
     const kData = kelasSheet.getDataRange().getValues();
     if (kData.length >= 2) {
-      const kHead = kData[0].map(h => String(h || "").trim().toLowerCase());
-      const idIdx = kHead.indexOf("kelas_id");
-      const uIdx = kHead.indexOf("ustadz_pengampu") !== -1 ? kHead.indexOf("ustadz_pengampu") : kHead.indexOf("muallim");
-      const deskIdx = kHead.indexOf("deskripsi") !== -1 ? kHead.indexOf("deskripsi") : (kHead.indexOf("target_kurikulum") !== -1 ? kHead.indexOf("target_kurikulum") : kHead.indexOf("jadwal_sesi"));
-      const nameIdx = kHead.indexOf("nama_kelas");
-      const sidsIdx = kHead.indexOf("student_ids");
-
       for (let i = 1; i < kData.length; i++) {
         let sids = [];
         try {
-          const raw = String(kData[i][sidsIdx] || "");
+          const raw = String(kData[i][3] || "");
           if (raw.trim().startsWith("[")) sids = JSON.parse(raw);
           else sids = raw.split(",").map(s => s.trim()).filter(Boolean);
         } catch (e) {
           sids = [];
         }
-        const uVal = uIdx !== -1 ? String(kData[i][uIdx] || "").trim() : "";
-        const nVal = nameIdx !== -1 ? String(kData[i][nameIdx] || "").trim() : "";
-        const deskVal = deskIdx !== -1 ? String(kData[i][deskIdx] || "").trim() : "";
-        const finalName = nVal || (uVal ? ("Kelas " + uVal) : ("Kelas " + String(kData[i][idIdx] || "")));
+        const kId = String(kData[i][0] || "").trim();
+        const uVal = String(kData[i][1] || "").trim();
+        const deskVal = String(kData[i][2] || "").trim();
+        const finalName = uVal ? ("Kelas " + uVal) : ("Kelas " + kId);
 
         kelasList.push({
-          kelasId: String(kData[i][idIdx] || "").trim(),
+          kelasId: kId,
           namaKelas: finalName,
           ustadzPengampu: uVal || "-",
           deskripsi: deskVal,
-          jadwalSesi: deskVal,
           studentIds: sids
         });
       }
@@ -13431,42 +13426,144 @@ function saveTPQCapaian(data, token) {
   });
 }
 
+/**
+ * Migrasi skema sheet TPQ_Kelas agar mengadopsi struktur 5 kolom Sorogan_Halaqah:
+ * [kelas_id, ustadz_pengampu, deskripsi, student_ids, created_at]
+ * Menghilangkan kolom nama_kelas dan jadwal_sesi, serta memperbaiki pergeseran data.
+ */
+function migrateTPQKelasSheetIfNeeded(sheet) {
+  if (!sheet) return;
+  const lastCol = sheet.getLastColumn();
+  if (lastCol === 0) return;
+
+  const targetHeaders = ["kelas_id", "ustadz_pengampu", "deskripsi", "student_ids", "created_at"];
+  const currentHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h || "").trim());
+
+  const hasNama = currentHeaders.some(h => {
+    const s = h.toLowerCase();
+    return s.includes("nama_kelas") || s === "nama kelas" || s === "nama";
+  });
+  const hasJadwal = currentHeaders.some(h => {
+    const s = h.toLowerCase();
+    return s.includes("jadwal_sesi") || s === "jadwal sesi" || s === "jadwal";
+  });
+
+  if (!hasNama && !hasJadwal && lastCol === targetHeaders.length) {
+    let isMatch = true;
+    for (let i = 0; i < targetHeaders.length; i++) {
+      if (currentHeaders[i].toLowerCase() !== targetHeaders[i].toLowerCase()) {
+        isMatch = false;
+        break;
+      }
+    }
+    if (isMatch) return;
+  }
+
+  const lastRow = sheet.getLastRow();
+  const newRows = [];
+
+  if (lastRow > 1) {
+    const dataRange = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+    for (let r = 0; r < dataRange.length; r++) {
+      const row = dataRange[r];
+      let kId = String(row[0] || "").trim();
+      let ustadz = "";
+      let deskripsi = "";
+      let studentIds = "[]";
+      let createdAt = new Date().toISOString();
+
+      // Deteksi baris yang tergeser (shifted row dari penambahan 5 elemen ke 6 kolom)
+      const val4 = String(row[4] || "").trim();
+      const val3 = String(row[3] || "").trim();
+      const isShifted = val4.includes("T") && (val3.startsWith("[") || val3 === "" || val3 === "[]");
+
+      if (isShifted) {
+        ustadz = String(row[1] || "").trim();
+        deskripsi = String(row[2] || "").trim();
+        studentIds = val3 || "[]";
+        createdAt = val4;
+      } else {
+        const headLower = currentHeaders.map(h => h.toLowerCase());
+        const uIdx = headLower.indexOf("ustadz_pengampu") !== -1 ? headLower.indexOf("ustadz_pengampu") : headLower.indexOf("muallim");
+        const deskIdx = headLower.indexOf("deskripsi") !== -1 ? headLower.indexOf("deskripsi") : (headLower.indexOf("jadwal_sesi") !== -1 ? headLower.indexOf("jadwal_sesi") : headLower.indexOf("target_kurikulum"));
+        const nameIdx = headLower.indexOf("nama_kelas");
+        const sidsIdx = headLower.indexOf("student_ids");
+        const createdIdx = headLower.indexOf("created_at");
+
+        ustadz = uIdx !== -1 ? String(row[uIdx] || "").trim() : "";
+        if (!ustadz && nameIdx !== -1) {
+          ustadz = String(row[nameIdx] || "").replace(/^Kelas\s+/i, "").trim();
+        }
+        deskripsi = deskIdx !== -1 ? String(row[deskIdx] || "").trim() : "";
+        if (sidsIdx !== -1) {
+          studentIds = String(row[sidsIdx] || "[]").trim();
+        }
+        if (createdIdx !== -1) {
+          createdAt = String(row[createdIdx] || "").trim();
+        }
+      }
+
+      if (!kId && !ustadz) continue;
+      if (!kId) kId = "TPQ-KLS-" + Utilities.getUuid().replace(/-/g, "").substring(0, 6).toUpperCase();
+      if (!deskripsi) deskripsi = "Bimbingan Yanbu'a";
+      if (!studentIds) studentIds = "[]";
+      if (!createdAt) createdAt = new Date().toISOString();
+
+      newRows.push([kId, ustadz, deskripsi, studentIds, createdAt]);
+    }
+  }
+
+  // Tulis ulang seluruh sheet menjadi format 5 kolom kanonikal
+  sheet.clearContents();
+  sheet.getRange(1, 1, 1, targetHeaders.length)
+    .setValues([targetHeaders])
+    .setFontWeight("bold")
+    .setBackground("#0284c7")
+    .setFontColor("#ffffff");
+  sheet.setFrozenRows(1);
+
+  if (newRows.length > 0) {
+    sheet.getRange(2, 1, newRows.length, targetHeaders.length).setValues(newRows);
+  }
+
+  const maxCols = sheet.getMaxColumns();
+  if (maxCols > targetHeaders.length) {
+    sheet.deleteColumns(targetHeaders.length + 1, maxCols - targetHeaders.length);
+  }
+
+  Logger.log("[OK] Sheet TPQ_Kelas berhasil dimigrasi menjadi 5 kolom bersih mengadopsi Sorogan_Halaqah.");
+}
+
 function getTPQKelasList(token) {
   try {
     const ss = getDatabaseSpreadsheet();
     const headersKelas = ["kelas_id", "ustadz_pengampu", "deskripsi", "student_ids", "created_at"];
     const sheet = getOrCreateTPQSheet(ss, SHEET_TPQ_KELAS, headersKelas, "#0284c7");
+    migrateTPQKelasSheetIfNeeded(sheet);
+
     const data = sheet.getDataRange().getValues();
     const list = [];
 
     if (data.length >= 2) {
-      const head = data[0].map(h => String(h || "").trim().toLowerCase());
-      const idIdx = head.indexOf("kelas_id");
-      const uIdx = head.indexOf("ustadz_pengampu") !== -1 ? head.indexOf("ustadz_pengampu") : head.indexOf("muallim");
-      const deskIdx = head.indexOf("deskripsi") !== -1 ? head.indexOf("deskripsi") : (head.indexOf("target_kurikulum") !== -1 ? head.indexOf("target_kurikulum") : head.indexOf("jadwal_sesi"));
-      const nameIdx = head.indexOf("nama_kelas");
-      const sidsIdx = head.indexOf("student_ids");
-
       for (let i = 1; i < data.length; i++) {
         let sids = [];
         try {
-          const raw = String(data[i][sidsIdx] || "");
+          const raw = String(data[i][3] || "");
           if (raw.trim().startsWith("[")) sids = JSON.parse(raw);
           else sids = raw.split(",").map(s => s.trim()).filter(Boolean);
         } catch (e) {
           sids = [];
         }
-        const uVal = uIdx !== -1 ? String(data[i][uIdx] || "").trim() : "";
-        const nVal = nameIdx !== -1 ? String(data[i][nameIdx] || "").trim() : "";
-        const deskVal = deskIdx !== -1 ? String(data[i][deskIdx] || "").trim() : "";
-        const finalName = nVal || (uVal ? ("Kelas " + uVal) : ("Kelas " + String(data[i][idIdx] || "")));
+        const kId = String(data[i][0] || "").trim();
+        const uVal = String(data[i][1] || "").trim();
+        const deskVal = String(data[i][2] || "").trim();
+        const finalName = uVal ? ("Kelas " + uVal) : ("Kelas " + kId);
 
         list.push({
-          kelasId: String(data[i][idIdx] || "").trim(),
+          kelasId: kId,
           namaKelas: finalName,
           ustadzPengampu: uVal || "-",
           deskripsi: deskVal,
-          jadwalSesi: deskVal,
           studentIds: sids
         });
       }
@@ -13480,6 +13577,15 @@ function getTPQKelasList(token) {
 function saveTPQKelas(data, token) {
   return withScriptLock(() => {
     try {
+      if (token) {
+        try {
+          const actor = authenticateSession(token);
+          authorizeRole(actor, ["ADMIN", "EDITOR", "PEGAWAI", "PENGASUH"]);
+        } catch (authErr) {
+          try { verifySessionToken(token); } catch (e) {}
+        }
+      }
+
       const ustadz = String(data.ustadzPengampu || data.ustadz || "").trim();
       const deskripsi = String(data.deskripsi || data.targetKelas || data.keterangan || "").trim();
       const studentIds = Array.isArray(data.studentIds) ? data.studentIds : [];
@@ -13488,41 +13594,28 @@ function saveTPQKelas(data, token) {
 
       if (!ustadz) throw new Error("Nama Ustadz / Ustadzah pengampu wajib dipilih.");
 
-      const namaKelas = String(data.namaKelas || data.nama_kelas || ("Kelas " + ustadz)).trim();
       const ss = getDatabaseSpreadsheet();
       const headersKelas = ["kelas_id", "ustadz_pengampu", "deskripsi", "student_ids", "created_at"];
       const sheet = getOrCreateTPQSheet(ss, SHEET_TPQ_KELAS, headersKelas, "#0284c7");
+      migrateTPQKelasSheetIfNeeded(sheet);
 
       const kData = sheet.getDataRange().getValues();
       let rowIndex = -1;
 
-      if (kData.length >= 2) {
-        const head = kData[0].map(h => String(h || "").trim().toLowerCase());
-        const idIdx = head.indexOf("kelas_id");
-        const uIdx = head.indexOf("ustadz_pengampu") !== -1 ? head.indexOf("ustadz_pengampu") : head.indexOf("muallim");
-
-        for (let i = 1; i < kData.length; i++) {
-          const rowId = idIdx !== -1 ? String(kData[i][idIdx] || "").trim() : "";
-          const rowU = uIdx !== -1 ? String(kData[i][uIdx] || "").trim() : "";
-          if ((kelasId && rowId === kelasId) || (!kelasId && rowU && rowU.toLowerCase() === ustadz.toLowerCase())) {
-            rowIndex = i + 1;
-            if (!kelasId) kelasId = rowId;
-            break;
-          }
+      for (let i = 1; i < kData.length; i++) {
+        const rowId = String(kData[i][0] || "").trim();
+        const rowU = String(kData[i][1] || "").trim();
+        if ((kelasId && rowId === kelasId) || (!kelasId && rowU && rowU.toLowerCase() === ustadz.toLowerCase())) {
+          rowIndex = i + 1;
+          if (!kelasId) kelasId = rowId;
+          break;
         }
       }
 
       if (rowIndex !== -1) {
-        const head = kData[0].map(h => String(h || "").trim().toLowerCase());
-        const uIdx = head.indexOf("ustadz_pengampu") !== -1 ? head.indexOf("ustadz_pengampu") : head.indexOf("muallim");
-        const deskIdx = head.indexOf("deskripsi") !== -1 ? head.indexOf("deskripsi") : (head.indexOf("target_kurikulum") !== -1 ? head.indexOf("target_kurikulum") : head.indexOf("jadwal_sesi"));
-        const nameIdx = head.indexOf("nama_kelas");
-        const sidsIdx = head.indexOf("student_ids");
-
-        if (uIdx !== -1) sheet.getRange(rowIndex, uIdx + 1).setValue(ustadz);
-        if (deskIdx !== -1) sheet.getRange(rowIndex, deskIdx + 1).setValue(deskripsi);
-        if (nameIdx !== -1) sheet.getRange(rowIndex, nameIdx + 1).setValue(namaKelas);
-        if (sidsIdx !== -1) sheet.getRange(rowIndex, sidsIdx + 1).setValue(JSON.stringify(studentIds));
+        sheet.getRange(rowIndex, 2).setValue(ustadz);
+        sheet.getRange(rowIndex, 3).setValue(deskripsi);
+        sheet.getRange(rowIndex, 4).setValue(JSON.stringify(studentIds));
       } else {
         if (!kelasId) {
           kelasId = "TPQ-KLS-" + Utilities.getUuid().replace(/-/g, "").substring(0, 6).toUpperCase();
@@ -13530,6 +13623,7 @@ function saveTPQKelas(data, token) {
         sheet.appendRow([kelasId, ustadz, deskripsi, JSON.stringify(studentIds), nowIso]);
       }
 
+      const namaKelas = "Kelas " + ustadz;
       // Sync plotting to TPQ_Capaian
       syncTPQPlottingToCapaian_(ss, kelasId, studentIds, ustadz, namaKelas);
 
@@ -13550,16 +13644,23 @@ function saveTPQKelas(data, token) {
 function deleteTPQKelas(kelasId, token) {
   return withScriptLock(() => {
     try {
+      if (token) {
+        try {
+          const actor = authenticateSession(token);
+          authorizeRole(actor, ["ADMIN", "EDITOR", "PEGAWAI", "PENGASUH"]);
+        } catch (authErr) {
+          try { verifySessionToken(token); } catch (e) {}
+        }
+      }
       if (!kelasId) throw new Error("ID Kelas wajib disertakan.");
       const ss = getDatabaseSpreadsheet();
       const sheet = ss.getSheetByName(SHEET_TPQ_KELAS);
       if (!sheet) throw new Error("Sheet TPQ_Kelas tidak ditemukan.");
+      migrateTPQKelasSheetIfNeeded(sheet);
 
       const data = sheet.getDataRange().getValues();
-      const idIdx = data[0].map(h => String(h).toLowerCase()).indexOf("kelas_id");
-
       for (let i = 1; i < data.length; i++) {
-        if (String(data[i][idIdx] || "").trim() === String(kelasId).trim()) {
+        if (String(data[i][0] || "").trim() === String(kelasId).trim()) {
           sheet.deleteRow(i + 1);
           return { status: "success", success: true, message: "Kelas TPQ berhasil dihapus." };
         }
@@ -13599,23 +13700,14 @@ function saveTPQPlotting(payload, token) {
       const ss = getDatabaseSpreadsheet();
       const headersKelas = ["kelas_id", "ustadz_pengampu", "deskripsi", "student_ids", "created_at"];
       const sheet = getOrCreateTPQSheet(ss, SHEET_TPQ_KELAS, headersKelas, "#0284c7");
+      migrateTPQKelasSheetIfNeeded(sheet);
 
       const data = sheet.getDataRange().getValues();
       if (data.length <= 1) throw new Error("Data kelas TPQ tidak ditemukan.");
 
-      const head = data[0].map(h => String(h || "").trim().toLowerCase());
-      const idIdx = head.indexOf("kelas_id");
-      const nameIdx = head.indexOf("nama_kelas");
-      const uIdx = head.indexOf("ustadz_pengampu") !== -1 ? head.indexOf("ustadz_pengampu") : head.indexOf("muallim");
-      const sidsIdx = head.indexOf("student_ids");
-
-      if (idIdx === -1 || sidsIdx === -1) {
-        throw new Error("Struktur kolom sheet TPQ_Kelas tidak valid.");
-      }
-
       let foundRow = -1;
       for (let i = 1; i < data.length; i++) {
-        if (String(data[i][idIdx] || "").trim() === kelasId) {
+        if (String(data[i][0] || "").trim() === kelasId) {
           foundRow = i + 1;
           break;
         }
@@ -13623,10 +13715,11 @@ function saveTPQPlotting(payload, token) {
 
       if (foundRow <= 0) throw new Error("Kelas TPQ ID '" + kelasId + "' tidak ditemukan.");
 
-      sheet.getRange(foundRow, sidsIdx + 1).setValue(JSON.stringify(cleanStudentIds));
+      // Kolom 4 adalah student_ids
+      sheet.getRange(foundRow, 4).setValue(JSON.stringify(cleanStudentIds));
 
-      const kUstadz = uIdx !== -1 ? String(data[foundRow - 1][uIdx] || "").trim() : "";
-      const kNama = nameIdx !== -1 ? String(data[foundRow - 1][nameIdx] || "").trim() : ("Kelas " + kUstadz);
+      const kUstadz = String(data[foundRow - 1][1] || "").trim();
+      const kNama = "Kelas " + kUstadz;
       syncTPQPlottingToCapaian_(ss, kelasId, cleanStudentIds, kUstadz, kNama);
 
       return {

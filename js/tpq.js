@@ -971,13 +971,13 @@ function renderTPQKelasCards() {
         <div class="p-4 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200 dark:border-[#283a4e] space-y-3 relative group">
             <div class="flex justify-between items-start">
                 <div class="min-w-0">
-                    <h4 class="font-black text-sm text-slate-800 dark:text-slate-100 truncate">${escapeHtml(k.namaKelas || ('Kelas ' + (k.ustadzPengampu || '')))}</h4>
-                    <span class="inline-block mt-1 px-2 py-0.5 rounded text-[9px] font-bold bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300">
-                        ${escapeHtml(k.deskripsi || k.jadwalSesi || 'Bimbingan Yanbu\'a')}
+                    <h4 class="font-black text-sm text-slate-800 dark:text-slate-100 truncate">${escapeHtml(k.ustadzPengampu || k.namaKelas || 'Ustadz Pengampu')}</h4>
+                    <span class="inline-block mt-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300">
+                        ${escapeHtml(k.deskripsi || 'Bimbingan Yanbu\'a')}
                     </span>
                 </div>
                 <div class="flex items-center space-x-1.5 shrink-0">
-                    <button type="button" onclick="deleteTPQKelasConfirm('${k.kelasId}', '${escapeHtml(k.namaKelas || k.ustadzPengampu)}')" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-300 flex items-center justify-center text-[10px] transition" title="Hapus Kelas">
+                    <button type="button" onclick="deleteTPQKelasConfirm('${k.kelasId}', '${escapeHtml(k.ustadzPengampu || k.namaKelas)}')" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-300 flex items-center justify-center text-[10px] transition" title="Hapus Kelas">
                         <i class="fa-solid fa-trash-can"></i>
                     </button>
                     <span class="w-7 h-7 rounded-lg bg-white dark:bg-[#15202d] text-slate-500 dark:text-slate-300 flex items-center justify-center text-xs font-bold shadow-sm">
@@ -986,14 +986,10 @@ function renderTPQKelasCards() {
                 </div>
             </div>
             <div class="space-y-1 text-xs text-slate-600 dark:text-slate-300">
-                <p class="flex items-center gap-1.5 truncate font-semibold">
+                <p class="flex items-center gap-1.5 truncate text-[11px] text-slate-500 dark:text-slate-400">
                     <i class="fa-solid fa-chalkboard-user text-teal-600"></i>
-                    <span>Pengampu: ${escapeHtml(k.ustadzPengampu || '-')}</span>
+                    <span>Pengampu: <strong class="text-slate-700 dark:text-slate-200 font-bold">${escapeHtml(k.ustadzPengampu || '-')}</strong></span>
                 </p>
-                ${(k.deskripsi && k.deskripsi !== k.namaKelas) ? `
-                <p class="text-[10px] text-slate-400 truncate">
-                    <i class="fa-solid fa-circle-info mr-1"></i> ${escapeHtml(k.deskripsi)}
-                </p>` : ''}
             </div>
             <div class="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-[#283a4e] text-xs">
                 <span class="font-bold text-slate-700 dark:text-slate-300">${enrolledCount} Santri Terdaftar</span>
@@ -1019,7 +1015,6 @@ async function submitNewTPQKelas(e) {
 
     const ustadz = inputUstadz ? inputUstadz.value.trim() : "";
     const deskripsi = inputTarget ? inputTarget.value.trim() : "";
-    const namaKelas = "Kelas " + ustadz;
 
     if (!ustadz) {
         alert("Nama Ustadz / Ustadzah pengampu wajib dipilih dari daftar data pegawai!");
@@ -1035,10 +1030,8 @@ async function submitNewTPQKelas(e) {
         const token = getTPQToken();
         const res = await apiPost("saveTPQKelas", {
             token,
-            namaKelas,
             ustadzPengampu: ustadz,
             deskripsi: deskripsi || "Bimbingan Yanbu'a",
-            jadwalSesi: deskripsi || "Bimbingan Yanbu'a",
             studentIds: []
         });
 
@@ -1050,10 +1043,9 @@ async function submitNewTPQKelas(e) {
             // Update state lokal
             const newK = {
                 kelasId: res.kelasId || ("TPQ-KLS-" + Date.now().toString().substring(8)),
-                namaKelas,
+                namaKelas: "Kelas " + ustadz,
                 ustadzPengampu: ustadz,
                 deskripsi: deskripsi || "Bimbingan Yanbu'a",
-                jadwalSesi: deskripsi || "Bimbingan Yanbu'a",
                 studentIds: []
             };
             ASNTPQ.data.kelasList = ASNTPQ.data.kelasList || [];
