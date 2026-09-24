@@ -586,7 +586,9 @@ function openSimakSoroganModal(studentId = null) {
         nilai: "MUMTAZ",
         muallim: st.muallimPengampu && st.muallimPengampu !== "-" ? st.muallimPengampu : "Guru Sorogan",
         catatan: "",
-        sesi: "Pagi (Ba'da Subuh)"
+        sesi: "Pagi (Ba'da Subuh)",
+        halaqahId: st.halaqahId || "",
+        namaHalaqah: st.namaHalaqah || ""
     };
 
     const elName = document.getElementById('sorogan-simak-modal-name');
@@ -815,6 +817,8 @@ async function submitSimakSorogan(e) {
         studentId: ASNSorogan.simakState.studentId,
         studentName: ASNSorogan.simakState.studentName,
         nis: ASNSorogan.simakState.nis,
+        halaqahId: ASNSorogan.simakState.halaqahId || "",
+        namaHalaqah: ASNSorogan.simakState.namaHalaqah || "",
         juz: elJuz ? Number(elJuz.value) : ASNSorogan.simakState.juz,
         halamanList: selectedPages,
         totalHalaman: selectedPages.length,

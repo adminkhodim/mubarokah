@@ -13606,6 +13606,175 @@ function migrateSoroganHalaqahSheet_(ss) {
   }
 }
 
+/**
+ * Menyelesaikan (resolve) halaqah_id, nama_halaqah, dan muallim pengampu untuk santri Sorogan
+ * Berdasarkan plotting di Sorogan_Halaqah, fallback ke muallim yang cocok, atau default.
+ */
+function resolveSoroganHalaqah_(ss, studentId, nis, customHalaqahId, customNamaHalaqah, customMuallim) {
+  let resolvedHalaqahId = String(customHalaqahId || "").trim();
+  let resolvedNamaHalaqah = String(customNamaHalaqah || "").trim();
+  let resolvedMuallim = String(customMuallim || "").trim();
+  if (resolvedMuallim === "-") resolvedMuallim = "";
+
+  const sId = String(studentId || "").trim();
+  const sNis = String(nis || "").trim();
+
+  try {
+    if (!ss) ss = getDatabaseSpreadsheet();
+    if (ss) {
+      const hSheet = ss.getSheetByName(SHEET_SOROGAN_HALAQAH);
+      if (hSheet) {
+        migrateSoroganHalaqahSheetIfNeeded(hSheet);
+        const hData = hSheet.getDataRange().getValues();
+        if (hData.length >= 2) {
+          const colMap = getSoroganHalaqahColumnIndexes(hData[0]);
+          if (colMap.id !== -1) {
+            let matchedRow = null;
+            let matchedRowIndex = -1;
+
+            // 1. Cari berdasarkan student_id atau nis di kolom student_ids
+            if (sId || sNis) {
+              for (let i = 1; i < hData.length; i++) {
+                const row = hData[i];
+                const rawSids = colMap.studentIds !== -1 ? row[colMap.studentIds] : "";
+                let sids = [];
+                if (typeof rawSids === "string") {
+                  if (rawSids.trim().startsWith("[")) {
+                    try { sids = JSON.parse(rawSids); } catch (e) { sids = []; }
+                  } else {
+                    sids = rawSids.split(",").map(s => s.trim()).filter(Boolean);
+                  }
+                } else if (Array.isArray(rawSids)) {
+                  sids = rawSids;
+                }
+
+                if ((sId && sids.includes(sId)) || (sNis && sids.includes(sNis))) {
+                  matchedRow = row;
+                  matchedRowIndex = i + 1;
+                  break;
+                }
+              }
+            }
+
+            // 2. Jika belum cocok, cari berdasarkan customHalaqahId
+            if (!matchedRow && resolvedHalaqahId) {
+              for (let i = 1; i < hData.length; i++) {
+                if (String(hData[i][colMap.id] || "").trim() === resolvedHalaqahId) {
+                  matchedRow = hData[i];
+                  matchedRowIndex = i + 1;
+                  break;
+                }
+              }
+            }
+
+            // 3. Jika belum cocok, cari berdasarkan muallim
+            if (!matchedRow && resolvedMuallim && resolvedMuallim !== "-") {
+              const cleanM = resolvedMuallim.toLowerCase().replace(/[^a-z0-9]/g, "");
+              for (let i = 1; i < hData.length; i++) {
+                const rowM = colMap.muallim !== -1 ? String(hData[i][colMap.muallim] || "").trim() : "";
+                const cleanRowM = rowM.toLowerCase().replace(/[^a-z0-9]/g, "");
+                if (cleanRowM && (cleanRowM === cleanM || cleanRowM.includes(cleanM) || cleanM.includes(cleanRowM))) {
+                  matchedRow = hData[i];
+                  matchedRowIndex = i + 1;
+                  break;
+                }
+              }
+            }
+
+            if (matchedRow) {
+              resolvedHalaqahId = String(matchedRow[colMap.id] || "").trim();
+              const mName = colMap.muallim !== -1 ? String(matchedRow[colMap.muallim] || "").trim() : "";
+              if (mName) resolvedMuallim = mName;
+              let hName = colMap.nama !== -1 ? String(matchedRow[colMap.nama] || "").trim() : "";
+              if (!hName && resolvedMuallim) hName = "Halaqah " + resolvedMuallim;
+              else if (!hName && resolvedHalaqahId) hName = "Halaqah " + resolvedHalaqahId;
+              resolvedNamaHalaqah = hName;
+
+              // Jika santri belum terdaftar di daftar student_ids pada halaqah ini, daftarkan otomatis
+              if (sId && colMap.studentIds !== -1 && matchedRowIndex > 0) {
+                try {
+                  const rawSids = matchedRow[colMap.studentIds] || "";
+                  const sids = String(rawSids).split(",").map(s => s.trim()).filter(Boolean);
+                  if (!sids.includes(sId)) {
+                    sids.push(sId);
+                    hSheet.getRange(matchedRowIndex, colMap.studentIds + 1).setValue(sids.join(","));
+                  }
+                } catch (syncPlotErr) {
+                  // Abaikan error minor
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  } catch (err) {
+    Logger.log("resolveSoroganHalaqah_ error: " + err.message);
+  }
+
+  // Jika nama_halaqah masih kosong atau 'Belum Ditentukan'
+  if (!resolvedNamaHalaqah || resolvedNamaHalaqah === "Belum Ditentukan") {
+    if (resolvedMuallim && resolvedMuallim !== "-") {
+      resolvedNamaHalaqah = "Halaqah " + resolvedMuallim;
+    } else if (resolvedHalaqahId) {
+      resolvedNamaHalaqah = "Halaqah " + resolvedHalaqahId;
+    } else {
+      resolvedNamaHalaqah = "Belum Ditentukan";
+    }
+  }
+
+  return {
+    halaqahId: resolvedHalaqahId,
+    namaHalaqah: resolvedNamaHalaqah,
+    muallim: resolvedMuallim || "-"
+  };
+}
+
+/**
+ * Menyinkronkan perubahan plotting dari Sorogan_Halaqah ke Sorogan_Capaian
+ */
+function syncSoroganPlottingToCapaian_(ss, halaqahId, studentIds, muallim) {
+  try {
+    if (!ss) ss = getDatabaseSpreadsheet();
+    if (!ss || !halaqahId) return;
+
+    const headersCapaian = ["student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_khatam", "status_terakhir", "halaqah_id", "nama_halaqah", "muallim_pengampu", "updated_at"];
+    const cSheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_CAPAIAN, headersCapaian, "#0f766e");
+    const cData = cSheet.getDataRange().getValues();
+    if (cData.length < 2) return;
+
+    const cHead = cData[0].map(h => String(h || "").trim().toLowerCase());
+    const sIdIdx = cHead.indexOf("student_id");
+    const hIdIdx = cHead.indexOf("halaqah_id");
+    const hNameIdx = cHead.indexOf("nama_halaqah");
+    const mIdx = cHead.indexOf("muallim_pengampu");
+    const upIdx = cHead.indexOf("updated_at");
+
+    if (sIdIdx === -1 || hIdIdx === -1) return;
+
+    const cleanSids = Array.isArray(studentIds) ? studentIds.map(s => String(s).trim()).filter(Boolean) : [];
+    const namaHalaqah = muallim && muallim !== "-" ? ("Halaqah " + muallim) : ("Halaqah " + halaqahId);
+    const nowIso = new Date().toISOString();
+
+    for (let i = 1; i < cData.length; i++) {
+      const rowSid = String(cData[i][sIdIdx] || "").trim();
+      const currentHId = String(cData[i][hIdIdx] || "").trim();
+
+      if (cleanSids.includes(rowSid)) {
+        const rowNumber = i + 1;
+        if (currentHId !== halaqahId || String(cData[i][hNameIdx] || "").trim() === "Belum Ditentukan" || !cData[i][hNameIdx]) {
+          cSheet.getRange(rowNumber, hIdIdx + 1).setValue(halaqahId);
+          if (hNameIdx !== -1) cSheet.getRange(rowNumber, hNameIdx + 1).setValue(namaHalaqah);
+          if (mIdx !== -1 && muallim && muallim !== "-") cSheet.getRange(rowNumber, mIdx + 1).setValue(muallim);
+          if (upIdx !== -1) cSheet.getRange(rowNumber, upIdx + 1).setValue(nowIso);
+        }
+      }
+    }
+  } catch (err) {
+    Logger.log("syncSoroganPlottingToCapaian_ error: " + err.message);
+  }
+}
+
 function initSoroganSheets(token) {
   try {
     if (token) {
@@ -13884,6 +14053,7 @@ function getSoroganDashboard(token) {
         const sid = String(cData[i][sIdIdx] || "").trim();
         if (sid) {
           capaianMap[sid] = {
+            rowNumber: i + 1,
             juzAktif: Number(cData[i][juzIdx]) || 1,
             halamanTerakhir: Number(cData[i][halIdx]) || 1,
             totalHalamanKhatam: Number(cData[i][totIdx]) || 0,
@@ -14003,6 +14173,34 @@ function getSoroganDashboard(token) {
     });
     if (soroganWeeklySessions === 0) soroganWeeklySessions = 11;
 
+    // Auto-heal baris capaian di Google Sheets jika halaqah_id kosong atau nama_halaqah 'Belum Ditentukan'
+    Object.keys(capaianMap).forEach(sid => {
+      const cp = capaianMap[sid];
+      const needsHealing = !cp.halaqahId || !cp.namaHalaqah || cp.namaHalaqah === "Belum Ditentukan";
+      if (needsHealing) {
+        const stObj = students.find(s => s.studentId === sid);
+        const stNis = stObj ? stObj.nis : "";
+        const resolved = resolveSoroganHalaqah_(ss, sid, stNis, cp.halaqahId, cp.namaHalaqah, cp.muallimPengampu);
+
+        if (resolved.halaqahId || (resolved.namaHalaqah && resolved.namaHalaqah !== "Belum Ditentukan")) {
+          cp.halaqahId = resolved.halaqahId || cp.halaqahId;
+          cp.namaHalaqah = resolved.namaHalaqah || cp.namaHalaqah;
+          if (resolved.muallim && resolved.muallim !== "-") cp.muallimPengampu = resolved.muallim;
+
+          if (cp.rowNumber && cp.rowNumber >= 2) {
+            try {
+              if (hIdIdx !== -1 && cp.halaqahId) capaianSheet.getRange(cp.rowNumber, hIdIdx + 1).setValue(cp.halaqahId);
+              if (hNameIdx !== -1 && cp.namaHalaqah) capaianSheet.getRange(cp.rowNumber, hNameIdx + 1).setValue(cp.namaHalaqah);
+              if (mIdx !== -1 && cp.muallimPengampu && cp.muallimPengampu !== "-") capaianSheet.getRange(cp.rowNumber, mIdx + 1).setValue(cp.muallimPengampu);
+              if (upIdx !== -1) capaianSheet.getRange(cp.rowNumber, upIdx + 1).setValue(nowIso);
+            } catch (healErr) {
+              Logger.log("Auto-heal Sorogan_Capaian error for " + sid + ": " + healErr.message);
+            }
+          }
+        }
+      }
+    });
+
     // Gabungkan data capaian & hitung ringkasan
     let totalJuzSum = 0;
     let khatam30Juz = 0;
@@ -14022,13 +14220,11 @@ function getSoroganDashboard(token) {
         updatedAt: ""
       };
 
-      if (!cp.halaqahId) {
-        const foundH = halaqahs.find(h => Array.isArray(h.studentIds) && (h.studentIds.includes(st.studentId) || h.studentIds.includes(st.nis)));
-        if (foundH) {
-          cp.halaqahId = foundH.halaqahId;
-          cp.namaHalaqah = foundH.namaHalaqah;
-          cp.muallimPengampu = foundH.muallim;
-        }
+      if (!cp.halaqahId || !cp.namaHalaqah || cp.namaHalaqah === "Belum Ditentukan") {
+        const resolved = resolveSoroganHalaqah_(ss, st.studentId, st.nis, cp.halaqahId, cp.namaHalaqah, cp.muallimPengampu);
+        if (resolved.halaqahId) cp.halaqahId = resolved.halaqahId;
+        if (resolved.namaHalaqah && resolved.namaHalaqah !== "Belum Ditentukan") cp.namaHalaqah = resolved.namaHalaqah;
+        if (resolved.muallim && resolved.muallim !== "-") cp.muallimPengampu = resolved.muallim;
       }
 
       const juz = Math.max(1, Math.min(30, cp.juzAktif));
@@ -14140,18 +14336,41 @@ function saveSoroganLog(data, token) {
       const cData = capaianSheet.getDataRange().getValues();
       let rowIndex = -1;
       let prevTotal = 0;
+      let existingHId = "";
+      let existingHName = "";
+      let existingMuallim = "";
 
       if (cData.length >= 2) {
         const sIdIdx = cData[0].map(h => String(h).toLowerCase()).indexOf("student_id");
         const totIdx = cData[0].map(h => String(h).toLowerCase()).indexOf("total_halaman_khatam");
+        const hIdIdx = cData[0].map(h => String(h).toLowerCase()).indexOf("halaqah_id");
+        const hNameIdx = cData[0].map(h => String(h).toLowerCase()).indexOf("nama_halaqah");
+        const mIdx = cData[0].map(h => String(h).toLowerCase()).indexOf("muallim_pengampu");
+
         for (let i = 1; i < cData.length; i++) {
           if (String(cData[i][sIdIdx] || "").trim() === studentId) {
             rowIndex = i + 1;
             prevTotal = Number(cData[i][totIdx]) || 0;
+            if (hIdIdx !== -1) existingHId = String(cData[i][hIdIdx] || "").trim();
+            if (hNameIdx !== -1) existingHName = String(cData[i][hNameIdx] || "").trim();
+            if (mIdx !== -1) existingMuallim = String(cData[i][mIdx] || "").trim();
             break;
           }
         }
       }
+
+      const inputHId = String(data.halaqahId || data.halaqah_id || existingHId || "").trim();
+      const inputHName = String(data.namaHalaqah || data.nama_halaqah || existingHName || "").trim();
+      const inputMuallim = (muallim && muallim !== "-") ? muallim : existingMuallim;
+
+      const resolvedHalaqah = resolveSoroganHalaqah_(ss, studentId, nis, inputHId, inputHName, inputMuallim);
+      const finalHalaqahId = resolvedHalaqah.halaqahId || inputHId || "";
+      const finalNamaHalaqah = (resolvedHalaqah.namaHalaqah && resolvedHalaqah.namaHalaqah !== "Belum Ditentukan")
+        ? resolvedHalaqah.namaHalaqah
+        : (inputHName && inputHName !== "Belum Ditentukan" ? inputHName : "Belum Ditentukan");
+      const finalMuallim = (muallim && muallim !== "-")
+        ? muallim
+        : ((resolvedHalaqah.muallim && resolvedHalaqah.muallim !== "-") ? resolvedHalaqah.muallim : (existingMuallim || "-"));
 
       const updatedTotal = statusSetoran === "LANJUT" ? (prevTotal + totalHalaman) : prevTotal;
 
@@ -14161,11 +14380,13 @@ function saveSoroganLog(data, token) {
         capaianSheet.getRange(rowIndex, 4).setValue(nextHalaman);
         capaianSheet.getRange(rowIndex, 5).setValue(updatedTotal);
         capaianSheet.getRange(rowIndex, 6).setValue(statusSetoran);
-        if (muallim && muallim !== "-") capaianSheet.getRange(rowIndex, 9).setValue(muallim);
+        if (finalHalaqahId) capaianSheet.getRange(rowIndex, 7).setValue(finalHalaqahId);
+        if (finalNamaHalaqah) capaianSheet.getRange(rowIndex, 8).setValue(finalNamaHalaqah);
+        if (finalMuallim && finalMuallim !== "-") capaianSheet.getRange(rowIndex, 9).setValue(finalMuallim);
         capaianSheet.getRange(rowIndex, 10).setValue(nowIso);
       } else {
         capaianSheet.appendRow([
-          studentId, studentName, nextJuz, nextHalaman, updatedTotal, statusSetoran, "", "Belum Ditentukan", muallim, nowIso
+          studentId, studentName, nextJuz, nextHalaman, updatedTotal, statusSetoran, finalHalaqahId, finalNamaHalaqah, finalMuallim, nowIso
         ]);
       }
 
@@ -14223,6 +14444,15 @@ function saveSoroganCapaian(data, token) {
       if (!studentId) throw new Error("ID Santri wajib disertakan.");
 
       const ss = getDatabaseSpreadsheet();
+      const resolved = resolveSoroganHalaqah_(ss, studentId, "", halaqahId, namaHalaqah, muallim);
+      const finalHalaqahId = halaqahId || resolved.halaqahId || "";
+      const finalNamaHalaqah = (namaHalaqah && namaHalaqah !== "Belum Ditentukan")
+        ? namaHalaqah
+        : (resolved.namaHalaqah || "Belum Ditentukan");
+      const finalMuallim = (muallim && muallim !== "-")
+        ? muallim
+        : ((resolved.muallim && resolved.muallim !== "-") ? resolved.muallim : "-");
+
       const headersCapaian = ["student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_khatam", "status_terakhir", "halaqah_id", "nama_halaqah", "muallim_pengampu", "updated_at"];
       const sheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_CAPAIAN, headersCapaian, "#0f766e");
 
@@ -14242,12 +14472,12 @@ function saveSoroganCapaian(data, token) {
         sheet.getRange(rowIndex, 2).setValue(studentName);
         sheet.getRange(rowIndex, 3).setValue(juz);
         sheet.getRange(rowIndex, 4).setValue(halaman);
-        if (halaqahId) sheet.getRange(rowIndex, 7).setValue(halaqahId);
-        if (namaHalaqah) sheet.getRange(rowIndex, 8).setValue(namaHalaqah);
-        if (muallim) sheet.getRange(rowIndex, 9).setValue(muallim);
+        if (finalHalaqahId) sheet.getRange(rowIndex, 7).setValue(finalHalaqahId);
+        if (finalNamaHalaqah) sheet.getRange(rowIndex, 8).setValue(finalNamaHalaqah);
+        if (finalMuallim && finalMuallim !== "-") sheet.getRange(rowIndex, 9).setValue(finalMuallim);
         sheet.getRange(rowIndex, 10).setValue(nowIso);
       } else {
-        sheet.appendRow([studentId, studentName, juz, halaman, 0, "LANJUT", halaqahId, namaHalaqah, muallim, nowIso]);
+        sheet.appendRow([studentId, studentName, juz, halaman, 0, "LANJUT", finalHalaqahId, finalNamaHalaqah, finalMuallim, nowIso]);
       }
 
       return { status: "success", success: true, message: `Posisi Sorogan santri ${studentName} berhasil disesuaikan.` };
@@ -14524,6 +14754,9 @@ function saveSoroganPlotting(payload, token) {
       if (foundRow <= 0) throw new Error("Halaqah Sorogan ID '" + halaqahId + "' tidak ditemukan.");
 
       sheet.getRange(foundRow, colMap.studentIds + 1).setValue(cleanStudentIds.join(","));
+
+      const hMuallim = colMap.muallim !== -1 ? String(data[foundRow - 1][colMap.muallim] || "").trim() : "";
+      syncSoroganPlottingToCapaian_(ss, halaqahId, cleanStudentIds, hMuallim);
 
       return {
         status: "success",
