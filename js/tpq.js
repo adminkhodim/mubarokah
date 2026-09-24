@@ -121,8 +121,30 @@ const YANBUA_JILID_INFO = {
     4: { name: "Jilid 4", desc: "Tasydid, Ikhfa', Iqlab, Idgham & Alif Lam", badge: "bg-blue-50 text-blue-700 border-blue-200" },
     5: { name: "Jilid 5", desc: "Waqaf, Ibtida' & Tanda Baca Mushaf", badge: "bg-indigo-50 text-indigo-700 border-indigo-200" },
     6: { name: "Jilid 6", desc: "Gharib & Musykilat Bacaan Al-Qur'an", badge: "bg-purple-50 text-purple-700 border-purple-200" },
-    7: { name: "Jilid 7", desc: "Kaidah Tajwid Lengkap & Pra Al-Qur'an", badge: "bg-amber-50 text-amber-700 border-amber-200" }
 };
+
+/**
+ * Normalisasi format waktu menjadi HH:mm yang bersih (misal 15:45, 05:00)
+ * Mencegah string panjang Date Google Sheets (misal Sat Dec 30 1899 ...)
+ */
+function formatTPQTime(val, defaultVal = "15:45") {
+    if (!val && val !== 0) return defaultVal;
+    if (val instanceof Date && !isNaN(val.getTime())) {
+        const hh = String(val.getHours()).padStart(2, "0");
+        const mm = String(val.getMinutes()).padStart(2, "0");
+        return `${hh}:${mm}`;
+    }
+    const s = String(val).trim();
+    if (/^\d{1,2}:\d{2}$/.test(s)) {
+        const parts = s.split(":");
+        return `${parts[0].padStart(2, "0")}:${parts[1]}`;
+    }
+    const match = s.match(/(?:(?:1899|1900|\d{4})[^\d]+)?(\d{1,2}):(\d{2})(?::\d{2})?/);
+    if (match) {
+        return `${match[1].padStart(2, "0")}:${match[2].padStart(2, "0")}`;
+    }
+    return s || defaultVal;
+}
 
 /**
  * Muat data lengkap dashboard TPQ Yanbu'a dengan pola SWR (Stale-While-Revalidate)
@@ -626,7 +648,9 @@ function openSimakTPQModal(studentId) {
 
         if (sesiArr.length > 0) {
             sesiArr.forEach(s => {
-                const timeLabel = s.jamMulai && s.jamSelesai ? ` (${s.jamMulai} - ${s.jamSelesai} WIB)` : '';
+                const jmMulai = formatTPQTime(s.jamMulai, '15:45');
+                const jmSelesai = formatTPQTime(s.jamSelesai, '17:00');
+                const timeLabel = (jmMulai && jmSelesai) ? ` (${jmMulai} - ${jmSelesai} WIB)` : '';
                 sesiOptions += `<option value="${escapeHtml(s.namaSesi)}">${escapeHtml(s.namaSesi + timeLabel)}</option>`;
             });
         } else {
@@ -1341,17 +1365,22 @@ async function submitTPQPlotting() {
  */
 function renderTPQMatriksBeban() {
     const tbody = document.getElementById('tpq-matriks-beban-tbody');
-    if (!tbody) return;
+    const mobileContainer = document.getElementById('tpq-matriks-beban-mobile-list');
+    if (!tbody && !mobileContainer) return;
 
     const kelasList = ASNTPQ.data.kelasList || [];
     const students = ASNTPQ.data.students || [];
 
     if (kelasList.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-xs text-slate-400">Belum ada data distribusi beban Ustadz TPQ.</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-xs text-slate-400">Belum ada data distribusi beban Ustadz TPQ.</td></tr>`;
+        if (mobileContainer) mobileContainer.innerHTML = `<div class="p-6 text-center text-xs text-slate-400 bg-white dark:bg-[#15202d] rounded-2xl border border-dashed border-slate-200 dark:border-[#283a4e]">Belum ada data distribusi beban Ustadz TPQ.</div>`;
         return;
     }
 
-    tbody.innerHTML = kelasList.map(k => {
+    const rowsHtml = [];
+    const cardsHtml = [];
+
+    kelasList.forEach(k => {
         const enrolled = students.filter(st => {
             if (Array.isArray(k.studentIds) && (k.studentIds.includes(st.studentId) || k.studentIds.includes(st.nis))) return true;
             return st.kelasId === k.kelasId;
@@ -1362,26 +1391,75 @@ function renderTPQMatriksBeban() {
             totalJilid += Number(st.jilidAktif || 1);
         });
         const avg = enrolled.length > 0 ? (totalJilid / enrolled.length).toFixed(1) : "1.0";
+        const ustadz = (k.ustadzPengampu && k.ustadzPengampu !== '-') ? k.ustadzPengampu : (k.namaKelas || 'Ustadz TPQ');
+        const deskripsi = k.deskripsi || k.namaKelas || 'Bimbingan Yanbu\'a';
+        const kategori = k.kategori || 'Yanbu\'a';
 
-        return `
+        // 1. Desktop Table Row (w-full table-fixed, no horizontal scroll)
+        rowsHtml.push(`
         <tr class="hover:bg-slate-50 dark:hover:bg-[#1c2836]/60 transition">
-            <td class="py-3 px-4 font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                <div class="w-7 h-7 rounded-lg bg-teal-100/70 dark:bg-teal-950 text-teal-700 dark:text-teal-300 flex items-center justify-center text-xs">
-                    <i class="fa-solid fa-user-tie"></i>
+            <td class="py-3 px-4 font-bold text-slate-800 dark:text-slate-100">
+                <div class="flex items-center gap-2 min-w-0">
+                    <div class="w-7 h-7 rounded-lg bg-teal-100/70 dark:bg-teal-950 text-teal-700 dark:text-teal-300 flex items-center justify-center text-xs shrink-0 font-bold">
+                        <i class="fa-solid fa-user-tie"></i>
+                    </div>
+                    <span class="truncate" title="${escapeHtml(ustadz)}">${escapeHtml(ustadz)}</span>
                 </div>
-                <span class="truncate">${escapeHtml(k.ustadzPengampu || 'Ustadz TPQ')}</span>
             </td>
-            <td class="py-3 px-4 font-semibold text-slate-700 dark:text-slate-200">${escapeHtml(k.namaKelas || '-')}</td>
-            <td class="py-3 px-4">
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300">
-                    ${escapeHtml(k.kategori || 'Yanbu\'a')}
+            <td class="py-3 px-4 font-semibold text-slate-700 dark:text-slate-200">
+                <span class="truncate block" title="${escapeHtml(deskripsi)}">${escapeHtml(deskripsi)}</span>
+            </td>
+            <td class="py-3 px-3">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300 whitespace-nowrap">
+                    ${escapeHtml(kategori)}
                 </span>
             </td>
-            <td class="py-3 px-4 font-bold text-slate-800 dark:text-slate-100">${enrolled.length} Santri</td>
-            <td class="py-3 px-4 font-bold text-teal-600 dark:text-teal-400">Jilid ${avg} / 7</td>
+            <td class="py-3 px-3 font-bold text-slate-800 dark:text-slate-100 whitespace-nowrap">${enrolled.length} Santri</td>
+            <td class="py-3 px-4 font-bold text-teal-600 dark:text-teal-400 whitespace-nowrap">Jilid ${avg} / 7</td>
         </tr>
-        `;
-    }).join('');
+        `);
+
+        // 2. Mobile Card (100% width, langsung tampak utuh tanpa scroll horizontal)
+        cardsHtml.push(`
+        <div class="p-3.5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200 dark:border-[#283a4e] shadow-sm space-y-2.5">
+            <div class="flex items-start justify-between gap-2">
+                <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                    <div class="w-8 h-8 rounded-xl bg-teal-100/80 dark:bg-teal-950 text-teal-700 dark:text-teal-300 flex items-center justify-center text-xs shrink-0 font-bold shadow-xs">
+                        <i class="fa-solid fa-user-tie"></i>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <h5 class="font-extrabold text-xs text-slate-800 dark:text-slate-100 truncate">${escapeHtml(ustadz)}</h5>
+                        <p class="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate">${escapeHtml(deskripsi)}</p>
+                    </div>
+                </div>
+                <span class="shrink-0 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 border border-teal-200/60 dark:border-teal-800/50">
+                    <i class="fa-solid fa-users text-[9px]"></i> ${enrolled.length} Santri
+                </span>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-[#283a4e]/60 text-xs">
+                <div class="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-[#1c2836] border border-slate-200/50 dark:border-[#283a4e]">
+                    <span class="text-[10px] font-semibold text-slate-400">Kategori</span>
+                    <span class="text-[10px] font-bold text-teal-700 dark:text-teal-300">${escapeHtml(kategori)}</span>
+                </div>
+                <div class="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-[#1c2836] border border-slate-200/50 dark:border-[#283a4e]">
+                    <span class="text-[10px] font-semibold text-slate-400">Rata-rata</span>
+                    <span class="text-[10px] font-black text-emerald-600 dark:text-emerald-400">Jilid ${avg} <span class="font-normal text-slate-400 text-[9px]">/ 7</span></span>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-0.5">
+                <button type="button" onclick="openPlottingFromKelasCard('${escapeHtml(k.kelasId)}')" class="text-[10px] font-bold text-teal-600 hover:text-teal-700 dark:text-teal-400 inline-flex items-center gap-1 transition">
+                    <span>Atur Plotting Santri</span>
+                    <i class="fa-solid fa-arrow-right text-[9px]"></i>
+                </button>
+            </div>
+        </div>
+        `);
+    });
+
+    if (tbody) tbody.innerHTML = rowsHtml.join('');
+    if (mobileContainer) mobileContainer.innerHTML = cardsHtml.join('');
 }
 
 /**
@@ -1466,7 +1544,7 @@ function renderTPQSesiCards() {
                 </p>
                 <div class="flex items-center justify-between text-[11px] pt-1">
                     <span class="font-bold flex items-center gap-1">
-                        <i class="fa-regular fa-clock text-teal-600"></i> ${escapeHtml(s.jamMulai || '15:45')} - ${escapeHtml(s.jamSelesai || '17:00')} WIB
+                        <i class="fa-regular fa-clock text-teal-600"></i> ${escapeHtml(formatTPQTime(s.jamMulai, '15:45'))} - ${escapeHtml(formatTPQTime(s.jamSelesai, '17:00'))} WIB
                     </span>
                     <span class="text-slate-400 text-[10px]">${hariStr || 'Setiap Hari'}</span>
                 </div>
@@ -1493,8 +1571,8 @@ function editTPQSesi(sesiId) {
     if (namaInput) namaInput.value = sesi.namaSesi || '';
     if (tipeInput) tipeInput.value = sesi.jenisSesi || 'Bimbingan Yanbu\'a Reguler';
     if (statusInput) statusInput.value = sesi.status || 'Aktif Digunakan';
-    if (jamMulaiInput) jamMulaiInput.value = sesi.jamMulai || '15:45';
-    if (jamSelesaiInput) jamSelesaiInput.value = sesi.jamSelesai || '17:00';
+    if (jamMulaiInput) jamMulaiInput.value = formatTPQTime(sesi.jamMulai, '15:45');
+    if (jamSelesaiInput) jamSelesaiInput.value = formatTPQTime(sesi.jamSelesai, '17:00');
     if (btnText) btnText.innerText = "Perbarui Sesi";
     if (btnCancel) btnCancel.classList.remove('hidden');
 
@@ -1524,8 +1602,8 @@ async function submitTPQSesi(e) {
         namaSesi: namaInput ? namaInput.value.trim() : "",
         jenisSesi: tipeInput ? tipeInput.value : "Bimbingan Yanbu'a Reguler",
         status: statusInput ? statusInput.value : "Aktif Digunakan",
-        jamMulai: jamMulaiInput ? jamMulaiInput.value : "15:45",
-        jamSelesai: jamSelesaiInput ? jamSelesaiInput.value : "17:00",
+        jamMulai: formatTPQTime(jamMulaiInput ? jamMulaiInput.value : "15:45", "15:45"),
+        jamSelesai: formatTPQTime(jamSelesaiInput ? jamSelesaiInput.value : "17:00", "17:00"),
         hariList
     };
 
@@ -1928,4 +2006,6 @@ window.onTPQBulkTargetScopeChange = onTPQBulkTargetScopeChange;
 window.setTPQBulkTargetChip = setTPQBulkTargetChip;
 window.recalculateTPQBulkTargetWeekly = recalculateTPQBulkTargetWeekly;
 window.submitTPQBulkTarget = submitTPQBulkTarget;
+window.formatTPQTime = formatTPQTime;
+window.renderTPQMatriksBeban = renderTPQMatriksBeban;
 

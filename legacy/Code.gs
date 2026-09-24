@@ -13085,8 +13085,8 @@ function getTPQDashboard(token) {
           namaSesi: String(sesiData[i][nameIdx] || "").trim(),
           jenisSesi: String(sesiData[i][typeIdx] || "").trim(),
           status: String(sesiData[i][stIdx] || "Aktif Digunakan").trim(),
-          jamMulai: String(sesiData[i][jmIdx] || "15:45").trim(),
-          jamSelesai: String(sesiData[i][jsIdx] || "17:00").trim(),
+          jamMulai: normalizeTimeString(sesiData[i][jmIdx], "15:45"),
+          jamSelesai: normalizeTimeString(sesiData[i][jsIdx], "17:00"),
           hariList: hariList
         });
       }
@@ -13860,8 +13860,8 @@ function saveTPQSesi(payload, token) {
       const sesiId = rawId || ("TPQ-SESI-" + Utilities.formatDate(new Date(), "GMT+7", "yyyyMMdd-HHmm"));
       const jenisSesi = String(p.jenisSesi || p.jenis_sesi || p.jenis || "Bimbingan Yanbu'a Reguler").trim();
       const status = String(p.status || "Aktif Digunakan").trim();
-      const jamMulai = String(p.jamMulai || p.jam_mulai || "15:45").trim();
-      const jamSelesai = String(p.jamSelesai || p.jam_selesai || "17:00").trim();
+      const jamMulai = normalizeTimeString(p.jamMulai || p.jam_mulai, "15:45");
+      const jamSelesai = normalizeTimeString(p.jamSelesai || p.jam_selesai, "17:00");
       const rawHari = p.hariList || p.hari || "Sen,Sel,Rab,Kam,Sab,Min";
       const hariList = Array.isArray(rawHari) ? rawHari.join(",") : String(rawHari);
       const createdAt = new Date().toISOString();
