@@ -594,12 +594,49 @@ function openSimakSoroganModal(studentId = null) {
     const elJuz = document.getElementById('sorogan-simak-modal-juz');
     const elMuallim = document.getElementById('sorogan-simak-modal-muallim');
     const elCatatan = document.getElementById('sorogan-simak-modal-catatan');
+    const elTanggal = document.getElementById('sorogan-simak-modal-tanggal');
+    const elSesi = document.getElementById('sorogan-simak-modal-sesi');
 
     if (elName) elName.innerText = st.name;
     if (elNis) elNis.innerText = `NIS: ${st.nis || "-"}`;
     if (elJuz) elJuz.value = ASNSorogan.simakState.juz;
     if (elMuallim) elMuallim.value = ASNSorogan.simakState.muallim;
     if (elCatatan) elCatatan.value = "";
+
+    if (elTanggal) {
+        elTanggal.value = new Date().toISOString().substring(0, 10);
+    }
+
+    if (elSesi) {
+        const sesiList = ASNSorogan.data.sesiList || [];
+        const activeSesi = sesiList.filter(s => (s.status || 'Aktif').includes('Aktif'));
+        if (activeSesi.length > 0) {
+            elSesi.innerHTML = activeSesi.map(s => {
+                const jM = cleanSoroganSesiTime(s.jamMulai, '05:15');
+                const jS = cleanSoroganSesiTime(s.jamSelesai, '06:30');
+                return `<option value="${escapeHtml(s.namaSesi)}">${escapeHtml(s.namaSesi)} (${jM} - ${jS} WIB)</option>`;
+            }).join('');
+        } else {
+            elSesi.innerHTML = `
+                <option value="Pagi (Ba'da Subuh)">Pagi (Ba'da Subuh) 05:15 - 06:30 WIB</option>
+                <option value="Sore (Ba'da Ashar)">Sore (Ba'da Ashar) 16:00 - 17:15 WIB</option>
+                <option value="Malam (Ba'da Isya)">Malam (Ba'da Isya) 20:00 - 21:30 WIB</option>
+            `;
+        }
+
+        // Otomatis pilih sesi sesuai jam lokal saat ini
+        const hour = new Date().getHours();
+        if (hour < 11) {
+            const p = activeSesi.find(s => s.namaSesi.toLowerCase().includes('pagi') || s.namaSesi.toLowerCase().includes('subuh'));
+            if (p) elSesi.value = p.namaSesi;
+        } else if (hour < 18) {
+            const s = activeSesi.find(s => s.namaSesi.toLowerCase().includes('sore') || s.namaSesi.toLowerCase().includes('ashar'));
+            if (s) elSesi.value = s.namaSesi;
+        } else {
+            const m = activeSesi.find(s => s.namaSesi.toLowerCase().includes('malam') || s.namaSesi.toLowerCase().includes('isya'));
+            if (m) elSesi.value = m.namaSesi;
+        }
+    }
 
     onSoroganJuzChanged();
     selectSoroganQuickStatus("LANJUT");
@@ -700,15 +737,49 @@ function selectSoroganQuickRange(count) {
 function selectSoroganQuickStatus(status) {
     ASNSorogan.simakState.statusSetoran = status;
 
-    document.querySelectorAll('.sorogan-btn-status').forEach(btn => {
-        if (btn.dataset.status === status) {
-            btn.classList.add('ring-2', 'ring-offset-1', 'font-black');
-            if (status === 'LANJUT') btn.classList.add('ring-sky-500', 'bg-sky-600', 'text-white');
-            else if (status === 'ULANG') btn.classList.add('ring-rose-500', 'bg-rose-600', 'text-white');
-            else if (status === 'KHATAM_30JUZ') btn.classList.add('ring-amber-500', 'bg-amber-600', 'text-white');
-        } else {
-            btn.classList.remove('ring-2', 'ring-offset-1', 'font-black', 'bg-sky-600', 'bg-rose-600', 'bg-amber-600', 'text-white');
+    const btnLanjut = document.getElementById('sorogan-btn-status-lanjut');
+    const btnUlang = document.getElementById('sorogan-btn-status-ulang');
+    const btnKhatam = document.getElementById('sorogan-btn-status-khatam');
+
+    const statusMap = {
+        'LANJUT': {
+            btn: btnLanjut,
+            iconClass: 'fa-solid fa-circle-check text-sm',
+            activeBtnClass: 'sorogan-btn-status py-2.5 px-3 rounded-xl border border-sky-600 bg-sky-600 text-white shadow-md text-xs font-bold flex flex-col items-center gap-1 transition active:scale-95 ring-2 ring-sky-400/80 ring-offset-1 dark:ring-offset-[#15202d]',
+            inactiveBtnClass: 'sorogan-btn-status py-2.5 px-3 rounded-xl border border-slate-200 dark:border-[#253447] bg-white dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95 hover:bg-slate-50 dark:hover:bg-[#253447]',
+            activeIconClass: 'text-white',
+            inactiveIconClass: 'text-sky-500',
+            label: 'Lanjut Halaman'
+        },
+        'ULANG': {
+            btn: btnUlang,
+            iconClass: 'fa-solid fa-rotate-left text-sm',
+            activeBtnClass: 'sorogan-btn-status py-2.5 px-3 rounded-xl border border-rose-600 bg-rose-600 text-white shadow-md text-xs font-bold flex flex-col items-center gap-1 transition active:scale-95 ring-2 ring-rose-400/80 ring-offset-1 dark:ring-offset-[#15202d]',
+            inactiveBtnClass: 'sorogan-btn-status py-2.5 px-3 rounded-xl border border-slate-200 dark:border-[#253447] bg-white dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95 hover:bg-slate-50 dark:hover:bg-[#253447]',
+            activeIconClass: 'text-white',
+            inactiveIconClass: 'text-rose-500',
+            label: "Ulang / I'adah"
+        },
+        'KHATAM_30JUZ': {
+            btn: btnKhatam,
+            iconClass: 'fa-solid fa-crown text-sm',
+            activeBtnClass: 'sorogan-btn-status py-2.5 px-3 rounded-xl border border-amber-500 bg-amber-500 text-white shadow-md text-xs font-bold flex flex-col items-center gap-1 transition active:scale-95 ring-2 ring-amber-400/80 ring-offset-1 dark:ring-offset-[#15202d]',
+            inactiveBtnClass: 'sorogan-btn-status py-2.5 px-3 rounded-xl border border-slate-200 dark:border-[#253447] bg-white dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95 hover:bg-slate-50 dark:hover:bg-[#253447]',
+            activeIconClass: 'text-white',
+            inactiveIconClass: 'text-amber-500',
+            label: 'Khatam 30 Juz'
         }
+    };
+
+    Object.keys(statusMap).forEach(key => {
+        const item = statusMap[key];
+        if (!item.btn) return;
+        const isActive = (key === status);
+        item.btn.className = isActive ? item.activeBtnClass : item.inactiveBtnClass;
+        item.btn.innerHTML = `
+            <i class="${item.iconClass} ${isActive ? item.activeIconClass : item.inactiveIconClass}"></i>
+            <span class="${isActive ? 'text-white font-bold' : 'text-slate-700 dark:text-slate-300'}">${item.label}</span>
+        `;
     });
 }
 
@@ -716,11 +787,9 @@ function selectSoroganQuickNilai(nilai) {
     ASNSorogan.simakState.nilai = nilai;
     document.querySelectorAll('.sorogan-btn-nilai').forEach(btn => {
         if (btn.dataset.nilai === nilai) {
-            btn.classList.add('bg-sky-600', 'text-white', 'font-bold');
-            btn.classList.remove('bg-slate-100', 'text-slate-700');
+            btn.className = 'sorogan-btn-nilai py-2 rounded-xl text-xs font-bold transition bg-sky-600 text-white shadow-sm ring-2 ring-sky-400/50';
         } else {
-            btn.classList.remove('bg-sky-600', 'text-white', 'font-bold');
-            btn.classList.add('bg-slate-100', 'text-slate-700');
+            btn.className = 'sorogan-btn-nilai py-2 rounded-xl text-xs font-semibold transition bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] dark:hover:bg-[#253447] text-slate-700 dark:text-slate-300';
         }
     });
 }
@@ -735,8 +804,12 @@ async function submitSimakSorogan(e) {
     const elJuz = document.getElementById('sorogan-simak-modal-juz');
     const elMuallim = document.getElementById('sorogan-simak-modal-muallim');
     const elCatatan = document.getElementById('sorogan-simak-modal-catatan');
+    const elTanggal = document.getElementById('sorogan-simak-modal-tanggal');
+    const elSesi = document.getElementById('sorogan-simak-modal-sesi');
 
     const selectedPages = ASNSorogan.simakState.selectedPages || [1];
+    const tanggalVal = (elTanggal && elTanggal.value) ? elTanggal.value : new Date().toISOString().substring(0, 10);
+    const sesiVal = (elSesi && elSesi.value) ? elSesi.value : "Pagi (Ba'da Subuh)";
 
     const payload = {
         studentId: ASNSorogan.simakState.studentId,
@@ -749,8 +822,8 @@ async function submitSimakSorogan(e) {
         nilai: ASNSorogan.simakState.nilai,
         muallim: elMuallim ? elMuallim.value.trim() : ASNSorogan.simakState.muallim,
         catatan: elCatatan ? elCatatan.value.trim() : "",
-        tanggal: new Date().toISOString().substring(0, 10),
-        sesi: "Pagi (Ba'da Subuh)"
+        tanggal: tanggalVal,
+        sesi: sesiVal
     };
 
     if (btn) {
