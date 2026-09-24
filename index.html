@@ -10629,6 +10629,30 @@
 
             <!-- Modal Body -->
             <div class="p-5 overflow-y-auto space-y-4 custom-scrollbar">
+                <!-- Tanggal Simakan & Sesi Waktu -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                            <i class="fa-solid fa-calendar-day text-teal-600"></i>
+                            <span>Tanggal Simakan</span>
+                        </label>
+                        <input type="date" id="tpq-simak-modal-tanggal"
+                            class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#253447] bg-white dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 text-xs font-semibold focus:ring-2 focus:ring-teal-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                            <i class="fa-regular fa-clock text-teal-600"></i>
+                            <span>Sesi Waktu</span>
+                        </label>
+                        <select id="tpq-simak-modal-sesi"
+                            class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#253447] bg-white dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 text-xs font-semibold focus:ring-2 focus:ring-teal-500 outline-none">
+                            <option value="Sore (15:45 - 17:00)">Sore (15:45 - 17:00 WIB)</option>
+                            <option value="Pagi (08:30 - 10:00)">Pagi (08:30 - 10:00 WIB)</option>
+                            <option value="Malam (18:30 - 19:30)">Malam (18:30 - 19:30 WIB)</option>
+                        </select>
+                    </div>
+                </div>
+
                 <!-- Jilid & Halaman Selector -->
                 <div class="p-3.5 bg-emerald-50/70 dark:bg-emerald-950/20 rounded-2xl border border-emerald-100 dark:border-emerald-800/40">
                     <div class="text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
@@ -10660,26 +10684,31 @@
                     </div>
                 </div>
 
-                <!-- Status Hasil Simakan (Lanjut, Ulang, Naik Jilid) -->
+                <!-- Status Hasil Simakan (Lanjut, Ulang, Naik Jilid, Khatam) -->
                 <div>
                     <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1.5">
                         Hasil Evaluasi Bimbingan
                     </label>
-                    <div class="grid grid-cols-3 gap-2">
-                        <button type="button" data-status="LANJUT" onclick="selectTPQQuickStatus('LANJUT')"
-                            class="tpq-btn-status py-2.5 px-3 rounded-xl border border-slate-200 dark:border-[#253447] bg-white dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <button type="button" id="tpq-btn-status-lanjut" data-status="LANJUT" onclick="selectTPQQuickStatus('LANJUT')"
+                            class="tpq-btn-status py-2.5 px-2 rounded-xl border border-slate-200 dark:border-[#253447] bg-white dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95">
                             <i class="fa-solid fa-circle-check text-emerald-500 text-sm"></i>
-                            <span>Lanjut</span>
+                            <span class="truncate">Lanjut</span>
                         </button>
-                        <button type="button" data-status="ULANG" onclick="selectTPQQuickStatus('ULANG')"
-                            class="tpq-btn-status py-2.5 px-3 rounded-xl border border-slate-200 dark:border-[#253447] bg-white dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95">
+                        <button type="button" id="tpq-btn-status-ulang" data-status="ULANG" onclick="selectTPQQuickStatus('ULANG')"
+                            class="tpq-btn-status py-2.5 px-2 rounded-xl border border-slate-200 dark:border-[#253447] bg-white dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95">
                             <i class="fa-solid fa-rotate-left text-rose-500 text-sm"></i>
-                            <span>Ulang / I'adah</span>
+                            <span class="truncate">Ulang / I'adah</span>
                         </button>
-                        <button type="button" data-status="NAIK_JILID" onclick="selectTPQQuickStatus('NAIK_JILID')"
-                            class="tpq-btn-status py-2.5 px-3 rounded-xl border border-slate-200 dark:border-[#253447] bg-white dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95">
+                        <button type="button" id="tpq-btn-status-naik-jilid" data-status="NAIK_JILID" onclick="selectTPQQuickStatus('NAIK_JILID')"
+                            class="tpq-btn-status py-2.5 px-2 rounded-xl border border-slate-200 dark:border-[#253447] bg-white dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95">
                             <i class="fa-solid fa-award text-amber-500 text-sm"></i>
-                            <span>Naik Jilid</span>
+                            <span class="truncate">Naik Jilid</span>
+                        </button>
+                        <button type="button" id="tpq-btn-status-khatam" data-status="KHATAM_YANBUA" onclick="selectTPQQuickStatus('KHATAM_YANBUA')"
+                            class="tpq-btn-status py-2.5 px-2 rounded-xl border border-slate-200 dark:border-[#253447] bg-white dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95">
+                            <i class="fa-solid fa-crown text-purple-500 text-sm"></i>
+                            <span class="truncate">Khatam TPQ</span>
                         </button>
                     </div>
                     <div id="tpq-simak-status-help" class="mt-2 text-[11px] p-2 bg-slate-50 dark:bg-[#1c2836] rounded-xl border border-slate-100 dark:border-[#253447]">

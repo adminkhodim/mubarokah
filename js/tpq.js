@@ -465,7 +465,9 @@ function openSimakTPQModal(studentId) {
         nilai: "MUMTAZ",
         ustadz: st.ustadzPengampu && st.ustadzPengampu !== "-" ? st.ustadzPengampu : "Ustadz/Ustadzah",
         catatan: "",
-        sesi: "Sore (15:45 - 17:00)"
+        sesi: "Sore (15:45 - 17:00)",
+        kelasId: st.kelasId || "",
+        namaKelas: st.namaKelas || ""
     };
 
     // Populate modal form elements
@@ -475,6 +477,8 @@ function openSimakTPQModal(studentId) {
     const elHalaman = document.getElementById('tpq-simak-modal-halaman');
     const elUstadz = document.getElementById('tpq-simak-modal-ustadz');
     const elCatatan = document.getElementById('tpq-simak-modal-catatan');
+    const elTanggal = document.getElementById('tpq-simak-modal-tanggal');
+    const elSesi = document.getElementById('tpq-simak-modal-sesi');
 
     if (elName) elName.innerText = st.name;
     if (elNis) elNis.innerText = `NIS: ${st.nis || "-"}`;
@@ -482,6 +486,47 @@ function openSimakTPQModal(studentId) {
     if (elHalaman) elHalaman.value = ASNTPQ.simakState.halaman;
     if (elUstadz) elUstadz.value = ASNTPQ.simakState.ustadz;
     if (elCatatan) elCatatan.value = "";
+
+    // Set Tanggal hari ini
+    if (elTanggal) {
+        const todayStr = new Date().toISOString().substring(0, 10);
+        elTanggal.value = todayStr;
+    }
+
+    // Populate opsi sesi waktu
+    if (elSesi) {
+        let sesiOptions = '';
+        const sesiArr = (ASNTPQ.data && ASNTPQ.data.sesiList && ASNTPQ.data.sesiList.length > 0)
+            ? ASNTPQ.data.sesiList.filter(s => (s.status || '').includes('Aktif'))
+            : [];
+
+        if (sesiArr.length > 0) {
+            sesiArr.forEach(s => {
+                const timeLabel = s.jamMulai && s.jamSelesai ? ` (${s.jamMulai} - ${s.jamSelesai} WIB)` : '';
+                sesiOptions += `<option value="${escapeHtml(s.namaSesi)}">${escapeHtml(s.namaSesi + timeLabel)}</option>`;
+            });
+        } else {
+            sesiOptions = `
+                <option value="Sore (15:45 - 17:00)">Sore (15:45 - 17:00 WIB)</option>
+                <option value="Pagi (08:30 - 10:00)">Pagi (08:30 - 10:00 WIB)</option>
+                <option value="Malam (18:30 - 19:30)">Malam (18:30 - 19:30 WIB)</option>
+            `;
+        }
+        elSesi.innerHTML = sesiOptions;
+
+        // Auto-select berdasarkan jam saat ini
+        const curHour = new Date().getHours();
+        if (curHour >= 6 && curHour < 12) {
+            const opt = Array.from(elSesi.options).find(o => o.value.toLowerCase().includes('pagi'));
+            if (opt) elSesi.value = opt.value;
+        } else if (curHour >= 12 && curHour < 18) {
+            const opt = Array.from(elSesi.options).find(o => o.value.toLowerCase().includes('sore'));
+            if (opt) elSesi.value = opt.value;
+        } else {
+            const opt = Array.from(elSesi.options).find(o => o.value.toLowerCase().includes('malam'));
+            if (opt) elSesi.value = opt.value;
+        }
+    }
 
     selectTPQQuickStatus("LANJUT");
     selectTPQQuickNilai("MUMTAZ");
@@ -496,31 +541,67 @@ function closeSimakTPQModal() {
 }
 
 /**
- * Tombol cepat pilih status simakan
+ * Tombol cepat pilih status simakan dengan penanganan kontras warna & teks yang presisi
  */
 function selectTPQQuickStatus(status) {
     ASNTPQ.simakState.statusSetoran = status;
 
+    const statusConfig = {
+        LANJUT: {
+            activeClass: 'bg-emerald-600 border-emerald-600 text-white shadow-sm ring-2 ring-emerald-400/50',
+            iconClass: 'fa-solid fa-circle-check text-white text-sm',
+            textClass: 'font-bold text-white',
+            help: '<span class="text-emerald-600 dark:text-emerald-400 font-semibold"><i class="fa-solid fa-circle-check mr-1"></i> Bacaan lancar. Santri akan lanjut ke halaman berikutnya (+1 hal).</span>'
+        },
+        ULANG: {
+            activeClass: 'bg-rose-600 border-rose-600 text-white shadow-sm ring-2 ring-rose-400/50',
+            iconClass: 'fa-solid fa-rotate-left text-white text-sm',
+            textClass: 'font-bold text-white',
+            help: '<span class="text-rose-600 dark:text-rose-400 font-semibold"><i class="fa-solid fa-rotate-left mr-1"></i> Perlu latihan. Santri mengulang halaman yang sama pada sesi berikutnya.</span>'
+        },
+        NAIK_JILID: {
+            activeClass: 'bg-amber-600 border-amber-600 text-white shadow-sm ring-2 ring-amber-400/50',
+            iconClass: 'fa-solid fa-award text-white text-sm',
+            textClass: 'font-bold text-white',
+            help: '<span class="text-amber-600 dark:text-amber-400 font-semibold"><i class="fa-solid fa-award mr-1"></i> Naik Jilid! Santri otomatis promosi ke Jilid berikutnya Halaman 1.</span>'
+        },
+        KHATAM_YANBUA: {
+            activeClass: 'bg-purple-600 border-purple-600 text-white shadow-sm ring-2 ring-purple-400/50',
+            iconClass: 'fa-solid fa-crown text-white text-sm',
+            textClass: 'font-bold text-white',
+            help: '<span class="text-purple-600 dark:text-purple-400 font-semibold"><i class="fa-solid fa-crown mr-1"></i> Barakallah! Santri telah khatam seluruh 7 Jilid Yanbu\'a dan siap naik ke Sorogan Al-Qur\'an.</span>'
+        }
+    };
+
+    const inactiveClass = 'bg-white dark:bg-[#1c2836] border-slate-200 dark:border-[#253447] text-slate-700 dark:text-slate-300';
+
     document.querySelectorAll('.tpq-btn-status').forEach(btn => {
-        if (btn.dataset.status === status) {
-            btn.classList.add('ring-2', 'ring-offset-1', 'font-black');
-            if (status === 'LANJUT') btn.classList.add('ring-emerald-500', 'bg-emerald-600', 'text-white');
-            else if (status === 'ULANG') btn.classList.add('ring-rose-500', 'bg-rose-600', 'text-white');
-            else if (status === 'NAIK_JILID') btn.classList.add('ring-amber-500', 'bg-amber-600', 'text-white');
+        const btnStatus = btn.dataset.status;
+        const icon = btn.querySelector('i');
+        const textSpan = btn.querySelector('span');
+
+        // Reset all classes
+        btn.className = 'tpq-btn-status py-2.5 px-2 rounded-xl border text-xs flex flex-col items-center gap-1 transition active:scale-95';
+
+        if (btnStatus === status && statusConfig[status]) {
+            btn.className += ' ' + statusConfig[status].activeClass;
+            if (icon) icon.className = statusConfig[status].iconClass;
+            if (textSpan) textSpan.className = statusConfig[status].textClass + ' truncate';
         } else {
-            btn.classList.remove('ring-2', 'ring-offset-1', 'font-black', 'bg-emerald-600', 'bg-rose-600', 'bg-amber-600', 'text-white');
+            btn.className += ' ' + inactiveClass;
+            if (icon) {
+                if (btnStatus === 'LANJUT') icon.className = 'fa-solid fa-circle-check text-emerald-500 text-sm';
+                else if (btnStatus === 'ULANG') icon.className = 'fa-solid fa-rotate-left text-rose-500 text-sm';
+                else if (btnStatus === 'NAIK_JILID') icon.className = 'fa-solid fa-award text-amber-500 text-sm';
+                else if (btnStatus === 'KHATAM_YANBUA') icon.className = 'fa-solid fa-crown text-purple-500 text-sm';
+            }
+            if (textSpan) textSpan.className = 'font-semibold truncate text-slate-700 dark:text-slate-300';
         }
     });
 
     const labelHelp = document.getElementById('tpq-simak-status-help');
-    if (labelHelp) {
-        if (status === 'LANJUT') {
-            labelHelp.innerHTML = `<span class="text-emerald-600 font-semibold"><i class="fa-solid fa-circle-check mr-1"></i> Bacaan lancar. Santri akan lanjut ke halaman berikutnya.</span>`;
-        } else if (status === 'ULANG') {
-            labelHelp.innerHTML = `<span class="text-rose-600 font-semibold"><i class="fa-solid fa-rotate-left mr-1"></i> Perlu latihan. Santri mengulang halaman yang sama pada sesi berikutnya.</span>`;
-        } else if (status === 'NAIK_JILID') {
-            labelHelp.innerHTML = `<span class="text-amber-600 font-semibold"><i class="fa-solid fa-award mr-1"></i> Khatam Jilid! Santri otomatis promosi ke Jilid berikutnya Halaman 1.</span>`;
-        }
+    if (labelHelp && statusConfig[status]) {
+        labelHelp.innerHTML = statusConfig[status].help;
     }
 }
 
@@ -551,6 +632,8 @@ async function submitSimakTPQ(e) {
     const elHalaman = document.getElementById('tpq-simak-modal-halaman');
     const elUstadz = document.getElementById('tpq-simak-modal-ustadz');
     const elCatatan = document.getElementById('tpq-simak-modal-catatan');
+    const elTanggal = document.getElementById('tpq-simak-modal-tanggal');
+    const elSesi = document.getElementById('tpq-simak-modal-sesi');
 
     const payload = {
         studentId: ASNTPQ.simakState.studentId,
@@ -562,8 +645,10 @@ async function submitSimakTPQ(e) {
         nilai: ASNTPQ.simakState.nilai,
         ustadz: elUstadz ? elUstadz.value.trim() : ASNTPQ.simakState.ustadz,
         catatan: elCatatan ? elCatatan.value.trim() : "",
-        tanggal: new Date().toISOString().substring(0, 10),
-        sesi: "Sore (15:45 - 17:00)"
+        tanggal: elTanggal && elTanggal.value ? elTanggal.value : new Date().toISOString().substring(0, 10),
+        sesi: elSesi && elSesi.value ? elSesi.value : "Sore (15:45 - 17:00)",
+        kelasId: ASNTPQ.simakState.kelasId || "",
+        namaKelas: ASNTPQ.simakState.namaKelas || ""
     };
 
     if (btn) {
