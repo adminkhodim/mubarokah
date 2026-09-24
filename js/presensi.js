@@ -49,6 +49,28 @@ const ASNPresensi = {
     liveInputMode: 'checklist'  // 'checklist' | 'qr'
 };
 
+const DEFAULT_PRESENSI_KEGIATAN = [
+    { kegiatanId: 'ACT-01', namaKegiatan: 'Shalat Subuh & Wirid', kategori: 'Ibadah', jadwalRutin: 'Setiap Hari (04:30 - 05:30 WIB)', targetPeserta: 'Semua Santri', penanggungJawab: 'Ustadz Pembina Asrama', status: 'Aktif' },
+    { kegiatanId: 'ACT-02', namaKegiatan: 'Shalat Maghrib & Isya Berjamaah', kategori: 'Ibadah', jadwalRutin: 'Setiap Hari (17:45 - 19:30 WIB)', targetPeserta: 'Semua Santri', penanggungJawab: 'Ustadz Pembina Asrama', status: 'Aktif' },
+    { kegiatanId: 'ACT-03', namaKegiatan: "Kajian Kitab Diniyah / Ta'lim", kategori: "Ta'lim", jadwalRutin: 'Senin - Kamis (20:00 - 21:00 WIB)', targetPeserta: 'Semua Santri', penanggungJawab: 'Dewan Asatidz', status: 'Aktif' },
+    { kegiatanId: 'ACT-04', namaKegiatan: "Ro'an & Kerja Bakti Kebersihan", kategori: 'Keasramaan', jadwalRutin: 'Ahad Pagi (07:00 - 08:30 WIB)', targetPeserta: 'Semua Santri', penanggungJawab: 'Pengurus Pondok', status: 'Aktif' },
+    { kegiatanId: 'ACT-05', namaKegiatan: 'Muhadharah / Khitobah Santri', kategori: 'Minat & Bakat', jadwalRutin: 'Malam Jumat (20:00 - 21:30 WIB)', targetPeserta: 'Semua Santri', penanggungJawab: 'Pembina Bahasa', status: 'Aktif' }
+];
+
+/**
+ * Universal API Adapter Bridge untuk Presensi
+ */
+async function callApi(payload = {}) {
+    if (!payload || !payload.action) throw new Error("Parameter action wajib diisi.");
+    const action = payload.action;
+    const body = { ...payload };
+    delete body.action;
+    if (typeof apiPost === 'function') {
+        return await apiPost(action, body);
+    }
+    throw new Error("Adapter apiPost tidak tersedia.");
+}
+
 /**
  * Helper pengambilan token yang aman
  */
@@ -86,15 +108,18 @@ async function loadAdminPresensiData(forceRefresh = false) {
 
     try {
         const token = getPresensiToken();
-        const payload = {
-            action: 'getPresensiDashboard',
-            token: token
-        };
+        let res = null;
+        if (typeof apiPost === 'function') {
+            res = await apiPost('getPresensiDashboard', { token });
+        } else {
+            res = await callApi({ action: 'getPresensiDashboard', token });
+        }
 
-        const res = await callApi(payload);
         if (res && (res.ok || res.success || res.status === 'success') && res.data) {
             ASNPresensi.data.todayStr = res.data.todayStr || new Date().toISOString().substring(0, 10);
-            ASNPresensi.data.kegiatanList = res.data.kegiatanList || [];
+            ASNPresensi.data.kegiatanList = (res.data.kegiatanList && res.data.kegiatanList.length > 0)
+                ? res.data.kegiatanList
+                : DEFAULT_PRESENSI_KEGIATAN;
             ASNPresensi.data.todaySessions = res.data.todaySessions || [];
             ASNPresensi.data.recentSessions = res.data.recentSessions || [];
             ASNPresensi.data.students = res.data.students || [];
@@ -104,6 +129,11 @@ async function loadAdminPresensiData(forceRefresh = false) {
             try {
                 localStorage.setItem(PRESENSI_STORAGE_KEYS.cacheDashboard, JSON.stringify(res.data));
             } catch (e) {}
+        } else {
+            // Gunakan kegiatan default jika respon kosong
+            if (!ASNPresensi.data.kegiatanList || ASNPresensi.data.kegiatanList.length === 0) {
+                ASNPresensi.data.kegiatanList = DEFAULT_PRESENSI_KEGIATAN;
+            }
         }
     } catch (err) {
         console.warn('[Presensi] Gagal memuat data dari server, membaca cache:', err);
@@ -112,14 +142,35 @@ async function loadAdminPresensiData(forceRefresh = false) {
             if (cached) {
                 const parsed = JSON.parse(cached);
                 ASNPresensi.data.todayStr = parsed.todayStr || '';
-                ASNPresensi.data.kegiatanList = parsed.kegiatanList || [];
+                ASNPresensi.data.kegiatanList = parsed.kegiatanList || DEFAULT_PRESENSI_KEGIATAN;
                 ASNPresensi.data.todaySessions = parsed.todaySessions || [];
                 ASNPresensi.data.recentSessions = parsed.recentSessions || [];
                 ASNPresensi.data.students = parsed.students || [];
                 ASNPresensi.data.stats = parsed.stats || ASNPresensi.data.stats;
+            } else {
+                ASNPresensi.data.kegiatanList = DEFAULT_PRESENSI_KEGIATAN;
             }
-        } catch (ce) {}
+        } catch (ce) {
+            ASNPresensi.data.kegiatanList = DEFAULT_PRESENSI_KEGIATAN;
+        }
     } finally {
+        // Fallback populasi santri dari adminStudentsData jika data students masih kosong
+        if ((!ASNPresensi.data.students || ASNPresensi.data.students.length === 0) && typeof adminStudentsData !== 'undefined' && Array.isArray(adminStudentsData) && adminStudentsData.length > 0) {
+            ASNPresensi.data.students = adminStudentsData.map(s => ({
+                studentId: s.student_id || s.studentId || s.id || '',
+                nis: s.nis || '',
+                name: s.name || s.student_name || '',
+                gender: s.gender || 'L',
+                photoUrl: s.photo_url || '',
+                program: s.program || '',
+                status: s.status || 'Aktif',
+                qrCode: s.qr_code || s.nis || s.student_id || ''
+            }));
+            if (ASNPresensi.data.stats) {
+                ASNPresensi.data.stats.totalSantriAktif = ASNPresensi.data.students.length;
+            }
+        }
+
         if (loader) loader.classList.add('hidden');
         renderPresensiDashboard();
     }
@@ -1316,8 +1367,10 @@ window.switchPresensiMainTab = switchPresensiMainTab;
 window.openPresensiBukaSesiModal = openPresensiBukaSesiModal;
 window.closePresensiBukaSesiModal = closePresensiBukaSesiModal;
 window.submitPresensiBukaSesi = submitPresensiBukaSesi;
+window.handleStartPresensiSession = submitPresensiBukaSesi;
 window.resumePresensiSesi = resumePresensiSesi;
 window.deletePresensiSesiAction = deletePresensiSesiAction;
+window.deletePresensiSesi = deletePresensiSesiAction;
 window.setLiveFilterGender = setLiveFilterGender;
 window.onSearchLiveStudent = onSearchLiveStudent;
 window.setAllStudentsAttendance = setAllStudentsAttendance;
@@ -1330,6 +1383,10 @@ window.stopPresensiQRScanner = stopPresensiQRScanner;
 window.openPresensiKegiatanModal = openPresensiKegiatanModal;
 window.closePresensiKegiatanModal = closePresensiKegiatanModal;
 window.submitPresensiKegiatan = submitPresensiKegiatan;
+window.handleSavePresensiKegiatan = submitPresensiKegiatan;
 window.deletePresensiKegiatanAction = deletePresensiKegiatanAction;
+window.deletePresensiKegiatan = deletePresensiKegiatanAction;
 window.loadPresensiRekapData = loadPresensiRekapData;
 window.exportPresensiRekapXLSX = exportPresensiRekapXLSX;
+window.callApi = callApi;
+

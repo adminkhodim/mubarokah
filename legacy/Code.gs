@@ -1764,6 +1764,32 @@ function doGet(e) {
       );
     }
 
+    if (action === "getPresensiDashboard" || action === "presensi.dashboard") {
+      const token = e.parameter.token || null;
+      return createJsonResponse(getPresensiDashboard(token));
+    }
+
+    if (action === "getPresensiKegiatanList" || action === "presensi.getKegiatan") {
+      const token = e.parameter.token || null;
+      return createJsonResponse(getPresensiKegiatanList(token));
+    }
+
+    if (action === "getPresensiSesiDetail" || action === "presensi.sesiDetail") {
+      const token = e.parameter.token || null;
+      const sId = e.parameter.sesiId || e.parameter.id || null;
+      return createJsonResponse(getPresensiSesiDetail(sId, token));
+    }
+
+    if (action === "getPresensiRekap" || action === "presensi.rekap") {
+      const token = e.parameter.token || null;
+      var filter = {};
+      if (e.parameter.startDate) filter.startDate = e.parameter.startDate;
+      if (e.parameter.endDate) filter.endDate = e.parameter.endDate;
+      if (e.parameter.kegiatanId) filter.kegiatanId = e.parameter.kegiatanId;
+      if (e.parameter.gender) filter.gender = e.parameter.gender;
+      return createJsonResponse(getPresensiRekap(filter, token));
+    }
+
     // ========================================================
     // PROGRAM DATA SOURCE v2.0 API ROUTER (GET)
     // ========================================================
