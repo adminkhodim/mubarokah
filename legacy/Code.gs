@@ -12937,6 +12937,42 @@ function initTPQSheets(token) {
   }
 }
 
+// Konfigurasi Resmi Jenjang & Halaman Kitab Yanbu'a (Pemula 48 hal, Jld 1 44, Jld 2 43, Jld 3 44, Jld 4 45, Jld 5 46, Jld 6 47, Jld 7 39)
+const YANBUA_PAGES_CONFIG_ = {
+  0: { name: "Pemula", pages: 48 },
+  1: { name: "Jilid 1", pages: 44 },
+  2: { name: "Jilid 2", pages: 43 },
+  3: { name: "Jilid 3", pages: 44 },
+  4: { name: "Jilid 4", pages: 45 },
+  5: { name: "Jilid 5", pages: 46 },
+  6: { name: "Jilid 6", pages: 47 },
+  7: { name: "Jilid 7", pages: 39 }
+};
+const TOTAL_YANBUA_PAGES_ = 48 + 44 + 43 + 44 + 45 + 46 + 47 + 39; // 356 Halaman
+
+function getYanbuaJilidMaxPages_(jilid) {
+  if (jilid === 0 || String(jilid).toLowerCase() === "pemula") return 48;
+  const num = Number(jilid);
+  if (YANBUA_PAGES_CONFIG_[num]) return YANBUA_PAGES_CONFIG_[num].pages;
+  return 44;
+}
+
+function getYanbuaCumulativePages_(jilid, halaman) {
+  let jKey = 1;
+  if (jilid === 0 || String(jilid).toLowerCase() === "pemula") jKey = 0;
+  else jKey = Number(jilid) || 1;
+
+  const hal = Number(halaman) || 1;
+  const pageMap = [48, 44, 43, 44, 45, 46, 47, 39];
+  let cumulative = 0;
+  for (let i = 0; i < jKey && i < pageMap.length; i++) {
+    cumulative += pageMap[i];
+  }
+  const maxInJilid = (jKey >= 0 && jKey < pageMap.length) ? pageMap[jKey] : 44;
+  cumulative += Math.min(maxInJilid, Math.max(1, hal));
+  return Math.min(TOTAL_YANBUA_PAGES_, cumulative);
+}
+
 function getTPQDashboard(token) {
   try {
     const ss = getDatabaseSpreadsheet();
@@ -13092,7 +13128,7 @@ function getTPQDashboard(token) {
       }
     }
 
-    // Hitung jumlah sesi aktif per pekan (contoh: 6 hari Sore = 6 sesi)
+    // Hitung jumlah sesi aktif per pekan (contoh: 5 hari Subuh + 6 hari Sore = 11 sesi)
     let tpqWeeklySessions = 0;
     sesiList.forEach(s => {
       if ((s.status || "").includes("Aktif")) {
@@ -13100,7 +13136,7 @@ function getTPQDashboard(token) {
         tpqWeeklySessions += Math.max(1, hArr.length);
       }
     });
-    if (tpqWeeklySessions === 0) tpqWeeklySessions = 6;
+    if (tpqWeeklySessions === 0) tpqWeeklySessions = 11;
 
     // Auto-heal baris capaian di Google Sheets jika kelas_id kosong atau nama_kelas masih 'Belum Ditentukan'
     const nowIso = new Date().toISOString();
@@ -13132,7 +13168,7 @@ function getTPQDashboard(token) {
     });
 
     // Gabungkan status capaian ke setiap siswa & hitung statistik
-    const perJilidCount = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0 };
+    const perJilidCount = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0 };
     let totalLanjut = 0;
     let totalUlang = 0;
     const ustadzSet = new Set();
@@ -13155,7 +13191,8 @@ function getTPQDashboard(token) {
         if (resolved.ustadz && resolved.ustadz !== "-") cp.ustadzPengampu = resolved.ustadz;
       }
 
-      const jld = Math.max(1, Math.min(7, cp.jilidAktif));
+      const isPemula = (cp.jilidAktif === 0 || String(cp.jilidAktif).toLowerCase() === "pemula");
+      const jld = isPemula ? 0 : Math.max(1, Math.min(7, Number(cp.jilidAktif) || 1));
       perJilidCount[jld] = (perJilidCount[jld] || 0) + 1;
       if (cp.statusTerakhir === "ULANG") totalUlang++;
       else totalLanjut++;
@@ -13165,9 +13202,9 @@ function getTPQDashboard(token) {
       }
 
       const tgt = targetMap[st.studentId] || {
-        targetJilid: Math.min(7, jld + 1),
+        targetJilid: isPemula ? 1 : Math.min(7, jld + 1),
         targetHalamanSesi: 1,
-        targetHalamanPekan: 6
+        targetHalamanPekan: tpqWeeklySessions
       };
 
       return {
@@ -13219,6 +13256,7 @@ function getTPQDashboard(token) {
         persentaseLanjut: enrichedStudents.length > 0 ? Math.round((totalLanjut / enrichedStudents.length) * 100) : 100,
         distribusiJilid: perJilidCount
       },
+      weeklySessions: tpqWeeklySessions,
       students: enrichedStudents,
       kelasList: kelasList,
       ustadzList: ustadzListFromPegawai,
@@ -13265,12 +13303,29 @@ function saveTPQLog(data, token) {
 
       if (statusSetoran === "LANJUT") {
         nextHalaman = halaman + 1;
+        const maxHal = getYanbuaJilidMaxPages_(jilid);
+        if (nextHalaman > maxHal) {
+          if (jilid === 0 || String(jilid).toLowerCase() === "pemula") {
+            nextJilid = 1;
+            nextHalaman = 1;
+          } else if (jilid < 7) {
+            nextJilid = jilid + 1;
+            nextHalaman = 1;
+          } else {
+            nextJilid = 7;
+            nextHalaman = 39;
+          }
+        }
       } else if (statusSetoran === "NAIK_JILID") {
-        nextJilid = Math.min(7, jilid + 1);
+        if (jilid === 0 || String(jilid).toLowerCase() === "pemula") {
+          nextJilid = 1;
+        } else {
+          nextJilid = Math.min(7, jilid + 1);
+        }
         nextHalaman = 1;
       } else if (statusSetoran === "KHATAM_YANBUA") {
         nextJilid = 7;
-        nextHalaman = 44; // Halaman akhir jilid 7
+        nextHalaman = 39; // Halaman akhir Jilid 7 Yanbu'a adalah 39
       } else {
         // ULANG
         nextHalaman = halaman;
@@ -16069,12 +16124,12 @@ function getTPQStudentDetail(studentId, token) {
     });
 
     const targetHarian = target.targetHalamanSesi || 1;
-    const targetPekan = target.targetHalamanPekan || (targetHarian * 6);
+    const targetPekan = target.targetHalamanPekan || (targetHarian * 11);
     const targetBulan = targetPekan * 4;
 
-    // Total halaman per jilid rata-rata 44 halaman (Jilid 1-7 = ~308 halaman total)
-    const totalHalSelesai = Math.min(308, Math.max(1, ((currentJilid - 1) * 44) + halAktif));
-    const percentOverall = Math.min(100, Math.round((totalHalSelesai / 308) * 100));
+    // Total halaman dihitung dari konfigurasi jenjang resmi Yanbu'a (Total: 356 Halaman)
+    const totalHalSelesai = getYanbuaCumulativePages_(currentJilid, halAktif);
+    const percentOverall = Math.min(100, Math.round((totalHalSelesai / TOTAL_YANBUA_PAGES_) * 100));
 
     return {
       status: "success",

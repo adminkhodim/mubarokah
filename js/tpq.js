@@ -113,15 +113,82 @@ const ASNTPQ = {
 const TPQ_CACHE_KEY = 'mubarokah_tpq_dashboard_cache';
 const TPQ_CACHE_TTL_MS = 5 * 60 * 1000; // 5 Menit
 
-// Deskripsi Materi Resmi Yanbu'a Jilid 1 - 7
+// Konfigurasi Resmi Jenjang & Halaman Kitab Yanbu'a (Pemula: 48, Jld 1: 44, Jld 2: 43, Jld 3: 44, Jld 4: 45, Jld 5: 46, Jld 6: 47, Jld 7: 39)
 const YANBUA_JILID_INFO = {
-    1: { name: "Jilid 1", desc: "Huruf Hijaiyah Tunggal Fathah & Makhraj Dasar", badge: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-    2: { name: "Jilid 2", desc: "Huruf Bersambung & Mad Thabi'i Dasar", badge: "bg-teal-50 text-teal-700 border-teal-200" },
-    3: { name: "Jilid 3", desc: "Kasrah, Dhammah, Sukun & Tanwin", badge: "bg-sky-50 text-sky-700 border-sky-200" },
-    4: { name: "Jilid 4", desc: "Tasydid, Ikhfa', Iqlab, Idgham & Alif Lam", badge: "bg-blue-50 text-blue-700 border-blue-200" },
-    5: { name: "Jilid 5", desc: "Waqaf, Ibtida' & Tanda Baca Mushaf", badge: "bg-indigo-50 text-indigo-700 border-indigo-200" },
-    6: { name: "Jilid 6", desc: "Gharib & Musykilat Bacaan Al-Qur'an", badge: "bg-purple-50 text-purple-700 border-purple-200" },
+    0: { name: "Pemula", jilid: 0, totalHalaman: 48, desc: "Huruf Hijaiyah & Harakat Dasar (Pemula)", badge: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-900" },
+    1: { name: "Jilid 1", jilid: 1, totalHalaman: 44, desc: "Huruf Hijaiyah Tunggal Fathah & Makhraj Dasar", badge: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-900" },
+    2: { name: "Jilid 2", jilid: 2, totalHalaman: 43, desc: "Huruf Bersambung & Mad Thabi'i Dasar", badge: "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/50 dark:text-teal-300 dark:border-teal-900" },
+    3: { name: "Jilid 3", jilid: 3, totalHalaman: 44, desc: "Kasrah, Dhammah, Sukun & Tanwin", badge: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/50 dark:text-sky-300 dark:border-sky-900" },
+    4: { name: "Jilid 4", jilid: 4, totalHalaman: 45, desc: "Tasydid, Ikhfa', Iqlab, Idgham & Alif Lam", badge: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-900" },
+    5: { name: "Jilid 5", jilid: 5, totalHalaman: 46, desc: "Waqaf, Ibtida' & Tanda Baca Mushaf", badge: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-900" },
+    6: { name: "Jilid 6", jilid: 6, totalHalaman: 47, desc: "Gharib & Musykilat Bacaan Al-Qur'an", badge: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-900" },
+    7: { name: "Jilid 7", jilid: 7, totalHalaman: 39, desc: "Kaidah Tajwid Lengkap & Pra Al-Qur'an", badge: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-900" }
 };
+YANBUA_JILID_INFO["pemula"] = YANBUA_JILID_INFO[0];
+YANBUA_JILID_INFO["Pemula"] = YANBUA_JILID_INFO[0];
+
+const TOTAL_YANBUA_PAGES = 48 + 44 + 43 + 44 + 45 + 46 + 47 + 39; // 356 Halaman Total
+
+function getYanbuaJilidMaxPages(jilid) {
+    if (jilid === 0 || String(jilid).toLowerCase() === "pemula") return 48;
+    const num = Number(jilid);
+    if (YANBUA_JILID_INFO[num]) return YANBUA_JILID_INFO[num].totalHalaman;
+    return 44;
+}
+window.getYanbuaJilidMaxPages = getYanbuaJilidMaxPages;
+
+function getYanbuaCumulativePages(jilid, halaman) {
+    let jKey = 1;
+    if (jilid === 0 || String(jilid).toLowerCase() === "pemula") jKey = 0;
+    else jKey = Number(jilid) || 1;
+
+    const hal = Number(halaman) || 1;
+    const pageMap = [48, 44, 43, 44, 45, 46, 47, 39];
+    let cumulative = 0;
+    for (let i = 0; i < jKey && i < pageMap.length; i++) {
+        cumulative += pageMap[i];
+    }
+    const maxInJilid = (jKey >= 0 && jKey < pageMap.length) ? pageMap[jKey] : 44;
+    cumulative += Math.min(maxInJilid, Math.max(1, hal));
+    return Math.min(TOTAL_YANBUA_PAGES, cumulative);
+}
+window.getYanbuaCumulativePages = getYanbuaCumulativePages;
+
+/**
+ * Hitung jumlah sesi aktif per pekan untuk TPQ berdasarkan ASNTPQ.data.sesiList
+ * (Contoh: Sesi Pagi 5 hari + Sesi Sore 6 hari = 11 sesi per pekan)
+ */
+function getTPQActiveWeeklySessionCounts() {
+    let sesiList = (ASNTPQ.data && ASNTPQ.data.sesiList) || [];
+    if (!sesiList || sesiList.length === 0) {
+        return 11;
+    }
+
+    const activeSessions = sesiList.filter(s => (s.status || 'Aktif Digunakan').includes('Aktif'));
+    if (activeSessions.length === 0) return 11;
+
+    let count = 0;
+    activeSessions.forEach(s => {
+        const rawHari = s.hariList || s.hari || [];
+        const hariArr = Array.isArray(rawHari) ? rawHari : String(rawHari).split(',').map(x => x.trim()).filter(Boolean);
+        count += Math.max(1, hariArr.length);
+    });
+
+    return count > 0 ? count : 11;
+}
+window.getTPQActiveWeeklySessionCounts = getTPQActiveWeeklySessionCounts;
+
+function updateTPQSimakMaxHalaman(jilid) {
+    const elHalaman = document.getElementById('tpq-simak-modal-halaman');
+    if (elHalaman) {
+        const maxHal = getYanbuaJilidMaxPages(jilid);
+        elHalaman.max = maxHal;
+        if (Number(elHalaman.value) > maxHal) {
+            elHalaman.value = maxHal;
+        }
+    }
+}
+window.updateTPQSimakMaxHalaman = updateTPQSimakMaxHalaman;
 
 /**
  * Normalisasi format waktu menjadi HH:mm yang bersih (misal 15:45, 05:00)
@@ -245,9 +312,9 @@ function renderTPQSummaryCards() {
     // Render bar jilid mini
     if (elDistBar) {
         let html = '';
-        for (let j = 1; j <= 7; j++) {
+        for (let j = 0; j <= 7; j++) {
             const count = dist[j] || 0;
-            const jInfo = YANBUA_JILID_INFO[j] || { name: `Jilid ${j}` };
+            const jInfo = YANBUA_JILID_INFO[j] || { name: (j === 0 ? "Pemula" : `Jilid ${j}`) };
             html += `
                 <div class="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-50 dark:bg-[#1c2836] border border-slate-100 dark:border-[#253447] text-center min-w-[70px]">
                     <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400">${jInfo.name}</span>
@@ -475,7 +542,7 @@ function renderTPQTable() {
                             <span>${jInfo.name}</span>
                         </span>
                         <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-                            Halaman <strong class="text-teal-600 dark:text-teal-400 font-black text-sm">${st.halamanAktif || 1}</strong>
+                            Halaman <strong class="text-teal-600 dark:text-teal-400 font-black text-sm">${st.halamanAktif || 1}</strong> <span class="text-[10px] text-slate-400 font-normal">/ ${jInfo.totalHalaman || 44}</span>
                         </span>
                     </div>
                 </td>
@@ -484,10 +551,10 @@ function renderTPQTable() {
                         class="text-left group/tgt hover:opacity-80 transition" title="Klik untuk ubah target">
                         <div class="flex items-center gap-1 font-bold text-slate-800 dark:text-slate-200">
                             <i class="fa-solid fa-bullseye text-[10px] text-amber-500"></i>
-                            <span>Jilid ${tgt.targetJilid || Math.min(7, (st.jilidAktif || 1) + 1)}</span>
+                            <span>${(tgt.targetJilid === 0 || String(tgt.targetJilid).toLowerCase() === 'pemula') ? 'Pemula' : `Jilid ${tgt.targetJilid || Math.min(7, (st.jilidAktif || 1) + 1)}`}</span>
                         </div>
                         <div class="text-[10px] text-slate-400 group-hover/tgt:text-teal-600 font-medium">
-                            ${tgt.targetHalamanSesi || 1} Hal/Sesi (${(tgt.targetHalamanSesi || 1) * 6} Hal/Pekan)
+                            ${tgt.targetHalamanSesi || 1} Hal/Sesi (${Math.round((tgt.targetHalamanSesi || 1) * getTPQActiveWeeklySessionCounts() * 10) / 10} Hal/Pekan)
                         </div>
                     </button>
                 </td>
@@ -525,13 +592,14 @@ function renderTPQTable() {
             const inKls = !!(st.namaKelas && st.namaKelas !== 'Belum Ada Kelas' && st.namaKelas !== 'Belum Ditentukan');
             const klsName = inKls ? st.namaKelas : 'Belum Masuk Kelas';
             const isUlang = st.statusTerakhir === 'ULANG';
-            const jInfo = YANBUA_JILID_INFO[st.jilidAktif] || { name: `Jilid ${st.jilidAktif}`, badge: "bg-slate-50 text-slate-700 border-slate-200" };
+            const jInfo = YANBUA_JILID_INFO[st.jilidAktif] || { name: (st.jilidAktif === 0 ? 'Pemula' : `Jilid ${st.jilidAktif}`), totalHalaman: 44, badge: "bg-slate-50 text-slate-700 border-slate-200" };
             const tgt = targets[st.studentId] || st.target || {
                 targetJilid: Math.min(7, (st.jilidAktif || 1) + 1),
                 targetHalamanSesi: 1
             };
             const targetSesi = tgt.targetHalamanSesi || 1;
-            const targetPekan = targetSesi * 6;
+            const weeklySessions = getTPQActiveWeeklySessionCounts();
+            const targetPekan = Math.round(targetSesi * weeklySessions * 10) / 10;
             const isSelected = selectedSet.has(st.studentId);
 
             const statusBadge = isUlang
@@ -565,7 +633,7 @@ function renderTPQTable() {
                             <span>${jInfo.name}</span>
                         </span>
                         <span class="text-xs font-bold text-slate-700 dark:text-slate-200">
-                            Hal <strong class="text-teal-600 dark:text-teal-400 font-black">${st.halamanAktif || 1}</strong>
+                            Hal <strong class="text-teal-600 dark:text-teal-400 font-black">${st.halamanAktif || 1}</strong> <span class="text-[10px] text-slate-400 font-normal">/ ${jInfo.totalHalaman || 44}</span>
                         </span>
                     </div>
                     <div>
@@ -601,11 +669,12 @@ function openSimakTPQModal(studentId) {
     const st = (ASNTPQ.data.students || []).find(s => s.studentId === studentId);
     if (!st) return;
 
+    const initJilid = (st.jilidAktif === 0 || String(st.jilidAktif).toLowerCase() === "pemula") ? 0 : (Number(st.jilidAktif) || 1);
     ASNTPQ.simakState = {
         studentId: st.studentId,
         studentName: st.name,
         nis: st.nis || "",
-        jilid: st.jilidAktif || 1,
+        jilid: initJilid,
         halaman: st.halamanAktif || 1,
         statusSetoran: "LANJUT",
         nilai: "MUMTAZ",
@@ -628,7 +697,10 @@ function openSimakTPQModal(studentId) {
 
     if (elName) elName.innerText = st.name;
     if (elNis) elNis.innerText = `NIS: ${st.nis || "-"}`;
-    if (elJilid) elJilid.value = ASNTPQ.simakState.jilid;
+    if (elJilid) {
+        elJilid.value = String(ASNTPQ.simakState.jilid);
+        updateTPQSimakMaxHalaman(ASNTPQ.simakState.jilid);
+    }
     if (elHalaman) elHalaman.value = ASNTPQ.simakState.halaman;
     if (elUstadz) elUstadz.value = ASNTPQ.simakState.ustadz;
     if (elCatatan) elCatatan.value = "";
@@ -1691,11 +1763,22 @@ function openTPQTargetModal(studentId) {
     const jilidSel = document.getElementById('input-tpq-target-jilid');
     const sesiInput = document.getElementById('input-tpq-target-sesi');
 
+    const curJilid = (st.jilidAktif === 0 || String(st.jilidAktif).toLowerCase() === "pemula") ? 0 : Number(st.jilidAktif || 1);
+    const curHal = Number(st.halamanAktif || 1);
+    const maxHal = getYanbuaJilidMaxPages(curJilid);
+    const sisaHal = Math.max(0, maxHal - curHal);
+    const jName = curJilid === 0 ? "Pemula" : `Jilid ${curJilid}`;
+
     if (nameEl) nameEl.innerText = st.name;
     if (nisEl) nisEl.innerText = `NIS: ${st.nis || "-"} • Kelas: ${st.namaKelas || "TPQ"}`;
-    if (posEl) posEl.innerText = `Jilid ${st.jilidAktif || 1} • Hal ${st.halamanAktif || 1}`;
+    if (posEl) {
+        posEl.innerHTML = `
+            <div class="font-extrabold text-xs text-teal-800 dark:text-teal-200">${jName} • Hal ${curHal} / ${maxHal}</div>
+            <div class="text-[10px] text-slate-400 font-semibold">(Sisa ${sisaHal} hal jilid ini)</div>
+        `;
+    }
     if (idInput) idInput.value = st.studentId;
-    if (jilidSel) jilidSel.value = String(tgt.targetJilid || Math.min(7, (st.jilidAktif || 1) + 1));
+    if (jilidSel) jilidSel.value = String(tgt.targetJilid !== undefined ? tgt.targetJilid : (curJilid === 0 ? 1 : Math.min(7, curJilid + 1)));
     if (sesiInput) sesiInput.value = tgt.targetHalamanSesi || 1;
 
     recalculateTPQTargetWeekly();
@@ -1721,13 +1804,53 @@ function recalculateTPQTargetWeekly() {
     const sesiInp = document.getElementById('input-tpq-target-sesi');
     const pekanInp = document.getElementById('input-tpq-target-pekan');
     const bulanInp = document.getElementById('input-tpq-target-bulan');
+    const labelPekan = document.getElementById('label-tpq-target-pekan');
+    const labelBulan = document.getElementById('label-tpq-target-bulan');
+    const idInput = document.getElementById('input-tpq-target-student-id');
+
+    const weeklySessions = getTPQActiveWeeklySessionCounts();
+    if (labelPekan) {
+        labelPekan.innerText = `Estimasi Target Pekanan (${weeklySessions} Sesi):`;
+    }
+    if (labelBulan) {
+        labelBulan.innerText = `Estimasi Target Bulanan (4 Pekan):`;
+    }
 
     const sesi = Number(sesiInp?.value || 1);
-    const pekan = Math.round(sesi * 6 * 10) / 10;
+    const pekan = Math.round(sesi * weeklySessions * 10) / 10;
     const bulan = Math.round(pekan * 4 * 10) / 10;
 
     if (pekanInp) pekanInp.value = `${pekan} Halaman / Pekan`;
-    if (bulanInp) bulanInp.value = `${bulan} Halaman (~${(bulan / 40).toFixed(1)} Jilid)`;
+    if (bulanInp) bulanInp.value = `${bulan} Halaman (~${(bulan / 44).toFixed(1)} Jilid / Bulan)`;
+
+    // Hitung Proyeksi Waktu Capaian
+    const studentId = idInput ? idInput.value : "";
+    const st = (ASNTPQ.data.students || []).find(s => s.studentId === studentId);
+    if (st) {
+        const curJilid = (st.jilidAktif === 0 || String(st.jilidAktif).toLowerCase() === "pemula") ? 0 : Number(st.jilidAktif || 1);
+        const curHal = Number(st.halamanAktif || 1);
+        const maxHal = getYanbuaJilidMaxPages(curJilid);
+        const sisaHalJilid = Math.max(0, maxHal - curHal);
+
+        const cumulativeDone = getYanbuaCumulativePages(curJilid, curHal);
+        const sisaHalTotal = Math.max(0, TOTAL_YANBUA_PAGES - cumulativeDone);
+
+        const elSisaJilid = document.getElementById('tpq-target-sisa-jilid');
+        const elEstimasiKhatam = document.getElementById('tpq-target-estimasi-khatam');
+
+        const pekanUntukJilid = pekan > 0 ? Math.ceil(sisaHalJilid / pekan) : 1;
+        const sesiUntukJilid = sesi > 0 ? Math.ceil(sisaHalJilid / sesi) : sisaHalJilid;
+
+        if (elSisaJilid) {
+            elSisaJilid.innerHTML = `${sisaHalJilid} Hal <span class="text-teal-600 dark:text-teal-400 font-bold">(~${pekanUntukJilid} pekan / ${sesiUntukJilid} sesi)</span>`;
+        }
+
+        const pekanUntukKhatam = pekan > 0 ? Math.ceil(sisaHalTotal / pekan) : 1;
+        const bulanUntukKhatam = Math.round((pekanUntukKhatam / 4) * 10) / 10;
+        if (elEstimasiKhatam) {
+            elEstimasiKhatam.innerHTML = `${sisaHalTotal} Hal tersisa <span class="text-teal-600 dark:text-teal-400 font-bold">(~${pekanUntukKhatam} pekan / ~${bulanUntukKhatam} bln)</span>`;
+        }
+    }
 }
 
 async function submitTPQTarget() {
@@ -1749,12 +1872,13 @@ async function submitTPQTarget() {
 
     try {
         const token = getTPQToken();
+        const weeklySessions = getTPQActiveWeeklySessionCounts();
         const res = await apiPost("saveTPQTarget", {
             token,
             studentId,
             targetJilid,
             targetHalamanSesi,
-            targetHalamanPekan: targetHalamanSesi * 6
+            targetHalamanPekan: Math.round(targetHalamanSesi * weeklySessions * 10) / 10
         });
 
         if (res && (res.success || res.status === "success")) {
@@ -1868,8 +1992,9 @@ function onTPQBulkTargetScopeChange() {
     } else if (scope === 'JILID') {
         const selJilid = document.getElementById('tpq-bulk-target-select-jilid');
         const j = selJilid ? Number(selJilid.value) : 1;
+        const jName = j === 0 ? "Pemula" : `Jilid ${j}`;
         count = students.filter(s => s.jilidAktif === j).length;
-        summaryText = `Target akan diterapkan ke semua santri Jilid ${j} (${count} santri)`;
+        summaryText = `Target akan diterapkan ke semua santri ${jName} (${count} santri)`;
     } else if (scope === 'SELECTED') {
         count = ASNTPQ.selectedStudentIds ? ASNTPQ.selectedStudentIds.size : 0;
         summaryText = `Target akan diterapkan ke ${count} santri yang dicentang`;
@@ -1898,13 +2023,23 @@ function recalculateTPQBulkTargetWeekly() {
     const sesiInp = document.getElementById('input-tpq-bulk-target-sesi');
     const pekanInp = document.getElementById('input-tpq-bulk-target-pekan');
     const bulanInp = document.getElementById('input-tpq-bulk-target-bulan');
+    const labelPekan = document.getElementById('label-tpq-bulk-target-pekan');
+    const labelBulan = document.getElementById('label-tpq-bulk-target-bulan');
+
+    const weeklySessions = getTPQActiveWeeklySessionCounts();
+    if (labelPekan) {
+        labelPekan.innerText = `Target Pekanan (${weeklySessions} Sesi):`;
+    }
+    if (labelBulan) {
+        labelBulan.innerText = `Target Bulanan (4 Pekan):`;
+    }
 
     const sesi = Number(sesiInp?.value || 1);
-    const pekan = Math.round(sesi * 6 * 10) / 10;
+    const pekan = Math.round(sesi * weeklySessions * 10) / 10;
     const bulan = Math.round(pekan * 4 * 10) / 10;
 
     if (pekanInp) pekanInp.value = `${pekan} Halaman`;
-    if (bulanInp) bulanInp.value = `${bulan} Halaman`;
+    if (bulanInp) bulanInp.value = `${bulan} Halaman (~${(bulan / 44).toFixed(1)} Jilid / Bulan)`;
 }
 
 async function submitTPQBulkTarget() {
@@ -1942,11 +2077,12 @@ async function submitTPQBulkTarget() {
 
     try {
         const token = getTPQToken();
+        const weeklySessions = getTPQActiveWeeklySessionCounts();
         const res = await apiPost("saveBulkTPQTarget", {
             token,
             studentIds: targetStudentIds,
             targetHalamanSesi,
-            targetHalamanPekan: targetHalamanSesi * 6
+            targetHalamanPekan: Math.round(targetHalamanSesi * weeklySessions * 10) / 10
         });
 
         if (res && (res.success || res.status === "success")) {

@@ -7199,14 +7199,15 @@
                                         </select>
                                         <select id="tpq-filter-jilid" onchange="filterTPQList()"
                                             class="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-semibold focus:ring-2 focus:ring-teal-500 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 transition">
-                                            <option value="ALL">Semua Jilid (1-7)</option>
-                                            <option value="1">Jilid 1</option>
-                                            <option value="2">Jilid 2</option>
-                                            <option value="3">Jilid 3</option>
-                                            <option value="4">Jilid 4</option>
-                                            <option value="5">Jilid 5</option>
-                                            <option value="6">Jilid 6</option>
-                                            <option value="7">Jilid 7</option>
+                                            <option value="ALL">Semua Tingkat (Pemula & Jilid 1-7)</option>
+                                            <option value="0">Pemula (48 Hal)</option>
+                                            <option value="1">Jilid 1 (44 Hal)</option>
+                                            <option value="2">Jilid 2 (43 Hal)</option>
+                                            <option value="3">Jilid 3 (44 Hal)</option>
+                                            <option value="4">Jilid 4 (45 Hal)</option>
+                                            <option value="5">Jilid 5 (46 Hal)</option>
+                                            <option value="6">Jilid 6 (47 Hal)</option>
+                                            <option value="7">Jilid 7 (39 Hal)</option>
                                         </select>
                                         <select id="tpq-filter-status" onchange="filterTPQList()"
                                             class="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-semibold focus:ring-2 focus:ring-teal-500 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 transition">
@@ -10667,16 +10668,17 @@
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">Jilid (1 s.d. 7)</label>
-                            <select id="tpq-simak-modal-jilid" onchange="ASNTPQ.simakState.jilid = Number(this.value)"
+                            <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">Tingkat / Jilid Yanbu'a</label>
+                            <select id="tpq-simak-modal-jilid" onchange="ASNTPQ.simakState.jilid = Number(this.value); updateTPQSimakMaxHalaman(this.value);"
                                 class="w-full px-3 py-2 bg-white dark:bg-[#1c2836] border border-slate-200 dark:border-[#253447] rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                                <option value="1">Jilid 1 (Makhraj Dasar)</option>
-                                <option value="2">Jilid 2 (Sambung & Mad Dasar)</option>
-                                <option value="3">Jilid 3 (Kasrah, Dhammah, Sukun)</option>
-                                <option value="4">Jilid 4 (Tasydid & Hukum Nun/Mim)</option>
-                                <option value="5">Jilid 5 (Waqaf & Tanda Baca)</option>
-                                <option value="6">Jilid 6 (Gharib & Musykilat)</option>
-                                <option value="7">Jilid 7 (Tajwid Lengkap)</option>
+                                <option value="0">Pemula (Hijaiyah Dasar • 48 Hal)</option>
+                                <option value="1">Jilid 1 (Makhraj Dasar • 44 Hal)</option>
+                                <option value="2">Jilid 2 (Sambung & Mad Dasar • 43 Hal)</option>
+                                <option value="3">Jilid 3 (Kasrah, Dhammah, Sukun • 44 Hal)</option>
+                                <option value="4">Jilid 4 (Tasydid & Nun Sukun • 45 Hal)</option>
+                                <option value="5">Jilid 5 (Waqaf & Tanda Baca • 46 Hal)</option>
+                                <option value="6">Jilid 6 (Gharib & Musykilat • 47 Hal)</option>
+                                <option value="7">Jilid 7 (Tajwid Lengkap • 39 Hal)</option>
                             </select>
                         </div>
                         <div>
@@ -11658,14 +11660,15 @@
                     <!-- Target Jilid Sasaran -->
                     <div class="p-3.5 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200 dark:border-[#283a4e] space-y-2">
                         <label class="font-bold text-slate-700 dark:text-slate-300 block">Target Jilid Berikutnya <span class="text-rose-500">*</span></label>
-                        <select id="input-tpq-target-jilid" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-bold bg-white dark:bg-[#15202d] text-slate-800 dark:text-slate-100">
-                            <option value="1">Jilid 1 (Dasar Hijaiyah)</option>
-                            <option value="2">Jilid 2 (Huruf Bersambung)</option>
-                            <option value="3">Jilid 3 (Tanda Baca Kasrah/Dhammah)</option>
-                            <option value="4">Jilid 4 (Tasydid & Nun Sukun)</option>
-                            <option value="5">Jilid 5 (Waqaf & Ibtida')</option>
-                            <option value="6">Jilid 6 (Gharib & Musykilat)</option>
-                            <option value="7">Jilid 7 (Tajwid Lengkap)</option>
+                        <select id="input-tpq-target-jilid" onchange="recalculateTPQTargetWeekly()" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-bold bg-white dark:bg-[#15202d] text-slate-800 dark:text-slate-100">
+                            <option value="0">Pemula (48 Halaman)</option>
+                            <option value="1">Jilid 1 (44 Halaman)</option>
+                            <option value="2">Jilid 2 (43 Halaman)</option>
+                            <option value="3">Jilid 3 (44 Halaman)</option>
+                            <option value="4">Jilid 4 (45 Halaman)</option>
+                            <option value="5">Jilid 5 (46 Halaman)</option>
+                            <option value="6">Jilid 6 (47 Halaman)</option>
+                            <option value="7">Jilid 7 (39 Halaman)</option>
                         </select>
                         <p class="text-[9px] text-slate-400">Target jenjang jilid yang diharapkan tercapai pada periode evaluasi.</p>
                     </div>
@@ -11684,12 +11687,30 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                     <div class="p-3 bg-slate-50 dark:bg-[#1c2836] rounded-xl border border-slate-200 dark:border-[#283a4e]">
-                        <span class="text-[10px] font-bold text-slate-400 block mb-0.5">Estimasi Target Pekanan (6 Sesi):</span>
-                        <input type="text" id="input-tpq-target-pekan" readonly value="6 Halaman / Pekan" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#253447] text-xs font-bold bg-white/80 dark:bg-[#15202d] text-slate-700 dark:text-slate-200">
+                        <span id="label-tpq-target-pekan" class="text-[10px] font-bold text-slate-400 block mb-0.5">Estimasi Target Pekanan (11 Sesi):</span>
+                        <input type="text" id="input-tpq-target-pekan" readonly value="11 Halaman / Pekan" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#253447] text-xs font-bold bg-white/80 dark:bg-[#15202d] text-slate-700 dark:text-slate-200">
                     </div>
                     <div class="p-3 bg-slate-50 dark:bg-[#1c2836] rounded-xl border border-slate-200 dark:border-[#283a4e]">
-                        <span class="text-[10px] font-bold text-slate-400 block mb-0.5">Estimasi Target Bulanan (4 Pekan):</span>
-                        <input type="text" id="input-tpq-target-bulan" readonly value="24 Halaman (~0.6 Jilid)" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#253447] text-xs font-bold bg-white/80 dark:bg-[#15202d] text-slate-700 dark:text-slate-200">
+                        <span id="label-tpq-target-bulan" class="text-[10px] font-bold text-slate-400 block mb-0.5">Estimasi Target Bulanan (4 Pekan):</span>
+                        <input type="text" id="input-tpq-target-bulan" readonly value="44 Halaman (~1 Jilid / Bulan)" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#253447] text-xs font-bold bg-white/80 dark:bg-[#15202d] text-slate-700 dark:text-slate-200">
+                    </div>
+                </div>
+
+                <!-- Proyeksi Sinkronisasi Capaian & Waktu Khatam -->
+                <div id="tpq-target-proyeksi-box" class="p-3 bg-teal-50/70 dark:bg-teal-950/40 rounded-xl border border-teal-200/80 dark:border-teal-800/60 text-xs space-y-1.5">
+                    <div class="flex items-center justify-between font-bold text-teal-900 dark:text-teal-200">
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-hourglass-half text-teal-600"></i> Proyeksi Ritme & Waktu Capaian:</span>
+                        <span id="tpq-target-proyeksi-status" class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200">Sinkron</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-600 dark:text-slate-300">
+                        <div>
+                            <span class="text-[10px] text-slate-400 block">Sisa Halaman Jilid Ini:</span>
+                            <span id="tpq-target-sisa-jilid" class="font-extrabold text-slate-800 dark:text-slate-100">-</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-slate-400 block">Estimasi Khatam Yanbu'a:</span>
+                            <span id="tpq-target-estimasi-khatam" class="font-extrabold text-teal-700 dark:text-teal-300">-</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -11769,15 +11790,16 @@
                             </select>
                         </div>
                         <div id="tpq-bulk-target-jilid-wrapper" class="hidden">
-                            <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Pilih Jilid Yanbu'a:</label>
+                            <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Pilih Tingkat / Jilid Yanbu'a:</label>
                             <select id="tpq-bulk-target-select-jilid" onchange="onTPQBulkTargetScopeChange()" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-semibold bg-white dark:bg-[#15202d] text-slate-800 dark:text-slate-100">
-                                <option value="1">Jilid 1</option>
-                                <option value="2">Jilid 2</option>
-                                <option value="3">Jilid 3</option>
-                                <option value="4">Jilid 4</option>
-                                <option value="5">Jilid 5</option>
-                                <option value="6">Jilid 6</option>
-                                <option value="7">Jilid 7</option>
+                                <option value="0">Pemula (48 Halaman)</option>
+                                <option value="1">Jilid 1 (44 Halaman)</option>
+                                <option value="2">Jilid 2 (43 Halaman)</option>
+                                <option value="3">Jilid 3 (44 Halaman)</option>
+                                <option value="4">Jilid 4 (45 Halaman)</option>
+                                <option value="5">Jilid 5 (46 Halaman)</option>
+                                <option value="6">Jilid 6 (47 Halaman)</option>
+                                <option value="7">Jilid 7 (39 Halaman)</option>
                             </select>
                         </div>
                     </div>
@@ -11808,12 +11830,12 @@
 
                     <div class="grid grid-cols-2 gap-2 pt-1 border-t border-teal-200/60 dark:border-teal-900/40">
                         <div>
-                            <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-0.5">Target Pekanan (6 Sesi):</label>
-                            <input type="text" id="input-tpq-bulk-target-pekan" readonly value="6 Halaman" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#253447] text-[11px] font-bold bg-white/80 dark:bg-[#15202d] text-slate-700 dark:text-slate-200">
+                            <label id="label-tpq-bulk-target-pekan" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-0.5">Target Pekanan (11 Sesi):</label>
+                            <input type="text" id="input-tpq-bulk-target-pekan" readonly value="11 Halaman" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#253447] text-[11px] font-bold bg-white/80 dark:bg-[#15202d] text-slate-700 dark:text-slate-200">
                         </div>
                         <div>
-                            <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-0.5">Target Bulanan:</label>
-                            <input type="text" id="input-tpq-bulk-target-bulan" readonly value="24 Halaman" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#253447] text-[11px] font-bold bg-white/80 dark:bg-[#15202d] text-slate-700 dark:text-slate-200">
+                            <label id="label-tpq-bulk-target-bulan" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-0.5">Target Bulanan:</label>
+                            <input type="text" id="input-tpq-bulk-target-bulan" readonly value="44 Halaman (~1 Jilid / Bulan)" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#253447] text-[11px] font-bold bg-white/80 dark:bg-[#15202d] text-slate-700 dark:text-slate-200">
                         </div>
                     </div>
                 </div>
