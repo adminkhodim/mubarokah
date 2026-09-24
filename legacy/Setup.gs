@@ -65,6 +65,8 @@ var AUTHORITATIVE_SCHEMAS_ = {
   "TPQ_Logs": ["log_id", "student_id", "nis", "student_name", "gender", "tanggal", "sesi", "jilid", "halaman", "status_setoran", "nilai", "ustadz", "catatan", "created_at"],
   "TPQ_Capaian": ["student_id", "student_name", "jilid_aktif", "halaman_aktif", "status_terakhir", "kelas_id", "nama_kelas", "ustadz_pengampu", "updated_at"],
   "TPQ_Kelas": ["kelas_id", "ustadz_pengampu", "deskripsi", "student_ids", "created_at"],
+  "TPQ_Target": ["student_id", "target_jilid", "target_halaman_sesi", "target_halaman_pekan", "updated_at"],
+  "TPQ_Sesi": ["sesi_id", "nama_sesi", "jenis_sesi", "status", "jam_mulai", "jam_selesai", "hari_list", "created_at"],
   "Sorogan_Logs": ["log_id", "student_id", "nis", "student_name", "gender", "tanggal", "sesi", "juz", "halaman_list", "total_halaman", "status_setoran", "nilai", "muallim", "catatan", "created_at"],
   "Sorogan_Capaian": ["student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_khatam", "status_terakhir", "halaqah_id", "nama_halaqah", "muallim_pengampu", "updated_at"],
   "Sorogan_Halaqah": ["halaqah_id", "muallim", "target_kurikulum", "student_ids", "created_at"],
@@ -886,3 +888,52 @@ function initProgramsSheet() {
     isNew: isNew
   };
 }
+
+/**
+ * FUNGSI CEPAT INISIALISASI TAB SHEET TPQ (TPQ_Logs, TPQ_Capaian, TPQ_Kelas, TPQ_Target, TPQ_Sesi)
+ * Dapat dijalankan langsung via Apps Script Editor (pilih: initTPQSheetsDirect -> Run).
+ */
+function initTPQSheetsDirect() {
+  var ss = null;
+  var props = PropertiesService.getScriptProperties();
+  var ssId = props.getProperty("SPREADSHEET_ID");
+  if (ssId) {
+    try { ss = SpreadsheetApp.openById(ssId); } catch (e) {}
+  }
+  if (!ss) {
+    try { ss = SpreadsheetApp.getActiveSpreadsheet(); } catch (e) {}
+  }
+  if (!ss) {
+    throw new Error("Spreadsheet database tidak ditemukan. Periksa SPREADSHEET_ID di Script Properties.");
+  }
+
+  var sheetsToInit = [
+    { name: "TPQ_Logs", color: "#0284c7" },
+    { name: "TPQ_Capaian", color: "#0d9488" },
+    { name: "TPQ_Kelas", color: "#0284c7" },
+    { name: "TPQ_Target", color: "#f59e0b" },
+    { name: "TPQ_Sesi", color: "#0284c7" }
+  ];
+
+  sheetsToInit.forEach(function(item) {
+    var expectedHeaders = AUTHORITATIVE_SCHEMAS_[item.name];
+    var sheet = ss.getSheetByName(item.name);
+    var isNew = false;
+    if (!sheet) {
+      sheet = ss.insertSheet(item.name);
+      isNew = true;
+    }
+    if (sheet.getLastRow() === 0) {
+      sheet.getRange(1, 1, 1, expectedHeaders.length).setValues([expectedHeaders]);
+    }
+    sheet.getRange(1, 1, 1, expectedHeaders.length)
+      .setFontWeight("bold")
+      .setBackground(item.color)
+      .setFontColor("#ffffff");
+    sheet.setFrozenRows(1);
+    Logger.log("[OK] Sheet '" + item.name + "' siap (" + (isNew ? "Baru dibuat" : "Sudah ada") + ").");
+  });
+
+  return { success: true, message: "Seluruh 5 Sheet TPQ berhasil diinisialisasi." };
+}
+

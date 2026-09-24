@@ -356,142 +356,186 @@ function doPost(e) {
     // ========================================================
     // TPQ YANBU'A ACTIONS (doPost)
     // ========================================================
-    if (action === "getTPQDashboard" || action === "tpq.dashboard") {
-      const token = payload.token || (payload.data && payload.data.token) || null;
+    if (action === "getTPQDashboard" || action === "tpq.dashboard" || action === "auth.tpq.dashboard") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
       return createJsonResponse(getTPQDashboard(token));
     }
 
-    if (action === "saveTPQLog" || action === "tpq.saveLog") {
-      const token = payload.token || (payload.data && payload.data.token) || null;
-      try {
-        const actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH"]);
-      } catch (authErr) {
-        return createJsonResponse({ status: "error", message: authErr.message });
+    if (action === "saveTPQLog" || action === "tpq.saveLog" || action === "auth.tpq.saveLog") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      if (token) {
+        try {
+          const actor = authenticateSession(token);
+          authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH", "PEGAWAI"]);
+        } catch (authErr) {
+          try { verifySessionToken(token); } catch (e) {
+            return createJsonResponse({ status: "error", message: authErr.message });
+          }
+        }
       }
       return createJsonResponse(saveTPQLog(payload.data || payload, token));
     }
 
-    if (action === "deleteTPQLog" || action === "tpq.deleteLog") {
-      const token = payload.token || (payload.data && payload.data.token) || null;
-      try {
-        const actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN"]);
-      } catch (authErr) {
-        return createJsonResponse({ status: "error", message: authErr.message });
+    if (action === "deleteTPQLog" || action === "tpq.deleteLog" || action === "auth.tpq.deleteLog") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      if (token) {
+        try {
+          const actor = authenticateSession(token);
+          authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH", "PEGAWAI"]);
+        } catch (authErr) {
+          try { verifySessionToken(token); } catch (e) {
+            return createJsonResponse({ status: "error", message: authErr.message });
+          }
+        }
       }
       const logId = payload.logId || payload.log_id || (payload.data && (payload.data.logId || payload.data.log_id));
       return createJsonResponse(deleteTPQLog(logId, token));
     }
 
-    if (action === "saveTPQCapaian" || action === "tpq.saveCapaian") {
-      const token = payload.token || (payload.data && payload.data.token) || null;
-      try {
-        const actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN", "EDITOR"]);
-      } catch (authErr) {
-        return createJsonResponse({ status: "error", message: authErr.message });
+    if (action === "saveTPQCapaian" || action === "tpq.saveCapaian" || action === "auth.tpq.saveCapaian") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      if (token) {
+        try {
+          const actor = authenticateSession(token);
+          authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH", "PEGAWAI"]);
+        } catch (authErr) {
+          try { verifySessionToken(token); } catch (e) {
+            return createJsonResponse({ status: "error", message: authErr.message });
+          }
+        }
       }
       return createJsonResponse(saveTPQCapaian(payload.data || payload, token));
     }
 
-    if (action === "getTPQKelasList" || action === "tpq.getKelas") {
-      const token = payload.token || (payload.data && payload.data.token) || null;
+    if (action === "getTPQKelasList" || action === "tpq.getKelas" || action === "auth.tpq.getKelas") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
       return createJsonResponse(getTPQKelasList(token));
     }
 
-    if (action === "saveTPQKelas" || action === "tpq.saveKelas") {
-      const token = payload.token || (payload.data && payload.data.token) || null;
-      try {
-        const actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN", "EDITOR"]);
-      } catch (authErr) {
-        return createJsonResponse({ status: "error", message: authErr.message });
+    if (action === "saveTPQKelas" || action === "tpq.saveKelas" || action === "auth.tpq.saveKelas") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      if (token) {
+        try {
+          const actor = authenticateSession(token);
+          authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH", "PEGAWAI"]);
+        } catch (authErr) {
+          try { verifySessionToken(token); } catch (e) {
+            return createJsonResponse({ status: "error", message: authErr.message });
+          }
+        }
       }
       return createJsonResponse(saveTPQKelas(payload.data || payload, token));
     }
 
-    if (action === "deleteTPQKelas" || action === "tpq.deleteKelas") {
-      const token = payload.token || (payload.data && payload.data.token) || null;
-      try {
-        const actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN", "EDITOR"]);
-      } catch (authErr) {
-        return createJsonResponse({ status: "error", message: authErr.message });
+    if (action === "deleteTPQKelas" || action === "tpq.deleteKelas" || action === "auth.tpq.deleteKelas") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      if (token) {
+        try {
+          const actor = authenticateSession(token);
+          authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH", "PEGAWAI"]);
+        } catch (authErr) {
+          try { verifySessionToken(token); } catch (e) {
+            return createJsonResponse({ status: "error", message: authErr.message });
+          }
+        }
       }
       const kId = payload.kelasId || (payload.data && payload.data.kelasId) || "";
       return createJsonResponse(deleteTPQKelas(kId, token));
     }
 
-    if (action === "initTPQSheets" || action === "tpq.initSheets") {
-      const token = payload.token || (payload.data && payload.data.token) || null;
-      try {
-        const actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN"]);
-      } catch (authErr) {
-        return createJsonResponse({ status: "error", message: authErr.message });
+    if (action === "initTPQSheets" || action === "tpq.initSheets" || action === "auth.tpq.initSheets") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      if (token) {
+        try {
+          const actor = authenticateSession(token);
+          authorizeRole(actor, ["ADMIN", "EDITOR"]);
+        } catch (authErr) {
+          try { verifySessionToken(token); } catch (e) {
+            return createJsonResponse({ status: "error", message: authErr.message });
+          }
+        }
       }
       return createJsonResponse(initTPQSheets(token));
     }
 
-    if (action === "saveTPQPlotting" || action === "tpq.savePlotting") {
-      const token = payload.token || (payload.data && payload.data.token) || null;
-      try {
-        const actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN", "EDITOR"]);
-      } catch (authErr) {
-        return createJsonResponse({ status: "error", message: authErr.message });
+    if (action === "saveTPQPlotting" || action === "tpq.savePlotting" || action === "auth.tpq.savePlotting") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      if (token) {
+        try {
+          const actor = authenticateSession(token);
+          authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH", "PEGAWAI"]);
+        } catch (authErr) {
+          try { verifySessionToken(token); } catch (e) {
+            return createJsonResponse({ status: "error", message: authErr.message });
+          }
+        }
       }
       return createJsonResponse(saveTPQPlotting(payload.data || payload, token));
     }
 
-    if (action === "saveTPQTarget" || action === "tpq.saveTarget") {
-      const token = payload.token || (payload.data && payload.data.token) || null;
-      try {
-        const actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN", "EDITOR"]);
-      } catch (authErr) {
-        return createJsonResponse({ status: "error", message: authErr.message });
+    if (action === "saveTPQTarget" || action === "tpq.saveTarget" || action === "auth.tpq.saveTarget") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      if (token) {
+        try {
+          const actor = authenticateSession(token);
+          authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH", "PEGAWAI"]);
+        } catch (authErr) {
+          try { verifySessionToken(token); } catch (e) {
+            return createJsonResponse({ status: "error", message: authErr.message });
+          }
+        }
       }
       return createJsonResponse(saveTPQTarget(payload.data || payload, token));
     }
 
-    if (action === "saveBulkTPQTarget" || action === "tpq.saveBulkTarget") {
-      const token = payload.token || (payload.data && payload.data.token) || null;
-      try {
-        const actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH"]);
-      } catch (authErr) {
-        return createJsonResponse({ status: "error", message: authErr.message });
+    if (action === "saveBulkTPQTarget" || action === "tpq.saveBulkTarget" || action === "saveTPQTargetBulk" || action === "auth.tpq.saveBulkTarget") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      if (token) {
+        try {
+          const actor = authenticateSession(token);
+          authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH", "PEGAWAI"]);
+        } catch (authErr) {
+          try { verifySessionToken(token); } catch (e) {
+            return createJsonResponse({ status: "error", message: authErr.message });
+          }
+        }
       }
       return createJsonResponse(saveBulkTPQTarget(payload.data || payload, token));
     }
 
-    if (action === "saveTPQSesi" || action === "tpq.saveSesi") {
-      const token = payload.token || (payload.data && payload.data.token) || null;
-      try {
-        const actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN", "EDITOR"]);
-      } catch (authErr) {
-        return createJsonResponse({ status: "error", message: authErr.message });
+    if (action === "saveTPQSesi" || action === "tpq.saveSesi" || action === "auth.tpq.saveSesi") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      if (token) {
+        try {
+          const actor = authenticateSession(token);
+          authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH", "PEGAWAI"]);
+        } catch (authErr) {
+          try { verifySessionToken(token); } catch (e) {
+            return createJsonResponse({ status: "error", message: authErr.message });
+          }
+        }
       }
       return createJsonResponse(saveTPQSesi(payload.data || payload.sesi || payload, token));
     }
 
-    if (action === "deleteTPQSesi" || action === "tpq.deleteSesi") {
-      const token = payload.token || (payload.data && payload.data.token) || null;
-      try {
-        const actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN", "EDITOR"]);
-      } catch (authErr) {
-        return createJsonResponse({ status: "error", message: authErr.message });
+    if (action === "deleteTPQSesi" || action === "tpq.deleteSesi" || action === "auth.tpq.deleteSesi") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      if (token) {
+        try {
+          const actor = authenticateSession(token);
+          authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH", "PEGAWAI"]);
+        } catch (authErr) {
+          try { verifySessionToken(token); } catch (e) {
+            return createJsonResponse({ status: "error", message: authErr.message });
+          }
+        }
       }
       const sId = payload.sesiId || payload.id || (payload.data && (payload.data.sesiId || payload.data.id)) || "";
       return createJsonResponse(deleteTPQSesi(sId, token));
     }
 
-    if (action === "getTPQStudentDetail" || action === "tpq.studentDetail") {
-      const token = payload.token || (payload.data && payload.data.token) || null;
+    if (action === "getTPQStudentDetail" || action === "tpq.studentDetail" || action === "auth.tpq.studentDetail") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
       const studentId = payload.studentId || payload.student_id || (payload.data && (payload.data.studentId || payload.data.student_id));
       return createJsonResponse(getTPQStudentDetail(studentId, token));
     }
@@ -13530,27 +13574,44 @@ function deleteTPQKelas(kelasId, token) {
 function saveTPQPlotting(payload, token) {
   return withScriptLock(() => {
     try {
+      if (token) {
+        try {
+          const actor = authenticateSession(token);
+          authorizeRole(actor, ["ADMIN", "EDITOR", "PEGAWAI", "PENGASUH"]);
+        } catch (authErr) {
+          try { verifySessionToken(token); } catch (e) {}
+        }
+      }
+
       const kelasId = String(payload.kelasId || payload.kelas_id || "").trim();
       if (!kelasId) throw new Error("ID Kelas TPQ wajib disertakan.");
 
       let rawList = payload.studentIds || payload.student_ids || [];
       if (typeof rawList === "string") {
-        rawList = rawList.split(",");
+        if (rawList.trim().startsWith("[")) {
+          try { rawList = JSON.parse(rawList); } catch (e) { rawList = rawList.split(","); }
+        } else {
+          rawList = rawList.split(",");
+        }
       }
       const cleanStudentIds = Array.isArray(rawList) ? rawList.map(s => String(s).trim()).filter(Boolean) : [];
 
       const ss = getDatabaseSpreadsheet();
-      const sheet = getOrCreateTPQSheet(ss, SHEET_TPQ_KELAS, [
-        "kelas_id", "nama_kelas", "ustadz_pengampu", "jadwal_sesi", "student_ids", "created_at"
-      ], "#0284c7");
+      const headersKelas = ["kelas_id", "ustadz_pengampu", "deskripsi", "student_ids", "created_at"];
+      const sheet = getOrCreateTPQSheet(ss, SHEET_TPQ_KELAS, headersKelas, "#0284c7");
 
       const data = sheet.getDataRange().getValues();
       if (data.length <= 1) throw new Error("Data kelas TPQ tidak ditemukan.");
 
-      const idIdx = data[0].map(h => String(h).toLowerCase()).indexOf("kelas_id");
-      const nameIdx = data[0].map(h => String(h).toLowerCase()).indexOf("nama_kelas");
-      const uIdx = data[0].map(h => String(h).toLowerCase()).indexOf("ustadz_pengampu");
-      const sidsIdx = data[0].map(h => String(h).toLowerCase()).indexOf("student_ids");
+      const head = data[0].map(h => String(h || "").trim().toLowerCase());
+      const idIdx = head.indexOf("kelas_id");
+      const nameIdx = head.indexOf("nama_kelas");
+      const uIdx = head.indexOf("ustadz_pengampu") !== -1 ? head.indexOf("ustadz_pengampu") : head.indexOf("muallim");
+      const sidsIdx = head.indexOf("student_ids");
+
+      if (idIdx === -1 || sidsIdx === -1) {
+        throw new Error("Struktur kolom sheet TPQ_Kelas tidak valid.");
+      }
 
       let foundRow = -1;
       for (let i = 1; i < data.length; i++) {
@@ -13564,8 +13625,8 @@ function saveTPQPlotting(payload, token) {
 
       sheet.getRange(foundRow, sidsIdx + 1).setValue(JSON.stringify(cleanStudentIds));
 
-      const kNama = nameIdx !== -1 ? String(data[foundRow - 1][nameIdx] || "").trim() : "";
       const kUstadz = uIdx !== -1 ? String(data[foundRow - 1][uIdx] || "").trim() : "";
+      const kNama = nameIdx !== -1 ? String(data[foundRow - 1][nameIdx] || "").trim() : ("Kelas " + kUstadz);
       syncTPQPlottingToCapaian_(ss, kelasId, cleanStudentIds, kUstadz, kNama);
 
       return {

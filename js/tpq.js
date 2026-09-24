@@ -19,6 +19,56 @@ const TPQ_STORAGE_KEYS = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.storag
         pengasuhToken: 'mubarokah_pengasuh_token'
     };
 
+/**
+ * Helper pengambilan token autentikasi sesi yang tahan banting (sessionStorage & localStorage)
+ */
+function getTPQToken() {
+    if (typeof getAdminSessionToken === 'function' && getAdminSessionToken !== getTPQToken) {
+        try {
+            const t = getAdminSessionToken();
+            if (t && typeof t === 'string' && t.trim()) return t.trim();
+        } catch (e) {}
+    }
+
+    const candidateKeys = [
+        'mubarokah_admin_token',
+        'mubarokah_pengasuh_token',
+        'user_token',
+        'mubarokah_parent_token'
+    ];
+
+    if (typeof TPQ_STORAGE_KEYS !== 'undefined') {
+        if (TPQ_STORAGE_KEYS.adminToken) candidateKeys.unshift(TPQ_STORAGE_KEYS.adminToken);
+        if (TPQ_STORAGE_KEYS.pengasuhToken) candidateKeys.unshift(TPQ_STORAGE_KEYS.pengasuhToken);
+    }
+    if (typeof ASN_STORAGE_KEYS !== 'undefined') {
+        if (ASN_STORAGE_KEYS.ADMIN_TOKEN) candidateKeys.unshift(ASN_STORAGE_KEYS.ADMIN_TOKEN);
+        if (ASN_STORAGE_KEYS.PENGASUH_TOKEN) candidateKeys.unshift(ASN_STORAGE_KEYS.PENGASUH_TOKEN);
+    }
+
+    for (const key of candidateKeys) {
+        if (!key) continue;
+        try {
+            const sVal = sessionStorage.getItem(key);
+            if (sVal && typeof sVal === 'string' && sVal.trim()) return sVal.trim();
+            const lVal = localStorage.getItem(key);
+            if (lVal && typeof lVal === 'string' && lVal.trim()) return lVal.trim();
+        } catch (err) {}
+    }
+
+    if (typeof ASNIdentity !== 'undefined' && ASNIdentity.currentUser && ASNIdentity.currentUser.token) {
+        return ASNIdentity.currentUser.token;
+    }
+    if (typeof ASNAuth !== 'undefined' && ASNAuth.token) {
+        return ASNAuth.token;
+    }
+    return "";
+}
+
+if (typeof window !== 'undefined' && typeof window.getAdminSessionToken !== 'function') {
+    window.getAdminSessionToken = getTPQToken;
+}
+
 const ASNTPQ = {
     data: {
         summary: {
@@ -123,7 +173,7 @@ async function loadAdminTPQData(forceRefresh = false) {
     }
 
     try {
-        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TPQ_STORAGE_KEYS.adminToken)) || "";
+        const token = getTPQToken();
         let response;
         try {
             response = await apiPost("getTPQDashboard", { token });
@@ -731,7 +781,7 @@ async function submitSimakTPQ(e) {
     }
 
     try {
-        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TPQ_STORAGE_KEYS.adminToken)) || "";
+        const token = getTPQToken();
         const res = await apiPost("saveTPQLog", { ...payload, token });
 
         if (res && (res.success || res.status === "success")) {
@@ -773,7 +823,7 @@ async function initTPQDatabaseSheets() {
     if (!ok) return;
 
     try {
-        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TPQ_STORAGE_KEYS.adminToken)) || "";
+        const token = getTPQToken();
         const res = await apiPost("initTPQSheets", { token });
         if (res && res.success) {
             alert(res.message);
@@ -982,7 +1032,7 @@ async function submitNewTPQKelas(e) {
     }
 
     try {
-        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TPQ_STORAGE_KEYS.adminToken)) || "";
+        const token = getTPQToken();
         const res = await apiPost("saveTPQKelas", {
             token,
             namaKelas,
@@ -1033,7 +1083,7 @@ async function deleteTPQKelasConfirm(kelasId, namaKelas) {
     if (!ok) return;
 
     try {
-        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TPQ_STORAGE_KEYS.adminToken)) || "";
+        const token = getTPQToken();
         const res = await apiPost("deleteTPQKelas", { token, kelasId });
 
         if (res && (res.success || res.status === "success")) {
@@ -1264,7 +1314,7 @@ async function submitTPQPlotting() {
     }
 
     try {
-        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TPQ_STORAGE_KEYS.adminToken)) || "";
+        const token = getTPQToken();
         const res = await apiPost("saveTPQPlotting", {
             token,
             kelasId,
@@ -1498,7 +1548,7 @@ async function submitTPQSesi(e) {
     }
 
     try {
-        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TPQ_STORAGE_KEYS.adminToken)) || "";
+        const token = getTPQToken();
         const res = await apiPost("saveTPQSesi", { token, ...payload });
 
         if (res && (res.success || res.status === "success")) {
@@ -1531,7 +1581,7 @@ async function deleteTPQSesiConfirm(sesiId, namaSesi) {
     if (!ok) return;
 
     try {
-        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TPQ_STORAGE_KEYS.adminToken)) || "";
+        const token = getTPQToken();
         const res = await apiPost("deleteTPQSesi", { token, sesiId });
 
         if (res && (res.success || res.status === "success")) {
@@ -1628,7 +1678,7 @@ async function submitTPQTarget() {
     }
 
     try {
-        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TPQ_STORAGE_KEYS.adminToken)) || "";
+        const token = getTPQToken();
         const res = await apiPost("saveTPQTarget", {
             token,
             studentId,
@@ -1821,7 +1871,7 @@ async function submitTPQBulkTarget() {
     }
 
     try {
-        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TPQ_STORAGE_KEYS.adminToken)) || "";
+        const token = getTPQToken();
         const res = await apiPost("saveBulkTPQTarget", {
             token,
             studentIds: targetStudentIds,
