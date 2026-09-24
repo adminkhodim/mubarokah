@@ -940,10 +940,10 @@ function renderSoroganHalaqahCards() {
         container.innerHTML = `
         <div class="col-span-1 sm:col-span-2 text-center py-8 px-4 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-dashed border-slate-200 dark:border-[#283a4e] space-y-2">
             <div class="w-10 h-10 mx-auto rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center text-base">
-                <i class="fa-solid fa-layer-group"></i>
+                <i class="fa-solid fa-users-rectangle"></i>
             </div>
-            <p class="text-xs font-bold text-slate-700 dark:text-slate-200">Belum Ada Halaqah Sorogan Aktif</p>
-            <p class="text-[10px] text-slate-400 max-w-sm mx-auto">Silakan buat kelompok halaqah sorogan baru di atas untuk mulai memplot santri.</p>
+            <p class="text-xs font-bold text-slate-700 dark:text-slate-200">Belum Ada Kelompok Halaqah Aktif</p>
+            <p class="text-[10px] text-slate-400 max-w-sm mx-auto">Silakan buat kelompok halaqah sorogan baru di atas dan tunjuk Kyai / Mu'allim Pengampu untuk mulai memplot santri binaan.</p>
         </div>`;
         return;
     }
@@ -951,41 +951,43 @@ function renderSoroganHalaqahCards() {
     const students = ASNSorogan.data.students || [];
 
     container.innerHTML = halaqahs.map((h, i) => {
+        const letter = String.fromCharCode(65 + (i % 26));
+        const muallimName = h.muallim || h.muallimPengampu || h.namaHalaqah || 'Kyai / Mu\'allim Pengampu';
+        const targetKurikulum = h.targetKurikulum || h.jadwalSesi || 'Sorogan Binnazhar Mushaf Pojok 30 Juz';
+        const safeDeleteName = escapeHtml(muallimName).replace(/'/g, "\\'");
         const enrolledCount = Array.isArray(h.studentIds) ? h.studentIds.length : (
             students.filter(s => s.halaqahId === h.halaqahId).length
         );
 
         return `
-        <div class="p-4 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200 dark:border-[#283a4e] space-y-3 relative group">
+        <div class="p-4 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200 dark:border-[#283a4e] space-y-3 relative group transition hover:border-sky-500/50">
             <div class="flex justify-between items-start">
-                <div>
-                    <h4 class="font-black text-sm text-slate-800 dark:text-slate-100">${escapeHtml(h.namaHalaqah)}</h4>
-                    <span class="inline-block mt-1 px-2 py-0.5 rounded text-[9px] font-bold bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300">
-                        ${escapeHtml(h.kategori || h.kategoriProgram || 'Sorogan Binnazhar')}
+                <div class="pr-2">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-lg bg-sky-600 text-white flex items-center justify-center text-xs font-black shrink-0 shadow-sm">
+                            ${letter}
+                        </span>
+                        <h4 class="font-black text-sm text-slate-800 dark:text-slate-100 leading-tight">
+                            ${escapeHtml(muallimName)}
+                        </h4>
+                    </div>
+                    <span class="inline-block mt-2 px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-sky-100 text-sky-800 dark:bg-sky-950/80 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/40">
+                        <i class="fa-solid fa-flag text-[9px] mr-1"></i>${escapeHtml(targetKurikulum)}
                     </span>
                 </div>
-                <div class="flex items-center space-x-1.5">
-                    <button type="button" onclick="deleteSoroganHalaqahConfirm('${h.halaqahId}', '${escapeHtml(h.namaHalaqah)}')" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-300 flex items-center justify-center text-[10px] transition" title="Hapus Halaqah">
+                <div class="flex items-center space-x-1.5 shrink-0">
+                    <button type="button" onclick="deleteSoroganHalaqahConfirm('${h.halaqahId}', '${safeDeleteName}')" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-300 flex items-center justify-center text-[10px] transition" title="Hapus Halaqah">
                         <i class="fa-solid fa-trash-can"></i>
                     </button>
-                    <span class="w-7 h-7 rounded-lg bg-white dark:bg-[#15202d] text-slate-500 dark:text-slate-300 flex items-center justify-center text-xs font-bold shadow-sm">
-                        ${String.fromCharCode(65 + (i % 26))}
-                    </span>
                 </div>
             </div>
-            <div class="space-y-1 text-xs text-slate-600 dark:text-slate-300">
-                <p class="flex items-center gap-1.5 truncate font-semibold">
-                    <i class="fa-solid fa-user-tie text-sky-600"></i>
-                    <span>${escapeHtml(h.muallim || h.muallimPengampu || 'Mu\'allim Pengampu')}</span>
-                </p>
-                <p class="text-[10px] text-slate-400 truncate">
-                    <i class="fa-solid fa-book-open mr-1"></i> ${escapeHtml(h.targetKurikulum || h.jadwalSesi || 'Sorogan Binnazhar Mushaf Pojok 30 Juz')}
-                </p>
-            </div>
             <div class="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-[#283a4e] text-xs">
-                <span class="font-bold text-slate-700 dark:text-slate-300">${enrolledCount} Santri Terdaftar</span>
-                <button type="button" onclick="openPlottingFromHalaqahCard('${h.halaqahId}')" class="px-3 py-1 bg-white dark:bg-[#15202d] hover:bg-sky-50 text-sky-700 dark:text-sky-300 font-bold rounded-lg border border-slate-200 dark:border-[#283a4e] text-[10px] transition flex items-center gap-1">
-                    <i class="fa-solid fa-user-plus text-[9px]"></i>
+                <span class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <i class="fa-solid fa-users text-sky-600 text-xs"></i>
+                    <span>${enrolledCount} Santri Binaan</span>
+                </span>
+                <button type="button" onclick="openPlottingFromHalaqahCard('${h.halaqahId}')" class="px-3 py-1 bg-white dark:bg-[#15202d] hover:bg-sky-50 hover:text-sky-700 text-slate-700 dark:text-slate-200 font-bold rounded-lg border border-slate-200 dark:border-[#283a4e] text-[10px] transition flex items-center gap-1 shadow-sm">
+                    <i class="fa-solid fa-user-plus text-[9px] text-sky-600"></i>
                     <span>+ Atur Santri</span>
                 </button>
             </div>
@@ -1000,19 +1002,15 @@ function renderSoroganHalaqahCards() {
 async function submitNewSoroganHalaqah(e) {
     if (e && e.preventDefault) e.preventDefault();
 
-    const inputNama = document.getElementById('input-sorogan-halaqah-nama');
-    const inputKat = document.getElementById('input-sorogan-halaqah-kategori');
     const inputMuallim = document.getElementById('input-sorogan-halaqah-muallim');
     const inputTarget = document.getElementById('input-sorogan-halaqah-target');
     const btn = document.getElementById('btn-submit-sorogan-halaqah');
 
-    const namaHalaqah = inputNama ? inputNama.value.trim() : "";
-    const kategori = inputKat ? inputKat.value.trim() : "";
     const muallim = inputMuallim ? inputMuallim.value.trim() : "";
     const targetDeskripsi = inputTarget ? inputTarget.value.trim() : "";
 
-    if (!namaHalaqah || !muallim) {
-        alert("Nama halaqah dan Mu'allim pengampu wajib diisi!");
+    if (!muallim) {
+        alert("Pilih Kyai / Mu'allim Pengampu terlebih dahulu!");
         return;
     }
 
@@ -1025,30 +1023,22 @@ async function submitNewSoroganHalaqah(e) {
         const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(SOROGAN_STORAGE_KEYS.adminToken)) || "";
         const res = await apiPost("saveSoroganHalaqah", {
             token,
-            namaHalaqah,
-            kategori,
-            kategoriProgram: kategori,
             muallim,
             muallimPengampu: muallim,
             targetKurikulum: targetDeskripsi || "Sorogan Binnazhar Mushaf Pojok 30 Juz",
-            jadwalSesi: targetDeskripsi || "Sorogan Binnazhar Mushaf Pojok 30 Juz",
             studentIds: []
         });
 
         if (res && (res.success || res.status === "success")) {
             if (typeof showToast === 'function') showToast(res.message || "Halaqah Sorogan berhasil ditambahkan!");
-            if (inputNama) inputNama.value = '';
             if (inputTarget) inputTarget.value = '';
 
             const newH = {
-                halaqahId: res.halaqahId || ("HLQ-SRG-" + Date.now().toString().substring(8)),
-                namaHalaqah,
-                kategori,
-                kategoriProgram: kategori,
+                halaqahId: res.halaqahId || ("SRG-HLQ-" + Date.now().toString().substring(8)),
+                namaHalaqah: "Halaqah " + muallim,
                 muallim,
                 muallimPengampu: muallim,
                 targetKurikulum: targetDeskripsi || "Sorogan Binnazhar Mushaf Pojok 30 Juz",
-                jadwalSesi: targetDeskripsi || "Sorogan Binnazhar Mushaf Pojok 30 Juz",
                 studentIds: []
             };
             ASNSorogan.data.halaqahs = ASNSorogan.data.halaqahs || [];
@@ -1124,7 +1114,12 @@ function populatePlottingSoroganHalaqahSelector() {
     }
 
     const currentVal = sel.value;
-    sel.innerHTML = halaqahs.map(h => `<option value="${escapeHtml(h.halaqahId)}">${escapeHtml(h.namaHalaqah)}</option>`).join('');
+    sel.innerHTML = halaqahs.map((h, i) => {
+        const letter = String.fromCharCode(65 + (i % 26));
+        const muallim = h.muallim || h.muallimPengampu || h.namaHalaqah || `Halaqah ${letter}`;
+        const target = h.targetKurikulum ? ` (${h.targetKurikulum})` : '';
+        return `<option value="${escapeHtml(h.halaqahId)}">${letter}. ${escapeHtml(muallim)}${escapeHtml(target)}</option>`;
+    }).join('');
 
     let targetId = currentVal;
     if (!targetId || !halaqahs.some(h => h.halaqahId === targetId)) {
@@ -1350,7 +1345,7 @@ function renderSoroganMatriksBeban() {
     const students = ASNSorogan.data.students || [];
 
     if (halaqahs.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-xs text-slate-400">Belum ada data distribusi beban Mu'allim Sorogan.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-xs text-slate-400">Belum ada data distribusi beban Mu'allim Sorogan.</td></tr>`;
         return;
     }
 
@@ -1365,19 +1360,20 @@ function renderSoroganMatriksBeban() {
             totalJuz += Number(st.juzAktif || 1);
         });
         const avg = enrolled.length > 0 ? (totalJuz / enrolled.length).toFixed(1) : "1.0";
+        const muallimName = h.muallim || h.muallimPengampu || h.namaHalaqah || 'Mu\'allim Sorogan';
+        const targetKurikulum = h.targetKurikulum || h.jadwalSesi || 'Sorogan Binnazhar Mushaf Pojok 30 Juz';
 
         return `
         <tr class="hover:bg-slate-50 dark:hover:bg-[#1c2836]/60 transition">
             <td class="py-3 px-4 font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                <div class="w-7 h-7 rounded-lg bg-sky-100/70 dark:bg-sky-950 text-sky-700 dark:text-sky-300 flex items-center justify-center text-xs">
+                <div class="w-7 h-7 rounded-lg bg-sky-100/70 dark:bg-sky-950 text-sky-700 dark:text-sky-300 flex items-center justify-center text-xs shrink-0">
                     <i class="fa-solid fa-user-tie"></i>
                 </div>
-                <span class="truncate">${escapeHtml(h.muallimPengampu || 'Mu\'allim Sorogan')}</span>
+                <span class="truncate font-bold">${escapeHtml(muallimName)}</span>
             </td>
-            <td class="py-3 px-4 font-semibold text-slate-700 dark:text-slate-200">${escapeHtml(h.namaHalaqah || '-')}</td>
             <td class="py-3 px-4">
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300">
-                    ${escapeHtml(h.kategori || 'Sorogan')}
+                <span class="px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-sky-100 text-sky-800 dark:bg-sky-950/80 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/40">
+                    <i class="fa-solid fa-flag text-[9px] mr-1"></i>${escapeHtml(targetKurikulum)}
                 </span>
             </td>
             <td class="py-3 px-4 font-bold text-slate-800 dark:text-slate-100">${enrolled.length} Santri</td>

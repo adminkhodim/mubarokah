@@ -13467,8 +13467,11 @@ function getOrCreateSoroganSheet(ss, sheetName, headers, bgHeaderColor) {
 
 /**
  * Normalisasi dan deteksi indeks kolom tab Sorogan_Halaqah secara tangguh.
- * Mengadopsi standar susunan kolom Tahfidz_Halaqah:
- * [halaqah_id, nama_halaqah, kategori, muallim, target_kurikulum, student_ids, created_at]
+/**
+ * Normalisasi dan deteksi indeks kolom tab Sorogan_Halaqah secara tangguh.
+ * Mengadopsi standar 5 kolom kanonikal:
+ * [halaqah_id, muallim, target_kurikulum, student_ids, created_at]
+ * Mendukung pembacaan kompatibilitas jika kolom lama (nama_halaqah, kategori) masih ada.
  */
 function getSoroganHalaqahColumnIndexes(headerRow) {
   if (!headerRow || !headerRow.length) return { id: -1, nama: -1, kategori: -1, muallim: -1, target: -1, studentIds: -1, createdAt: -1 };
@@ -13493,27 +13496,39 @@ function getSoroganHalaqahColumnIndexes(headerRow) {
 }
 
 /**
- * Otomatis migrasi header & susunan data sheet Sorogan_Halaqah ke format standar Tahfidz_Halaqah
- * [halaqah_id, nama_halaqah, kategori, muallim, target_kurikulum, student_ids, created_at]
- * Non-destruktif: tidak menghilangkan data halaqah yang sudah ada.
+ * Otomatis migrasi header & susunan data sheet Sorogan_Halaqah ke format standar 5 kolom kanonikal:
+ * [halaqah_id, muallim, target_kurikulum, student_ids, created_at]
+ * Menghilangkan kolom nama_halaqah dan kategori tanpa menghilangkan data santri binaan.
  */
 function migrateSoroganHalaqahSheetIfNeeded(sheet) {
   if (!sheet) return;
   const lastCol = sheet.getLastColumn();
   if (lastCol === 0) return;
 
-  const targetHeaders = ["halaqah_id", "nama_halaqah", "kategori", "muallim", "target_kurikulum", "student_ids", "created_at"];
+  const targetHeaders = ["halaqah_id", "muallim", "target_kurikulum", "student_ids", "created_at"];
   const currentHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h || "").trim());
 
-  // Cek apakah sudah sesuai target
-  let isMatch = true;
-  for (let i = 0; i < targetHeaders.length; i++) {
-    if (!currentHeaders[i] || currentHeaders[i].toLowerCase() !== targetHeaders[i].toLowerCase()) {
-      isMatch = false;
-      break;
+  // Cek apakah sheet masih memiliki kolom 'nama_halaqah' atau 'kategori'
+  const hasNama = currentHeaders.some(h => {
+    const s = h.toLowerCase();
+    return s.includes("nama_halaqah") || s === "nama" || s.includes("namahalaqah");
+  });
+  const hasKategori = currentHeaders.some(h => {
+    const s = h.toLowerCase();
+    return s === "kategori" || s === "category" || s.includes("kategori_program");
+  });
+
+  // Jika sudah 5 kolom dan tidak ada nama_halaqah / kategori, lewati
+  if (!hasNama && !hasKategori && lastCol === targetHeaders.length) {
+    let isMatch = true;
+    for (let i = 0; i < targetHeaders.length; i++) {
+      if (currentHeaders[i].toLowerCase() !== targetHeaders[i].toLowerCase()) {
+        isMatch = false;
+        break;
+      }
     }
+    if (isMatch) return;
   }
-  if (isMatch) return;
 
   // Baca indeks lama
   const oldColMap = getSoroganHalaqahColumnIndexes(currentHeaders);
@@ -13525,11 +13540,14 @@ function migrateSoroganHalaqahSheetIfNeeded(sheet) {
     for (let r = 0; r < dataRange.length; r++) {
       const row = dataRange[r];
       const hId = oldColMap.id !== -1 ? String(row[oldColMap.id] || "").trim() : "";
-      const hNama = oldColMap.nama !== -1 ? String(row[oldColMap.nama] || "").trim() : "";
-      if (!hId && !hNama) continue;
+      let hMuallim = oldColMap.muallim !== -1 ? String(row[oldColMap.muallim] || "").trim() : "";
+      
+      // Jika muallim kosong tapi nama_halaqah ada, kita fallback gunakan nama halaqah
+      if (!hMuallim && oldColMap.nama !== -1) {
+        hMuallim = String(row[oldColMap.nama] || "").trim();
+      }
+      if (!hId && !hMuallim) continue;
 
-      const hKat = (oldColMap.kategori !== -1 && row[oldColMap.kategori]) ? String(row[oldColMap.kategori]).trim() : "Pesantren Reguler Putra Putri";
-      const hMuallim = oldColMap.muallim !== -1 ? String(row[oldColMap.muallim] || "").trim() : "";
       const hTarget = oldColMap.target !== -1 ? String(row[oldColMap.target] || "").trim() : "Sorogan Binnazhar Mushaf Pojok 30 Juz";
       
       let rawSids = oldColMap.studentIds !== -1 ? row[oldColMap.studentIds] : "";
@@ -13550,11 +13568,11 @@ function migrateSoroganHalaqahSheetIfNeeded(sheet) {
       }
 
       const hCreated = (oldColMap.createdAt !== -1 && row[oldColMap.createdAt]) ? row[oldColMap.createdAt] : new Date().toISOString();
-      newRows.push([hId, hNama, hKat, hMuallim, hTarget, sidsStr, hCreated]);
+      newRows.push([hId || ("SRG-HLQ-" + (r < 10 ? "0" + (r + 1) : (r + 1))), hMuallim || "Kyai / Mu'allim Pengampu", hTarget, sidsStr, hCreated]);
     }
   }
 
-  // Bersihkan dan tulis ulang susunan kolom persis format Tahfidz_Halaqah
+  // Bersihkan dan tulis ulang susunan kolom persis 5 kolom standar kanonikal
   sheet.clear();
   sheet.getRange(1, 1, 1, targetHeaders.length).setValues([targetHeaders])
     .setFontWeight("bold")
@@ -13564,6 +13582,27 @@ function migrateSoroganHalaqahSheetIfNeeded(sheet) {
 
   if (newRows.length > 0) {
     sheet.getRange(2, 1, newRows.length, targetHeaders.length).setValues(newRows);
+  }
+
+  // Hapus sisa kolom jika sheet punya lebih dari 5 kolom
+  const maxCols = sheet.getMaxColumns();
+  if (maxCols > targetHeaders.length) {
+    try {
+      sheet.deleteColumns(targetHeaders.length + 1, maxCols - targetHeaders.length);
+    } catch (e) {
+      // Abaikan jika tidak diizinkan oleh spreadsheet
+    }
+  }
+}
+
+function migrateSoroganHalaqahSheet_(ss) {
+  try {
+    if (!ss) return;
+    const sheet = ss.getSheetByName(SHEET_SOROGAN_HALAQAH);
+    if (!sheet) return;
+    migrateSoroganHalaqahSheetIfNeeded(sheet);
+  } catch (err) {
+    Logger.log("migrateSoroganHalaqahSheet_ error: " + err.message);
   }
 }
 
@@ -13582,7 +13621,7 @@ function initSoroganSheets(token) {
 
     const headersLogs = ["log_id", "student_id", "nis", "student_name", "gender", "tanggal", "sesi", "juz", "halaman_list", "total_halaman", "status_setoran", "nilai", "muallim", "catatan", "created_at"];
     const headersCapaian = ["student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_khatam", "status_terakhir", "halaqah_id", "nama_halaqah", "muallim_pengampu", "updated_at"];
-    const headersHalaqah = ["halaqah_id", "nama_halaqah", "kategori", "muallim", "target_kurikulum", "student_ids", "created_at"];
+    const headersHalaqah = ["halaqah_id", "muallim", "target_kurikulum", "student_ids", "created_at"];
     const headersTarget = ["student_id", "target_juz", "target_halaman_sesi", "target_halaman_pekan", "updated_at"];
     const headersSesi = ["sesi_id", "nama_sesi", "jenis_sesi", "status", "jam_mulai", "jam_selesai", "hari_list", "created_at"];
 
@@ -13637,8 +13676,8 @@ function initSoroganSheets(token) {
         }
       }
       const defaultHalaqah = [
-        ["SRG-HLQ-01", "Halaqah Sorogan Putra (Mushaf Besar)", "Pesantren Reguler Putra Putri", ustadz, "Sorogan Binnazhar Mushaf Pojok 30 Juz", "", nowIso],
-        ["SRG-HLQ-02", "Halaqah Sorogan Putri (Mushaf Besar)", "Pesantren Reguler Putra Putri", ustadzah, "Sorogan Binnazhar Mushaf Pojok 30 Juz", "", nowIso]
+        ["SRG-HLQ-01", ustadz, "Sorogan Binnazhar Mushaf Pojok 30 Juz", "", nowIso],
+        ["SRG-HLQ-02", ustadzah, "Sorogan Binnazhar Mushaf Pojok 30 Juz", "", nowIso]
       ];
       hSheet.getRange(2, 1, defaultHalaqah.length, headersHalaqah.length).setValues(defaultHalaqah);
     }
@@ -13683,7 +13722,7 @@ function getSoroganDashboard(token) {
     // 0. Auto-ensure SEMUA sheet Sorogan Al-Qur'an tersedia di database
     const headersLogs = ["log_id", "student_id", "nis", "student_name", "gender", "tanggal", "sesi", "juz", "halaman_list", "total_halaman", "status_setoran", "nilai", "muallim", "catatan", "created_at"];
     const headersCapaian = ["student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_khatam", "status_terakhir", "halaqah_id", "nama_halaqah", "muallim_pengampu", "updated_at"];
-    const headersHalaqah = ["halaqah_id", "nama_halaqah", "kategori", "muallim", "target_kurikulum", "student_ids", "created_at"];
+    const headersHalaqah = ["halaqah_id", "muallim", "target_kurikulum", "student_ids", "created_at"];
     const headersTarget = ["student_id", "target_juz", "target_halaman_sesi", "target_halaman_pekan", "updated_at"];
     const headersSesi = ["sesi_id", "nama_sesi", "jenis_sesi", "status", "jam_mulai", "jam_selesai", "hari_list", "created_at"];
 
@@ -13752,8 +13791,8 @@ function getSoroganDashboard(token) {
     // Auto-seed default Halaqah jika sheet baru dibuat / kosong
     if (halaqahSheet.getLastRow() < 2) {
       const defaultHalaqah = [
-        ["SRG-HLQ-01", "Halaqah Sorogan Putra (Mushaf Besar)", defaultProg1, defaultTeacher1, "Sorogan Binnazhar Mushaf Pojok 30 Juz", "", nowIso],
-        ["SRG-HLQ-02", "Halaqah Sorogan Putri (Mushaf Besar)", defaultProg2, defaultTeacher2, "Sorogan Binnazhar Mushaf Pojok 30 Juz", "", nowIso]
+        ["SRG-HLQ-01", defaultTeacher1, "Sorogan Binnazhar Mushaf Pojok 30 Juz", "", nowIso],
+        ["SRG-HLQ-02", defaultTeacher2, "Sorogan Binnazhar Mushaf Pojok 30 Juz", "", nowIso]
       ];
       halaqahSheet.getRange(2, 1, defaultHalaqah.length, headersHalaqah.length).setValues(defaultHalaqah);
     }
@@ -13867,8 +13906,12 @@ function getSoroganDashboard(token) {
       for (let i = 1; i < hData.length; i++) {
         const row = hData[i];
         const hId = colMap.id !== -1 ? String(row[colMap.id] || "").trim() : "";
-        const hNama = colMap.nama !== -1 ? String(row[colMap.nama] || "").trim() : "";
-        if (!hId && !hNama) continue;
+        const mName = colMap.muallim !== -1 ? String(row[colMap.muallim] || "").trim() : "";
+        let hNama = colMap.nama !== -1 && row[colMap.nama] ? String(row[colMap.nama]).trim() : "";
+        if (!hNama && mName) {
+          hNama = "Halaqah " + mName;
+        }
+        if (!hId && !mName && !hNama) continue;
 
         const rawSids = colMap.studentIds !== -1 ? row[colMap.studentIds] : "";
         let sids = [];
@@ -13882,19 +13925,18 @@ function getSoroganDashboard(token) {
           sids = rawSids;
         }
 
-        const mName = colMap.muallim !== -1 ? String(row[colMap.muallim] || "").trim() : "";
         const kName = colMap.kategori !== -1 ? String(row[colMap.kategori] || "").trim() : "";
         const targetDesc = colMap.target !== -1 ? String(row[colMap.target] || "").trim() : "";
 
         halaqahs.push({
-          halaqahId: hId,
-          namaHalaqah: hNama,
+          halaqahId: hId || ("SRG-HLQ-" + (i < 10 ? "0" + i : i)),
+          namaHalaqah: hNama || ("Halaqah " + (mName || hId)),
           muallim: mName,
           muallimPengampu: mName,
           kategori: kName,
           kategoriProgram: kName,
-          targetKurikulum: targetDesc,
-          jadwalSesi: targetDesc,
+          targetKurikulum: targetDesc || "Sorogan Binnazhar Mushaf Pojok 30 Juz",
+          jadwalSesi: targetDesc || "Sorogan Binnazhar Mushaf Pojok 30 Juz",
           studentIds: sids
         });
       }
@@ -14207,7 +14249,7 @@ function saveSoroganCapaian(data, token) {
 function getSoroganHalaqahList(token) {
   try {
     const ss = getDatabaseSpreadsheet();
-    const headersHalaqah = ["halaqah_id", "nama_halaqah", "kategori", "muallim", "target_kurikulum", "student_ids", "created_at"];
+    const headersHalaqah = ["halaqah_id", "muallim", "target_kurikulum", "student_ids", "created_at"];
     const sheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_HALAQAH, headersHalaqah, "#4338ca");
     migrateSoroganHalaqahSheetIfNeeded(sheet);
     const data = sheet.getDataRange().getValues();
@@ -14219,8 +14261,12 @@ function getSoroganHalaqahList(token) {
       for (let i = 1; i < data.length; i++) {
         const row = data[i];
         const hId = colMap.id !== -1 ? String(row[colMap.id] || "").trim() : "";
-        const hNama = colMap.nama !== -1 ? String(row[colMap.nama] || "").trim() : "";
-        if (!hId && !hNama) continue;
+        const mName = colMap.muallim !== -1 ? String(row[colMap.muallim] || "").trim() : "";
+        let hNama = colMap.nama !== -1 && row[colMap.nama] ? String(row[colMap.nama]).trim() : "";
+        if (!hNama && mName) {
+          hNama = "Halaqah " + mName;
+        }
+        if (!hId && !mName && !hNama) continue;
 
         const rawSids = colMap.studentIds !== -1 ? row[colMap.studentIds] : "";
         let sids = [];
@@ -14234,19 +14280,18 @@ function getSoroganHalaqahList(token) {
           sids = rawSids;
         }
 
-        const mName = colMap.muallim !== -1 ? String(row[colMap.muallim] || "").trim() : "";
         const kName = colMap.kategori !== -1 ? String(row[colMap.kategori] || "").trim() : "";
         const targetDesc = colMap.target !== -1 ? String(row[colMap.target] || "").trim() : "";
 
         list.push({
-          halaqahId: hId,
-          namaHalaqah: hNama,
+          halaqahId: hId || ("SRG-HLQ-" + (i < 10 ? "0" + i : i)),
+          namaHalaqah: hNama || ("Halaqah " + (mName || hId)),
           muallim: mName,
           muallimPengampu: mName,
           kategori: kName,
           kategoriProgram: kName,
-          targetKurikulum: targetDesc,
-          jadwalSesi: targetDesc,
+          targetKurikulum: targetDesc || "Sorogan Binnazhar Mushaf Pojok 30 Juz",
+          jadwalSesi: targetDesc || "Sorogan Binnazhar Mushaf Pojok 30 Juz",
           studentIds: sids
         });
       }
@@ -14315,15 +14360,14 @@ function saveSoroganHalaqah(data, token) {
         }
       }
 
-      const muallim = String(data.muallim || data.muallimPengampu || "").trim();
+      let muallim = String(data.muallim || data.muallimPengampu || "").trim();
       let nama = String(data.namaHalaqah || data.nama_halaqah || data.nama || "").trim();
-      if (!nama && muallim) {
-        nama = "Halaqah " + muallim;
-      }
-      if (!nama) throw new Error("Mu'allim Pengampu atau nama halaqah sorogan wajib diisi.");
+      if (!muallim && !nama) throw new Error("Mu'allim Pengampu halaqah sorogan wajib dipilih atau diisi.");
+      if (!muallim && nama) muallim = nama;
+      if (!nama && muallim) nama = "Halaqah " + muallim;
 
       const ss = getDatabaseSpreadsheet();
-      const headersHalaqah = ["halaqah_id", "nama_halaqah", "kategori", "muallim", "target_kurikulum", "student_ids", "created_at"];
+      const headersHalaqah = ["halaqah_id", "muallim", "target_kurikulum", "student_ids", "created_at"];
       const sheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_HALAQAH, headersHalaqah, "#4338ca");
       migrateSoroganHalaqahSheetIfNeeded(sheet);
 
@@ -14363,16 +14407,16 @@ function saveSoroganHalaqah(data, token) {
         }
       }
 
-      const headersCount = Math.max(sheetData[0].length, 7);
+      const headersCount = Math.max(sheetData[0].length, headersHalaqah.length);
       const rowValues = new Array(headersCount).fill("");
 
       if (colMap.id !== -1) rowValues[colMap.id] = halaqahId;
-      if (colMap.nama !== -1) rowValues[colMap.nama] = nama;
-      if (colMap.kategori !== -1) rowValues[colMap.kategori] = kategori;
       if (colMap.muallim !== -1) rowValues[colMap.muallim] = muallim;
       if (colMap.target !== -1) rowValues[colMap.target] = targetKurikulum;
       if (colMap.studentIds !== -1) rowValues[colMap.studentIds] = studentIdsStr;
       if (colMap.createdAt !== -1) rowValues[colMap.createdAt] = createdAt;
+      if (colMap.nama !== -1) rowValues[colMap.nama] = nama;
+      if (colMap.kategori !== -1) rowValues[colMap.kategori] = kategori;
 
       if (foundRow > 0) {
         if (colMap.createdAt !== -1 && sheetData[foundRow - 1][colMap.createdAt]) {
@@ -14446,7 +14490,7 @@ function saveSoroganPlotting(payload, token) {
       const cleanStudentIds = Array.isArray(rawList) ? rawList.map(s => String(s).trim()).filter(Boolean) : [];
 
       const ss = getDatabaseSpreadsheet();
-      const headersHalaqah = ["halaqah_id", "nama_halaqah", "kategori", "muallim", "target_kurikulum", "student_ids", "created_at"];
+      const headersHalaqah = ["halaqah_id", "muallim", "target_kurikulum", "student_ids", "created_at"];
       const sheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_HALAQAH, headersHalaqah, "#4338ca");
       migrateSoroganHalaqahSheetIfNeeded(sheet);
 
