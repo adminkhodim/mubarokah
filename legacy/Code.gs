@@ -16455,6 +16455,22 @@ function deleteTPQLog(logId, token) {
 // ====================================================================
 
 /**
+ * Helper Database Spreadsheet untuk Modul Presensi
+ */
+function getSpreadsheetDB_() {
+  if (typeof getDatabaseSpreadsheet === "function") {
+    var db = getDatabaseSpreadsheet();
+    if (db) return db;
+  }
+  var explicitId = "1cZSRh2rtKpT6E8m3GFJonVbiQG51fh24eN8J5JWtOJY";
+  try {
+    return SpreadsheetApp.openById(explicitId);
+  } catch (e) {
+    return SpreadsheetApp.getActiveSpreadsheet();
+  }
+}
+
+/**
  * Helper inisialisasi sheet presensi kegiatan secara otomatis jika belum ada.
  */
 function initPresensiSheetsIfNeeded_(ss) {
