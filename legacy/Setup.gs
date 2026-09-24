@@ -71,7 +71,10 @@ var AUTHORITATIVE_SCHEMAS_ = {
   "Sorogan_Capaian": ["student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_khatam", "status_terakhir", "halaqah_id", "nama_halaqah", "muallim_pengampu", "updated_at"],
   "Sorogan_Halaqah": ["halaqah_id", "muallim", "target_kurikulum", "student_ids", "created_at"],
   "Sorogan_Target": ["student_id", "target_juz", "target_halaman_sesi", "target_halaman_pekan", "updated_at"],
-  "Sorogan_Sesi": ["sesi_id", "nama_sesi", "jenis_sesi", "status", "jam_mulai", "jam_selesai", "hari_list", "created_at"]
+  "Sorogan_Sesi": ["sesi_id", "nama_sesi", "jenis_sesi", "status", "jam_mulai", "jam_selesai", "hari_list", "created_at"],
+  "Presensi_Kegiatan": ["kegiatan_id", "nama_kegiatan", "kategori", "jadwal_rutin", "target_peserta", "penanggung_jawab", "status", "created_at"],
+  "Presensi_Sesi": ["sesi_id", "kegiatan_id", "nama_kegiatan", "tanggal", "waktu_buka", "petugas", "total_peserta", "total_hadir", "total_izin", "total_sakit", "total_alpa", "status_sesi", "catatan", "created_at"],
+  "Presensi_Logs": ["log_id", "sesi_id", "kegiatan_id", "student_id", "nis", "student_name", "gender", "tanggal", "status_kehadiran", "metode_absen", "waktu_absen", "keterangan", "created_at"]
 };
 
 // ============================================================
@@ -937,3 +940,49 @@ function initTPQSheetsDirect() {
   return { success: true, message: "Seluruh 5 Sheet TPQ berhasil diinisialisasi." };
 }
 
+/**
+ * FUNGSI CEPAT INISIALISASI TAB SHEET PRESENSI KEGIATAN
+ * (Presensi_Kegiatan, Presensi_Sesi, Presensi_Logs)
+ * Dapat dijalankan langsung via Apps Script Editor (pilih: initPresensiSheetsDirect -> Run).
+ */
+function initPresensiSheetsDirect() {
+  var ss = null;
+  var props = PropertiesService.getScriptProperties();
+  var ssId = props.getProperty("SPREADSHEET_ID");
+  if (ssId) {
+    try { ss = SpreadsheetApp.openById(ssId); } catch (e) {}
+  }
+  if (!ss) {
+    try { ss = SpreadsheetApp.getActiveSpreadsheet(); } catch (e) {}
+  }
+  if (!ss) {
+    throw new Error("Spreadsheet database tidak ditemukan. Periksa SPREADSHEET_ID di Script Properties.");
+  }
+
+  var sheetsToInit = [
+    { name: "Presensi_Kegiatan", color: "#059669" }, // Emerald
+    { name: "Presensi_Sesi", color: "#0d9488" },     // Teal
+    { name: "Presensi_Logs", color: "#0284c7" }      // Sky
+  ];
+
+  sheetsToInit.forEach(function(item) {
+    var expectedHeaders = AUTHORITATIVE_SCHEMAS_[item.name];
+    var sheet = ss.getSheetByName(item.name);
+    var isNew = false;
+    if (!sheet) {
+      sheet = ss.insertSheet(item.name);
+      isNew = true;
+    }
+    if (sheet.getLastRow() === 0) {
+      sheet.getRange(1, 1, 1, expectedHeaders.length).setValues([expectedHeaders]);
+    }
+    sheet.getRange(1, 1, 1, expectedHeaders.length)
+      .setFontWeight("bold")
+      .setBackground(item.color)
+      .setFontColor("#ffffff");
+    sheet.setFrozenRows(1);
+    Logger.log("[OK] Sheet '" + item.name + "' siap (" + (isNew ? "Baru dibuat" : "Sudah ada") + ").");
+  });
+
+  return { success: true, message: "Seluruh 3 Sheet Presensi Kegiatan berhasil diinisialisasi." };
+}

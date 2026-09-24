@@ -2249,6 +2249,18 @@
                                     Qur'an</span>
                             </button>
 
+                            <!-- 5d. Presensi Kegiatan -->
+                            <button type="button" onclick="openAdminModuleFromControlCenter('presensi')"
+                                class="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-slate-50 dark:bg-[#1c2836] hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-slate-100 dark:border-[#253447] hover:border-emerald-300 transition group active:scale-95 text-center">
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 group-hover:bg-emerald-600 group-hover:text-white flex items-center justify-center text-base shadow-sm transition">
+                                    <i class="fa-solid fa-clipboard-user"></i>
+                                </div>
+                                <span
+                                    class="text-[10px] font-bold text-slate-700 dark:text-slate-200 mt-1.5 truncate w-full">Presensi
+                                    Kegiatan</span>
+                            </button>
+
                             <!-- 5. PPDB -->
                             <button type="button" onclick="openAdminModuleFromControlCenter('ppdb')"
                                 class="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-slate-50 dark:bg-[#1c2836] hover:bg-blue-50 dark:hover:bg-blue-950/40 border border-slate-100 dark:border-[#253447] hover:border-blue-300 transition group active:scale-95 text-center">
@@ -5036,6 +5048,12 @@
                                         <i class="fa-solid fa-book-bookmark w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-sky-600"></i>
                                         <span class="sidebar-text whitespace-nowrap">Sorogan Al-Qur'an</span>
                                     </button>
+                                    <button onclick="showAdminView('presensi')" data-view="presensi"
+                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-emerald-700 text-xs font-medium transition group"
+                                        title="Presensi Kegiatan">
+                                        <i class="fa-solid fa-clipboard-user w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-emerald-600"></i>
+                                        <span class="sidebar-text whitespace-nowrap">Presensi Kegiatan</span>
+                                    </button>
                                     <button onclick="showAdminView('ppdb')" data-view="ppdb"
                                         class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-blue-700 text-xs font-medium transition group"
                                         title="Data Pendaftar PPDB">
@@ -5299,6 +5317,21 @@
                                                 <div>
                                                     <h4 class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-sky-700 transition">Sorogan Qur'an</h4>
                                                     <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Simakan mushaf besar.</p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Presensi Kegiatan Santri -->
+                                            <div onclick="showAdminView('presensi')"
+                                                class="bg-white hover:bg-emerald-50/60 p-4 rounded-2xl border border-slate-100 hover:border-emerald-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
+                                                <div class="flex justify-between items-start">
+                                                    <div class="w-11 h-11 bg-emerald-50 text-emerald-700 group-hover:bg-emerald-700 group-hover:text-white rounded-2xl flex items-center justify-center text-lg shadow-sm transition-all duration-300">
+                                                        <i class="fa-solid fa-clipboard-user"></i>
+                                                    </div>
+                                                    <span class="text-[9px] font-extrabold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md uppercase">Live & QR</span>
+                                                </div>
+                                                <div>
+                                                    <h4 class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-emerald-700 transition">Presensi Kegiatan</h4>
+                                                    <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Absensi shalat & kajian.</p>
                                                 </div>
                                             </div>
 
@@ -7558,6 +7591,414 @@
                                         <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">Belum ada data capaian sorogan ditemukan.</p>
                                     </div>
                                 </section>
+                            </div>
+
+                            <!-- ================= VIEW: MODUL PRESENSI KEGIATAN SANTRI ================= -->
+                            <div id="admin-view-presensi" class="hidden space-y-4">
+                                <!-- HEADER SUB-VIEW -->
+                                <div class="bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex items-center justify-between">
+                                    <div class="flex items-center space-x-2.5">
+                                        <button type="button" onclick="backFromAdminModule()"
+                                            class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-lg flex items-center justify-center transition active:scale-95 shrink-0"
+                                            title="Kembali">
+                                            <i class="fa-solid fa-arrow-left text-xs"></i>
+                                        </button>
+                                        <div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400 uppercase tracking-widest block">Kesiswaan & Akademik</span>
+                                                <span class="text-[10px] font-bold px-2 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">Live & Exception</span>
+                                            </div>
+                                            <h2 class="text-sm md:text-base font-bold text-slate-800 dark:text-slate-100">
+                                                Presensi Kegiatan Santri
+                                            </h2>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-1.5 sm:space-x-2">
+                                        <button type="button" onclick="openPresensiBukaSesiModal()"
+                                            class="px-3 sm:px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm active:scale-95">
+                                            <i class="fa-solid fa-play text-xs"></i>
+                                            <span>+ Buka Sesi</span>
+                                        </button>
+                                        <button type="button" onclick="switchPresensiMainTab('agenda')"
+                                            class="hidden sm:flex px-3 py-1.5 bg-slate-100 dark:bg-[#1c2836] hover:bg-slate-200 dark:hover:bg-[#253447] text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition items-center space-x-1.5 active:scale-95"
+                                            title="Kelola Master Agenda Kegiatan">
+                                            <i class="fa-solid fa-list-check text-xs text-slate-400"></i>
+                                            <span>Agenda</span>
+                                        </button>
+                                        <button type="button" onclick="loadAdminPresensiData(true)"
+                                            class="px-2.5 sm:px-3 py-1.5 bg-slate-100 dark:bg-[#1c2836] hover:bg-slate-200 dark:hover:bg-[#253447] text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 active:scale-95"
+                                            title="Segarkan Data">
+                                            <i class="fa-solid fa-rotate text-xs"></i>
+                                            <span class="hidden md:inline">Refresh</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- 4 STAT CARDS -->
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    <div class="bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm space-y-1">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Sesi Hari Ini</span>
+                                            <i class="fa-solid fa-calendar-day text-emerald-600 text-sm"></i>
+                                        </div>
+                                        <h3 id="presensi-stat-today-sessions" class="text-base sm:text-lg font-black text-slate-800 dark:text-slate-100">0 Sesi</h3>
+                                        <p class="text-[10px] text-slate-400">Ibadah & kajian terdaftar</p>
+                                    </div>
+                                    <div class="bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm space-y-1">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Kehadiran Santri</span>
+                                            <i class="fa-solid fa-chart-line text-teal-600 text-sm"></i>
+                                        </div>
+                                        <h3 id="presensi-stat-rerata-pct" class="text-base sm:text-lg font-black text-emerald-600">100%</h3>
+                                        <p class="text-[10px] text-slate-400">Rerata kehadiran bulan ini</p>
+                                    </div>
+                                    <div class="bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm space-y-1">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Izin & Sakit</span>
+                                            <i class="fa-solid fa-notes-medical text-amber-500 text-sm"></i>
+                                        </div>
+                                        <h3 id="presensi-stat-izin-sakit" class="text-base sm:text-lg font-black text-amber-600">0 Santri</h3>
+                                        <p class="text-[10px] text-slate-400">Tercatat dengan keterangan</p>
+                                    </div>
+                                    <div class="bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm space-y-1">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Alpa / Tanpa Ket</span>
+                                            <i class="fa-solid fa-triangle-exclamation text-rose-500 text-sm"></i>
+                                        </div>
+                                        <h3 id="presensi-stat-alpa" class="text-base sm:text-lg font-black text-rose-600">0 Santri</h3>
+                                        <p class="text-[10px] text-slate-400">Perlu tindak lanjut</p>
+                                    </div>
+                                </div>
+
+                                <!-- TAB NAVIGATION SWITCHER -->
+                                <div class="bg-white dark:bg-[#15202d] p-1.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex items-center gap-1 overflow-x-auto scrollbar-none">
+                                    <button type="button" id="tab-presensi-btn-today" onclick="switchPresensiMainTab('today')"
+                                        class="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs bg-emerald-600 text-white shadow-sm transition active:scale-95 shrink-0">
+                                        <i class="fa-solid fa-calendar-day text-xs"></i>
+                                        <span>Sesi Hari Ini</span>
+                                    </button>
+                                    <button type="button" id="tab-presensi-btn-live" onclick="switchPresensiMainTab('live')"
+                                        class="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836] transition active:scale-95 shrink-0">
+                                        <i class="fa-solid fa-clipboard-check text-xs"></i>
+                                        <span>Live Absensi</span>
+                                    </button>
+                                    <button type="button" id="tab-presensi-btn-rekap" onclick="switchPresensiMainTab('rekap')"
+                                        class="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836] transition active:scale-95 shrink-0">
+                                        <i class="fa-solid fa-chart-pie text-xs"></i>
+                                        <span>Rekapitulasi Santri</span>
+                                    </button>
+                                    <button type="button" id="tab-presensi-btn-agenda" onclick="switchPresensiMainTab('agenda')"
+                                        class="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836] transition active:scale-95 shrink-0">
+                                        <i class="fa-solid fa-list-check text-xs"></i>
+                                        <span>Master Agenda</span>
+                                    </button>
+                                </div>
+
+                                <!-- ================= TAB 1: SESI HARI INI & RIWAYAT ================= -->
+                                <div id="panel-presensi-today" class="space-y-4">
+                                    <!-- Sesi Hari Ini Card Grid -->
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <h4 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                                                <i class="fa-regular fa-clock text-emerald-600"></i>
+                                                <span>Agenda Presensi Hari Ini</span>
+                                            </h4>
+                                            <button type="button" onclick="openPresensiBukaSesiModal()" class="text-xs text-emerald-600 font-bold hover:underline">
+                                                + Buka Sesi Baru
+                                            </button>
+                                        </div>
+
+                                        <div id="presensi-today-sessions-list" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            <!-- Rendered dynamically by JS -->
+                                        </div>
+
+                                        <div id="presensi-today-empty" class="hidden bg-white dark:bg-[#15202d] p-8 rounded-2xl border border-slate-100 dark:border-[#253447] text-center space-y-3">
+                                            <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-xl">
+                                                <i class="fa-solid fa-calendar-check"></i>
+                                            </div>
+                                            <div class="space-y-1">
+                                                <h4 class="text-sm font-bold text-slate-800 dark:text-slate-100">Belum Ada Sesi Dibuka Hari Ini</h4>
+                                                <p class="text-xs text-slate-400 max-w-sm mx-auto">Klik tombol di bawah untuk membuka sesi absensi shalat berjamaah, kajian kitab, atau kegiatan lainnya.</p>
+                                            </div>
+                                            <button type="button" onclick="openPresensiBukaSesiModal()"
+                                                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm inline-flex items-center gap-2">
+                                                <i class="fa-solid fa-play text-xs"></i>
+                                                <span>Mulai Sesi Absensi</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Riwayat Sesi Terdahulu Table -->
+                                    <div class="bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm overflow-hidden">
+                                        <div class="px-4 py-3 bg-slate-50 dark:bg-[#1c2836] border-b border-slate-100 dark:border-[#253447] flex justify-between items-center">
+                                            <h4 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
+                                                Riwayat Sesi Sebelumnya
+                                            </h4>
+                                            <span class="text-[10px] text-slate-400">10 Sesi Terakhir</span>
+                                        </div>
+                                        <div class="overflow-x-auto">
+                                            <table class="w-full text-left">
+                                                <thead>
+                                                    <tr class="border-b border-slate-100 dark:border-[#253447] bg-slate-50/50 dark:bg-[#182332] text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                                        <th class="py-2.5 px-3">Tanggal</th>
+                                                        <th class="py-2.5 px-3">Kegiatan</th>
+                                                        <th class="py-2.5 px-3">Petugas</th>
+                                                        <th class="py-2.5 px-3 text-center">Hadir</th>
+                                                        <th class="py-2.5 px-3 text-center">Pengecualian</th>
+                                                        <th class="py-2.5 px-3 text-right">Aksi</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="presensi-recent-sessions-list">
+                                                    <!-- Rendered dynamically -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- ================= TAB 2: LIVE CHECKLIST & SCANNER QR ================= -->
+                                <div id="panel-presensi-live" class="hidden space-y-3">
+                                    <!-- Notice jika belum ada sesi aktif -->
+                                    <div id="presensi-live-no-session" class="bg-white dark:bg-[#15202d] p-8 rounded-2xl border border-slate-100 dark:border-[#253447] text-center space-y-3">
+                                        <div class="w-12 h-12 bg-amber-50 dark:bg-amber-950/60 text-amber-600 rounded-full flex items-center justify-center mx-auto text-xl">
+                                            <i class="fa-solid fa-door-open"></i>
+                                        </div>
+                                        <div class="space-y-1">
+                                            <h4 class="text-sm font-bold text-slate-800 dark:text-slate-100">Tidak Ada Sesi Absensi Aktif</h4>
+                                            <p class="text-xs text-slate-400 max-w-sm mx-auto">Silakan buka sesi absensi baru atau pilih salah satu sesi yang sedang berjalan dari tab "Sesi Hari Ini".</p>
+                                        </div>
+                                        <button type="button" onclick="openPresensiBukaSesiModal()"
+                                            class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm inline-flex items-center gap-2">
+                                            <i class="fa-solid fa-play text-xs"></i>
+                                            <span>Buka Sesi Sekarang</span>
+                                        </button>
+                                    </div>
+
+                                    <!-- Sesi Aktif Container -->
+                                    <div id="presensi-live-content" class="hidden space-y-3">
+                                        <!-- Header Banner Sesi Aktif -->
+                                        <div class="bg-gradient-to-r from-emerald-700 to-teal-800 text-white p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                            <div class="space-y-1">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-500/40 text-emerald-100 border border-emerald-400/40 uppercase animate-pulse">Sesi Aktif</span>
+                                                    <h3 id="presensi-live-session-title" class="text-base font-bold text-white">Shalat Subuh Berjamaah</h3>
+                                                </div>
+                                                <p id="presensi-live-session-meta" class="text-xs text-emerald-100">Hari ini | Pukul 05:00 WIB | Petugas: Ust. Ahmad</p>
+                                            </div>
+                                            <!-- Mode Selector (Checklist vs QR) -->
+                                            <div class="inline-flex rounded-xl p-1 bg-emerald-900/60 border border-emerald-600/40 gap-1 self-start sm:self-auto">
+                                                <button type="button" id="presensi-btn-mode-checklist" onclick="setLiveInputMode('checklist')"
+                                                    class="px-3.5 py-1.5 rounded-xl font-bold text-xs bg-emerald-600 text-white shadow-sm transition active:scale-95">
+                                                    <i class="fa-solid fa-list-check mr-1.5"></i>Checklist Massal
+                                                </button>
+                                                <button type="button" id="presensi-btn-mode-qr" onclick="setLiveInputMode('qr')"
+                                                    class="px-3.5 py-1.5 rounded-xl font-semibold text-xs text-emerald-100 hover:bg-emerald-800 transition active:scale-95">
+                                                    <i class="fa-solid fa-qrcode mr-1.5"></i>Scan QR Santri
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- PANEL 1: CHECKLIST MASSAL (DEFAULT) -->
+                                        <div id="presensi-panel-checklist" class="space-y-3">
+                                            <!-- Toolbar Filter & Quick Actions -->
+                                            <div class="bg-white dark:bg-[#15202d] p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex flex-col md:flex-row items-center justify-between gap-2.5">
+                                                <div class="flex items-center gap-2 w-full md:w-auto">
+                                                    <div class="inline-flex rounded-xl p-1 bg-slate-100 dark:bg-[#1c2836] border border-slate-200 dark:border-[#283a4e] gap-1">
+                                                        <button type="button" id="presensi-filter-gender-all" onclick="setLiveFilterGender('all')"
+                                                            class="px-3 py-1.5 bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-sm">Semua</button>
+                                                        <button type="button" id="presensi-filter-gender-L" onclick="setLiveFilterGender('L')"
+                                                            class="px-3 py-1.5 bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 font-semibold text-xs rounded-xl hover:bg-slate-200 transition">Putra</button>
+                                                        <button type="button" id="presensi-filter-gender-P" onclick="setLiveFilterGender('P')"
+                                                            class="px-3 py-1.5 bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 font-semibold text-xs rounded-xl hover:bg-slate-200 transition">Putri</button>
+                                                    </div>
+                                                    <div class="relative flex-1 md:w-56">
+                                                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                                                        <input type="text" placeholder="Cari nama santri / NIS..." oninput="onSearchLiveStudent(this.value)"
+                                                            class="w-full pl-8 pr-3 py-1.5 rounded-xl bg-slate-50 dark:bg-[#1c2836] border border-slate-200 dark:border-[#283a4e] text-xs text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                                    </div>
+                                                </div>
+
+                                                <!-- 1-KLIK HADIR SEMUA -->
+                                                <button type="button" onclick="setAllStudentsAttendance('Hadir')"
+                                                    class="w-full md:w-auto px-4 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 font-bold text-xs transition flex items-center justify-center gap-1.5 active:scale-95 shadow-sm">
+                                                    <i class="fa-solid fa-check-double text-emerald-600"></i>
+                                                    <span>Tandai Semua Hadir (1-Klik)</span>
+                                                </button>
+                                            </div>
+
+                                            <!-- Counter Summary Strip -->
+                                            <div class="grid grid-cols-5 gap-2 text-center text-xs">
+                                                <div class="bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 p-2 rounded-xl">
+                                                    <span class="text-[10px] text-emerald-700 dark:text-emerald-400 block font-bold uppercase">Hadir</span>
+                                                    <span id="presensi-count-hadir" class="text-base font-black text-emerald-800 dark:text-emerald-200">0</span>
+                                                </div>
+                                                <div class="bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 p-2 rounded-xl">
+                                                    <span class="text-[10px] text-blue-700 dark:text-blue-400 block font-bold uppercase">Izin</span>
+                                                    <span id="presensi-count-izin" class="text-base font-black text-blue-800 dark:text-blue-200">0</span>
+                                                </div>
+                                                <div class="bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 p-2 rounded-xl">
+                                                    <span class="text-[10px] text-amber-700 dark:text-amber-400 block font-bold uppercase">Sakit</span>
+                                                    <span id="presensi-count-sakit" class="text-base font-black text-amber-800 dark:text-amber-200">0</span>
+                                                </div>
+                                                <div class="bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 p-2 rounded-xl">
+                                                    <span class="text-[10px] text-rose-700 dark:text-rose-400 block font-bold uppercase">Alpa</span>
+                                                    <span id="presensi-count-alpa" class="text-base font-black text-rose-800 dark:text-rose-200">0</span>
+                                                </div>
+                                                <div class="bg-slate-100 dark:bg-[#1c2836] border border-slate-200 dark:border-[#283a4e] p-2 rounded-xl">
+                                                    <span class="text-[10px] text-slate-500 block font-bold uppercase">Total</span>
+                                                    <span id="presensi-count-total" class="text-base font-black text-slate-700 dark:text-slate-200">0</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Desktop Table -->
+                                            <div class="hidden md:block bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm overflow-hidden">
+                                                <table class="w-full text-left">
+                                                    <thead>
+                                                        <tr class="border-b border-slate-100 dark:border-[#253447] bg-slate-50/50 dark:bg-[#182332] text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                                            <th class="py-2.5 px-3 text-center w-12">No</th>
+                                                            <th class="py-2.5 px-3">Nama Santri</th>
+                                                            <th class="py-2.5 px-3 text-center w-48">Status Kehadiran</th>
+                                                            <th class="py-2.5 px-3">Keterangan / Alasan</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="presensi-live-table-body">
+                                                        <!-- Rendered dynamically -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <!-- Mobile Cards List -->
+                                            <div id="presensi-live-mobile-cards" class="block md:hidden space-y-2">
+                                                <!-- Rendered dynamically -->
+                                            </div>
+
+                                            <!-- Sticky Bottom Floating Action Bar -->
+                                            <div class="sticky bottom-3 z-20 bg-white/95 dark:bg-[#15202d]/95 backdrop-blur-md p-3 rounded-2xl border border-slate-200 dark:border-[#253447] shadow-lg flex items-center justify-between gap-2">
+                                                <span class="text-xs text-slate-500 dark:text-slate-400 hidden sm:inline flex items-center gap-1.5">
+                                                    <i class="fa-solid fa-cloud-arrow-up text-emerald-600"></i>
+                                                    <span>Otomatis simpan pengecualian ke Google Sheets.</span>
+                                                </span>
+                                                <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                                                    <button type="button" onclick="saveLivePresensiProgress(false)"
+                                                        class="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] dark:hover:bg-[#253447] text-slate-700 dark:text-slate-200 font-bold text-xs transition active:scale-95">
+                                                        Simpan Sementara
+                                                    </button>
+                                                    <button type="button" onclick="saveLivePresensiProgress(true)"
+                                                        class="flex-1 sm:flex-initial px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition shadow-sm active:scale-95 flex items-center justify-center gap-1.5">
+                                                        <i class="fa-solid fa-circle-check"></i>
+                                                        <span>Selesai & Tutup Sesi</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- PANEL 2: SCANNER KAMERA QR (HYBRID) -->
+                                        <div id="presensi-panel-qr" class="hidden space-y-3">
+                                            <div class="bg-white dark:bg-[#15202d] p-4 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm max-w-lg mx-auto space-y-4">
+                                                <div class="text-center space-y-1">
+                                                    <h4 class="text-sm font-bold text-slate-800 dark:text-slate-100">Scan QR Code Kartu Santri</h4>
+                                                    <p class="text-xs text-slate-400">Arahkan kamera ke QR code pada kartu santri. Santri otomatis ditandai HADIR.</p>
+                                                </div>
+
+                                                <!-- Scanner Video Reader -->
+                                                <div id="presensi-qr-reader" class="w-full aspect-square bg-slate-900 rounded-2xl overflow-hidden shadow-inner flex items-center justify-center">
+                                                    <!-- Html5Qrcode Reader mounted here -->
+                                                </div>
+
+                                                <!-- Scan Result Card -->
+                                                <div id="presensi-qr-scan-result"></div>
+
+                                                <div class="flex items-center justify-center gap-2 pt-2">
+                                                    <button type="button" onclick="setLiveInputMode('checklist')"
+                                                        class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition">
+                                                        Kembali ke Checklist
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- ================= TAB 3: REKAPITULASI & STATISTIK SANTRI ================= -->
+                                <div id="panel-presensi-rekap" class="hidden space-y-3">
+                                    <!-- Filter Toolbar -->
+                                    <div class="bg-white dark:bg-[#15202d] p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 items-end">
+                                        <div class="space-y-1">
+                                            <label class="text-[10px] font-bold text-slate-400 uppercase">Dari Tanggal</label>
+                                            <input type="date" id="presensi-rekap-filter-start" class="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-[#1c2836] border border-slate-200 dark:border-[#283a4e] text-xs text-slate-700 dark:text-slate-200">
+                                        </div>
+                                        <div class="space-y-1">
+                                            <label class="text-[10px] font-bold text-slate-400 uppercase">Sampai Tanggal</label>
+                                            <input type="date" id="presensi-rekap-filter-end" class="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-[#1c2836] border border-slate-200 dark:border-[#283a4e] text-xs text-slate-700 dark:text-slate-200">
+                                        </div>
+                                        <div class="space-y-1">
+                                            <label class="text-[10px] font-bold text-slate-400 uppercase">Pilih Kegiatan</label>
+                                            <select id="presensi-rekap-filter-kegiatan" class="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-[#1c2836] border border-slate-200 dark:border-[#283a4e] text-xs text-slate-700 dark:text-slate-200">
+                                                <option value="">Semua Kegiatan</option>
+                                            </select>
+                                        </div>
+                                        <div class="space-y-1">
+                                            <label class="text-[10px] font-bold text-slate-400 uppercase">Santri</label>
+                                            <select id="presensi-rekap-filter-gender" class="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-[#1c2836] border border-slate-200 dark:border-[#283a4e] text-xs text-slate-700 dark:text-slate-200">
+                                                <option value="">Semua Santri</option>
+                                                <option value="L">Khusus Putra</option>
+                                                <option value="P">Khusus Putri</option>
+                                            </select>
+                                        </div>
+                                        <div class="flex items-center gap-1.5">
+                                            <button type="button" onclick="loadPresensiRekapData()" class="flex-1 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm active:scale-95">
+                                                Filter
+                                            </button>
+                                            <button type="button" onclick="exportPresensiRekapXLSX()" class="w-9 h-9 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center text-xs font-bold transition active:scale-95" title="Ekspor Excel">
+                                                <i class="fa-solid fa-file-excel"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Table Rekapitulasi (Desktop) -->
+                                    <div class="hidden md:block bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm overflow-hidden">
+                                        <table class="w-full text-left">
+                                            <thead>
+                                                <tr class="border-b border-slate-100 dark:border-[#253447] bg-slate-50/50 dark:bg-[#182332] text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                                    <th class="py-2.5 px-3 text-center w-12">No</th>
+                                                    <th class="py-2.5 px-3">Nama Santri</th>
+                                                    <th class="py-2.5 px-3">NIS</th>
+                                                    <th class="py-2.5 px-3 text-center">Total Sesi</th>
+                                                    <th class="py-2.5 px-3 text-center">Hadir</th>
+                                                    <th class="py-2.5 px-3 text-center">I / S / A</th>
+                                                    <th class="py-2.5 px-3 text-center">Persentase</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="presensi-rekap-table-body">
+                                                <!-- Rendered dynamically -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- Mobile Cards Rekapitulasi -->
+                                    <div id="presensi-rekap-mobile-cards" class="block md:hidden space-y-2">
+                                        <!-- Rendered dynamically -->
+                                    </div>
+                                </div>
+
+                                <!-- ================= TAB 4: MASTER AGENDA KEGIATAN (CRUD) ================= -->
+                                <div id="panel-presensi-agenda" class="hidden space-y-3">
+                                    <div class="bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex items-center justify-between">
+                                        <div>
+                                            <h4 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Master Kegiatan Santri</h4>
+                                            <p class="text-[11px] text-slate-400">Atur agenda ibadah rutin, kajian kitab, kebersihan ro'an, atau kegiatan asrama.</p>
+                                        </div>
+                                        <button type="button" onclick="openPresensiKegiatanModal()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95">
+                                            <i class="fa-solid fa-plus text-xs"></i>
+                                            <span>Tambah Kegiatan</span>
+                                        </button>
+                                    </div>
+
+                                    <!-- Grid Master Activities -->
+                                    <div id="presensi-agenda-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                        <!-- Rendered dynamically -->
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- ================= VIEW 5: MODUL MANAJEMEN PROGRAM (CMS) ================= -->
@@ -14253,6 +14694,149 @@
                 </button>
             </div>
         </div>
+    <!-- ==================== MODAL: BUKA SESI PRESENSI BARU ==================== -->
+    <div id="modal-presensi-buka-sesi" class="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/60 backdrop-blur-xs hidden">
+        <div class="bg-white dark:bg-[#15202d] rounded-2xl shadow-xl w-full max-w-md border border-slate-100 dark:border-[#253447] overflow-hidden animate-scale-up">
+            <!-- Modal Header -->
+            <div class="px-5 py-4 border-b border-slate-100 dark:border-[#253447] flex items-center justify-between bg-slate-50/50 dark:bg-[#182332]">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-play"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">Buka Sesi Presensi Baru</h3>
+                        <p class="text-[10px] text-slate-400">Pilih agenda kegiatan untuk memulai absensi santri</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closePresensiBukaSesiModal()" class="w-7 h-7 rounded-lg hover:bg-slate-200 dark:hover:bg-[#253447] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            </div>
+
+            <!-- Modal Form -->
+            <form id="form-presensi-buka-sesi" onsubmit="handleStartPresensiSession(event)" class="p-5 space-y-3.5">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Pilih Kegiatan <span class="text-rose-500">*</span></label>
+                    <select id="presensi-modal-kegiatan-id" required class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100 font-medium focus:ring-1 focus:ring-emerald-500">
+                        <option value="">-- Memuat Agenda Kegiatan... --</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Tanggal <span class="text-rose-500">*</span></label>
+                        <input type="date" id="presensi-modal-tanggal" required class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100 font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Waktu / Jam Buka</label>
+                        <input type="time" id="presensi-modal-waktu" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100 font-medium">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Petugas / Asatidz Pengampu</label>
+                    <input type="text" id="presensi-modal-petugas" placeholder="Nama Ustadz / Pengurus Piket" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100">
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Catatan Tambahan (Opsional)</label>
+                    <input type="text" id="presensi-modal-catatan" placeholder="Contoh: Tempat di Masjid Lantai 2" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100">
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-end gap-2">
+                    <button type="button" onclick="closePresensiBukaSesiModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] dark:hover:bg-[#253447] text-slate-600 dark:text-slate-300 font-bold text-xs transition">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition active:scale-95 flex items-center gap-1.5">
+                        <i class="fa-solid fa-play text-xs"></i>
+                        <span>Mulai Absensi Santri</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL: FORM MASTER KEGIATAN PRESENSI ==================== -->
+    <div id="modal-presensi-kegiatan" class="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/60 backdrop-blur-xs hidden">
+        <div class="bg-white dark:bg-[#15202d] rounded-2xl shadow-xl w-full max-w-md border border-slate-100 dark:border-[#253447] overflow-hidden animate-scale-up">
+            <!-- Modal Header -->
+            <div class="px-5 py-4 border-b border-slate-100 dark:border-[#253447] flex items-center justify-between bg-slate-50/50 dark:bg-[#182332]">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-list-check"></i>
+                    </div>
+                    <div>
+                        <h3 id="presensi-modal-kegiatan-title" class="font-bold text-sm text-slate-800 dark:text-slate-100">Tambah Kegiatan Presensi</h3>
+                        <p class="text-[10px] text-slate-400">Atur rincian agenda ibadah atau kajian santri</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closePresensiKegiatanModal()" class="w-7 h-7 rounded-lg hover:bg-slate-200 dark:hover:bg-[#253447] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            </div>
+
+            <!-- Modal Form -->
+            <form id="form-presensi-kegiatan" onsubmit="handleSavePresensiKegiatan(event)" class="p-5 space-y-3.5">
+                <input type="hidden" id="presensi-agenda-form-id" value="">
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Nama Kegiatan <span class="text-rose-500">*</span></label>
+                    <input type="text" id="presensi-agenda-form-nama" required placeholder="Contoh: Shalat Subuh Berjamaah" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100 font-medium focus:ring-1 focus:ring-emerald-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Kategori <span class="text-rose-500">*</span></label>
+                        <select id="presensi-agenda-form-kategori" required class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100 font-medium">
+                            <option value="Ibadah">Ibadah</option>
+                            <option value="Ta'lim">Ta'lim / Kajian</option>
+                            <option value="Keasramaan">Keasramaan</option>
+                            <option value="Minat & Bakat">Minat & Bakat</option>
+                            <option value="Khusus">Khusus</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Target Peserta</label>
+                        <select id="presensi-agenda-form-target" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100 font-medium">
+                            <option value="Semua">Semua Santri</option>
+                            <option value="Putra">Khusus Santri Putra</option>
+                            <option value="Putri">Khusus Santri Putri</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Jadwal Rutin</label>
+                    <input type="text" id="presensi-agenda-form-jadwal" placeholder="Contoh: Setiap Hari 04:30 WIB" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Penanggung Jawab</label>
+                        <input type="text" id="presensi-agenda-form-pj" placeholder="Ust. Ahmad" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Status</label>
+                        <select id="presensi-agenda-form-status" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100 font-medium">
+                            <option value="Aktif">Aktif</option>
+                            <option value="Nonaktif">Nonaktif</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-end gap-2">
+                    <button type="button" onclick="closePresensiKegiatanModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] dark:hover:bg-[#253447] text-slate-600 dark:text-slate-300 font-bold text-xs transition">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition active:scale-95 flex items-center gap-1.5">
+                        <i class="fa-solid fa-floppy-disk text-xs"></i>
+                        <span>Simpan Kegiatan</span>
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- ==================== APPLICATION SCRIPTS & MODULES ==================== -->
@@ -14291,6 +14875,8 @@
     <script src="js/tahfidz.js"></script>
     <script src="js/tpq.js"></script>
     <script src="js/sorogan.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="js/presensi.js"></script>
 
     <!-- Main Controller & Navigation -->
     <script src="js/main.js"></script>

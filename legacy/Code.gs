@@ -695,6 +695,93 @@ function doPost(e) {
     }
 
     // ========================================================
+    // PRESENSI KEGIATAN SANTRI ACTIONS (doPost)
+    // ========================================================
+    if (action === "getPresensiDashboard" || action === "presensi.dashboard" || action === "auth.presensi.dashboard") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(getPresensiDashboard(token));
+    }
+
+    if (action === "getPresensiKegiatanList" || action === "presensi.getKegiatan") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(getPresensiKegiatanList(token));
+    }
+
+    if (action === "savePresensiKegiatan" || action === "presensi.saveKegiatan") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      if (token) {
+        try {
+          const actor = authenticateSession(token);
+          authorizeRole(actor, ["ADMIN", "EDITOR", "PEGAWAI", "PENGASUH"]);
+        } catch (authErr) {
+          try { verifySessionToken(token); } catch (e) {
+            return createJsonResponse({ status: "error", message: authErr.message });
+          }
+        }
+      }
+      return createJsonResponse(savePresensiKegiatan(payload.data || payload, token));
+    }
+
+    if (action === "deletePresensiKegiatan" || action === "presensi.deleteKegiatan") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      if (token) {
+        try {
+          const actor = authenticateSession(token);
+          authorizeRole(actor, ["ADMIN", "EDITOR", "PEGAWAI"]);
+        } catch (authErr) {
+          try { verifySessionToken(token); } catch (e) {
+            return createJsonResponse({ status: "error", message: authErr.message });
+          }
+        }
+      }
+      const kId = payload.kegiatanId || payload.id || (payload.data && (payload.data.kegiatanId || payload.data.id)) || "";
+      return createJsonResponse(deletePresensiKegiatan(kId, token));
+    }
+
+    if (action === "savePresensiSesi" || action === "presensi.saveSesi") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      if (token) {
+        try {
+          const actor = authenticateSession(token);
+          authorizeRole(actor, ["ADMIN", "EDITOR", "PEGAWAI", "PENGASUH"]);
+        } catch (authErr) {
+          try { verifySessionToken(token); } catch (e) {
+            return createJsonResponse({ status: "error", message: authErr.message });
+          }
+        }
+      }
+      return createJsonResponse(savePresensiSesi(payload.data || payload, token));
+    }
+
+    if (action === "getPresensiSesiDetail" || action === "presensi.sesiDetail") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      const sId = payload.sesiId || payload.id || (payload.data && (payload.data.sesiId || payload.data.id)) || "";
+      return createJsonResponse(getPresensiSesiDetail(sId, token));
+    }
+
+    if (action === "deletePresensiSesi" || action === "presensi.deleteSesi") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      if (token) {
+        try {
+          const actor = authenticateSession(token);
+          authorizeRole(actor, ["ADMIN", "EDITOR", "PEGAWAI"]);
+        } catch (authErr) {
+          try { verifySessionToken(token); } catch (e) {
+            return createJsonResponse({ status: "error", message: authErr.message });
+          }
+        }
+      }
+      const sId = payload.sesiId || payload.id || (payload.data && (payload.data.sesiId || payload.data.id)) || "";
+      return createJsonResponse(deletePresensiSesi(sId, token));
+    }
+
+    if (action === "getPresensiRekap" || action === "presensi.rekap") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      const filter = payload.filter || (payload.data && payload.data.filter) || {};
+      return createJsonResponse(getPresensiRekap(filter, token));
+    }
+
+    // ========================================================
     // DATA PEGAWAI (ASATIDZ & KARYAWAN) ACTIONS (doPost)
     // ========================================================
     if (action === "getEmployees" || action === "employee.list") {
@@ -16336,5 +16423,757 @@ function deleteTPQLog(logId, token) {
     };
   }
 }
+
+// ====================================================================
+// MODUL PRESENSI KEGIATAN SANTRI (HYBRID & EXCEPTION-BASED STORAGE)
+// ====================================================================
+
+/**
+ * Helper inisialisasi sheet presensi kegiatan secara otomatis jika belum ada.
+ */
+function initPresensiSheetsIfNeeded_(ss) {
+  try {
+    if (!ss) ss = getSpreadsheetDB_();
+    var schemas = {
+      "Presensi_Kegiatan": ["kegiatan_id", "nama_kegiatan", "kategori", "jadwal_rutin", "target_peserta", "penanggung_jawab", "status", "created_at"],
+      "Presensi_Sesi": ["sesi_id", "kegiatan_id", "nama_kegiatan", "tanggal", "waktu_buka", "petugas", "total_peserta", "total_hadir", "total_izin", "total_sakit", "total_alpa", "status_sesi", "catatan", "created_at"],
+      "Presensi_Logs": ["log_id", "sesi_id", "kegiatan_id", "student_id", "nis", "student_name", "gender", "tanggal", "status_kehadiran", "metode_absen", "waktu_absen", "keterangan", "created_at"]
+    };
+    var colors = {
+      "Presensi_Kegiatan": "#059669",
+      "Presensi_Sesi": "#0d9488",
+      "Presensi_Logs": "#0284c7"
+    };
+
+    for (var name in schemas) {
+      var sheet = ss.getSheetByName(name);
+      var isNew = false;
+      if (!sheet) {
+        sheet = ss.insertSheet(name);
+        isNew = true;
+      }
+      if (sheet.getLastRow() === 0) {
+        sheet.getRange(1, 1, 1, schemas[name].length).setValues([schemas[name]]);
+      }
+      sheet.getRange(1, 1, 1, schemas[name].length)
+        .setFontWeight("bold")
+        .setBackground(colors[name])
+        .setFontColor("#ffffff");
+      sheet.setFrozenRows(1);
+
+      // Jika sheet Presensi_Kegiatan baru dibuat, tambahkan contoh agenda default
+      if (name === "Presensi_Kegiatan" && sheet.getLastRow() <= 1) {
+        var nowIso = new Date().toISOString();
+        var defaultKegiatan = [
+          ["ACT-01", "Shalat Subuh & Wirid", "Ibadah", "Setiap Hari (04:30 - 05:30 WIB)", "Semua Santri", "Ustadz Pembina Asrama", "Aktif", nowIso],
+          ["ACT-02", "Shalat Maghrib & Isya Berjamaah", "Ibadah", "Setiap Hari (17:45 - 19:30 WIB)", "Semua Santri", "Ustadz Pembina Asrama", "Aktif", nowIso],
+          ["ACT-03", "Kajian Kitab Diniyah / Ta'lim", "Ta'lim", "Senin - Kamis (20:00 - 21:00 WIB)", "Semua Santri", "Dewan Asatidz", "Aktif", nowIso],
+          ["ACT-04", "Ro'an & Kerja Bakti Kebersihan", "Keasramaan", "Ahad Pagi (07:00 - 08:30 WIB)", "Semua Santri", "Pengurus Pondok", "Aktif", nowIso],
+          ["ACT-05", "Muhadharah / Khitobah Santri", "Minat & Bakat", "Malam Jumat (20:00 - 21:30 WIB)", "Semua Santri", "Pembina Bahasa", "Aktif", nowIso]
+        ];
+        sheet.getRange(2, 1, defaultKegiatan.length, defaultKegiatan[0].length).setValues(defaultKegiatan);
+      }
+    }
+  } catch (e) {
+    Logger.log("initPresensiSheetsIfNeeded_ warning: " + e.message);
+  }
+}
+
+/**
+ * Mengambil data dashboard Presensi Kegiatan:
+ * - Master kegiatan
+ * - Sesi hari ini & riwayat sesi
+ * - Daftar santri aktif
+ * - Statistik kehadiran
+ */
+function getPresensiDashboard(token) {
+  try {
+    var ss = getSpreadsheetDB_();
+    initPresensiSheetsIfNeeded_(ss);
+
+    var tz = Session.getScriptTimeZone() || "Asia/Jakarta";
+    var todayStr = Utilities.formatDate(new Date(), tz, "yyyy-MM-dd");
+
+    // 1. Ambil Master Kegiatan
+    var shKegiatan = ss.getSheetByName("Presensi_Kegiatan");
+    var kegiatanList = [];
+    if (shKegiatan && shKegiatan.getLastRow() > 1) {
+      var rowsK = shKegiatan.getRange(2, 1, shKegiatan.getLastRow() - 1, shKegiatan.getLastColumn()).getValues();
+      for (var i = 0; i < rowsK.length; i++) {
+        var r = rowsK[i];
+        if (!r[0]) continue;
+        kegiatanList.push({
+          kegiatanId: String(r[0] || ""),
+          namaKegiatan: String(r[1] || ""),
+          kategori: String(r[2] || "Umum"),
+          jadwalRutin: String(r[3] || ""),
+          targetPeserta: String(r[4] || "Semua Santri"),
+          penanggungJawab: String(r[5] || ""),
+          status: String(r[6] || "Aktif"),
+          createdAt: r[7] ? String(r[7]) : ""
+        });
+      }
+    }
+
+    // 2. Ambil Sesi Presensi
+    var shSesi = ss.getSheetByName("Presensi_Sesi");
+    var todaySessions = [];
+    var recentSessions = [];
+    var totalSesiBulanIni = 0;
+    var totalPesertaKumulatif = 0;
+    var totalHadirKumulatif = 0;
+    var totalIzinHariIni = 0;
+    var totalSakitHariIni = 0;
+    var totalAlpaHariIni = 0;
+
+    var currentYearMonth = todayStr.substring(0, 7); // YYYY-MM
+
+    if (shSesi && shSesi.getLastRow() > 1) {
+      var rowsS = shSesi.getRange(2, 1, shSesi.getLastRow() - 1, shSesi.getLastColumn()).getValues();
+      // Urutkan dari yang terbaru (descending)
+      rowsS.reverse();
+
+      for (var j = 0; j < rowsS.length; j++) {
+        var s = rowsS[j];
+        if (!s[0]) continue;
+
+        var rawTgl = s[3];
+        var tglStr = "";
+        if (rawTgl instanceof Date) {
+          tglStr = Utilities.formatDate(rawTgl, tz, "yyyy-MM-dd");
+        } else {
+          tglStr = String(rawTgl || "").substring(0, 10);
+        }
+
+        var sesObj = {
+          sesiId: String(s[0] || ""),
+          kegiatanId: String(s[1] || ""),
+          namaKegiatan: String(s[2] || ""),
+          tanggal: tglStr,
+          waktuBuka: String(s[4] || ""),
+          petugas: String(s[5] || ""),
+          totalPeserta: Number(s[6]) || 0,
+          totalHadir: Number(s[7]) || 0,
+          totalIzin: Number(s[8]) || 0,
+          totalSakit: Number(s[9]) || 0,
+          totalAlpa: Number(s[10]) || 0,
+          statusSesi: String(s[11] || "Tutup"),
+          catatan: String(s[12] || ""),
+          createdAt: s[13] ? String(s[13]) : ""
+        };
+
+        // Hitung statistik
+        if (tglStr === todayStr) {
+          todaySessions.push(sesObj);
+          totalIzinHariIni += sesObj.totalIzin;
+          totalSakitHariIni += sesObj.totalSakit;
+          totalAlpaHariIni += sesObj.totalAlpa;
+        }
+
+        if (tglStr.indexOf(currentYearMonth) === 0) {
+          totalSesiBulanIni++;
+          totalPesertaKumulatif += sesObj.totalPeserta;
+          totalHadirKumulatif += sesObj.totalHadir;
+        }
+
+        if (recentSessions.length < 50) {
+          recentSessions.push(sesObj);
+        }
+      }
+    }
+
+    // 3. Ambil Daftar Santri Aktif
+    var shStudents = ss.getSheetByName("Students");
+    var students = [];
+    if (shStudents && shStudents.getLastRow() > 1) {
+      var rowsSt = shStudents.getRange(2, 1, shStudents.getLastRow() - 1, shStudents.getLastColumn()).getValues();
+      for (var k = 0; k < rowsSt.length; k++) {
+        var st = rowsSt[k];
+        if (!st[0]) continue;
+        var statusSantri = String(st[8] || "Aktif");
+        if (statusSantri.toLowerCase().indexOf("aktif") !== -1 || statusSantri.toLowerCase() === "active") {
+          students.push({
+            studentId: String(st[0] || ""),
+            nis: String(st[1] || ""),
+            name: String(st[3] || ""),
+            gender: String(st[4] || "L"),
+            photoUrl: String(st[6] || ""),
+            program: String(st[7] || ""),
+            status: statusSantri,
+            qrCode: String(st[10] || st[0] || "")
+          });
+        }
+      }
+    }
+
+    // Rata-rata kehadiran bulan ini (%)
+    var rerataKehadiranPct = totalPesertaKumulatif > 0
+      ? Math.round((totalHadirKumulatif / totalPesertaKumulatif) * 100)
+      : 100;
+
+    return {
+      status: "success",
+      success: true,
+      ok: true,
+      data: {
+        todayStr: todayStr,
+        kegiatanList: kegiatanList,
+        todaySessions: todaySessions,
+        recentSessions: recentSessions,
+        students: students,
+        stats: {
+          totalKegiatanAktif: kegiatanList.filter(function(k) { return k.status === "Aktif"; }).length,
+          totalSesiBulanIni: totalSesiBulanIni,
+          rerataKehadiranPct: rerataKehadiranPct,
+          totalIzinHariIni: totalIzinHariIni,
+          totalSakitHariIni: totalSakitHariIni,
+          totalAlpaHariIni: totalAlpaHariIni,
+          totalSantriAktif: students.length
+        }
+      }
+    };
+  } catch (err) {
+    return {
+      status: "error",
+      success: false,
+      ok: false,
+      message: "Gagal memuat dashboard Presensi: " + err.message
+    };
+  }
+}
+
+/**
+ * Mengambil daftar master kegiatan presensi.
+ */
+function getPresensiKegiatanList(token) {
+  try {
+    var ss = getSpreadsheetDB_();
+    initPresensiSheetsIfNeeded_(ss);
+    var sh = ss.getSheetByName("Presensi_Kegiatan");
+    var list = [];
+    if (sh && sh.getLastRow() > 1) {
+      var rows = sh.getRange(2, 1, sh.getLastRow() - 1, sh.getLastColumn()).getValues();
+      for (var i = 0; i < rows.length; i++) {
+        var r = rows[i];
+        if (!r[0]) continue;
+        list.push({
+          kegiatanId: String(r[0] || ""),
+          namaKegiatan: String(r[1] || ""),
+          kategori: String(r[2] || "Umum"),
+          jadwalRutin: String(r[3] || ""),
+          targetPeserta: String(r[4] || "Semua Santri"),
+          penanggungJawab: String(r[5] || ""),
+          status: String(r[6] || "Aktif"),
+          createdAt: r[7] ? String(r[7]) : ""
+        });
+      }
+    }
+    return { status: "success", success: true, ok: true, data: list };
+  } catch (err) {
+    return { status: "error", success: false, ok: false, message: err.message };
+  }
+}
+
+/**
+ * Menyimpan / memperbarui master kegiatan presensi.
+ */
+function savePresensiKegiatan(payload, token) {
+  try {
+    var ss = getSpreadsheetDB_();
+    initPresensiSheetsIfNeeded_(ss);
+    var sh = ss.getSheetByName("Presensi_Kegiatan");
+    if (!sh) throw new Error("Sheet Presensi_Kegiatan tidak ditemukan");
+
+    var kegiatanId = payload.kegiatanId || payload.id;
+    var namaKegiatan = String(payload.namaKegiatan || "").trim();
+    if (!namaKegiatan) throw new Error("Nama Kegiatan wajib diisi");
+
+    var kategori = String(payload.kategori || "Umum").trim();
+    var jadwalRutin = String(payload.jadwalRutin || "").trim();
+    var targetPeserta = String(payload.targetPeserta || "Semua Santri").trim();
+    var penanggungJawab = String(payload.penanggungJawab || "").trim();
+    var status = String(payload.status || "Aktif").trim();
+    var nowIso = new Date().toISOString();
+
+    if (kegiatanId) {
+      // Mode Update
+      var rows = sh.getRange(2, 1, sh.getLastRow() - 1, 1).getValues();
+      var foundRow = -1;
+      for (var i = 0; i < rows.length; i++) {
+        if (String(rows[i][0]) === String(kegiatanId)) {
+          foundRow = i + 2;
+          break;
+        }
+      }
+      if (foundRow !== -1) {
+        sh.getRange(foundRow, 2, 1, 6).setValues([[
+          namaKegiatan, kategori, jadwalRutin, targetPeserta, penanggungJawab, status
+        ]]);
+        return {
+          status: "success",
+          success: true,
+          ok: true,
+          message: "Kegiatan '" + namaKegiatan + "' berhasil diperbarui.",
+          data: { kegiatanId: kegiatanId, namaKegiatan: namaKegiatan }
+        };
+      }
+    }
+
+    // Mode Tambah Baru
+    var newId = "ACT-" + Utilities.formatDate(new Date(), Session.getScriptTimeZone() || "Asia/Jakarta", "yyMMdd-HHmmss");
+    var newRow = [newId, namaKegiatan, kategori, jadwalRutin, targetPeserta, penanggungJawab, status, nowIso];
+    sh.appendRow(newRow);
+
+    return {
+      status: "success",
+      success: true,
+      ok: true,
+      message: "Kegiatan '" + namaKegiatan + "' berhasil ditambahkan.",
+      data: { kegiatanId: newId, namaKegiatan: namaKegiatan }
+    };
+  } catch (err) {
+    return { status: "error", success: false, ok: false, message: err.message };
+  }
+}
+
+/**
+ * Menghapus atau menonaktifkan master kegiatan.
+ */
+function deletePresensiKegiatan(kegiatanId, token) {
+  try {
+    if (!kegiatanId) throw new Error("ID Kegiatan diperlukan");
+    var ss = getSpreadsheetDB_();
+    var sh = ss.getSheetByName("Presensi_Kegiatan");
+    if (!sh || sh.getLastRow() <= 1) throw new Error("Data kegiatan kosong");
+
+    var rows = sh.getRange(2, 1, sh.getLastRow() - 1, 1).getValues();
+    for (var i = 0; i < rows.length; i++) {
+      if (String(rows[i][0]) === String(kegiatanId)) {
+        sh.deleteRow(i + 2);
+        return { status: "success", success: true, ok: true, message: "Kegiatan berhasil dihapus." };
+      }
+    }
+    return { status: "error", success: false, ok: false, message: "Kegiatan tidak ditemukan." };
+  } catch (err) {
+    return { status: "error", success: false, ok: false, message: err.message };
+  }
+}
+
+/**
+ * Menyimpan / Memperbarui Sesi Presensi & Menyimpan HANYA Pengecualian (Izin, Sakit, Alpa) ke Presensi_Logs
+ */
+function savePresensiSesi(payload, token) {
+  try {
+    var ss = getSpreadsheetDB_();
+    initPresensiSheetsIfNeeded_(ss);
+
+    var shSesi = ss.getSheetByName("Presensi_Sesi");
+    var shLogs = ss.getSheetByName("Presensi_Logs");
+    if (!shSesi || !shLogs) throw new Error("Sheet Presensi tidak lengkap");
+
+    var tz = Session.getScriptTimeZone() || "Asia/Jakarta";
+    var nowIso = new Date().toISOString();
+    var todayStr = Utilities.formatDate(new Date(), tz, "yyyy-MM-dd");
+
+    var sesiId = payload.sesiId || payload.id;
+    var isNewSesi = false;
+    if (!sesiId) {
+      isNewSesi = true;
+      sesiId = "SESI-" + Utilities.formatDate(new Date(), tz, "yyyyMMdd-HHmmss");
+    }
+
+    var kegiatanId = String(payload.kegiatanId || "").trim();
+    var namaKegiatan = String(payload.namaKegiatan || "").trim();
+    var tanggal = String(payload.tanggal || todayStr).substring(0, 10);
+    var waktuBuka = String(payload.waktuBuka || Utilities.formatDate(new Date(), tz, "HH:mm")).trim();
+    var petugas = String(payload.petugas || "Admin").trim();
+    var totalPeserta = Number(payload.totalPeserta) || 0;
+    var statusSesi = String(payload.statusSesi || "Tutup").trim();
+    var catatan = String(payload.catatan || "").trim();
+
+    // Array exceptions (HANYA status selain 'Hadir': Izin, Sakit, Alpa)
+    var rawExceptions = payload.exceptions || payload.catatanKhusus || [];
+    var exceptions = [];
+    var countIzin = 0;
+    var countSakit = 0;
+    var countAlpa = 0;
+
+    for (var i = 0; i < rawExceptions.length; i++) {
+      var ex = rawExceptions[i];
+      var stStatus = String(ex.statusKehadiran || ex.status || "").trim();
+      // Saring: Hanya yang bukan Hadir!
+      if (stStatus && stStatus !== "Hadir") {
+        if (stStatus === "Izin") countIzin++;
+        else if (stStatus === "Sakit") countSakit++;
+        else if (stStatus === "Alpa" || stStatus === "Absen" || stStatus === "Tanpa Keterangan") {
+          stStatus = "Alpa";
+          countAlpa++;
+        }
+
+        exceptions.push({
+          studentId: String(ex.studentId || ex.id || ""),
+          nis: String(ex.nis || ""),
+          studentName: String(ex.studentName || ex.name || ""),
+          gender: String(ex.gender || "L"),
+          statusKehadiran: stStatus,
+          metodeAbsen: String(ex.metodeAbsen || "CHECKLIST").trim(),
+          waktuAbsen: String(ex.waktuAbsen || waktuBuka).trim(),
+          keterangan: String(ex.keterangan || ex.alasan || "").trim()
+        });
+      }
+    }
+
+    // Hitung total hadir implisit
+    var totalTidakHadir = countIzin + countSakit + countAlpa;
+    if (totalPeserta < totalTidakHadir) {
+      totalPeserta = totalTidakHadir;
+    }
+    var totalHadir = Math.max(0, totalPeserta - totalTidakHadir);
+
+    // 1. Simpan / Update ke Presensi_Sesi
+    var sesiRowIndex = -1;
+    if (!isNewSesi && shSesi.getLastRow() > 1) {
+      var sesiIds = shSesi.getRange(2, 1, shSesi.getLastRow() - 1, 1).getValues();
+      for (var sIdx = 0; sIdx < sesiIds.length; sIdx++) {
+        if (String(sesiIds[sIdx][0]) === String(sesiId)) {
+          sesiRowIndex = sIdx + 2;
+          break;
+        }
+      }
+    }
+
+    var sesiValues = [
+      sesiId, kegiatanId, namaKegiatan, tanggal, waktuBuka, petugas,
+      totalPeserta, totalHadir, countIzin, countSakit, countAlpa,
+      statusSesi, catatan, nowIso
+    ];
+
+    if (sesiRowIndex !== -1) {
+      shSesi.getRange(sesiRowIndex, 1, 1, sesiValues.length).setValues([sesiValues]);
+    } else {
+      shSesi.appendRow(sesiValues);
+    }
+
+    // 2. Bersihkan log lama untuk sesiId ini (jika mode update)
+    if (shLogs.getLastRow() > 1) {
+      var logRows = shLogs.getRange(2, 2, shLogs.getLastRow() - 1, 1).getValues(); // kolom 2 = sesi_id
+      // Hapus baris dari bawah ke atas agar index tidak bergeser
+      for (var lIdx = logRows.length - 1; lIdx >= 0; lIdx--) {
+        if (String(logRows[lIdx][0]) === String(sesiId)) {
+          shLogs.deleteRow(lIdx + 2);
+        }
+      }
+    }
+
+    // 3. Tulis HANYA baris pengecualian (Izin, Sakit, Alpa) ke Presensi_Logs
+    if (exceptions.length > 0) {
+      var logAppendRows = [];
+      for (var eIdx = 0; eIdx < exceptions.length; eIdx++) {
+        var item = exceptions[eIdx];
+        var logId = "LOG-PRS-" + Utilities.formatDate(new Date(), tz, "yyMMdd") + "-" + (eIdx + 1) + "-" + Math.floor(Math.random() * 1000);
+        logAppendRows.push([
+          logId,
+          sesiId,
+          kegiatanId,
+          item.studentId,
+          item.nis,
+          item.studentName,
+          item.gender,
+          tanggal,
+          item.statusKehadiran,
+          item.metodeAbsen,
+          item.waktuAbsen,
+          item.keterangan,
+          nowIso
+        ]);
+      }
+      shLogs.getRange(shLogs.getLastRow() + 1, 1, logAppendRows.length, logAppendRows[0].length).setValues(logAppendRows);
+    }
+
+    return {
+      status: "success",
+      success: true,
+      ok: true,
+      message: "Sesi presensi '" + namaKegiatan + "' berhasil disimpan. (" + totalHadir + " Hadir, " + countIzin + " Izin, " + countSakit + " Sakit, " + countAlpa + " Alpa)",
+      data: {
+        sesiId: sesiId,
+        totalPeserta: totalPeserta,
+        totalHadir: totalHadir,
+        totalIzin: countIzin,
+        totalSakit: countSakit,
+        totalAlpa: countAlpa,
+        exceptionsLogged: exceptions.length
+      }
+    };
+  } catch (err) {
+    return { status: "error", success: false, ok: false, message: "Gagal menyimpan sesi: " + err.message };
+  }
+}
+
+/**
+ * Mengambil detail satu sesi presensi lengkap dengan daftar rekonstruksi santri.
+ */
+function getPresensiSesiDetail(sesiId, token) {
+  try {
+    if (!sesiId) throw new Error("Sesi ID diperlukan");
+    var ss = getSpreadsheetDB_();
+    var shSesi = ss.getSheetByName("Presensi_Sesi");
+    var shLogs = ss.getSheetByName("Presensi_Logs");
+    var shStudents = ss.getSheetByName("Students");
+
+    var sesiData = null;
+    if (shSesi && shSesi.getLastRow() > 1) {
+      var sRows = shSesi.getRange(2, 1, shSesi.getLastRow() - 1, shSesi.getLastColumn()).getValues();
+      for (var i = 0; i < sRows.length; i++) {
+        if (String(sRows[i][0]) === String(sesiId)) {
+          var r = sRows[i];
+          var tz = Session.getScriptTimeZone() || "Asia/Jakarta";
+          var rawT = r[3];
+          var tStr = (rawT instanceof Date) ? Utilities.formatDate(rawT, tz, "yyyy-MM-dd") : String(rawT || "").substring(0, 10);
+          sesiData = {
+            sesiId: String(r[0] || ""),
+            kegiatanId: String(r[1] || ""),
+            namaKegiatan: String(r[2] || ""),
+            tanggal: tStr,
+            waktuBuka: String(r[4] || ""),
+            petugas: String(r[5] || ""),
+            totalPeserta: Number(r[6]) || 0,
+            totalHadir: Number(r[7]) || 0,
+            totalIzin: Number(r[8]) || 0,
+            totalSakit: Number(r[9]) || 0,
+            totalAlpa: Number(r[10]) || 0,
+            statusSesi: String(r[11] || "Tutup"),
+            catatan: String(r[12] || ""),
+            createdAt: r[13] ? String(r[13]) : ""
+          };
+          break;
+        }
+      }
+    }
+
+    if (!sesiData) throw new Error("Sesi presensi tidak ditemukan");
+
+    // Ambil exceptions dari Presensi_Logs
+    var exceptionsMap = {};
+    if (shLogs && shLogs.getLastRow() > 1) {
+      var lRows = shLogs.getRange(2, 1, shLogs.getLastRow() - 1, shLogs.getLastColumn()).getValues();
+      for (var j = 0; j < lRows.length; j++) {
+        var lr = lRows[j];
+        if (String(lr[1]) === String(sesiId)) {
+          var stId = String(lr[3] || "");
+          exceptionsMap[stId] = {
+            logId: String(lr[0] || ""),
+            statusKehadiran: String(lr[8] || "Izin"),
+            metodeAbsen: String(lr[9] || "MANUAL"),
+            waktuAbsen: String(lr[10] || ""),
+            keterangan: String(lr[11] || "")
+          };
+        }
+      }
+    }
+
+    // Ambil santri aktif
+    var studentList = [];
+    if (shStudents && shStudents.getLastRow() > 1) {
+      var stRows = shStudents.getRange(2, 1, shStudents.getLastRow() - 1, shStudents.getLastColumn()).getValues();
+      for (var k = 0; k < stRows.length; k++) {
+        var row = stRows[k];
+        if (!row[0]) continue;
+        var stId2 = String(row[0] || "");
+        var ex = exceptionsMap[stId2];
+        studentList.push({
+          studentId: stId2,
+          nis: String(row[1] || ""),
+          name: String(row[3] || ""),
+          gender: String(row[4] || "L"),
+          photoUrl: String(row[6] || ""),
+          program: String(row[7] || ""),
+          statusKehadiran: ex ? ex.statusKehadiran : "Hadir",
+          keterangan: ex ? ex.keterangan : "",
+          metodeAbsen: ex ? ex.metodeAbsen : "CHECKLIST"
+        });
+      }
+    }
+
+    return {
+      status: "success",
+      success: true,
+      ok: true,
+      data: {
+        sesi: sesiData,
+        students: studentList,
+        exceptionsCount: Object.keys(exceptionsMap).length
+      }
+    };
+  } catch (err) {
+    return { status: "error", success: false, ok: false, message: err.message };
+  }
+}
+
+/**
+ * Menghapus satu sesi presensi beserta catatan log terkait.
+ */
+function deletePresensiSesi(sesiId, token) {
+  try {
+    if (!sesiId) throw new Error("Sesi ID diperlukan");
+    var ss = getSpreadsheetDB_();
+    var shSesi = ss.getSheetByName("Presensi_Sesi");
+    var shLogs = ss.getSheetByName("Presensi_Logs");
+
+    if (shSesi && shSesi.getLastRow() > 1) {
+      var sRows = shSesi.getRange(2, 1, shSesi.getLastRow() - 1, 1).getValues();
+      for (var i = 0; i < sRows.length; i++) {
+        if (String(sRows[i][0]) === String(sesiId)) {
+          shSesi.deleteRow(i + 2);
+          break;
+        }
+      }
+    }
+
+    if (shLogs && shLogs.getLastRow() > 1) {
+      var lRows = shLogs.getRange(2, 2, shLogs.getLastRow() - 1, 1).getValues();
+      for (var j = lRows.length - 1; j >= 0; j--) {
+        if (String(lRows[j][0]) === String(sesiId)) {
+          shLogs.deleteRow(j + 2);
+        }
+      }
+    }
+
+    return { status: "success", success: true, ok: true, message: "Sesi presensi berhasil dihapus." };
+  } catch (err) {
+    return { status: "error", success: false, ok: false, message: err.message };
+  }
+}
+
+/**
+ * Rekapitulasi Presensi Santri (Perorangan / Matriks)
+ */
+function getPresensiRekap(filter, token) {
+  try {
+    filter = filter || {};
+    var ss = getSpreadsheetDB_();
+    initPresensiSheetsIfNeeded_(ss);
+
+    var shSesi = ss.getSheetByName("Presensi_Sesi");
+    var shLogs = ss.getSheetByName("Presensi_Logs");
+    var shStudents = ss.getSheetByName("Students");
+
+    var startDate = filter.startDate || "";
+    var endDate = filter.endDate || "";
+    var kegiatanId = filter.kegiatanId || "";
+    var gender = filter.gender || "";
+
+    // 1. Ambil Sesi yang sesuai filter
+    var validSesiIds = {};
+    var totalSesiTerhitung = 0;
+
+    if (shSesi && shSesi.getLastRow() > 1) {
+      var sRows = shSesi.getRange(2, 1, shSesi.getLastRow() - 1, shSesi.getLastColumn()).getValues();
+      var tz = Session.getScriptTimeZone() || "Asia/Jakarta";
+
+      for (var i = 0; i < sRows.length; i++) {
+        var r = sRows[i];
+        if (!r[0]) continue;
+        var sId = String(r[0]);
+        var kId = String(r[1]);
+        var rawT = r[3];
+        var tStr = (rawT instanceof Date) ? Utilities.formatDate(rawT, tz, "yyyy-MM-dd") : String(rawT || "").substring(0, 10);
+
+        if (kegiatanId && kId !== kegiatanId) continue;
+        if (startDate && tStr < startDate) continue;
+        if (endDate && tStr > endDate) continue;
+
+        validSesiIds[sId] = true;
+        totalSesiTerhitung++;
+      }
+    }
+
+    // 2. Ambil Pengecualian dari Presensi_Logs untuk sesi yang valid
+    // studentExceptions[studentId] = { izin: X, sakit: Y, alpa: Z }
+    var studentExceptions = {};
+
+    if (shLogs && shLogs.getLastRow() > 1) {
+      var lRows = shLogs.getRange(2, 1, shLogs.getLastRow() - 1, shLogs.getLastColumn()).getValues();
+      for (var j = 0; j < lRows.length; j++) {
+        var lr = lRows[j];
+        var sesiKey = String(lr[1]);
+        if (!validSesiIds[sesiKey]) continue;
+
+        var stId = String(lr[3]);
+        var stStatus = String(lr[8] || "Izin");
+
+        if (!studentExceptions[stId]) {
+          studentExceptions[stId] = { izin: 0, sakit: 0, alpa: 0, logs: [] };
+        }
+
+        if (stStatus === "Izin") studentExceptions[stId].izin++;
+        else if (stStatus === "Sakit") studentExceptions[stId].sakit++;
+        else if (stStatus === "Alpa") studentExceptions[stId].alpa++;
+
+        studentExceptions[stId].logs.push({
+          sesiId: sesiKey,
+          tanggal: String(lr[7] || "").substring(0, 10),
+          status: stStatus,
+          keterangan: String(lr[11] || "")
+        });
+      }
+    }
+
+    // 3. Kompilasi Santri
+    var rekapList = [];
+    if (shStudents && shStudents.getLastRow() > 1) {
+      var stRows = shStudents.getRange(2, 1, shStudents.getLastRow() - 1, shStudents.getLastColumn()).getValues();
+      for (var k = 0; k < stRows.length; k++) {
+        var row = stRows[k];
+        if (!row[0]) continue;
+        var sGender = String(row[4] || "L");
+        if (gender && sGender !== gender) continue;
+
+        var sId2 = String(row[0]);
+        var exData = studentExceptions[sId2] || { izin: 0, sakit: 0, alpa: 0, logs: [] };
+
+        var izin = exData.izin;
+        var sakit = exData.sakit;
+        var alpa = exData.alpa;
+        var totalAbsen = izin + sakit + alpa;
+        var hadir = Math.max(0, totalSesiTerhitung - totalAbsen);
+        var pct = totalSesiTerhitung > 0 ? Math.round((hadir / totalSesiTerhitung) * 100) : 100;
+
+        rekapList.push({
+          studentId: sId2,
+          nis: String(row[1] || ""),
+          name: String(row[3] || ""),
+          gender: sGender,
+          program: String(row[7] || ""),
+          totalSesi: totalSesiTerhitung,
+          hadir: hadir,
+          izin: izin,
+          sakit: sakit,
+          alpa: alpa,
+          persentase: pct,
+          logs: exData.logs
+        });
+      }
+    }
+
+    // Urutkan berdasarkan persentase kehadiran terendah (untuk monitoring kedisiplinan)
+    rekapList.sort(function(a, b) {
+      return a.persentase - b.persentase;
+    });
+
+    return {
+      status: "success",
+      success: true,
+      ok: true,
+      data: {
+        totalSesiTerhitung: totalSesiTerhitung,
+        rekap: rekapList
+      }
+    };
+  } catch (err) {
+    return { status: "error", success: false, ok: false, message: err.message };
+  }
+}
+
 
 
