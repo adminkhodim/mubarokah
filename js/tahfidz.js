@@ -2625,42 +2625,47 @@ function renderTahfidzHalaqahCards() {
         return;
     }
 
-    container.innerHTML = halaqahs.map((h, i) => `
-    <div class="p-4 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200 dark:border-[#283a4e] space-y-3 relative group">
-        <div class="flex justify-between items-start">
-            <div>
-                <h4 class="font-black text-sm text-slate-800 dark:text-slate-100">${escapeHtml(h.namaHalaqah)}</h4>
-                <span class="inline-block mt-1 px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                    ${escapeHtml(h.kategori || 'Tahfidz Anak')}
-                </span>
+    container.innerHTML = halaqahs.map((h, i) => {
+        const letter = String.fromCharCode(65 + (i % 26));
+        const muhafizName = h.muhafiz || 'Ustadz Pembina';
+        const targetKurikulum = h.targetKurikulum || 'Tahfidz 30 Juz';
+        const safeDeleteName = escapeHtml(muhafizName).replace(/'/g, "\\'");
+
+        return `
+        <div class="p-4 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200 dark:border-[#283a4e] space-y-3 relative group transition hover:border-emerald-500/50">
+            <div class="flex justify-between items-start">
+                <div class="pr-2">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs font-black shrink-0 shadow-sm">
+                            ${letter}
+                        </span>
+                        <h4 class="font-black text-sm text-slate-800 dark:text-slate-100 leading-tight">
+                            ${escapeHtml(muhafizName)}
+                        </h4>
+                    </div>
+                    <span class="inline-block mt-2 px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
+                        <i class="fa-solid fa-flag text-[9px] mr-1"></i>${escapeHtml(targetKurikulum)}
+                    </span>
+                </div>
+                <div class="flex items-center space-x-1.5 shrink-0">
+                    <button type="button" onclick="deleteTahfidzHalaqahConfirm('${h.halaqahId}', '${safeDeleteName}')" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-300 flex items-center justify-center text-[10px] transition" title="Hapus Halaqah">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
             </div>
-            <div class="flex items-center space-x-1.5">
-                <button type="button" onclick="deleteTahfidzHalaqahConfirm('${h.halaqahId}', '${escapeHtml(h.namaHalaqah)}')" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-300 flex items-center justify-center text-[10px] transition" title="Hapus Halaqah">
-                    <i class="fa-solid fa-trash-can"></i>
+            <div class="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-[#283a4e] text-xs">
+                <span class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <i class="fa-solid fa-users text-emerald-600 text-xs"></i>
+                    <span>${h.studentCount || 0} Santri Binaan</span>
+                </span>
+                <button type="button" onclick="openPlottingFromHalaqahCard('${h.halaqahId}')" class="px-3 py-1 bg-white dark:bg-[#15202d] hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 dark:text-slate-200 font-bold rounded-lg border border-slate-200 dark:border-[#283a4e] text-[10px] transition flex items-center gap-1 shadow-sm">
+                    <i class="fa-solid fa-user-plus text-[9px] text-emerald-600"></i>
+                    <span>+ Atur Santri</span>
                 </button>
-                <span class="w-7 h-7 rounded-lg bg-white dark:bg-[#15202d] text-slate-500 dark:text-slate-300 flex items-center justify-center text-xs font-bold shadow-sm">
-                    ${String.fromCharCode(65 + i)}
-                </span>
             </div>
         </div>
-        <div class="space-y-1 text-xs text-slate-600 dark:text-slate-300">
-            <p class="flex items-center gap-1.5 truncate font-semibold">
-                <i class="fa-solid fa-user-tie text-emerald-600"></i>
-                <span>${escapeHtml(h.muhafiz || 'Ustadz Pembina')}</span>
-            </p>
-            <p class="text-[10px] text-slate-400 truncate">
-                <i class="fa-solid fa-flag mr-1"></i> ${escapeHtml(h.targetKurikulum || 'Target Mushaf Pojok Standar')}
-            </p>
-        </div>
-        <div class="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-[#283a4e] text-xs">
-            <span class="font-bold text-slate-700 dark:text-slate-300">${h.studentCount || 0} Santri Binaan</span>
-            <button type="button" onclick="openPlottingFromHalaqahCard('${h.halaqahId}')" class="px-3 py-1 bg-white dark:bg-[#15202d] hover:bg-emerald-50 text-emerald-700 dark:text-emerald-300 font-bold rounded-lg border border-slate-200 dark:border-[#283a4e] text-[10px] transition flex items-center gap-1">
-                <i class="fa-solid fa-user-plus text-[9px]"></i>
-                <span>+ Atur Santri</span>
-            </button>
-        </div>
-    </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 /**
@@ -2700,10 +2705,10 @@ function openPlottingSantri(halaqahId) {
     const muhEl = document.getElementById('tahfidz-plotting-muhafiz');
     const targetEl = document.getElementById('tahfidz-plotting-target');
 
-    if (badgeEl) badgeEl.innerText = halaqah.namaHalaqah || halaqahId;
-    if (infoEl) infoEl.innerText = `Atur santri binaan untuk ${halaqah.namaHalaqah} (${halaqah.kategori || 'Tahfidz'})`;
+    if (badgeEl) badgeEl.innerText = halaqah.muhafiz || halaqah.namaHalaqah || halaqahId;
+    if (infoEl) infoEl.innerText = `Atur santri binaan untuk bimbingan ${halaqah.muhafiz || 'Ustadz Pembina'}`;
     if (muhEl) muhEl.innerText = halaqah.muhafiz || 'Belum Ditunjuk';
-    if (targetEl) targetEl.innerText = halaqah.targetKurikulum || 'Target Mushaf Pojok Standar';
+    if (targetEl) targetEl.innerText = halaqah.targetKurikulum || 'Tahfidz 30 Juz';
 
     // Reset search & filter
     const searchInp = document.getElementById('tahfidz-plotting-search');
@@ -2755,7 +2760,12 @@ function populatePlottingHalaqahSelector() {
     }
 
     const currentVal = sel.value;
-    sel.innerHTML = halaqahs.map(h => `<option value="${escapeHtml(h.halaqahId)}">${escapeHtml(h.namaHalaqah)} (${escapeHtml(h.kategori || 'Tahfidz')})</option>`).join('');
+    sel.innerHTML = halaqahs.map((h, i) => {
+        const letter = String.fromCharCode(65 + (i % 26));
+        const muh = h.muhafiz || h.namaHalaqah || 'Ustadz Pembina';
+        const tgt = h.targetKurikulum || 'Tahfidz 30 Juz';
+        return `<option value="${escapeHtml(h.halaqahId)}">${letter}. ${escapeHtml(muh)} (${escapeHtml(tgt)})</option>`;
+    }).join('');
 
     let targetId = currentVal;
     if (!targetId || !halaqahs.some(h => h.halaqahId === targetId)) {
@@ -3013,7 +3023,7 @@ function renderTahfidzMatriksBeban() {
         const students = ASNTahfidz.data.students || [];
 
         matrix = halaqahs.map(h => {
-            const enrolled = students.filter(st => st.halaqah && (st.halaqah.halaqahId === h.halaqahId || st.halaqah.namaHalaqah === h.namaHalaqah));
+            const enrolled = students.filter(st => st.halaqah && (st.halaqah.halaqahId === h.halaqahId || st.halaqah.namaHalaqah === h.namaHalaqah || st.halaqah.muhafiz === h.muhafiz));
             let totalJuz = 0;
             enrolled.forEach(st => {
                 totalJuz += Number(st.progress?.currentJuz || 0);
@@ -3021,8 +3031,7 @@ function renderTahfidzMatriksBeban() {
             const avg = enrolled.length > 0 ? (totalJuz / enrolled.length).toFixed(1) : "0.0";
             return {
                 muhafiz: h.muhafiz || 'Ustadz Pembina',
-                namaHalaqah: h.namaHalaqah,
-                kategori: h.kategori || 'Tahfidz Anak',
+                targetKurikulum: h.targetKurikulum || 'Tahfidz 30 Juz',
                 binaanCount: enrolled.length,
                 avgCapaian: avg
             };
@@ -3030,34 +3039,27 @@ function renderTahfidzMatriksBeban() {
     }
 
     if (matrix.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-xs text-slate-400">Belum ada data distribusi beban Ustadz Muhafiz.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-xs text-slate-400">Belum ada data distribusi beban Ustadz Muhafiz.</td></tr>`;
         return;
     }
 
-    tbody.innerHTML = matrix.map(m => {
-        const isAnak = (m.kategori || '').toLowerCase().includes('anak');
-        const badgeColor = isAnak
-            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-            : 'bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300';
-        return `
+    tbody.innerHTML = matrix.map(m => `
         <tr class="hover:bg-slate-50 dark:hover:bg-[#1c2836]/60 transition">
             <td class="py-3 px-4 font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                <div class="w-7 h-7 rounded-lg bg-emerald-100/70 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-xs">
+                <div class="w-7 h-7 rounded-lg bg-emerald-100/70 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-xs shrink-0">
                     <i class="fa-solid fa-user-tie"></i>
                 </div>
-                <span class="truncate">${escapeHtml(m.muhafiz || 'Ustadz Pembina')}</span>
+                <span class="truncate font-bold">${escapeHtml(m.muhafiz || 'Ustadz Pembina')}</span>
             </td>
-            <td class="py-3 px-4 font-semibold text-slate-700 dark:text-slate-200">${escapeHtml(m.namaHalaqah || '-')}</td>
             <td class="py-3 px-4">
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${badgeColor}">
-                    ${escapeHtml(m.kategori || 'Tahfidz')}
+                <span class="px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
+                    <i class="fa-solid fa-flag text-[9px] mr-1"></i>${escapeHtml(m.targetKurikulum || 'Tahfidz 30 Juz')}
                 </span>
             </td>
             <td class="py-3 px-4 font-bold text-slate-800 dark:text-slate-100">${m.binaanCount || 0} Santri</td>
             <td class="py-3 px-4 font-bold text-emerald-600 dark:text-emerald-400">Juz ${m.avgCapaian || '0.0'} / 30</td>
         </tr>
-        `;
-    }).join('');
+    `).join('');
 }
 
 /**
@@ -3332,9 +3334,9 @@ async function saveAllHalaqahChanges() {
 /**
  * Konfirmasi & Hapus Kelompok Halaqah
  */
-async function deleteTahfidzHalaqahConfirm(halaqahId, namaHalaqah) {
+async function deleteTahfidzHalaqahConfirm(halaqahId, muhafizName) {
     if (!halaqahId) return;
-    if (!confirm(`Hapus kelompok halaqah "${namaHalaqah || halaqahId}"? Santri yang terplotting akan dilepas dari halaqah ini.`)) {
+    if (!confirm(`Hapus kelompok halaqah pembinaan "${muhafizName || halaqahId}"? Santri yang terplotting akan dilepas dari halaqah ini.`)) {
         return;
     }
 
@@ -3382,15 +3384,12 @@ async function submitNewHalaqah(e) {
     if (e) e.preventDefault();
 
     const muh = (document.getElementById('input-halaqah-muhafiz')?.value || '').trim();
-    const target = (document.getElementById('input-halaqah-target')?.value || '').trim();
+    const target = (document.getElementById('input-halaqah-target')?.value || '').trim() || "Tahfidz 30 Juz";
 
     if (!muh) {
         if (typeof showToast === 'function') showToast("⚠️ Silakan pilih Ustadz Muhafiz Pembina terlebih dahulu.");
         return;
     }
-
-    const nama = `Halaqah ${muh}`;
-    const kat = 'Tahfidz Al-Qur\'an';
 
     const btn = document.getElementById('btn-submit-tahfidz-halaqah');
     setTahfidzButtonLoading(btn, true, "Menyimpan Halaqah...");
@@ -3399,24 +3398,22 @@ async function submitNewHalaqah(e) {
         const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TAHFIDZ_STORAGE_KEYS.adminToken)) || "";
         const res = await apiPost("saveTahfidzHalaqah", {
             token,
-            namaHalaqah: nama,
-            kategori: kat,
             muhafiz: muh,
-            targetKurikulum: target || "Target Tahfidz Standar"
+            targetKurikulum: target
         });
 
         if (res && (res.success || res.status === "success")) {
-            if (typeof showToast === 'function') showToast("✅ Halaqah baru berhasil dibuat!");
+            if (typeof showToast === 'function') showToast("✅ Kelompok halaqah berhasil dibuat!");
             if (document.getElementById('input-halaqah-muhafiz')) document.getElementById('input-halaqah-muhafiz').value = '';
             if (document.getElementById('input-halaqah-target')) document.getElementById('input-halaqah-target').value = '';
             
             const newHalaqah = {
                 halaqahId: res.halaqahId || ("HLQ-" + Date.now()),
-                namaHalaqah: nama,
-                kategori: kat,
                 muhafiz: muh,
-                targetKurikulum: target || "Target Tahfidz Standar",
-                studentCount: 0
+                namaHalaqah: "Halaqah " + muh,
+                targetKurikulum: target,
+                studentCount: 0,
+                studentIds: []
             };
 
             // Tambahkan halaqah lokal ke state
