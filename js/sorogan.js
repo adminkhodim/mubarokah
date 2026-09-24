@@ -1696,16 +1696,45 @@ function setSoroganTargetChip(field, val) {
     }
 }
 
+/**
+ * Hitung jumlah sesi aktif per pekan untuk Sorogan berdasarkan ASNSorogan.data.sesiList
+ * (Contoh: Sesi Pagi 5 hari + Sesi Sore 6 hari = 11 sesi per pekan)
+ */
+function getSoroganActiveWeeklySessionCounts() {
+    let sesiList = (ASNSorogan.data && ASNSorogan.data.sesiList) || [];
+    if (!sesiList || sesiList.length === 0) {
+        return 11;
+    }
+
+    const activeSessions = sesiList.filter(s => (s.status || 'Aktif Digunakan').includes('Aktif'));
+    if (activeSessions.length === 0) return 11;
+
+    let count = 0;
+    activeSessions.forEach(s => {
+        const rawHari = s.hariList || s.hari || [];
+        const hariArr = Array.isArray(rawHari) ? rawHari : String(rawHari).split(',').map(x => x.trim()).filter(Boolean);
+        count += Math.max(1, hariArr.length);
+    });
+
+    return count > 0 ? count : 11;
+}
+window.getSoroganActiveWeeklySessionCounts = getSoroganActiveWeeklySessionCounts;
+
 function recalculateSoroganTargetWeekly() {
     const sesiInp = document.getElementById('input-sorogan-target-sesi');
     const pekanInp = document.getElementById('input-sorogan-target-pekan');
     const bulanInp = document.getElementById('input-sorogan-target-bulan');
+    const labelPekan = document.getElementById('label-sorogan-target-pekan');
+
+    const weeklySessions = getSoroganActiveWeeklySessionCounts();
+    if (labelPekan) {
+        labelPekan.innerText = `Estimasi Target Pekanan (${weeklySessions} Sesi):`;
+    }
 
     const sesi = Number(sesiInp?.value || 2);
-    const pekan = Math.round(sesi * 6 * 10) / 10;
+    const pekan = Math.round(sesi * weeklySessions * 10) / 10;
     const bulan = Math.round(pekan * 4 * 10) / 10;
 
-    const lembarSesi = (sesi / 2).toFixed(1);
     const lembarPekan = (pekan / 2).toFixed(1);
 
     if (pekanInp) pekanInp.value = `${pekan} Halaman (${lembarPekan} Lembar)`;
@@ -1731,12 +1760,15 @@ async function submitSoroganTarget() {
 
     try {
         const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(SOROGAN_STORAGE_KEYS.adminToken)) || "";
+        const weeklySessions = getSoroganActiveWeeklySessionCounts();
+        const targetHalamanPekan = Math.round(targetHalamanSesi * weeklySessions * 10) / 10;
+
         const res = await apiPost("saveSoroganTarget", {
             token,
             studentId,
             targetJuz,
             targetHalamanSesi,
-            targetHalamanPekan: targetHalamanSesi * 6
+            targetHalamanPekan
         });
 
         if (res && (res.success || res.status === "success")) {
@@ -1746,7 +1778,8 @@ async function submitSoroganTarget() {
             if (!ASNSorogan.data.targets) ASNSorogan.data.targets = {};
             ASNSorogan.data.targets[studentId] = {
                 targetJuz,
-                targetHalamanSesi
+                targetHalamanSesi,
+                targetHalamanPekan
             };
             renderSoroganTable();
         } else {
@@ -1882,9 +1915,15 @@ function recalculateSoroganBulkTargetWeekly() {
     const sesiInp = document.getElementById('input-sorogan-bulk-target-sesi');
     const pekanInp = document.getElementById('input-sorogan-bulk-target-pekan');
     const bulanInp = document.getElementById('input-sorogan-bulk-target-bulan');
+    const labelPekan = document.getElementById('label-sorogan-bulk-target-pekan');
+
+    const weeklySessions = getSoroganActiveWeeklySessionCounts();
+    if (labelPekan) {
+        labelPekan.innerText = `Target Pekanan (${weeklySessions} Sesi):`;
+    }
 
     const sesi = Number(sesiInp?.value || 2);
-    const pekan = Math.round(sesi * 6 * 10) / 10;
+    const pekan = Math.round(sesi * weeklySessions * 10) / 10;
     const bulan = Math.round(pekan * 4 * 10) / 10;
 
     const lembarPekan = (pekan / 2).toFixed(1);
@@ -1928,11 +1967,14 @@ async function submitSoroganBulkTarget() {
 
     try {
         const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(SOROGAN_STORAGE_KEYS.adminToken)) || "";
+        const weeklySessions = getSoroganActiveWeeklySessionCounts();
+        const targetHalamanPekan = Math.round(targetHalamanSesi * weeklySessions * 10) / 10;
+
         const res = await apiPost("saveBulkSoroganTarget", {
             token,
             studentIds: targetStudentIds,
             targetHalamanSesi,
-            targetHalamanPekan: targetHalamanSesi * 6
+            targetHalamanPekan
         });
 
         if (res && (res.success || res.status === "success")) {
@@ -1943,7 +1985,8 @@ async function submitSoroganBulkTarget() {
             if (!ASNSorogan.data.targets) ASNSorogan.data.targets = {};
             targetStudentIds.forEach(id => {
                 ASNSorogan.data.targets[id] = {
-                    targetHalamanSesi
+                    targetHalamanSesi,
+                    targetHalamanPekan
                 };
             });
             clearSoroganSelectedStudents();
@@ -2242,9 +2285,13 @@ function renderSoroganStudentDetailView() {
     const elIndPTgt = document.getElementById('sorogan-ind-pekan-target');
     const elIndPBar = document.getElementById('sorogan-ind-pekan-bar');
 
+    const weeklySessions = getSoroganActiveWeeklySessionCounts();
+    const fallbackTargetPekan = target.targetHalamanPekan || ((target.targetHalamanSesi || 2) * weeklySessions);
+    const fallbackTargetBulan = fallbackTargetPekan * 4;
+
     if (elIndPStatus) elIndPStatus.innerText = indP.status || "0% Capaian";
     if (elIndPReal) elIndPReal.innerText = indP.realitaText || "0 Halaman";
-    if (elIndPTgt) elIndPTgt.innerText = indP.targetText || `${(target.targetHalamanSesi || 2) * 6} Halaman`;
+    if (elIndPTgt) elIndPTgt.innerText = indP.targetText || `${fallbackTargetPekan} Halaman`;
     if (elIndPBar) elIndPBar.style.width = `${Math.min(100, indP.percent || 0)}%`;
 
     const elIndBStatus = document.getElementById('sorogan-ind-bulan-status');
@@ -2254,7 +2301,7 @@ function renderSoroganStudentDetailView() {
 
     if (elIndBStatus) elIndBStatus.innerText = indB.status || "0% Capaian";
     if (elIndBReal) elIndBReal.innerText = indB.realitaText || "0 Halaman";
-    if (elIndBTgt) elIndBTgt.innerText = indB.targetText || `${(target.targetHalamanSesi || 2) * 24} Halaman`;
+    if (elIndBTgt) elIndBTgt.innerText = indB.targetText || `${fallbackTargetBulan} Halaman`;
     if (elIndBBar) elIndBBar.style.width = `${Math.min(100, indB.percent || 0)}%`;
 
     // Render Matriks 30 Juz Mushaf Pojok Grid
@@ -2627,9 +2674,11 @@ function exportSoroganDataXLSX() {
                 "Status Terakhir", "Terakhir Diperbarui"
             ];
 
+            const weeklySessions = getSoroganActiveWeeklySessionCounts();
             const rows = students.map((st, idx) => {
                 const tgt = (ASNSorogan.data.targets && ASNSorogan.data.targets[st.studentId]) || st.target || {};
                 const tSesi = tgt.targetHalamanSesi || 2;
+                const tPekan = tgt.targetHalamanPekan || (tSesi * weeklySessions);
                 return [
                     idx + 1,
                     st.nis || "-",
@@ -2642,7 +2691,7 @@ function exportSoroganDataXLSX() {
                     st.halamanTerakhir || 1,
                     tgt.targetJuz || 30,
                     tSesi,
-                    tSesi * 6,
+                    tPekan,
                     st.statusTerakhir === 'ULANG' ? "Wajib Mengulang" : "Lancar (Lanjut)",
                     st.updatedAt ? st.updatedAt.substring(0, 10) : "-"
                 ];

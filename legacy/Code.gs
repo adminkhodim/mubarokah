@@ -13955,10 +13955,11 @@ function getSoroganDashboard(token) {
       for (let i = 1; i < tData.length; i++) {
         const sid = String(tData[i][sIdIdx] || "").trim();
         if (sid) {
+          const sSesi = Number(tData[i][sSesiIdx]) || 2;
           targetMap[sid] = {
             targetJuz: Number(tData[i][jIdx]) || 1,
-            targetHalamanSesi: Number(tData[i][sSesiIdx]) || 2,
-            targetHalamanPekan: Number(tData[i][sPekanIdx]) || 12
+            targetHalamanSesi: sSesi,
+            targetHalamanPekan: Number(tData[i][sPekanIdx]) || (sSesi * 11)
           };
         }
       }
@@ -13991,6 +13992,16 @@ function getSoroganDashboard(token) {
         });
       }
     }
+
+    // Hitung jumlah sesi aktif per pekan (contoh: 5 hari Subuh + 6 hari Ashar = 11 sesi)
+    let soroganWeeklySessions = 0;
+    sesiList.forEach(s => {
+      if ((s.status || "").includes("Aktif")) {
+        const hArr = Array.isArray(s.hariList) ? s.hariList : String(s.hariList || "").split(",").map(h => h.trim()).filter(Boolean);
+        soroganWeeklySessions += Math.max(1, hArr.length);
+      }
+    });
+    if (soroganWeeklySessions === 0) soroganWeeklySessions = 11;
 
     // Gabungkan data capaian & hitung ringkasan
     let totalJuzSum = 0;
@@ -14034,7 +14045,7 @@ function getSoroganDashboard(token) {
       const tgt = targetMap[st.studentId] || {
         targetJuz: Math.min(30, juz + 1),
         targetHalamanSesi: 2,
-        targetHalamanPekan: 12
+        targetHalamanPekan: 2 * soroganWeeklySessions
       };
 
       return {
@@ -14539,7 +14550,7 @@ function saveSoroganTarget(payload, token) {
 
       const targetJuz = Number(payload.targetJuz || payload.target_juz || 1);
       const targetHalamanSesi = Number(payload.targetHalamanSesi || payload.target_halaman_sesi || 2);
-      const targetHalamanPekan = Number(payload.targetHalamanPekan || payload.target_halaman_pekan || (targetHalamanSesi * 6));
+      const targetHalamanPekan = Number(payload.targetHalamanPekan || payload.target_halaman_pekan || (targetHalamanSesi * 11));
       const updatedAt = new Date().toISOString();
 
       const data = sheet.getDataRange().getValues();
@@ -14590,7 +14601,7 @@ function saveBulkSoroganTarget(payload, token) {
       const sheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_TARGET, headers, "#f59e0b");
 
       const targetHalamanSesi = Number(payload.targetHalamanSesi || payload.target_halaman_sesi || 2);
-      const targetHalamanPekan = Number(payload.targetHalamanPekan || payload.target_halaman_pekan || (targetHalamanSesi * 6));
+      const targetHalamanPekan = Number(payload.targetHalamanPekan || payload.target_halaman_pekan || (targetHalamanSesi * 11));
       const updatedAt = new Date().toISOString();
 
       const data = sheet.getDataRange().getValues();
@@ -14848,7 +14859,7 @@ function getSoroganStudentDetail(studentId, token) {
     let target = {
       targetJuz: 30,
       targetHalamanSesi: 2,
-      targetHalamanPekan: 12
+      targetHalamanPekan: 22
     };
 
     if (targetData && targetData.length > 1) {
@@ -14861,10 +14872,11 @@ function getSoroganStudentDetail(studentId, token) {
       for (let i = 1; i < targetData.length; i++) {
         const sId = String(targetData[i][sIdIdx] || "").trim();
         if (sId === cleanId || (student && sId === student.nis)) {
+          const sSesi = Number(targetData[i][sesiIdx] || 2);
           target = {
             targetJuz: Number(targetData[i][juzIdx] || 30),
-            targetHalamanSesi: Number(targetData[i][sesiIdx] || 2),
-            targetHalamanPekan: Number(targetData[i][pekanIdx] || 12)
+            targetHalamanSesi: sSesi,
+            targetHalamanPekan: Number(targetData[i][pekanIdx] || (sSesi * 11))
           };
           break;
         }
@@ -15024,7 +15036,7 @@ function getSoroganStudentDetail(studentId, token) {
     });
 
     const targetHarian = target.targetHalamanSesi || 2;
-    const targetPekan = target.targetHalamanPekan || (targetHarian * 6);
+    const targetPekan = target.targetHalamanPekan || (targetHarian * 11);
     const targetBulan = targetPekan * 4;
 
     const pekanPercent = targetPekan > 0 ? Math.min(100, Math.round((pekanReal / targetPekan) * 100)) : 0;
