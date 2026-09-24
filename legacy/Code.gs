@@ -12829,7 +12829,7 @@ function initTPQSheets(token) {
 
     const headersLogs = ["log_id", "student_id", "nis", "student_name", "gender", "tanggal", "sesi", "jilid", "halaman", "status_setoran", "nilai", "ustadz", "catatan", "created_at"];
     const headersCapaian = ["student_id", "student_name", "jilid_aktif", "halaman_aktif", "status_terakhir", "kelas_id", "nama_kelas", "ustadz_pengampu", "updated_at"];
-    const headersKelas = ["kelas_id", "nama_kelas", "ustadz_pengampu", "jadwal_sesi", "student_ids", "created_at"];
+    const headersKelas = ["kelas_id", "ustadz_pengampu", "deskripsi", "student_ids", "created_at"];
     const headersTarget = ["student_id", "target_jilid", "target_halaman_sesi", "target_halaman_pekan", "updated_at"];
     const headersSesi = ["sesi_id", "nama_sesi", "jenis_sesi", "status", "jam_mulai", "jam_selesai", "hari_list", "created_at"];
 
@@ -12961,16 +12961,16 @@ function getTPQDashboard(token) {
     }
 
     // 3. Ambil data Kelas TPQ
-    const headersKelas = ["kelas_id", "nama_kelas", "ustadz_pengampu", "jadwal_sesi", "student_ids", "created_at"];
+    const headersKelas = ["kelas_id", "ustadz_pengampu", "deskripsi", "student_ids", "created_at"];
     const kelasSheet = getOrCreateTPQSheet(ss, SHEET_TPQ_KELAS, headersKelas, "#0284c7");
     const kelasList = [];
     const kData = kelasSheet.getDataRange().getValues();
     if (kData.length >= 2) {
       const kHead = kData[0].map(h => String(h || "").trim().toLowerCase());
       const idIdx = kHead.indexOf("kelas_id");
+      const uIdx = kHead.indexOf("ustadz_pengampu") !== -1 ? kHead.indexOf("ustadz_pengampu") : kHead.indexOf("muallim");
+      const deskIdx = kHead.indexOf("deskripsi") !== -1 ? kHead.indexOf("deskripsi") : (kHead.indexOf("target_kurikulum") !== -1 ? kHead.indexOf("target_kurikulum") : kHead.indexOf("jadwal_sesi"));
       const nameIdx = kHead.indexOf("nama_kelas");
-      const uIdx = kHead.indexOf("ustadz_pengampu");
-      const jIdx = kHead.indexOf("jadwal_sesi");
       const sidsIdx = kHead.indexOf("student_ids");
 
       for (let i = 1; i < kData.length; i++) {
@@ -12982,11 +12982,17 @@ function getTPQDashboard(token) {
         } catch (e) {
           sids = [];
         }
+        const uVal = uIdx !== -1 ? String(kData[i][uIdx] || "").trim() : "";
+        const nVal = nameIdx !== -1 ? String(kData[i][nameIdx] || "").trim() : "";
+        const deskVal = deskIdx !== -1 ? String(kData[i][deskIdx] || "").trim() : "";
+        const finalName = nVal || (uVal ? ("Kelas " + uVal) : ("Kelas " + String(kData[i][idIdx] || "")));
+
         kelasList.push({
           kelasId: String(kData[i][idIdx] || "").trim(),
-          namaKelas: String(kData[i][nameIdx] || "").trim(),
-          ustadzPengampu: String(kData[i][uIdx] || "").trim(),
-          jadwalSesi: String(kData[i][jIdx] || "").trim(),
+          namaKelas: finalName,
+          ustadzPengampu: uVal || "-",
+          deskripsi: deskVal,
+          jadwalSesi: deskVal,
           studentIds: sids
         });
       }
@@ -13138,6 +13144,32 @@ function getTPQDashboard(token) {
       };
     });
 
+    // 6. Ambil data Pegawai untuk Asatidz Pengampu
+    const pegawaiSheet = ss.getSheetByName(SHEET_PEGAWAI) || ss.getSheetByName("Pegawai") || ss.getSheetByName("pegawai");
+    const ustadzListFromPegawai = [];
+    if (pegawaiSheet) {
+      const pData = pegawaiSheet.getDataRange().getValues();
+      if (pData && pData.length > 1) {
+        const pHead = pData[0].map(h => String(h || "").trim().toLowerCase());
+        const pNamaIdx = pHead.indexOf("nama") !== -1 ? pHead.indexOf("nama") : pHead.indexOf("name");
+        const pStatusIdx = pHead.indexOf("status");
+        for (let i = 1; i < pData.length; i++) {
+          const row = pData[i];
+          const nama = pNamaIdx !== -1 ? String(row[pNamaIdx] || "").trim() : "";
+          const st = pStatusIdx !== -1 ? String(row[pStatusIdx] || "").trim().toUpperCase() : "ACTIVE";
+          if (nama && (st === "ACTIVE" || st === "AKTIF" || st === "")) {
+            if (!ustadzListFromPegawai.includes(nama)) ustadzListFromPegawai.push(nama);
+          }
+        }
+      }
+    }
+
+    ustadzSet.forEach(u => {
+      if (u && u !== "-" && !ustadzListFromPegawai.includes(u)) {
+        ustadzListFromPegawai.push(u);
+      }
+    });
+
     return {
       status: "success",
       success: true,
@@ -13150,7 +13182,7 @@ function getTPQDashboard(token) {
       },
       students: enrichedStudents,
       kelasList: kelasList,
-      ustadzList: Array.from(ustadzSet),
+      ustadzList: ustadzListFromPegawai,
       targets: targetMap,
       sesiList: sesiList
     };
@@ -13358,27 +13390,39 @@ function saveTPQCapaian(data, token) {
 function getTPQKelasList(token) {
   try {
     const ss = getDatabaseSpreadsheet();
-    const headersKelas = ["kelas_id", "nama_kelas", "ustadz_pengampu", "jadwal_sesi", "student_ids", "created_at"];
+    const headersKelas = ["kelas_id", "ustadz_pengampu", "deskripsi", "student_ids", "created_at"];
     const sheet = getOrCreateTPQSheet(ss, SHEET_TPQ_KELAS, headersKelas, "#0284c7");
     const data = sheet.getDataRange().getValues();
     const list = [];
 
     if (data.length >= 2) {
-      const head = data[0].map(h => String(h).toLowerCase());
+      const head = data[0].map(h => String(h || "").trim().toLowerCase());
       const idIdx = head.indexOf("kelas_id");
+      const uIdx = head.indexOf("ustadz_pengampu") !== -1 ? head.indexOf("ustadz_pengampu") : head.indexOf("muallim");
+      const deskIdx = head.indexOf("deskripsi") !== -1 ? head.indexOf("deskripsi") : (head.indexOf("target_kurikulum") !== -1 ? head.indexOf("target_kurikulum") : head.indexOf("jadwal_sesi"));
       const nameIdx = head.indexOf("nama_kelas");
-      const uIdx = head.indexOf("ustadz_pengampu");
-      const jIdx = head.indexOf("jadwal_sesi");
       const sidsIdx = head.indexOf("student_ids");
 
       for (let i = 1; i < data.length; i++) {
         let sids = [];
-        try { sids = JSON.parse(String(data[i][sidsIdx] || "[]")); } catch (e) { sids = []; }
+        try {
+          const raw = String(data[i][sidsIdx] || "");
+          if (raw.trim().startsWith("[")) sids = JSON.parse(raw);
+          else sids = raw.split(",").map(s => s.trim()).filter(Boolean);
+        } catch (e) {
+          sids = [];
+        }
+        const uVal = uIdx !== -1 ? String(data[i][uIdx] || "").trim() : "";
+        const nVal = nameIdx !== -1 ? String(data[i][nameIdx] || "").trim() : "";
+        const deskVal = deskIdx !== -1 ? String(data[i][deskIdx] || "").trim() : "";
+        const finalName = nVal || (uVal ? ("Kelas " + uVal) : ("Kelas " + String(data[i][idIdx] || "")));
+
         list.push({
           kelasId: String(data[i][idIdx] || "").trim(),
-          namaKelas: String(data[i][nameIdx] || "").trim(),
-          ustadzPengampu: String(data[i][uIdx] || "").trim(),
-          jadwalSesi: String(data[i][jIdx] || "").trim(),
+          namaKelas: finalName,
+          ustadzPengampu: uVal || "-",
+          deskripsi: deskVal,
+          jadwalSesi: deskVal,
           studentIds: sids
         });
       }
@@ -13392,43 +13436,67 @@ function getTPQKelasList(token) {
 function saveTPQKelas(data, token) {
   return withScriptLock(() => {
     try {
-      const namaKelas = String(data.namaKelas || data.nama_kelas || "").trim();
       const ustadz = String(data.ustadzPengampu || data.ustadz || "").trim();
-      const jadwal = String(data.jadwalSesi || data.jadwal || "Sore (15:45 - 17:00)").trim();
+      const deskripsi = String(data.deskripsi || data.targetKelas || data.keterangan || "").trim();
       const studentIds = Array.isArray(data.studentIds) ? data.studentIds : [];
       let kelasId = String(data.kelasId || data.id || "").trim();
       const nowIso = new Date().toISOString();
 
-      if (!namaKelas) throw new Error("Nama kelas wajib diisi.");
+      if (!ustadz) throw new Error("Nama Ustadz / Ustadzah pengampu wajib dipilih.");
 
+      const namaKelas = String(data.namaKelas || data.nama_kelas || ("Kelas " + ustadz)).trim();
       const ss = getDatabaseSpreadsheet();
-      const headersKelas = ["kelas_id", "nama_kelas", "ustadz_pengampu", "jadwal_sesi", "student_ids", "created_at"];
+      const headersKelas = ["kelas_id", "ustadz_pengampu", "deskripsi", "student_ids", "created_at"];
       const sheet = getOrCreateTPQSheet(ss, SHEET_TPQ_KELAS, headersKelas, "#0284c7");
 
       const kData = sheet.getDataRange().getValues();
       let rowIndex = -1;
 
-      if (kelasId && kData.length >= 2) {
-        const idIdx = kData[0].map(h => String(h).toLowerCase()).indexOf("kelas_id");
+      if (kData.length >= 2) {
+        const head = kData[0].map(h => String(h || "").trim().toLowerCase());
+        const idIdx = head.indexOf("kelas_id");
+        const uIdx = head.indexOf("ustadz_pengampu") !== -1 ? head.indexOf("ustadz_pengampu") : head.indexOf("muallim");
+
         for (let i = 1; i < kData.length; i++) {
-          if (String(kData[i][idIdx] || "").trim() === kelasId) {
+          const rowId = idIdx !== -1 ? String(kData[i][idIdx] || "").trim() : "";
+          const rowU = uIdx !== -1 ? String(kData[i][uIdx] || "").trim() : "";
+          if ((kelasId && rowId === kelasId) || (!kelasId && rowU && rowU.toLowerCase() === ustadz.toLowerCase())) {
             rowIndex = i + 1;
+            if (!kelasId) kelasId = rowId;
             break;
           }
         }
       }
 
       if (rowIndex !== -1) {
-        sheet.getRange(rowIndex, 2).setValue(namaKelas);
-        sheet.getRange(rowIndex, 3).setValue(ustadz);
-        sheet.getRange(rowIndex, 4).setValue(jadwal);
-        sheet.getRange(rowIndex, 5).setValue(JSON.stringify(studentIds));
+        const head = kData[0].map(h => String(h || "").trim().toLowerCase());
+        const uIdx = head.indexOf("ustadz_pengampu") !== -1 ? head.indexOf("ustadz_pengampu") : head.indexOf("muallim");
+        const deskIdx = head.indexOf("deskripsi") !== -1 ? head.indexOf("deskripsi") : (head.indexOf("target_kurikulum") !== -1 ? head.indexOf("target_kurikulum") : head.indexOf("jadwal_sesi"));
+        const nameIdx = head.indexOf("nama_kelas");
+        const sidsIdx = head.indexOf("student_ids");
+
+        if (uIdx !== -1) sheet.getRange(rowIndex, uIdx + 1).setValue(ustadz);
+        if (deskIdx !== -1) sheet.getRange(rowIndex, deskIdx + 1).setValue(deskripsi);
+        if (nameIdx !== -1) sheet.getRange(rowIndex, nameIdx + 1).setValue(namaKelas);
+        if (sidsIdx !== -1) sheet.getRange(rowIndex, sidsIdx + 1).setValue(JSON.stringify(studentIds));
       } else {
-        if (!kelasId) kelasId = "KLS-" + Utilities.getUuid().replace(/-/g, "").substring(0, 8).toUpperCase();
-        sheet.appendRow([kelasId, namaKelas, ustadz, jadwal, JSON.stringify(studentIds), nowIso]);
+        if (!kelasId) {
+          kelasId = "TPQ-KLS-" + Utilities.getUuid().replace(/-/g, "").substring(0, 6).toUpperCase();
+        }
+        sheet.appendRow([kelasId, ustadz, deskripsi, JSON.stringify(studentIds), nowIso]);
       }
 
-      return { status: "success", success: true, message: `Kelas ${namaKelas} berhasil disimpan.`, kelasId: kelasId };
+      // Sync plotting to TPQ_Capaian
+      syncTPQPlottingToCapaian_(ss, kelasId, studentIds, ustadz, namaKelas);
+
+      return {
+        status: "success",
+        success: true,
+        message: `Kelas ${namaKelas} berhasil disimpan.`,
+        kelasId: kelasId,
+        ustadzPengampu: ustadz,
+        deskripsi: deskripsi
+      };
     } catch (err) {
       return { status: "error", success: false, message: "Gagal menyimpan kelas TPQ: " + err.message };
     }

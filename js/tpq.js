@@ -336,10 +336,11 @@ function updateTPQBulkSelectionBar() {
 }
 
 /**
- * Render tabel daftar capaian santri TPQ
+ * Render tabel daftar capaian santri TPQ (Desktop Table & Mobile Card List tanpa scroll kanan)
  */
 function renderTPQTable() {
     const tbody = document.getElementById('admin-tpq-table-body');
+    const mobileContainer = document.getElementById('admin-tpq-mobile-list');
     const emptyState = document.getElementById('admin-tpq-empty');
     const countEl = document.getElementById('admin-tpq-count');
 
@@ -349,10 +350,9 @@ function renderTPQTable() {
         countEl.innerText = `${list.length} Santri`;
     }
 
-    if (!tbody) return;
-
     if (list.length === 0) {
-        tbody.innerHTML = '';
+        if (tbody) tbody.innerHTML = '';
+        if (mobileContainer) mobileContainer.innerHTML = '';
         if (emptyState) emptyState.classList.remove('hidden');
         return;
     }
@@ -444,7 +444,81 @@ function renderTPQTable() {
         `;
     });
 
-    tbody.innerHTML = html;
+    if (tbody) tbody.innerHTML = html;
+
+    // Render Compact Card List untuk Tampilan Mobile (Tidak Perlu Scroll Kanan)
+    if (mobileContainer) {
+        mobileContainer.innerHTML = list.map(st => {
+            const initials = (st.name || 'Santri').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'SN';
+            const inKls = !!(st.namaKelas && st.namaKelas !== 'Belum Ada Kelas' && st.namaKelas !== 'Belum Ditentukan');
+            const klsName = inKls ? st.namaKelas : 'Belum Masuk Kelas';
+            const isUlang = st.statusTerakhir === 'ULANG';
+            const jInfo = YANBUA_JILID_INFO[st.jilidAktif] || { name: `Jilid ${st.jilidAktif}`, badge: "bg-slate-50 text-slate-700 border-slate-200" };
+            const tgt = targets[st.studentId] || st.target || {
+                targetJilid: Math.min(7, (st.jilidAktif || 1) + 1),
+                targetHalamanSesi: 1
+            };
+            const targetSesi = tgt.targetHalamanSesi || 1;
+            const targetPekan = targetSesi * 6;
+            const isSelected = selectedSet.has(st.studentId);
+
+            const statusBadge = isUlang
+                ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/50 dark:text-rose-300"><i class="fa-solid fa-rotate-left"></i> Mengulang</span>`
+                : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300"><i class="fa-solid fa-circle-check"></i> Lancar</span>`;
+
+            return `
+            <div class="p-3.5 bg-white dark:bg-[#15202d] rounded-2xl border ${isSelected ? 'border-amber-400 dark:border-amber-600 bg-amber-50/20' : 'border-slate-100 dark:border-[#253447]'} shadow-sm space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2.5 min-w-0">
+                        <input type="checkbox" onchange="toggleSelectTPQStudent('${escapeHtml(st.studentId)}', this.checked)" ${isSelected ? 'checked' : ''} class="tpq-row-checkbox rounded border-slate-300 text-teal-600 focus:ring-teal-500 cursor-pointer shrink-0" title="Pilih ${escapeHtml(st.name || '')}">
+                        <div class="w-9 h-9 rounded-full bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300 font-extrabold flex items-center justify-center text-xs shrink-0">
+                            ${st.photoUrl ? `<img src="${escapeHtml(st.photoUrl)}" class="w-full h-full object-cover rounded-full">` : initials}
+                        </div>
+                        <div class="min-w-0">
+                            <h4 class="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">${escapeHtml(st.name)}</h4>
+                            <p class="text-[10px] text-slate-400">NIS: ${escapeHtml(st.nis || '-')} • <span class="${inKls ? 'text-teal-600 dark:text-teal-400 font-semibold' : 'text-amber-600 dark:text-amber-400 font-semibold'}">${escapeHtml(klsName)}</span></p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="openSimakTPQModal('${escapeHtml(st.studentId)}')" class="px-2.5 py-1.5 bg-teal-600 text-white font-bold text-xs rounded-xl shadow-sm active:scale-95 transition shrink-0 inline-flex items-center gap-1">
+                        <i class="fa-solid fa-pen-nib text-[10px]"></i>
+                        <span>Simak</span>
+                    </button>
+                </div>
+
+                <!-- Posisi Jilid & Status Pill Row -->
+                <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-[#253447]">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-black border ${jInfo.badge}">
+                            <i class="fa-solid fa-book-open-reader text-[10px]"></i>
+                            <span>${jInfo.name}</span>
+                        </span>
+                        <span class="text-xs font-bold text-slate-700 dark:text-slate-200">
+                            Hal <strong class="text-teal-600 dark:text-teal-400 font-black">${st.halamanAktif || 1}</strong>
+                        </span>
+                    </div>
+                    <div>
+                        ${statusBadge}
+                    </div>
+                </div>
+
+                <!-- Target Pills Row -->
+                <div class="flex items-center justify-between text-[10px] font-bold pt-0.5">
+                    <div class="flex items-center gap-1.5">
+                        <span onclick="openTPQTargetModal('${escapeHtml(st.studentId)}')" class="px-2 py-0.5 rounded-md bg-teal-50 text-teal-800 dark:bg-teal-950/60 dark:text-teal-300 cursor-pointer border border-teal-200/50">
+                            Target: ${targetSesi} Hal/Sesi (${targetPekan} Hal/Pekan)
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" onclick="openTPQTargetModal('${escapeHtml(st.studentId)}')" class="p-1.5 bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 rounded-lg text-xs" title="Atur Target">
+                            <i class="fa-solid fa-bullseye text-amber-500"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            `;
+        }).join('');
+    }
+
     updateTPQBulkSelectionBar();
 }
 
@@ -776,18 +850,36 @@ function populateTPQUstadzDropdown() {
     if (!sel) return;
 
     let teachers = [];
-    if (typeof ASNAdmin !== 'undefined' && ASNAdmin.data && Array.isArray(ASNAdmin.data.employees)) {
-        teachers = ASNAdmin.data.employees.map(e => e.name || e.nama).filter(Boolean);
-    }
-    if (teachers.length === 0 && Array.isArray(ASNTPQ.data.ustadzList) && ASNTPQ.data.ustadzList.length > 0) {
-        teachers = ASNTPQ.data.ustadzList;
-    }
-    if (teachers.length === 0) {
-        teachers = ["Ustadz Yusuf", "Ustadzah Maryam", "Ustadz Ridwan", "Ustadzah Khadijah", "Ustadz Hasan"];
+
+    // 1. Dari data dashboard TPQ (yang sudah mengambil dari Sheet Pegawai aktif)
+    if (Array.isArray(ASNTPQ.data.ustadzList) && ASNTPQ.data.ustadzList.length > 0) {
+        teachers = [...ASNTPQ.data.ustadzList];
     }
 
+    // 2. Dari data Pegawai Admin global jika tersedia
+    if (typeof ASNAdmin !== 'undefined' && ASNAdmin.data && Array.isArray(ASNAdmin.data.employees)) {
+        ASNAdmin.data.employees.forEach(e => {
+            const n = e.name || e.nama;
+            if (n && !teachers.includes(n)) teachers.push(n);
+        });
+    }
+
+    // 3. Dari modul Tahfidz / Sorogan jika tersedia
+    if (typeof ASNTahfidz !== 'undefined' && ASNTahfidz.data && Array.isArray(ASNTahfidz.data.asatidz)) {
+        ASNTahfidz.data.asatidz.forEach(n => {
+            if (n && !teachers.includes(n)) teachers.push(n);
+        });
+    }
+    if (typeof ASNSorogan !== 'undefined' && ASNSorogan.data && Array.isArray(ASNSorogan.data.muallimList)) {
+        ASNSorogan.data.muallimList.forEach(n => {
+            if (n && !teachers.includes(n)) teachers.push(n);
+        });
+    }
+
+    teachers = teachers.filter(Boolean);
+
     const currentVal = sel.value;
-    sel.innerHTML = `<option value="">-- Pilih Ustadz Pengampu --</option>` +
+    sel.innerHTML = `<option value="">-- Pilih dari Data Pegawai --</option>` +
         teachers.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
 
     if (currentVal && teachers.includes(currentVal)) {
@@ -828,14 +920,14 @@ function renderTPQKelasCards() {
         return `
         <div class="p-4 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200 dark:border-[#283a4e] space-y-3 relative group">
             <div class="flex justify-between items-start">
-                <div>
-                    <h4 class="font-black text-sm text-slate-800 dark:text-slate-100">${escapeHtml(k.namaKelas)}</h4>
+                <div class="min-w-0">
+                    <h4 class="font-black text-sm text-slate-800 dark:text-slate-100 truncate">${escapeHtml(k.namaKelas || ('Kelas ' + (k.ustadzPengampu || '')))}</h4>
                     <span class="inline-block mt-1 px-2 py-0.5 rounded text-[9px] font-bold bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300">
-                        ${escapeHtml(k.kategori || 'Bimbingan Yanbu\'a')}
+                        ${escapeHtml(k.deskripsi || k.jadwalSesi || 'Bimbingan Yanbu\'a')}
                     </span>
                 </div>
-                <div class="flex items-center space-x-1.5">
-                    <button type="button" onclick="deleteTPQKelasConfirm('${k.kelasId}', '${escapeHtml(k.namaKelas)}')" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-300 flex items-center justify-center text-[10px] transition" title="Hapus Kelas">
+                <div class="flex items-center space-x-1.5 shrink-0">
+                    <button type="button" onclick="deleteTPQKelasConfirm('${k.kelasId}', '${escapeHtml(k.namaKelas || k.ustadzPengampu)}')" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-300 flex items-center justify-center text-[10px] transition" title="Hapus Kelas">
                         <i class="fa-solid fa-trash-can"></i>
                     </button>
                     <span class="w-7 h-7 rounded-lg bg-white dark:bg-[#15202d] text-slate-500 dark:text-slate-300 flex items-center justify-center text-xs font-bold shadow-sm">
@@ -845,12 +937,13 @@ function renderTPQKelasCards() {
             </div>
             <div class="space-y-1 text-xs text-slate-600 dark:text-slate-300">
                 <p class="flex items-center gap-1.5 truncate font-semibold">
-                    <i class="fa-solid fa-user-tie text-teal-600"></i>
-                    <span>${escapeHtml(k.ustadzPengampu || 'Ustadz Pengampu')}</span>
+                    <i class="fa-solid fa-chalkboard-user text-teal-600"></i>
+                    <span>Pengampu: ${escapeHtml(k.ustadzPengampu || '-')}</span>
                 </p>
+                ${(k.deskripsi && k.deskripsi !== k.namaKelas) ? `
                 <p class="text-[10px] text-slate-400 truncate">
-                    <i class="fa-regular fa-clock mr-1"></i> ${escapeHtml(k.jadwalSesi || 'Sore (15:45 - 17:00)')}
-                </p>
+                    <i class="fa-solid fa-circle-info mr-1"></i> ${escapeHtml(k.deskripsi)}
+                </p>` : ''}
             </div>
             <div class="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-[#283a4e] text-xs">
                 <span class="font-bold text-slate-700 dark:text-slate-300">${enrolledCount} Santri Terdaftar</span>
@@ -865,24 +958,21 @@ function renderTPQKelasCards() {
 }
 
 /**
- * Submit Tambah Kelas Baru
+ * Submit Tambah Kelas Baru (Cukup Ustadz Pengampu & Deskripsi)
  */
 async function submitNewTPQKelas(e) {
     if (e && e.preventDefault) e.preventDefault();
 
-    const inputNama = document.getElementById('input-tpq-kelas-nama');
-    const inputKat = document.getElementById('input-tpq-kelas-kategori');
     const inputUstadz = document.getElementById('input-tpq-kelas-ustadz');
     const inputTarget = document.getElementById('input-tpq-kelas-target');
     const btn = document.getElementById('btn-submit-tpq-kelas');
 
-    const namaKelas = inputNama ? inputNama.value.trim() : "";
-    const kategori = inputKat ? inputKat.value : "Jilid 1 - 2 (Dasar)";
     const ustadz = inputUstadz ? inputUstadz.value.trim() : "";
-    const targetDeskripsi = inputTarget ? inputTarget.value.trim() : "";
+    const deskripsi = inputTarget ? inputTarget.value.trim() : "";
+    const namaKelas = "Kelas " + ustadz;
 
-    if (!namaKelas || !ustadz) {
-        alert("Nama kelas dan Ustadz pengampu wajib diisi!");
+    if (!ustadz) {
+        alert("Nama Ustadz / Ustadzah pengampu wajib dipilih dari daftar data pegawai!");
         return;
     }
 
@@ -897,23 +987,23 @@ async function submitNewTPQKelas(e) {
             token,
             namaKelas,
             ustadzPengampu: ustadz,
-            jadwalSesi: targetDeskripsi || "Sore (15:45 - 17:00)",
-            kategori,
+            deskripsi: deskripsi || "Bimbingan Yanbu'a",
+            jadwalSesi: deskripsi || "Bimbingan Yanbu'a",
             studentIds: []
         });
 
         if (res && (res.success || res.status === "success")) {
             if (typeof showToast === 'function') showToast(res.message || "Kelas TPQ berhasil ditambahkan!");
-            if (inputNama) inputNama.value = '';
             if (inputTarget) inputTarget.value = '';
+            if (inputUstadz) inputUstadz.value = '';
 
             // Update state lokal
             const newK = {
-                kelasId: res.kelasId || ("KLS-" + Date.now().toString().substring(8)),
+                kelasId: res.kelasId || ("TPQ-KLS-" + Date.now().toString().substring(8)),
                 namaKelas,
                 ustadzPengampu: ustadz,
-                kategori,
-                jadwalSesi: targetDeskripsi || "Sore (15:45 - 17:00)",
+                deskripsi: deskripsi || "Bimbingan Yanbu'a",
+                jadwalSesi: deskripsi || "Bimbingan Yanbu'a",
                 studentIds: []
             };
             ASNTPQ.data.kelasList = ASNTPQ.data.kelasList || [];

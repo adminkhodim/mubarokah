@@ -7264,7 +7264,8 @@
                                         </div>
                                     </div>
 
-                                    <div class="overflow-x-auto">
+                                    <!-- DESKTOP TABLE (Hidden on Mobile) -->
+                                    <div class="hidden md:block overflow-x-auto">
                                         <table class="w-full text-left border-collapse">
                                             <thead>
                                                 <tr class="bg-slate-50 dark:bg-[#1c2836] text-slate-500 dark:text-slate-400 uppercase text-[10px] font-extrabold tracking-wider border-b border-slate-100 dark:border-[#253447]">
@@ -7285,6 +7286,11 @@
                                                 <!-- Dynamic rows -->
                                             </tbody>
                                         </table>
+                                    </div>
+
+                                    <!-- MOBILE CARD LIST (No Horizontal Scroll Needed) -->
+                                    <div id="admin-tpq-mobile-list" class="block md:hidden space-y-3">
+                                        <!-- Rendered dynamically by JavaScript -->
                                     </div>
 
                                     <div id="admin-tpq-loader" class="hidden py-8 text-center space-y-2">
@@ -11877,27 +11883,18 @@
                         </span>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                             <div>
-                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Kelas <span class="text-rose-500">*</span></label>
-                                <input type="text" id="input-tpq-kelas-nama" required placeholder="Misal: Yanbu'a Jilid 1 Putra"
-                                    class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs outline-none focus:ring-2 focus:ring-teal-500">
-                            </div>
-                            <div>
-                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Kategori Jilid <span class="text-rose-500">*</span></label>
-                                <select id="input-tpq-kelas-kategori" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs outline-none font-bold">
-                                    <option value="Jilid 1 - 2 (Dasar)">Jilid 1 - 2 (Dasar)</option>
-                                    <option value="Jilid 3 - 4 (Menengah)">Jilid 3 - 4 (Menengah)</option>
-                                    <option value="Jilid 5 - 7 (Lanjutan & Tajwid)">Jilid 5 - 7 (Lanjutan & Tajwid)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Ustadz / Ustadzah Pengampu <span class="text-rose-500">*</span></label>
+                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                    <i class="fa-solid fa-chalkboard-user mr-1 text-teal-600"></i>Ustadz / Ustadzah Pengampu <span class="text-rose-500">*</span>
+                                </label>
                                 <select id="input-tpq-kelas-ustadz" required class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs outline-none font-bold">
-                                    <option value="">-- Pilih Ustadz Pengampu --</option>
+                                    <option value="">-- Pilih dari Data Pegawai --</option>
                                 </select>
                             </div>
-                            <div class="sm:col-span-2">
-                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Deskripsi / Target Kelas</label>
-                                <input type="text" id="input-tpq-kelas-target" placeholder="Misal: Bimbingan Tahsin Dasar Fathah & Kasrah / 1 Halaman per Hari"
+                            <div>
+                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                    <i class="fa-solid fa-align-left mr-1 text-teal-600"></i>Deskripsi / Keterangan Kelas
+                                </label>
+                                <input type="text" id="input-tpq-kelas-target" placeholder="Misal: Bimbingan Yanbu'a Putra / Ba'da Ashar"
                                     class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-xs outline-none focus:ring-2 focus:ring-teal-500">
                             </div>
                             <div class="flex items-end">
