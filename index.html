@@ -10013,7 +10013,35 @@
 
                     <!-- PANEL TAB 2: RIWAYAT SETORAN LENGKAP -->
                     <div id="panel-detail-tab-2" class="hidden space-y-3">
-                        <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-[#253447]">
+                        <!-- Toolbar Tampilan (Kartu Responsif vs Tabel) -->
+                        <div class="flex items-center justify-between text-xs pb-1 border-b border-slate-100 dark:border-[#253447]">
+                            <span class="font-bold text-slate-700 dark:text-slate-300 text-[11px] flex items-center gap-1.5">
+                                <i class="fa-solid fa-clock-rotate-left text-emerald-600"></i>
+                                <span>Daftar Riwayat Setoran</span>
+                                <span id="tahfidz-detail-riwayat-count-badge" class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">0 Setoran</span>
+                            </span>
+                            <!-- View Toggle Button (Ringkas/Kartu vs Tabel) -->
+                            <div class="inline-flex rounded-lg p-0.5 bg-slate-100 dark:bg-[#1c2836] border border-slate-200 dark:border-[#253447]">
+                                <button type="button" id="btn-riwayat-view-card" onclick="setTahfidzRiwayatView('card')"
+                                    class="px-2.5 py-1 rounded-md text-[10px] font-bold transition bg-white dark:bg-[#15202d] text-emerald-700 dark:text-emerald-400 shadow-sm"
+                                    title="Tampilan Kartu (Pas di Layar HP tanpa Scroll)">
+                                    <i class="fa-solid fa-grip-lines mr-1"></i>Ringkas / Kartu
+                                </button>
+                                <button type="button" id="btn-riwayat-view-table" onclick="setTahfidzRiwayatView('table')"
+                                    class="px-2.5 py-1 rounded-md text-[10px] font-bold transition text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                                    title="Tampilan Tabel">
+                                    <i class="fa-solid fa-table-list mr-1"></i>Tabel
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 1. TAMPILAN KARTU (OPTIMAL DI HP - 100% UTUH TANPA SCROLL KE KANAN) -->
+                        <div id="tahfidz-detail-riwayat-card-list" class="space-y-2.5">
+                            <!-- Populated dynamically by JS -->
+                        </div>
+
+                        <!-- 2. TAMPILAN TABEL LENGKAP -->
+                        <div id="tahfidz-detail-riwayat-table-wrapper" class="hidden overflow-x-auto rounded-xl border border-slate-200 dark:border-[#253447]">
                             <table class="w-full text-left border-collapse text-xs">
                                 <thead>
                                     <tr
