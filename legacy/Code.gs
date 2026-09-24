@@ -540,6 +540,12 @@ function doPost(e) {
       return createJsonResponse(getTPQStudentDetail(studentId, token));
     }
 
+    if (action === "deleteTPQLog" || action === "tpq.deleteLog") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      const logId = payload.logId || payload.log_id || (payload.data && (payload.data.logId || payload.data.log_id)) || "";
+      return createJsonResponse(deleteTPQLog(logId, token));
+    }
+
     // ========================================================
     // SOROGAN AL-QUR'AN ACTIONS (doPost)
     // ========================================================
@@ -16131,6 +16137,42 @@ function getTPQStudentDetail(studentId, token) {
     const totalHalSelesai = getYanbuaCumulativePages_(currentJilid, halAktif);
     const percentOverall = Math.min(100, Math.round((totalHalSelesai / TOTAL_YANBUA_PAGES_) * 100));
 
+    const pekanPercent = targetPekan > 0 ? Math.min(100, Math.round((pekanReal / targetPekan) * 100)) : 0;
+    const bulanPercent = targetBulan > 0 ? Math.min(100, Math.round((bulanReal / targetBulan) * 100)) : 0;
+    const jName = (currentJilid === 0 || String(currentJilid).toLowerCase() === "pemula") ? "Pemula" : `Jilid ${currentJilid}`;
+
+    const stats = {
+      progressJilid: currentJilid,
+      halamanTerakhir: halAktif,
+      totalHalamanKhatam: totalHalSelesai,
+      capaianSaatIni: `${jName} Hal ${halAktif} (${percentOverall}%)`,
+      targetCapaian: (target.targetJilid === 0 ? "Pemula" : `Jilid ${target.targetJilid || 7}`),
+      totalSetoran: `${riwayat.length} Kali`,
+      rataRataNilai: avgNilaiText,
+      progressMax: TOTAL_YANBUA_PAGES_,
+      progressPercent: percentOverall
+    };
+
+    const indikator = {
+      harian: {
+        targetText: `${targetHarian} Halaman / Sesi`,
+        realitaText: `${harianReal} Halaman (${harianCount}x Simak)`,
+        status: harianCount > 0 ? "Ada Simakan Hari Ini" : "Belum Ada Simakan"
+      },
+      pekanan: {
+        targetText: `${targetPekan} Halaman / Pekan`,
+        realitaText: `${pekanReal} Halaman (${pekanCount}x Simak)`,
+        percent: pekanPercent,
+        status: pekanPercent >= 100 ? "Target Pekan Tercapai" : (pekanPercent > 0 ? `${pekanPercent}% Capaian` : "0% Capaian")
+      },
+      bulanan: {
+        targetText: `${targetBulan} Halaman / Bulan`,
+        realitaText: `${bulanReal} Halaman (${bulanCount}x Simak)`,
+        percent: bulanPercent,
+        status: bulanPercent >= 100 ? "Target Bulan Tercapai" : (bulanPercent > 0 ? `${bulanPercent}% Capaian` : "0% Capaian")
+      }
+    };
+
     return {
       status: "success",
       success: true,
@@ -16140,11 +16182,15 @@ function getTPQStudentDetail(studentId, token) {
         name: student.name || "Santri",
         gender: student.gender || "L",
         photoUrl: student.photoUrl || "",
-        program: "TPQ Yanbu'a (Jilid 1 - 7)",
+        program: "TPQ Yanbu'a (Pemula - Jilid 7)",
         status: student.status || "ACTIVE",
         kelas: studentKelas,
         ustadz: studentUstadz
       },
+      kelas: studentKelas,
+      ustadz: studentUstadz,
+      stats: stats,
+      indikator: indikator,
       capaian: {
         jilidAktif: currentJilid,
         halamanAktif: halAktif,
@@ -16153,7 +16199,7 @@ function getTPQStudentDetail(studentId, token) {
         percentOverall: percentOverall
       },
       target: {
-        targetJilid: target.targetJilid || Math.min(7, currentJilid + 1),
+        targetJilid: target.targetJilid !== undefined ? target.targetJilid : Math.min(7, currentJilid + 1),
         targetHarian: targetHarian,
         targetPekan: targetPekan,
         targetBulan: targetBulan
@@ -16175,6 +16221,118 @@ function getTPQStudentDetail(studentId, token) {
       status: "error",
       success: false,
       message: "Gagal memuat detail santri TPQ: " + err.message
+    };
+  }
+}
+
+/**
+ * Hapus catatan log simakan TPQ dan rekalkulasi capaian terakhir santri
+ */
+function deleteTPQLog(logId, token) {
+  try {
+    if (!logId) throw new Error("ID Log wajib disertakan.");
+    if (token) {
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH", "PEGAWAI"]);
+      } catch (authErr) {
+        try { verifySessionToken(token); } catch (e) {
+          return { status: "error", success: false, message: authErr.message };
+        }
+      }
+    }
+
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error("Database spreadsheet tidak ditemukan.");
+    const logsSheet = ss.getSheetByName(SHEET_TPQ_LOGS);
+    if (!logsSheet) throw new Error("Sheet TPQ_Logs tidak ditemukan.");
+
+    const lData = logsSheet.getDataRange().getValues();
+    if (lData.length < 2) throw new Error("Tidak ada data log TPQ.");
+
+    const lHead = lData[0].map(h => String(h || "").trim().toLowerCase());
+    const logIdIdx = lHead.indexOf("log_id");
+    const sIdIdx = lHead.indexOf("student_id");
+    if (logIdIdx === -1) throw new Error("Kolom log_id tidak ditemukan di TPQ_Logs.");
+
+    let targetRow = -1;
+    let studentId = "";
+    for (let i = 1; i < lData.length; i++) {
+      if (String(lData[i][logIdIdx] || "").trim() === String(logId).trim()) {
+        targetRow = i + 1;
+        studentId = sIdIdx !== -1 ? String(lData[i][sIdIdx] || "").trim() : "";
+        break;
+      }
+    }
+
+    if (targetRow === -1) throw new Error("Catatan log dengan ID " + logId + " tidak ditemukan.");
+
+    logsSheet.deleteRow(targetRow);
+
+    // Rekalkulasi capaian terakhir jika studentId ditemukan
+    if (studentId) {
+      const remainingData = logsSheet.getDataRange().getValues();
+      const studentLogs = [];
+      if (remainingData.length >= 2) {
+        const rHead = remainingData[0].map(h => String(h || "").trim().toLowerCase());
+        const rsIdx = rHead.indexOf("student_id");
+        const rjIdx = rHead.indexOf("jilid");
+        const rhIdx = rHead.indexOf("halaman");
+        const rstIdx = rHead.indexOf("status_setoran");
+        const rtglIdx = rHead.indexOf("tanggal");
+        const rcrIdx = rHead.indexOf("created_at");
+
+        for (let i = 1; i < remainingData.length; i++) {
+          if (String(remainingData[i][rsIdx] || "").trim() === studentId) {
+            studentLogs.push({
+              jilid: rjIdx !== -1 ? (Number(remainingData[i][rjIdx]) || 1) : 1,
+              halaman: rhIdx !== -1 ? (Number(remainingData[i][rhIdx]) || 1) : 1,
+              statusSetoran: rstIdx !== -1 ? String(remainingData[i][rstIdx] || "LANJUT").trim().toUpperCase() : "LANJUT",
+              tgl: (rtglIdx !== -1 && remainingData[i][rtglIdx]) ? new Date(remainingData[i][rtglIdx]) : (rcrIdx !== -1 && remainingData[i][rcrIdx] ? new Date(remainingData[i][rcrIdx]) : new Date(0))
+            });
+          }
+        }
+      }
+
+      studentLogs.sort((a, b) => b.tgl - a.tgl);
+      const capaianSheet = ss.getSheetByName(SHEET_TPQ_CAPAIAN);
+      if (capaianSheet) {
+        const cData = capaianSheet.getDataRange().getValues();
+        if (cData.length >= 2) {
+          const cHead = cData[0].map(h => String(h || "").trim().toLowerCase());
+          const csIdIdx = cHead.indexOf("student_id");
+          const cJilidIdx = cHead.indexOf("jilid_aktif");
+          const cHalIdx = cHead.indexOf("halaman_aktif");
+          const cStIdx = cHead.indexOf("status_terakhir");
+          const cUpIdx = cHead.indexOf("updated_at");
+
+          for (let i = 1; i < cData.length; i++) {
+            if (String(cData[i][csIdIdx] || "").trim() === studentId) {
+              const nowIso = new Date().toISOString();
+              if (studentLogs.length > 0) {
+                const latest = studentLogs[0];
+                if (cJilidIdx !== -1) capaianSheet.getRange(i + 1, cJilidIdx + 1).setValue(latest.jilid);
+                if (cHalIdx !== -1) capaianSheet.getRange(i + 1, cHalIdx + 1).setValue(latest.halaman);
+                if (cStIdx !== -1) capaianSheet.getRange(i + 1, cStIdx + 1).setValue(latest.statusSetoran);
+                if (cUpIdx !== -1) capaianSheet.getRange(i + 1, cUpIdx + 1).setValue(nowIso);
+              }
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    return {
+      status: "success",
+      success: true,
+      message: "Catatan simakan TPQ berhasil dihapus."
+    };
+  } catch (err) {
+    return {
+      status: "error",
+      success: false,
+      message: "Gagal menghapus log TPQ: " + err.message
     };
   }
 }

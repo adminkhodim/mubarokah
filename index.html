@@ -11856,6 +11856,395 @@
         </div>
     </div>
 
+    <!-- ==================== MODAL TPQ: DETAIL SANTRI & MUTABA'AH YANBU'A ==================== -->
+    <div id="modal-tpq-detail"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 hidden">
+        <div
+            class="bg-white dark:bg-[#15202d] w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-[#253447] flex flex-col max-h-[94vh] transform transition-all">
+            <!-- Modal Header -->
+            <div
+                class="px-5 py-4 bg-slate-50 dark:bg-[#1c2836] border-b border-slate-100 dark:border-[#253447] flex justify-between items-center shrink-0">
+                <div class="flex items-center space-x-3 min-w-0">
+                    <div id="tpq-detail-avatar"
+                        class="w-11 h-11 rounded-2xl bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300 font-black text-sm flex items-center justify-center shrink-0 border border-teal-200 dark:border-teal-800/40 shadow-sm">
+                        SN
+                    </div>
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2">
+                            <h3 id="tpq-detail-name"
+                                class="text-base font-extrabold text-slate-800 dark:text-slate-100 truncate">
+                                Memuat Santri...
+                            </h3>
+                            <span id="tpq-detail-badge-status"
+                                class="px-2 py-0.5 rounded-full text-[10px] font-black bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300 shrink-0">
+                                TPQ Aktif
+                            </span>
+                        </div>
+                        <p id="tpq-detail-nis" class="text-[11px] text-slate-400">NIS: - • Yanbu'a • Kelas TPQ</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2 shrink-0">
+                    <button type="button" id="btn-tpq-detail-print" onclick="printTPQStudentMutabaah()"
+                        class="px-2.5 py-1 rounded-xl bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 text-teal-700 dark:text-teal-300 flex items-center gap-1 text-xs font-bold transition border border-teal-200 dark:border-teal-800/60 active:scale-95"
+                        title="Cetak Mutaba'ah TPQ">
+                        <i class="fa-solid fa-print text-xs"></i>
+                        <span class="hidden sm:inline">Cetak Mutaba'ah</span>
+                    </button>
+                    <button type="button" onclick="closeTPQStudentDetail()"
+                        class="w-8 h-8 rounded-full bg-slate-200/60 dark:bg-slate-700 hover:bg-slate-300 text-slate-500 dark:text-slate-300 flex items-center justify-center transition">
+                        <i class="fa-solid fa-xmark text-sm"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Content Body -->
+            <div id="tpq-detail-content"
+                class="p-4 sm:p-5 overflow-y-auto space-y-4 custom-scrollbar flex-1 text-xs">
+                <!-- Loader State -->
+                <div id="tpq-detail-loader" class="py-16 text-center space-y-2 hidden">
+                    <i class="fa-solid fa-spinner fa-spin text-3xl text-teal-600"></i>
+                    <p class="text-xs text-slate-400 font-bold">Memuat rapor mutaba'ah TPQ Yanbu'a...</p>
+                </div>
+
+                <!-- Error State -->
+                <div id="tpq-detail-error" class="p-6 text-center text-rose-600 text-xs hidden">
+                    <p id="tpq-detail-error-text">Gagal memuat detail santri.</p>
+                </div>
+
+                <!-- Main Details Body -->
+                <div id="tpq-detail-body" class="space-y-4">
+                    <!-- 4 Stat Strip Cards -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        <div
+                            class="p-3 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200/70 dark:border-[#253447] text-center space-y-0.5">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">CAPAIAN SAAT INI</span>
+                            <div id="tpq-detail-stat-capaian"
+                                class="text-sm font-black text-teal-600 dark:text-teal-400">Jilid 1 Hal 1 <span
+                                    class="text-xs font-bold text-slate-400">(0%)</span></div>
+                        </div>
+                        <div
+                            class="p-3 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200/70 dark:border-[#253447] text-center space-y-0.5">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">TARGET CAPAIAN</span>
+                            <div id="tpq-detail-stat-target"
+                                class="text-sm font-black text-amber-500 dark:text-amber-400">Jilid 7 (Khatam)</div>
+                        </div>
+                        <div
+                            class="p-3 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200/70 dark:border-[#253447] text-center space-y-0.5">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">TOTAL SIMAKAN</span>
+                            <div id="tpq-detail-stat-total"
+                                class="text-sm font-black text-slate-800 dark:text-slate-100">0 Kali</div>
+                        </div>
+                        <div
+                            class="p-3 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200/70 dark:border-[#253447] text-center space-y-0.5">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">RATA-RATA NILAI</span>
+                            <div id="tpq-detail-stat-nilai"
+                                class="text-sm font-black text-teal-600 dark:text-teal-400">Mumtaz (A)</div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Yanbu'a (356 Halaman) Bar -->
+                    <div class="space-y-1">
+                        <div class="flex justify-between items-center text-[11px] font-extrabold">
+                            <span class="text-slate-700 dark:text-slate-300">Progress Kitab Yanbu'a (356 Halaman / 8 Tingkat)</span>
+                            <span id="tpq-detail-progress-text" class="text-teal-600 font-black">Jilid 1 (Hal 1/44) • 1 / 356 Hal (0%)</span>
+                        </div>
+                        <div class="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                            <div id="tpq-detail-progress-bar"
+                                class="bg-teal-600 h-full rounded-full transition-all duration-500"
+                                style="width: 1%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Tabs Navigation -->
+                    <div
+                        class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-[#253447] pb-2 pt-1">
+                        <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 sm:pb-0">
+                            <button type="button" id="btn-tpq-detail-tab-1" onclick="switchTPQDetailTab(1)"
+                                class="px-3 py-1.5 text-xs font-bold rounded-xl bg-teal-700 text-white shadow-sm transition flex items-center gap-1.5 shrink-0">
+                                <i class="fa-solid fa-list-check"></i> 1. Rekapitulasi & Matriks
+                            </button>
+                            <button type="button" id="btn-tpq-detail-tab-2" onclick="switchTPQDetailTab(2)"
+                                class="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition flex items-center gap-1.5 shrink-0">
+                                <i class="fa-solid fa-clock-rotate-left"></i> 2. Riwayat Simakan
+                            </button>
+                            <button type="button" id="btn-tpq-detail-tab-3" onclick="switchTPQDetailTab(3)"
+                                class="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition flex items-center gap-1.5 shrink-0">
+                                <i class="fa-solid fa-hourglass-half"></i> 3. Estimasi Khatam
+                            </button>
+                        </div>
+                        <div class="self-end sm:self-auto">
+                            <span
+                                class="px-3 py-1 rounded-xl bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 border border-teal-200/60 dark:border-teal-800/50 text-[11px] font-bold flex items-center gap-1.5">
+                                <i class="fa-solid fa-book-open-reader text-[10px]"></i>
+                                <span>Kitab Yanbu'a (Pemula - Jilid 7)</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- PANEL TAB 1: REKAPITULASI & MATRIKS YANBU'A -->
+                    <div id="panel-tpq-detail-tab-1" class="space-y-3">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                            <div>
+                                <h4
+                                    class="text-xs font-black text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-chart-column text-teal-600"></i> REKAPITULASI REALITA VS TARGET (3 INDIKATOR)
+                                </h4>
+                                <p class="text-[10px] text-slate-400">Pencapaian halaman harian, pekanan, dan bulanan santri</p>
+                            </div>
+                        </div>
+
+                        <!-- 3 Cards Indikator (Harian, Pekan, Bulan) -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <!-- Indikator 1: Capaian Harian -->
+                            <div
+                                class="p-3.5 bg-white dark:bg-[#15202d] rounded-2xl border-2 border-teal-200 dark:border-teal-900/60 shadow-sm space-y-2.5">
+                                <div class="flex justify-between items-center">
+                                    <span
+                                        class="font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 text-xs">
+                                        <i class="fa-regular fa-calendar text-teal-600"></i> Capaian Harian
+                                    </span>
+                                    <span id="tpq-ind-harian-status"
+                                        class="text-[9px] font-extrabold px-2 py-0.5 rounded bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">Belum Ada Simakan</span>
+                                </div>
+                                <div class="flex items-center space-x-1">
+                                    <input type="date" id="tpq-date-harian"
+                                        onchange="onChangeTPQIndikatorDate('daily', this.value)"
+                                        class="flex-1 px-2 py-1 rounded-lg border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-[10px] font-bold outline-none">
+                                    <button type="button" onclick="setTPQIndikatorPreset('today')"
+                                        class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-[#1c2836] text-[9px] font-bold hover:bg-slate-200">Hari Ini</button>
+                                    <button type="button" onclick="setTPQIndikatorPreset('yesterday')"
+                                        class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-[#1c2836] text-[9px] font-bold hover:bg-slate-200">Kemarin</button>
+                                </div>
+                                <div class="p-2 rounded-xl bg-slate-50 dark:bg-[#1c2836] space-y-1">
+                                    <div class="flex justify-between items-center text-[10px]">
+                                        <span class="text-slate-500">Realita:</span>
+                                        <span id="tpq-ind-harian-realita" class="font-extrabold text-slate-800 dark:text-slate-100">0 Halaman</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-[10px]">
+                                        <span class="text-slate-500">Target Sesi:</span>
+                                        <span id="tpq-ind-harian-target" class="font-bold text-teal-600">1 Halaman / Sesi</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Indikator 2: Capaian Pekanan -->
+                            <div
+                                class="p-3.5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm space-y-2.5">
+                                <div class="flex justify-between items-center">
+                                    <span
+                                        class="font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 text-xs">
+                                        <i class="fa-solid fa-calendar-week text-teal-600"></i> Capaian Pekanan
+                                    </span>
+                                    <span id="tpq-ind-pekan-status"
+                                        class="text-[9px] font-extrabold px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">0% Capaian</span>
+                                </div>
+                                <div class="p-2 rounded-xl bg-slate-50 dark:bg-[#1c2836] space-y-1">
+                                    <div class="flex justify-between items-center text-[10px]">
+                                        <span class="text-slate-500">Realita (7 Hari):</span>
+                                        <span id="tpq-ind-pekan-realita" class="font-extrabold text-slate-800 dark:text-slate-100">0 Halaman</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-[10px]">
+                                        <span class="text-slate-500">Target Pekan (11 Sesi):</span>
+                                        <span id="tpq-ind-pekan-target" class="font-bold text-teal-600">11 Halaman</span>
+                                    </div>
+                                </div>
+                                <div class="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                                    <div id="tpq-ind-pekan-bar" class="bg-teal-600 h-full rounded-full transition-all" style="width: 0%;"></div>
+                                </div>
+                            </div>
+
+                            <!-- Indikator 3: Capaian Bulanan -->
+                            <div
+                                class="p-3.5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm space-y-2.5">
+                                <div class="flex justify-between items-center">
+                                    <span
+                                        class="font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 text-xs">
+                                        <i class="fa-solid fa-calendar-days text-teal-600"></i> Capaian Bulanan
+                                    </span>
+                                    <span id="tpq-ind-bulan-status"
+                                        class="text-[9px] font-extrabold px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">0% Capaian</span>
+                                </div>
+                                <div class="p-2 rounded-xl bg-slate-50 dark:bg-[#1c2836] space-y-1">
+                                    <div class="flex justify-between items-center text-[10px]">
+                                        <span class="text-slate-500">Realita Bulan Ini:</span>
+                                        <span id="tpq-ind-bulan-realita" class="font-extrabold text-slate-800 dark:text-slate-100">0 Halaman</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-[10px]">
+                                        <span class="text-slate-500">Target Bulan (4 Pekan):</span>
+                                        <span id="tpq-ind-bulan-target" class="font-bold text-teal-600">44 Halaman</span>
+                                    </div>
+                                </div>
+                                <div class="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                                    <div id="tpq-ind-bulan-bar" class="bg-teal-600 h-full rounded-full transition-all" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Matriks 8 Tingkat Yanbu'a Grid -->
+                        <div class="p-3.5 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200/70 dark:border-[#253447] space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-border-all text-teal-600"></i> Matriks Capaian Jenjang Kitab Yanbu'a
+                                </span>
+                                <span class="text-[10px] text-slate-400">Pemula s.d. Jilid 7 • Total 356 Hal</span>
+                            </div>
+                            <div id="tpq-detail-jilid-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2">
+                                <!-- Populated dynamically by JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PANEL TAB 2: RIWAYAT SIMAKAN -->
+                    <div id="panel-tpq-detail-tab-2" class="hidden space-y-3">
+                        <!-- Toolbar Tampilan (Kartu Responsif vs Tabel) -->
+                        <div class="flex items-center justify-between text-xs pb-1 border-b border-slate-100 dark:border-[#253447]">
+                            <span class="font-bold text-slate-700 dark:text-slate-300 text-[11px] flex items-center gap-1.5">
+                                <i class="fa-solid fa-clock-rotate-left text-teal-600"></i>
+                                <span>Riwayat Simakan Yanbu'a</span>
+                                <span id="tpq-detail-riwayat-count-badge" class="px-2 py-0.5 rounded-full bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300 text-[10px] font-black">0</span>
+                            </span>
+                            <div class="flex items-center gap-1 bg-slate-100 dark:bg-[#1c2836] p-0.5 rounded-xl border border-slate-200/60 dark:border-[#283a4e]">
+                                <button type="button" id="btn-tpq-view-card" onclick="setTPQRiwayatView('card')"
+                                    class="px-2 py-1 rounded-lg text-[10px] font-bold bg-white dark:bg-[#15202d] text-teal-700 dark:text-teal-300 shadow-sm transition">
+                                    <i class="fa-solid fa-grip-vertical mr-1"></i> Kartu
+                                </button>
+                                <button type="button" id="btn-tpq-view-table" onclick="setTPQRiwayatView('table')"
+                                    class="px-2 py-1 rounded-lg text-[10px] font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition">
+                                    <i class="fa-solid fa-table-list mr-1"></i> Tabel
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 1. Tampilan Kartu Responsif (Default HP) -->
+                        <div id="tpq-detail-riwayat-card-list" class="space-y-2.5">
+                            <!-- Populated dynamically -->
+                        </div>
+
+                        <!-- 2. Tampilan Tabel Lengkap (Desktop/Toggle) -->
+                        <div id="tpq-detail-riwayat-table-wrapper" class="overflow-x-auto rounded-xl border border-slate-200/80 dark:border-[#253447] hidden">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-50 dark:bg-[#1c2836] border-b border-slate-200/80 dark:border-[#253447] text-slate-500 uppercase text-[10px] font-extrabold tracking-wider">
+                                    <tr>
+                                        <th class="py-2.5 px-3">Tanggal / Sesi</th>
+                                        <th class="py-2.5 px-3">Tingkat / Halaman</th>
+                                        <th class="py-2.5 px-3">Hasil / Nilai</th>
+                                        <th class="py-2.5 px-3">Ustadz / Catatan</th>
+                                        <th class="py-2.5 px-3 text-right">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tpq-detail-riwayat-tbody" class="divide-y divide-slate-100 dark:divide-[#202f42] text-slate-700 dark:text-slate-200">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- PANEL TAB 3: ESTIMASI KHATAM -->
+                    <div id="panel-tpq-detail-tab-3" class="hidden space-y-3">
+                        <!-- Hero Estimasi Khatam Box -->
+                        <div class="p-4 sm:p-5 rounded-3xl bg-gradient-to-br from-teal-700 via-teal-800 to-emerald-950 text-white shadow-lg space-y-3 relative overflow-hidden">
+                            <div class="absolute -right-8 -top-8 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 relative z-10">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2 py-0.5 rounded-full bg-white/20 text-white font-extrabold text-[10px] uppercase tracking-wider">
+                                            Proyeksi Berdasarkan Tren Riil
+                                        </span>
+                                        <span id="tpq-estimasi-badge-status" class="px-2 py-0.5 rounded-full bg-teal-300 text-teal-950 font-black text-[10px]">
+                                            Aktif TPQ
+                                        </span>
+                                    </div>
+                                    <h3 class="text-xs sm:text-sm font-medium text-teal-100 mt-1">Perkiraan Waktu Khatam Yanbu'a:</h3>
+                                    <div class="flex items-baseline gap-2 mt-0.5">
+                                        <span id="tpq-estimasi-khatam-bulan-tahun" class="text-2xl sm:text-3xl font-black tracking-tight text-white">
+                                            Memuat...
+                                        </span>
+                                        <span id="tpq-estimasi-khatam-durasi" class="text-xs text-teal-200 font-semibold">
+                                            (± 0 Bulan lagi)
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="bg-white/10 backdrop-blur-sm p-3 rounded-xl border border-white/15 text-left sm:text-right shrink-0">
+                                    <span class="text-[10px] text-teal-200 block uppercase font-bold">Kecepatan TPQ</span>
+                                    <span id="tpq-estimasi-laju-text" class="text-base font-extrabold text-white">0 Hal / Pekan</span>
+                                    <span id="tpq-estimasi-laju-sub" class="text-[10px] text-teal-200 block mt-0.5">0 Hal / Bulan</span>
+                                </div>
+                            </div>
+
+                            <!-- Progress Menuju 356 Halaman -->
+                            <div class="space-y-1.5 pt-1 relative z-10">
+                                <div class="flex justify-between items-center text-[11px] font-bold text-teal-100">
+                                    <span>Milestone: <b id="tpq-estimasi-halaman-tuntas" class="text-white">0</b> dari 356 Halaman (Yanbu'a)</span>
+                                    <span id="tpq-estimasi-sisa-halaman" class="text-teal-200">Sisa 356 Halaman</span>
+                                </div>
+                                <div class="w-full bg-black/20 h-2.5 rounded-full overflow-hidden p-0.5">
+                                    <div id="tpq-estimasi-meter-bar" class="bg-white h-full rounded-full transition-all duration-700" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3 Skenario Waktu Khatam -->
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-xs font-black text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-teal-600"></i> Simulasi Skenario Waktu Selesai (Khatam Yanbu'a)
+                                </h4>
+                                <span class="text-[10px] text-slate-400">Total 356 Hal (8 Tingkat)</span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+                                <!-- Skenario A -->
+                                <div class="p-3 bg-white dark:bg-[#15202d] rounded-xl border border-slate-200/80 dark:border-[#253447] space-y-1">
+                                    <span class="text-[10px] font-bold text-teal-600 block">Skenario 1: Tren Riil Saat Ini</span>
+                                    <div id="tpq-skenario-riil-date" class="text-xs font-black text-slate-800 dark:text-slate-100">-</div>
+                                    <p id="tpq-skenario-riil-sub" class="text-[9px] text-slate-400">Mengikuti laju simakan saat ini</p>
+                                </div>
+                                <!-- Skenario B -->
+                                <div class="p-3 bg-white dark:bg-[#15202d] rounded-xl border border-slate-200/80 dark:border-[#253447] space-y-1">
+                                    <span class="text-[10px] font-bold text-amber-600 block">Skenario 2: Target Santri</span>
+                                    <div id="tpq-skenario-target-date" class="text-xs font-black text-slate-800 dark:text-slate-100">-</div>
+                                    <p id="tpq-skenario-target-sub" class="text-[9px] text-slate-400">Jika konsisten sesuai target pekanan</p>
+                                </div>
+                                <!-- Skenario C -->
+                                <div class="p-3 bg-white dark:bg-[#15202d] rounded-xl border border-slate-200/80 dark:border-[#253447] space-y-1">
+                                    <span class="text-[10px] font-bold text-purple-600 block">Skenario 3: Akselerasi (1 Hal / Sesi)</span>
+                                    <div id="tpq-skenario-akselerasi-date" class="text-xs font-black text-slate-800 dark:text-slate-100">-</div>
+                                    <p id="tpq-skenario-akselerasi-sub" class="text-[9px] text-slate-400">11 halaman per pekan (11 sesi aktif)</p>
+                                </div>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200/60 dark:border-teal-800/40 text-[10px] text-teal-800 dark:text-teal-300 flex items-center gap-2">
+                                <i class="fa-solid fa-circle-info shrink-0"></i>
+                                <span>Estimasi dihitung dari total 356 halaman Kitab Yanbu'a (Pemula: 48 Hal, Jilid 1-7: 308 Hal). Ketepatan bacaan tartil dan kehadiran bimbingan menentukan ketepatan capaian.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div
+                class="px-5 py-3.5 bg-slate-50 dark:bg-[#1c2836] border-t border-slate-100 dark:border-[#253447] flex items-center justify-between gap-3 shrink-0">
+                <div class="flex items-center space-x-2">
+                    <button type="button"
+                        onclick="openSimakTPQModal(ASNTPQ.activeStudentDetail?.student?.studentId)"
+                        class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs shadow-sm transition flex items-center gap-1.5 active:scale-95">
+                        <i class="fa-solid fa-plus text-[10px]"></i>
+                        <span>+ Simak Baru</span>
+                    </button>
+                    <button type="button"
+                        onclick="openTPQTargetModal(ASNTPQ.activeStudentDetail?.student?.studentId)"
+                        class="px-3.5 py-2 bg-white hover:bg-slate-100 dark:bg-[#15202d] dark:hover:bg-[#1c2836] text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition border border-slate-200 dark:border-[#283a4e] flex items-center gap-1.5 active:scale-95">
+                        <i class="fa-solid fa-pencil text-[10px]"></i>
+                        <span>Edit Target</span>
+                    </button>
+                </div>
+                <button type="button" onclick="closeTPQStudentDetail()"
+                    class="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-[#253447] dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition active:scale-95">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ==================== MODAL TPQ: KELOLA KELAS & PLOTTING (4 TAB LENGKAP) ==================== -->
     <div id="modal-tpq-kelas"
         class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 hidden">
