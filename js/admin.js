@@ -144,6 +144,17 @@
         window.toggleAdminAccordion = toggleAdminAccordion;
 
         function showAdminView(viewName) {
+            // Guard Otorisasi Peran RBAC: Cegah navigasi ke modul yang tidak diizinkan
+            if (viewName && viewName !== 'hub') {
+                if (typeof isModuleAllowedForRole === 'function' && !isModuleAllowedForRole(viewName)) {
+                    const fallbackMeta = ADMIN_VIEW_META[viewName] || {};
+                    if (typeof showToast === 'function') {
+                        showToast(`⛔ Akses Terbatas: Peran Anda tidak memiliki izin untuk modul ${fallbackMeta.title || viewName}.`);
+                    }
+                    viewName = 'hub';
+                }
+            }
+
             const meta = ADMIN_VIEW_META[viewName] || ADMIN_VIEW_META['hub'];
 
             // Update Sidebar Active state
@@ -293,6 +304,9 @@
                 renderAdminUnitKegiatanList();
             } else {
                 hubView.classList.remove('hidden');
+                if (typeof applyAdminRoleVisibility === 'function') {
+                    applyAdminRoleVisibility();
+                }
             }
 
             // Sembunyikan double header di layar mobile saat sub-view aktif
