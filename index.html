@@ -6061,6 +6061,58 @@
                                     </div>
                                 </div>
 
+                                <!-- Section Kelola Video Highlight Galeri -->
+                                <section
+                                    class="bg-white dark:bg-[#151f2c] p-4 md:p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] space-y-4">
+                                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-[#253447] pb-2.5">
+                                        <h3
+                                            class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center">
+                                            <i class="fa-brands fa-youtube text-red-600 mr-2 text-sm"></i> Video Highlight Kegiatan
+                                        </h3>
+                                        <span class="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                                            Tampil di Beranda Galeri
+                                        </span>
+                                    </div>
+
+                                    <form id="adminGaleriVideoForm" onsubmit="handleAdminGaleriVideoSubmit(event)" class="space-y-3.5">
+                                        <div>
+                                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                                                Tautan Video / Kode Embed YouTube <span class="text-rose-500">*</span>
+                                            </label>
+                                            <div class="flex flex-col sm:flex-row gap-2">
+                                                <input type="text" id="admin-galeri-video-input" required
+                                                    placeholder="https://youtu.be/... atau https://www.youtube.com/watch?v=..."
+                                                    oninput="previewAdminGaleriVideo()"
+                                                    class="flex-1 text-sm px-3.5 py-2.5 bg-slate-50 dark:bg-[#1c2836] border border-slate-200 dark:border-[#253447] text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-red-500 transition">
+                                                <button type="button" onclick="previewAdminGaleriVideo()"
+                                                    class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-[#253447] dark:hover:bg-[#2e4055] text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 shrink-0 active:scale-95">
+                                                    <i class="fa-solid fa-eye text-xs"></i> Pratinjau
+                                                </button>
+                                            </div>
+                                            <p class="text-[10.5px] text-slate-400 dark:text-slate-500 mt-1.5">
+                                                Mendukung semua format: link standar YouTube, youtu.be, Shorts, YouTube Live, maupun kode &lt;iframe&gt; embed.
+                                            </p>
+                                        </div>
+
+                                        <!-- Pratinjau Video -->
+                                        <div id="admin-galeri-video-preview-wrapper" class="space-y-1.5">
+                                            <p class="text-[10px] font-semibold text-slate-500 dark:text-slate-400">Pratinjau Video:</p>
+                                            <div class="relative max-w-sm sm:max-w-md aspect-video rounded-2xl overflow-hidden shadow-sm border border-slate-200 dark:border-[#253447] bg-black">
+                                                <iframe id="admin-galeri-video-preview-iframe" class="w-full h-full"
+                                                    src="https://www.youtube.com/embed/ZQZqPcAlrk0?rel=0" title="Pratinjau Video Highlight"
+                                                    frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex items-center justify-end pt-1">
+                                            <button type="submit" id="btn-submit-galeri-video"
+                                                class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl shadow-sm transition active:scale-95 flex items-center gap-2">
+                                                <i class="fa-solid fa-save"></i> Simpan Video Highlight
+                                            </button>
+                                        </div>
+                                    </form>
+                                </section>
+
                                 <!-- Formulir Input Galeri -->
                                 <section
                                     class="bg-white dark:bg-[#151f2c] p-4 md:p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] space-y-4">
@@ -6217,11 +6269,19 @@
                                         <div>
                                             <label
                                                 class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Video
-                                                Highlight (Youtube Embed
-                                                URL) <span class="text-red-500">*</span></label>
-                                            <input type="url" id="input-video-highlight" required
-                                                placeholder="https://www.youtube.com/embed/..."
-                                                class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 focus:outline-none focus:border-brand-500 focus:bg-white transition">
+                                                Highlight YouTube (Link Video / Kode Embed) <span class="text-red-500">*</span></label>
+                                            <input type="text" id="input-video-highlight" required
+                                                oninput="previewPengaturanVideo()"
+                                                placeholder="https://youtu.be/... atau https://www.youtube.com/watch?v=..."
+                                                class="w-full text-sm bg-slate-50 dark:bg-[#1c2836] border border-slate-200 dark:border-[#253447] text-slate-800 dark:text-slate-100 rounded-xl px-4 py-2.5 focus:outline-none focus:border-brand-500 transition">
+                                            <div class="mt-2 space-y-1">
+                                                <p class="text-[10px] text-slate-400">Pratinjau:</p>
+                                                <div class="relative max-w-xs aspect-video rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-[#253447] bg-black">
+                                                    <iframe id="pengaturan-video-preview-iframe" class="w-full h-full"
+                                                        src="https://www.youtube.com/embed/ZQZqPcAlrk0?rel=0" title="Pratinjau Video"
+                                                        frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                                                </div>
+                                            </div>
                                         </div>
                                         <div>
                                             <label

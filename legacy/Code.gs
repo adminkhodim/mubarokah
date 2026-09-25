@@ -2278,28 +2278,44 @@ function toggleStatusGaleri(galeriId, newStatus) {
 
 function formatYoutubeEmbedUrlBackend(rawUrl) {
   if (!rawUrl || typeof rawUrl !== "string") return "";
-  const trimmed = rawUrl.trim();
-  if (!trimmed) return "";
-  if (trimmed.includes("youtube.com/embed/") || trimmed.includes("youtube-nocookie.com/embed/")) {
-    return trimmed;
+  let str = rawUrl.trim();
+  if (!str) return "";
+
+  // 1. Ekstrak src jika pengguna menyalin kode <iframe> dari YouTube
+  const iframeSrc = str.match(/src=["']([^"']+)["']/i);
+  if (iframeSrc && iframeSrc[1]) {
+    str = iframeSrc[1].trim();
   }
-  const playlistMatch = trimmed.match(/[?&]list=([a-zA-Z0-9_-]+)/);
-  if (playlistMatch && playlistMatch[1] && !trimmed.includes("watch?v=")) {
+
+  // 2. Playlist YouTube
+  const playlistMatch = str.match(/[?&]list=([a-zA-Z0-9_-]+)/);
+  if (playlistMatch && playlistMatch[1] && !str.includes("watch?v=")) {
     return "https://www.youtube.com/embed/videoseries?list=" + playlistMatch[1] + "&rel=0";
   }
-  const shortMatch = trimmed.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
-  if (shortMatch && shortMatch[1]) {
-    return "https://www.youtube.com/embed/" + shortMatch[1] + "?rel=0";
+
+  // 3. Raw 11-char Video ID
+  if (/^[a-zA-Z0-9_-]{11}$/.test(str)) {
+    return "https://www.youtube.com/embed/" + str + "?rel=0";
   }
-  const watchMatch = trimmed.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+
+  // 4. youtu.be, embed, shorts, live, v
+  const match = str.match(/(?:youtu\.be\/|youtube\.com\/(?:embed|shorts|live|v)\/)([a-zA-Z0-9_-]{11})/i);
+  if (match && match[1]) {
+    return "https://www.youtube.com/embed/" + match[1] + "?rel=0";
+  }
+
+  // 5. watch?v=VIDEO_ID atau &v=VIDEO_ID
+  const watchMatch = str.match(/[?&]v=([a-zA-Z0-9_-]{11})/i);
   if (watchMatch && watchMatch[1]) {
     return "https://www.youtube.com/embed/" + watchMatch[1] + "?rel=0";
   }
-  const shortsMatch = trimmed.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/);
-  if (shortsMatch && shortsMatch[1]) {
-    return "https://www.youtube.com/embed/" + shortsMatch[1] + "?rel=0";
+
+  // 6. Jika sudah embed URL
+  if (str.includes("youtube.com/embed/") || str.includes("youtube-nocookie.com/embed/")) {
+    return str.includes("?") ? str : (str + "?rel=0");
   }
-  return trimmed;
+
+  return str;
 }
 
 // ==================== PENGATURAN PROFIL ====================
@@ -2367,7 +2383,7 @@ function simpanPengaturan(payload) {
     const data = sheet.getDataRange().getValues();
     
     for (let k of keysToUpdate) {
-      if (k === "action") continue;
+      if (k === "action" || k === "token" || k === "tenantId") continue;
       
       let foundRow = -1;
       for (let i = 1; i < data.length; i++) {
@@ -2386,7 +2402,7 @@ function simpanPengaturan(payload) {
       }
     }
     
-    return { success: true, message: "Pengaturan berhasil disimpan!" };
+    return { success: true, status: "success", ok: true, message: "Pengaturan berhasil disimpan!" };
   } catch (err) {
     return { success: false, message: err.toString() };
   }

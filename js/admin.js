@@ -739,6 +739,7 @@
                     document.getElementById('input-link-instagram').value = config.link_instagram || "";
                     document.getElementById('input-link-youtube').value = config.link_youtube || "";
                     document.getElementById('input-link-facebook').value = config.link_facebook || "";
+                    previewPengaturanVideo();
                 }
             } catch (err) {
                 console.error("Gagal memuat pengaturan:", err);
@@ -751,6 +752,17 @@
                 }
             }
         }
+
+        function previewPengaturanVideo() {
+            const raw = (document.getElementById('input-video-highlight')?.value || '').trim();
+            const iframe = document.getElementById('pengaturan-video-preview-iframe');
+            if (!iframe) return;
+            const embedUrl = (typeof formatYoutubeEmbedUrl === 'function') ? formatYoutubeEmbedUrl(raw) : raw;
+            if (embedUrl && (embedUrl.includes('youtube.com/embed/') || embedUrl.includes('youtube-nocookie.com/embed/'))) {
+                iframe.src = embedUrl;
+            }
+        }
+        window.previewPengaturanVideo = previewPengaturanVideo;
 
         async function submitPengaturan(e) {
             e.preventDefault();

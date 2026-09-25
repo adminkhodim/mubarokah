@@ -184,43 +184,95 @@
          * Mengonversi semua variasi URL YouTube (watch?v=, youtu.be/, shorts/, playlist, m.youtube.com)
          * menjadi URL embed resmi yang aman disematkan dalam <iframe> tanpa terblokir X-Frame-Options.
          */
+        /**
+         * Ekstrak 11-karakter YouTube Video ID dari berbagai format input (URL reguler, pendek, live, shorts, embed, maupun tag <iframe>).
+         */
+        function extractYoutubeId(input) {
+            if (!input || typeof input !== 'string') return null;
+            let str = input.trim();
+            if (!str) return null;
+
+            // Ekstrak nilai src jika user menyalin seluruh kode tag <iframe>
+            const iframeSrc = str.match(/src=["']([^"']+)["']/i);
+            if (iframeSrc && iframeSrc[1]) {
+                str = iframeSrc[1].trim();
+            }
+
+            // 1. Raw 11-character video ID
+            if (/^[a-zA-Z0-9_-]{11}$/.test(str)) {
+                return str;
+            }
+
+            // 2. youtu.be/ID atau youtube.com/(embed|shorts|live|v)/ID
+            const shortMatch = str.match(/(?:youtu\.be\/|youtube\.com\/(?:embed|shorts|live|v)\/)([a-zA-Z0-9_-]{11})/i);
+            if (shortMatch && shortMatch[1]) {
+                return shortMatch[1];
+            }
+
+            // 3. watch?v=ID atau &v=ID
+            const watchMatch = str.match(/[?&]v=([a-zA-Z0-9_-]{11})/i);
+            if (watchMatch && watchMatch[1]) {
+                return watchMatch[1];
+            }
+
+            // 4. youtube.com/embed/ID
+            const embedMatch = str.match(/youtube(?:-nocookie)?\.com\/embed\/([a-zA-Z0-9_-]{11})/i);
+            if (embedMatch && embedMatch[1]) {
+                return embedMatch[1];
+            }
+
+            return null;
+        }
+
+        /**
+         * Konversi berbagai format URL YouTube menjadi URL embed resmi yang aman disematkan dalam <iframe>.
+         */
         function formatYoutubeEmbedUrl(rawUrl) {
             if (!rawUrl || typeof rawUrl !== 'string') return "https://www.youtube.com/embed/ZQZqPcAlrk0?rel=0";
             const trimmed = rawUrl.trim();
             if (!trimmed) return "https://www.youtube.com/embed/ZQZqPcAlrk0?rel=0";
 
-            // Jika sudah berformat embed, kembalikan langsung dengan rel=0
-            if (trimmed.includes('youtube.com/embed/') || trimmed.includes('youtube-nocookie.com/embed/')) {
-                return trimmed.includes('?') ? trimmed : `${trimmed}?rel=0`;
-            }
-
-            // 1. Playlist: youtube.com/playlist?list=ID
+            // 1. Playlist
             const playlistMatch = trimmed.match(/[?&]list=([a-zA-Z0-9_-]+)/);
             if (playlistMatch && playlistMatch[1] && !trimmed.includes('watch?v=')) {
                 return `https://www.youtube.com/embed/videoseries?list=${playlistMatch[1]}&rel=0`;
             }
 
-            // 2. Short Link: youtu.be/VIDEO_ID
-            const shortMatch = trimmed.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
-            if (shortMatch && shortMatch[1]) {
-                return `https://www.youtube.com/embed/${shortMatch[1]}?rel=0`;
+            // 2. Ekstrak Video ID
+            const videoId = extractYoutubeId(trimmed);
+            if (videoId) {
+                return `https://www.youtube.com/embed/${videoId}?rel=0`;
             }
 
-            // 3. Watch Link (desktop www atau mobile m.youtube.com): watch?v=VIDEO_ID
-            const watchMatch = trimmed.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
-            if (watchMatch && watchMatch[1]) {
-                return `https://www.youtube.com/embed/${watchMatch[1]}?rel=0`;
+            // 3. Jika sudah berformat embed URL
+            if (trimmed.includes('youtube.com/embed/') || trimmed.includes('youtube-nocookie.com/embed/')) {
+                return trimmed.includes('?') ? trimmed : `${trimmed}?rel=0`;
             }
 
-            // 4. Shorts: youtube.com/shorts/VIDEO_ID
-            const shortsMatch = trimmed.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/);
-            if (shortsMatch && shortsMatch[1]) {
-                return `https://www.youtube.com/embed/${shortsMatch[1]}?rel=0`;
-            }
-
-            // Sanitasi ketat: jika bukan link video yang valid, JANGAN kembalikan URL mentah (seperti m.youtube.com)
-            // agar iframe tidak memicu 'X-Frame-Options: sameorigin'. Gunakan fallback embed resmi pesantren.
             return "https://www.youtube.com/embed/ZQZqPcAlrk0?rel=0";
+        }
+
+        /**
+         * Mengembalikan URL tonton langsung (https://youtu.be/ID) untuk tombol eksternal.
+         */
+        function getYoutubeWatchUrl(embedOrRawUrl) {
+            if (!embedOrRawUrl || typeof embedOrRawUrl !== 'string') return "https://youtu.be/ZQZqPcAlrk0";
+            const trimmed = embedOrRawUrl.trim();
+            const playlistMatch = trimmed.match(/[?&]list=([a-zA-Z0-9_-]+)/);
+            if (playlistMatch && playlistMatch[1] && !trimmed.includes('watch?v=')) {
+                return `https://www.youtube.com/playlist?list=${playlistMatch[1]}`;
+            }
+            const videoId = extractYoutubeId(trimmed);
+            if (videoId) {
+                return `https://youtu.be/${videoId}`;
+            }
+            return trimmed;
+        }
+
+        if (typeof window !== 'undefined') {
+            window.extractYoutubeId = extractYoutubeId;
+            window.formatYoutubeEmbedUrl = formatYoutubeEmbedUrl;
+            window.getYoutubeWatchUrl = getYoutubeWatchUrl;
         }
 
         // ==================== STATE MANAGEMENT DATA ====================
