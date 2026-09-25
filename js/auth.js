@@ -2477,6 +2477,14 @@ function togglePintuAksesResmi() {
 }
 
 function openAdminModuleFromControlCenter(viewName) {
+    if (typeof isModuleAllowedForRole === 'function' && !isModuleAllowedForRole(viewName)) {
+        if (typeof showToast === 'function') {
+            showToast('Akses ditutup: Anda tidak memiliki izin untuk membuka modul ini.');
+        } else {
+            alert('Akses ditutup: Anda tidak memiliki izin untuk membuka modul ini.');
+        }
+        return;
+    }
     if (typeof switchTab === 'function') {
         switchTab('admin', false);
     }

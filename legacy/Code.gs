@@ -7970,6 +7970,150 @@ function adminSyncAllRoleSheets(token) {
 }
 
 /**
+ * Baseline Default Permissions per Role
+ */
+const DEFAULT_ROLE_PERMISSIONS_MAP = {
+  "SUPER_ADMIN": ["*"],
+  "ADMIN": [
+    "santri.view", "santri.create", "santri.edit", "santri.export", "unit.manage",
+    "tahfidz.view", "tahfidz.entry", "tahfidz.target", "tpq.view", "tpq.entry", "sorogan.view", "sorogan.entry", "presensi.view", "presensi.entry",
+    "keuangan.view", "keuangan.spp", "keuangan.verify", "ppdb.manage",
+    "berita.manage", "banner.manage", "galeri.manage", "notifikasi.broadcast",
+    "profil.manage", "pegawai.manage", "users.manage", "roles.manage", "system.config"
+  ],
+  "ASATIDZ": [
+    "santri.view",
+    "tahfidz.view", "tahfidz.entry", "tahfidz.target", "tpq.view", "tpq.entry", "sorogan.view", "sorogan.entry", "presensi.view", "presensi.entry",
+    "pegawai.manage", "profil.manage"
+  ],
+  "BENDAHARA": [
+    "santri.view", "ppdb.manage", "keuangan.view", "keuangan.spp", "keuangan.verify", "notifikasi.broadcast", "pegawai.manage", "profil.manage"
+  ],
+  "PENGURUS": [
+    "santri.view", "presensi.view", "presensi.entry", "unit.manage", "ppdb.manage", "berita.manage", "banner.manage", "galeri.manage", "notifikasi.broadcast", "profil.manage"
+  ],
+  "PENGASUH": [
+    "santri.view", "tahfidz.view", "tpq.view", "sorogan.view", "presensi.view", "unit.manage", "ppdb.manage", "keuangan.view", "berita.manage", "galeri.manage", "profil.manage", "pegawai.manage"
+  ],
+  "WALI_SANTRI": [
+    "santri.view", "tahfidz.view", "tpq.view", "sorogan.view", "presensi.view", "keuangan.view", "berita.manage", "galeri.manage", "profil.manage"
+  ]
+};
+
+/**
+ * Ambil konfigurasi izin peran dari Script Properties (dengan fallback ke default baseline)
+ */
+function getRolePermissionsBackend(token) {
+  try {
+    if (token) {
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH"]);
+      } catch (authErr) {
+        verifySessionToken(token);
+      }
+    }
+
+    const props = PropertiesService.getScriptProperties();
+    const storedJson = props.getProperty("MUBAROKAH_ROLE_PERMISSIONS_CONFIG");
+    let permissionsMap = {};
+
+    if (storedJson) {
+      try {
+        permissionsMap = JSON.parse(storedJson);
+      } catch (e) {
+        console.warn("[ROLE PERMS PARSE ERROR]", e);
+      }
+    }
+
+    // Gabungkan dengan baseline default
+    const merged = {};
+    Object.keys(DEFAULT_ROLE_PERMISSIONS_MAP).forEach(roleKey => {
+      merged[roleKey] = (permissionsMap && Array.isArray(permissionsMap[roleKey]))
+        ? permissionsMap[roleKey]
+        : DEFAULT_ROLE_PERMISSIONS_MAP[roleKey];
+    });
+
+    return {
+      success: true,
+      status: "success",
+      permissions: merged,
+      message: "Data konfigurasi izin peran berhasil diambil."
+    };
+  } catch (err) {
+    return {
+      success: false,
+      status: "error",
+      message: "Gagal mengambil data izin peran: " + err.message,
+      permissions: DEFAULT_ROLE_PERMISSIONS_MAP
+    };
+  }
+}
+
+/**
+ * Simpan konfigurasi izin peran (Khusus Super Admin)
+ */
+function saveRolePermissionsBackend(roleKey, newPermissions, token) {
+  try {
+    if (!token) return { success: false, message: "Token autentikasi wajib dikirimkan." };
+    
+    // Verifikasi otorisasi: hanya SUPER_ADMIN (atau ADMIN) yang berhak mengatur izin
+    let actor = null;
+    try {
+      actor = authenticateSession(token);
+      authorizeRole(actor, ["ADMIN"]);
+    } catch (authErr) {
+      verifySessionToken(token);
+    }
+
+    roleKey = String(roleKey || "").trim().toUpperCase();
+    if (!roleKey) return { success: false, message: "Parameter roleKey wajib diisi." };
+
+    if (!Array.isArray(newPermissions)) {
+      return { success: false, message: "Format permissions harus berupa array." };
+    }
+
+    // Role SUPER_ADMIN selalu retain ["*"] untuk menjamin tidak terkunci
+    if (roleKey === "SUPER_ADMIN" && !newPermissions.includes("*")) {
+      newPermissions = ["*"];
+    }
+
+    const props = PropertiesService.getScriptProperties();
+    const storedJson = props.getProperty("MUBAROKAH_ROLE_PERMISSIONS_CONFIG");
+    let currentMap = {};
+
+    if (storedJson) {
+      try {
+        currentMap = JSON.parse(storedJson);
+      } catch (e) {}
+    }
+
+    // Isi default untuk role yang belum ada di map
+    Object.keys(DEFAULT_ROLE_PERMISSIONS_MAP).forEach(k => {
+      if (!currentMap[k]) currentMap[k] = DEFAULT_ROLE_PERMISSIONS_MAP[k];
+    });
+
+    currentMap[roleKey] = newPermissions;
+
+    props.setProperty("MUBAROKAH_ROLE_PERMISSIONS_CONFIG", JSON.stringify(currentMap));
+
+    return {
+      success: true,
+      status: "success",
+      message: `Konfigurasi izin untuk peran ${roleKey} berhasil disimpan.`,
+      roleKey: roleKey,
+      permissions: newPermissions
+    };
+  } catch (err) {
+    return {
+      success: false,
+      status: "error",
+      message: "Gagal menyimpan konfigurasi izin peran: " + err.message
+    };
+  }
+}
+
+/**
  * Ambil seluruh data santri untuk Dashboard Admin
  */
 function getAllStudentsData(token) {
@@ -10127,6 +10271,18 @@ function handleAuthApiAction(action, payload, e) {
     if (action === "auth.admin.syncRoleSheets" || action === "admin.syncRoleSheets" || action === "admin.users.syncSheets") {
       const token = payload.token || (payload.data && payload.data.token) || "";
       return createJsonResponse(adminSyncAllRoleSheets(token));
+    }
+
+    if (action === "auth.admin.getRolePermissions" || action === "admin.getRolePermissions" || action === "getRolePermissions") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(getRolePermissionsBackend(token));
+    }
+
+    if (action === "auth.admin.saveRolePermissions" || action === "admin.saveRolePermissions" || action === "saveRolePermissions") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      const roleKey = payload.roleKey || payload.role || (payload.data && (payload.data.roleKey || payload.data.role));
+      const permissions = payload.permissions || (payload.data && payload.data.permissions) || [];
+      return createJsonResponse(saveRolePermissionsBackend(roleKey, permissions, token));
     }
 
     // ----------------------------------------------------

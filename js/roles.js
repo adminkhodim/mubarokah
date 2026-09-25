@@ -146,6 +146,142 @@
         }
     };
 
+    // =========================================================================
+    // KAMUS HAK AKSES & MODUL GRANULAR (Mengadopsi Standar KHODIM.COM)
+    // =========================================================================
+    const PERMISSION_CATEGORIES = [
+        {
+            key: 'kesantrian',
+            label: 'KESANTRIAN & KESISWAAN',
+            icon: 'fa-users',
+            color: 'emerald',
+            items: [
+                { key: 'santri.view', label: 'Melihat Data & Profil Santri', desc: 'Akses membaca daftar santri dan rincian data kesantrian' },
+                { key: 'santri.create', label: 'Pendaftaran Santri Baru', desc: 'Izin menambahkan santri baru ke dalam database' },
+                { key: 'santri.edit', label: 'Mengubah Data Santri', desc: 'Izin memperbarui informasi biodata & wali santri' },
+                { key: 'santri.delete', label: 'Menghapus Data Santri', desc: 'Izin menghapus data santri dari database' },
+                { key: 'santri.export', label: 'Import Excel / Massal', desc: 'Izin mengimpor dan mengekspor data santri dari file .xlsx' },
+                { key: 'unit.manage', label: 'Unit Kegiatan Santri (UKS)', desc: 'Akses mengelola ekstrakurikuler & kegiatan asrama' }
+            ]
+        },
+        {
+            key: 'akademik',
+            label: 'AKADEMIK, QUR\'AN & PEMBELAJARAN',
+            icon: 'fa-book-quran',
+            color: 'indigo',
+            items: [
+                { key: 'tahfidz.view', label: 'Melihat Mutaba\'ah Tahfidz', desc: 'Akses melihat rekapitulasi setoran & capaian hafalan 30 juz' },
+                { key: 'tahfidz.entry', label: 'Entri Setoran Tahfidz', desc: 'Izin menginput setoran ziyadah & muraja\'ah santri' },
+                { key: 'tahfidz.target', label: 'Mengatur Target Tahfidz', desc: 'Izin menentukan target capaian juz santri' },
+                { key: 'tpq.view', label: 'Melihat Mutaba\'ah TPQ', desc: 'Akses melihat capaian 8 jilid Kitab Yanbu\'a santri' },
+                { key: 'tpq.entry', label: 'Entri Simakan TPQ Yanbu\'a', desc: 'Izin menginput setoran jilid & halaman santri' },
+                { key: 'sorogan.view', label: 'Melihat Mutaba\'ah Sorogan', desc: 'Akses melihat riwayat sorogan binnazhar & kitab kuning' },
+                { key: 'sorogan.entry', label: 'Entri Simakan Sorogan', desc: 'Izin menginput setoran sorogan Al-Qur\'an & kitab' },
+                { key: 'presensi.view', label: 'Melihat Rekap Presensi', desc: 'Akses memantau grafik kehadiran kegiatan santri' },
+                { key: 'presensi.entry', label: 'Checklist & Scan QR Presensi', desc: 'Izin melakukan absensi live kegiatan & sholat' }
+            ]
+        },
+        {
+            key: 'keuangan',
+            label: 'KEUANGAN & ADMINISTRASI',
+            icon: 'fa-wallet',
+            color: 'amber',
+            items: [
+                { key: 'keuangan.view', label: 'Melihat Kas & Saldo Pondok', desc: 'Akses memantau ringkasan buku kas dan saldo pesantren' },
+                { key: 'keuangan.spp', label: 'Pencatatan & Tagihan SPP', desc: 'Izin mencatat pembayaran iuran syahriah & SPP' },
+                { key: 'keuangan.verify', label: 'Verifikasi Pembayaran PPDB', desc: 'Izin memvalidasi konfirmasi bukti transfer wali santri' },
+                { key: 'ppdb.manage', label: 'Pengelolaan Berkas PPDB', desc: 'Akses seleksi berkas calon santri & formulir pendaftaran' }
+            ]
+        },
+        {
+            key: 'konten',
+            label: 'KONTEN & PUBLIKASI',
+            icon: 'fa-newspaper',
+            color: 'sky',
+            items: [
+                { key: 'berita.manage', label: 'Manajemen Berita & Pengumuman', desc: 'Izin menerbitkan artikel, agenda pondok, dan warta santri' },
+                { key: 'banner.manage', label: 'Manajemen Banner Slider', desc: 'Izin mengubah banner promosi & kegiatan beranda' },
+                { key: 'galeri.manage', label: 'Manajemen Galeri Foto', desc: 'Izin mengunggah album dokumentasi kegiatan santri' },
+                { key: 'notifikasi.broadcast', label: 'Broadcast Pesan & Notifikasi', desc: 'Izin mengirim notifikasi pengumuman ke akun santri/wali' }
+            ]
+        },
+        {
+            key: 'kelembagaan',
+            label: 'KELEMBAGAAN & PENGATURAN SISTEM',
+            icon: 'fa-building-columns',
+            color: 'purple',
+            items: [
+                { key: 'profil.manage', label: 'Profil Lembaga & Pengurus', desc: 'Izin mengubah struktur kepengurusan & sejarah pondok' },
+                { key: 'pegawai.manage', label: 'Data Pegawai & Asatidz', desc: 'Akses mengelola data staf & dewan asatidz' },
+                { key: 'users.manage', label: 'Manajemen Akun Pengguna', desc: 'Izin membuat, reset sandi, dan status akun' },
+                { key: 'roles.manage', label: 'Manajemen Peran (RBAC)', desc: 'Hak khusus mengatur checklist izin peran pengguna' },
+                { key: 'system.config', label: 'Konfigurasi Sistem & API', desc: 'Akses kunci integrasi Google Sheets & token sistem' }
+            ]
+        }
+    ];
+
+    // Pemetaan Modul Sistem ke Izin Terkait
+    const MODULE_TO_PERMISSIONS = {
+        'santri': ['santri.view', 'santri.create', 'santri.edit'],
+        'tahfidz': ['tahfidz.view', 'tahfidz.entry'],
+        'tpq': ['tpq.view', 'tpq.entry'],
+        'sorogan': ['sorogan.view', 'sorogan.entry'],
+        'presensi': ['presensi.view', 'presensi.entry'],
+        'ppdb': ['ppdb.manage'],
+        'program': ['unit.manage', 'profil.manage'],
+        'unit-kegiatan': ['unit.manage'],
+        'users': ['users.manage'],
+        'roles': ['roles.manage'],
+        'pegawai': ['pegawai.manage'],
+        'berita': ['berita.manage'],
+        'banner': ['banner.manage'],
+        'galeri': ['galeri.manage'],
+        'notifikasi': ['notifikasi.broadcast'],
+        'profil-lembaga': ['profil.manage'],
+        'pengaturan': ['system.config']
+    };
+
+    // Default Baseline Permissions per Role
+    const DEFAULT_ROLE_PERMISSIONS_MAP = {
+        'SUPER_ADMIN': ['*'],
+        'ADMIN': [
+            'santri.view', 'santri.create', 'santri.edit', 'santri.export', 'unit.manage',
+            'tahfidz.view', 'tahfidz.entry', 'tahfidz.target', 'tpq.view', 'tpq.entry', 'sorogan.view', 'sorogan.entry', 'presensi.view', 'presensi.entry',
+            'keuangan.view', 'keuangan.spp', 'keuangan.verify', 'ppdb.manage',
+            'berita.manage', 'banner.manage', 'galeri.manage', 'notifikasi.broadcast',
+            'profil.manage', 'pegawai.manage', 'users.manage', 'roles.manage', 'system.config'
+        ],
+        'ASATIDZ': [
+            'santri.view',
+            'tahfidz.view', 'tahfidz.entry', 'tahfidz.target', 'tpq.view', 'tpq.entry', 'sorogan.view', 'sorogan.entry', 'presensi.view', 'presensi.entry',
+            'pegawai.manage', 'profil.manage'
+        ],
+        'BENDAHARA': [
+            'santri.view', 'ppdb.manage', 'keuangan.view', 'keuangan.spp', 'keuangan.verify', 'notifikasi.broadcast', 'pegawai.manage', 'profil.manage'
+        ],
+        'PENGURUS': [
+            'santri.view', 'presensi.view', 'presensi.entry', 'unit.manage', 'ppdb.manage', 'berita.manage', 'banner.manage', 'galeri.manage', 'notifikasi.broadcast', 'profil.manage'
+        ],
+        'PENGASUH': [
+            'santri.view', 'tahfidz.view', 'tpq.view', 'sorogan.view', 'presensi.view', 'unit.manage', 'ppdb.manage', 'keuangan.view', 'berita.manage', 'galeri.manage', 'profil.manage', 'pegawai.manage'
+        ],
+        'WALI_SANTRI': [
+            'santri.view', 'tahfidz.view', 'tpq.view', 'sorogan.view', 'presensi.view', 'keuangan.view', 'berita.manage', 'galeri.manage', 'profil.manage'
+        ]
+    };
+
+    // State Permissions Aktif (Diambil dari Local Storage / Backend)
+    let ROLE_PERMISSIONS_STATE = (function() {
+        try {
+            const cached = localStorage.getItem('MUBAROKAH_ROLE_PERMS_CACHE');
+            if (cached) return JSON.parse(cached);
+        } catch (e) {}
+        return JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS_MAP));
+    })();
+
+    let currentConfiguringRole = null;
+    let currentModalPermissions = [];
+
     // Matriks Hak Akses per Modul Sistem (CRUD & Permissions)
     // Nilai akses: 'full' (CRUD), 'write' (Input/Edit Mutabaah), 'read' (Lihat Saja), 'none' (Tertutup)
     const MODULE_PERMISSIONS_MATRIX = [
@@ -379,6 +515,9 @@
                 }
             }
 
+            // Muat konfigurasi izin peran dari backend
+            fetchRolePermissionsFromBackend();
+
             renderAdminRolesView();
         } catch (err) {
             console.error('[LOAD ROLES ERROR]', err);
@@ -496,7 +635,17 @@
     }
 
     /**
-     * Render Kartu-Kartu Peran (Role Cards Grid)
+     * Dapatkan teks counter izin aktif untuk kartu peran
+     */
+    function getRoleActivePermissionsCount(roleKey) {
+        if (roleKey === 'SUPER_ADMIN') return 'Semua Hak Akses';
+        const perms = ROLE_PERMISSIONS_STATE[roleKey] || DEFAULT_ROLE_PERMISSIONS_MAP[roleKey] || [];
+        if (perms.includes('*')) return 'Semua Hak Akses';
+        return `${perms.length} Izin Aktif`;
+    }
+
+    /**
+     * Render Kartu-Kartu Peran (Role Cards Grid - Mengadopsi Tampilan Screenshot 2 KHODIM.COM)
      */
     function renderRoleCardsGrid() {
         const container = document.getElementById('admin-roles-cards-container');
@@ -515,57 +664,91 @@
             filteredKeys = ['WALI_SANTRI'];
         }
 
+        const tierCategoryBadge = {
+            'SUPER_ADMIN': 'bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300 border border-purple-200/60',
+            'ADMIN': 'bg-brand-100 text-brand-800 dark:bg-brand-950/80 dark:text-brand-300 border border-brand-200/60',
+            'BENDAHARA': 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-200/60',
+            'ASATIDZ': 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950/80 dark:text-indigo-300 border border-indigo-200/60',
+            'PENGASUH': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200/60',
+            'PENGURUS': 'bg-sky-100 text-sky-800 dark:bg-sky-950/80 dark:text-sky-300 border border-sky-200/60',
+            'WALI_SANTRI': 'bg-slate-100 text-slate-700 dark:bg-[#1c2836] dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+        };
+
+        const tierCategoryLabel = {
+            'SUPER_ADMIN': 'AKSES PENUH',
+            'ADMIN': 'OPERASIONAL',
+            'BENDAHARA': 'FINANSIAL',
+            'ASATIDZ': 'AKADEMIK',
+            'PENGASUH': 'EKSEKUTIF',
+            'PENGURUS': 'KESANTRIAN',
+            'WALI_SANTRI': 'EKSTERNAL'
+        };
+
         container.innerHTML = filteredKeys.map(key => {
             const role = ROLE_DEFINITIONS[key];
             const userCount = getRoleUserCount(key);
+            const isSuperAdmin = (key === 'SUPER_ADMIN');
+            const permsText = getRoleActivePermissionsCount(key);
+            const catBadgeClass = tierCategoryBadge[key] || 'bg-slate-100 text-slate-800';
+            const catLabel = tierCategoryLabel[key] || 'OTORITAS';
 
             return `
-                <div class="bg-white dark:bg-[#15202d] rounded-2xl border ${role.borderColor} shadow-xs hover:shadow-md transition p-4 flex flex-col justify-between space-y-4 group">
-                    <div>
-                        <!-- Header Kartu -->
-                        <div class="flex items-start justify-between">
+                <div class="bg-white dark:bg-[#15202d] rounded-3xl border border-slate-200/80 dark:border-[#253447] shadow-xs hover:shadow-md transition p-5 flex flex-col justify-between space-y-4 group">
+                    <div class="space-y-3.5">
+                        <!-- Top Header: Icon, Role Name, Pill Code & Category Badge -->
+                        <div class="flex items-start justify-between gap-2">
                             <div class="flex items-center space-x-3">
-                                <div class="w-11 h-11 rounded-2xl bg-slate-50 dark:bg-[#1c2836] ${role.iconColor} flex items-center justify-center text-lg shadow-xs group-hover:scale-105 transition">
+                                <div class="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-[#1c2836] ${role.iconColor} flex items-center justify-center text-xl shadow-xs group-hover:scale-105 transition border border-slate-100 dark:border-[#253447]">
                                     <i class="fa-solid ${role.icon}"></i>
                                 </div>
                                 <div>
-                                    <span class="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 block">${role.tier}</span>
-                                    <h4 class="font-black text-slate-800 dark:text-slate-100 text-sm md:text-base">${role.name}</h4>
+                                    <div class="flex items-center space-x-1.5">
+                                        <h4 class="font-black text-slate-800 dark:text-slate-100 text-sm md:text-base leading-tight">${role.name}</h4>
+                                    </div>
+                                    <span class="inline-block mt-0.5 px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-slate-100 dark:bg-[#1c2836] text-slate-500 dark:text-slate-400">
+                                        ${key}
+                                    </span>
                                 </div>
                             </div>
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-extrabold ${role.badgeBg}">
-                                ${key}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${catBadgeClass} shrink-0">
+                                ${catLabel}
                             </span>
                         </div>
 
                         <!-- Deskripsi Ringkas -->
-                        <p class="text-xs text-slate-600 dark:text-slate-300 mt-3 leading-relaxed">
+                        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed min-h-[36px]">
                             ${role.summary}
                         </p>
 
-                        <!-- Poin Kapabilitas Utama -->
-                        <div class="mt-3.5 space-y-1.5 border-t border-slate-100 dark:border-[#253447] pt-3">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Wewenang Utama:</span>
-                            ${role.capabilities.map(cap => `
-                                <div class="flex items-start space-x-1.5 text-xs text-slate-700 dark:text-slate-200">
-                                    <i class="fa-solid fa-check text-[10px] text-emerald-500 mt-1 shrink-0"></i>
-                                    <span class="text-[11px] leading-tight">${cap}</span>
-                                </div>
-                            `).join('')}
+                        <!-- Indikator Izin Aktif -->
+                        <div class="flex items-center space-x-2 pt-1 text-xs">
+                            <i class="fa-solid ${isSuperAdmin ? 'fa-crown text-purple-600 dark:text-purple-400' : 'fa-sliders text-emerald-600 dark:text-emerald-400'}"></i>
+                            <span class="font-bold ${isSuperAdmin ? 'text-purple-700 dark:text-purple-300' : 'text-emerald-700 dark:text-emerald-400'}">
+                                ${permsText}
+                            </span>
+                        </div>
+
+                        <!-- Tombol Utama: Konfigurasi Izin (Sesuai Screenshot 2 KHODIM) -->
+                        <div>
+                            <button type="button" onclick="openRolePermissionsModal('${key}')"
+                                class="w-full py-2.5 px-4 rounded-2xl border border-emerald-600/70 hover:border-emerald-600 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-xs font-bold transition flex items-center justify-center space-x-2 active:scale-98 shadow-xs">
+                                <i class="fa-solid fa-sliders text-xs"></i>
+                                <span>Konfigurasi Izin</span>
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Footer Kartu: Akun Pengguna Aktif & Aksi -->
+                    <!-- Footer Kartu: Akun Pengguna Aktif & Aksi Rinci -->
                     <div class="pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between">
-                        <div class="flex items-center space-x-1.5">
-                            <i class="fa-solid fa-users text-xs text-slate-400"></i>
-                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300">${userCount}</span>
-                            <span class="text-[10px] text-slate-400">Akun Terdaftar</span>
+                        <div class="flex items-center space-x-1.5 text-slate-500 dark:text-slate-400 text-xs">
+                            <i class="fa-solid fa-users text-xs"></i>
+                            <span class="font-bold text-slate-700 dark:text-slate-200">${userCount}</span>
+                            <span class="text-[10px]">Akun Terdaftar</span>
                         </div>
                         <div class="flex items-center space-x-1.5">
                             <button type="button" onclick="filterAndShowUsersByRole('${key}')"
-                                class="px-2.5 py-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 rounded-xl transition active:scale-95 flex items-center space-x-1"
-                                title="Lihat seluruh pengguna dengan peran ${role.shortName}">
+                                class="px-2.5 py-1 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-[#1c2836] rounded-xl transition flex items-center space-x-1"
+                                title="Lihat daftar akun dengan peran ${role.shortName}">
                                 <span>Lihat Akun</span>
                                 <i class="fa-solid fa-arrow-right text-[9px]"></i>
                             </button>
@@ -699,6 +882,314 @@
     function closeRoleGuideModal() {
         const modal = document.getElementById('modal-admin-role-guide');
         if (modal) modal.classList.add('hidden');
+    }
+
+    // =========================================================================
+    // MODAL KONFIGURASI IZIN PERAN (RBAC KHODIM-STYLE)
+    // =========================================================================
+
+    /**
+     * Buka Modal Konfigurasi Izin Peran
+     */
+    function openRolePermissionsModal(roleKey) {
+        const role = ROLE_DEFINITIONS[roleKey];
+        if (!role) return;
+
+        currentConfiguringRole = roleKey;
+
+        // Ambil izin yang sedang aktif untuk role ini
+        const activePerms = ROLE_PERMISSIONS_STATE[roleKey] || DEFAULT_ROLE_PERMISSIONS_MAP[roleKey] || [];
+        currentModalPermissions = [...activePerms];
+
+        const modal = document.getElementById('modal-admin-role-permissions');
+        if (!modal) return;
+
+        // Update Header
+        const titleEl = document.getElementById('role-perm-title');
+        if (titleEl) titleEl.innerText = `Konfigurasi Izin: ${role.name}`;
+
+        const subEl = document.getElementById('role-perm-subtitle');
+        if (subEl) subEl.innerText = `Role ID: ${role.key} • ${role.summary}`;
+
+        const iconEl = document.getElementById('role-perm-icon');
+        if (iconEl) iconEl.className = `fa-solid ${role.icon}`;
+
+        const iconWrap = document.getElementById('role-perm-icon-wrapper');
+        if (iconWrap) {
+            iconWrap.className = `w-10 h-10 rounded-2xl bg-slate-100 dark:bg-[#1c2836] ${role.iconColor} flex items-center justify-center text-lg font-bold shadow-xs border border-slate-200 dark:border-[#253447]`;
+        }
+
+        // Tampilkan/Sembunyikan Banner Super Admin
+        const saBanner = document.getElementById('role-perm-superadmin-banner');
+        if (saBanner) {
+            if (roleKey === 'SUPER_ADMIN') saBanner.classList.remove('hidden');
+            else saBanner.classList.add('hidden');
+        }
+
+        // Reset search input
+        const searchInput = document.getElementById('role-perm-search-input');
+        if (searchInput) searchInput.value = '';
+
+        // Render Checklist Categories & Items
+        renderRolePermissionsChecklist();
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    /**
+     * Tutup Modal Konfigurasi Izin Peran
+     */
+    function closeRolePermissionsModal() {
+        const modal = document.getElementById('modal-admin-role-permissions');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+        currentConfiguringRole = null;
+        currentModalPermissions = [];
+    }
+
+    /**
+     * Render Daftar Checklist Izin per Kategori (Sesuai Screenshot 3 KHODIM)
+     */
+    function renderRolePermissionsChecklist(searchFilter = '') {
+        const container = document.getElementById('role-permissions-categories-container');
+        if (!container) return;
+
+        const isSuperAdmin = (currentConfiguringRole === 'SUPER_ADMIN');
+        const filter = String(searchFilter || '').trim().toLowerCase();
+
+        container.innerHTML = PERMISSION_CATEGORIES.map(cat => {
+            const filteredItems = cat.items.filter(item => {
+                if (!filter) return true;
+                return item.label.toLowerCase().includes(filter) ||
+                       item.desc.toLowerCase().includes(filter) ||
+                       item.key.toLowerCase().includes(filter);
+            });
+
+            if (filteredItems.length === 0) return '';
+
+            return `
+                <div class="space-y-3 role-perm-category-block" data-category="${cat.key}">
+                    <!-- Category Header -->
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-[#253447]">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-6 h-6 rounded-lg bg-${cat.color}-100 dark:bg-${cat.color}-950/70 text-${cat.color}-700 dark:text-${cat.color}-300 flex items-center justify-center text-xs font-bold">
+                                <i class="fa-solid ${cat.icon}"></i>
+                            </div>
+                            <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-100">${cat.label}</h4>
+                        </div>
+                        ${!isSuperAdmin ? `
+                            <div class="flex items-center space-x-2 text-[10px]">
+                                <button type="button" onclick="toggleCategoryPermissions('${cat.key}', true)" 
+                                    class="text-emerald-600 dark:text-emerald-400 font-bold hover:underline">
+                                    Pilih Semua
+                                </button>
+                                <span class="text-slate-300 dark:text-slate-600">•</span>
+                                <button type="button" onclick="toggleCategoryPermissions('${cat.key}', false)" 
+                                    class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                                    Kosongkan
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- 2-Columns Checklist Cards Grid (Screenshot 3 KHODIM) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        ${filteredItems.map(item => {
+                            const isChecked = isSuperAdmin || currentModalPermissions.includes(item.key) || currentModalPermissions.includes('*');
+                            const cardBorder = isChecked
+                                ? 'border-emerald-500/80 bg-emerald-50/50 dark:bg-emerald-950/20'
+                                : 'border-slate-200 dark:border-[#253447] bg-white dark:bg-[#15202d] hover:border-slate-300';
+                            
+                            const checkClass = isChecked
+                                ? 'bg-emerald-600 text-white shadow-xs'
+                                : 'border-2 border-slate-300 dark:border-slate-600 text-transparent';
+
+                            return `
+                                <div onclick="${!isSuperAdmin ? `toggleRolePermissionItem('${item.key}')` : ''}"
+                                    class="p-3.5 rounded-2xl border ${cardBorder} transition select-none ${isSuperAdmin ? 'cursor-default' : 'cursor-pointer'} flex items-start space-x-3 group">
+                                    <div class="w-5 h-5 rounded-lg ${checkClass} flex items-center justify-center text-xs shrink-0 mt-0.5 transition">
+                                        <i class="fa-solid fa-check text-[10px]"></i>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <h5 class="text-xs font-bold text-slate-800 dark:text-slate-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition">${item.label}</h5>
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">${item.desc}</p>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        updateRolePermissionsCounter();
+    }
+
+    /**
+     * Toggle satu item izin
+     */
+    function toggleRolePermissionItem(permKey) {
+        if (currentConfiguringRole === 'SUPER_ADMIN') return;
+        const idx = currentModalPermissions.indexOf(permKey);
+        if (idx !== -1) {
+            currentModalPermissions.splice(idx, 1);
+        } else {
+            currentModalPermissions.push(permKey);
+        }
+        renderRolePermissionsChecklist(document.getElementById('role-perm-search-input')?.value || '');
+    }
+
+    /**
+     * Toggle semua izin dalam satu kategori
+     */
+    function toggleCategoryPermissions(catKey, isSelectAll) {
+        if (currentConfiguringRole === 'SUPER_ADMIN') return;
+        const category = PERMISSION_CATEGORIES.find(c => c.key === catKey);
+        if (!category) return;
+
+        category.items.forEach(item => {
+            const idx = currentModalPermissions.indexOf(item.key);
+            if (isSelectAll && idx === -1) {
+                currentModalPermissions.push(item.key);
+            } else if (!isSelectAll && idx !== -1) {
+                currentModalPermissions.splice(idx, 1);
+            }
+        });
+        renderRolePermissionsChecklist(document.getElementById('role-perm-search-input')?.value || '');
+    }
+
+    /**
+     * Pilih Semua / Kosongkan Seluruh Izin
+     */
+    function selectAllRolePermissions(isSelectAll) {
+        if (currentConfiguringRole === 'SUPER_ADMIN') return;
+        if (isSelectAll) {
+            const allKeys = [];
+            PERMISSION_CATEGORIES.forEach(c => c.items.forEach(i => allKeys.push(i.key)));
+            currentModalPermissions = allKeys;
+        } else {
+            currentModalPermissions = [];
+        }
+        renderRolePermissionsChecklist(document.getElementById('role-perm-search-input')?.value || '');
+    }
+
+    /**
+     * Live search pada modal konfigurasi izin
+     */
+    function filterRolePermissionsSearch(keyword) {
+        renderRolePermissionsChecklist(keyword);
+    }
+
+    /**
+     * Update label counter status izin pada footer modal
+     */
+    function updateRolePermissionsCounter() {
+        const badge = document.getElementById('role-perm-counter-badge');
+        if (!badge) return;
+        if (currentConfiguringRole === 'SUPER_ADMIN') {
+            badge.innerText = 'Semua Hak Akses (*)';
+            badge.className = 'px-2.5 py-0.5 rounded-full font-bold text-xs bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border border-purple-200/60';
+        } else {
+            const totalItems = PERMISSION_CATEGORIES.reduce((acc, c) => acc + c.items.length, 0);
+            badge.innerText = `${currentModalPermissions.length} dari ${totalItems} Izin Aktif`;
+            badge.className = 'px-2.5 py-0.5 rounded-full font-bold text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200/60';
+        }
+    }
+
+    /**
+     * Simpan Perubahan Izin dari Modal ke Backend & Cache
+     */
+    async function saveRolePermissionsFromModal() {
+        if (!currentConfiguringRole) return;
+        const roleKey = currentConfiguringRole;
+        const role = ROLE_DEFINITIONS[roleKey];
+        const saveBtn = document.getElementById('btn-save-role-permissions');
+        
+        let originalContent = '';
+        if (saveBtn) {
+            originalContent = saveBtn.innerHTML;
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>Menyimpan...</span>';
+        }
+
+        try {
+            // Update state lokal
+            ROLE_PERMISSIONS_STATE[roleKey] = [...currentModalPermissions];
+            try {
+                localStorage.setItem('MUBAROKAH_ROLE_PERMS_CACHE', JSON.stringify(ROLE_PERMISSIONS_STATE));
+            } catch (e) {}
+
+            // Kirim ke backend Google Sheets / Script Properties
+            if (typeof authApiPost === 'function') {
+                try {
+                    await authApiPost('auth.admin.saveRolePermissions', {
+                        roleKey: roleKey,
+                        permissions: currentModalPermissions
+                    });
+                } catch (netErr) {
+                    console.warn('[SAVE ROLE PERMS BACKEND WARN]', netErr);
+                }
+            }
+
+            // Perbarui UI katalog kartu peran
+            renderRoleCardsGrid();
+
+            // Terapkan efek visibilitas menu real-time
+            const currentActiveRole = (typeof ASNIdentity !== 'undefined' && ASNIdentity.currentRole) || 
+                                     sessionStorage.getItem('ASN_ADMIN_ROLE') || 
+                                     sessionStorage.getItem('mubarokah_admin_role') || 'SUPER_ADMIN';
+            applyAdminRoleVisibility(currentActiveRole);
+
+            // Tutup modal
+            closeRolePermissionsModal();
+
+            if (typeof showToast === 'function') {
+                showToast(`Izin peran ${role ? role.name : roleKey} berhasil diperbarui!`);
+            } else if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Izin Disimpan',
+                    text: `Konfigurasi izin untuk peran ${role ? role.name : roleKey} berhasil disimpan dan langsung diterapkan ke dashboard.`,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            } else {
+                alert(`Konfigurasi izin untuk peran ${role ? role.name : roleKey} berhasil disimpan.`);
+            }
+        } catch (err) {
+            console.error('[SAVE ROLE PERMISSIONS ERROR]', err);
+            alert('Gagal menyimpan izin: ' + err.message);
+        } finally {
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalContent;
+            }
+        }
+    }
+
+    /**
+     * Ambil Konfigurasi Izin dari Backend Google Sheets
+     */
+    async function fetchRolePermissionsFromBackend() {
+        if (typeof authApiPost !== 'function') return;
+        try {
+            const res = await authApiPost('auth.admin.getRolePermissions', {});
+            if (res && res.success && res.permissions) {
+                ROLE_PERMISSIONS_STATE = res.permissions;
+                try {
+                    localStorage.setItem('MUBAROKAH_ROLE_PERMS_CACHE', JSON.stringify(ROLE_PERMISSIONS_STATE));
+                } catch (e) {}
+                renderRoleCardsGrid();
+                const activeRole = (typeof ASNIdentity !== 'undefined' && ASNIdentity.currentRole) || 
+                                  sessionStorage.getItem('ASN_ADMIN_ROLE') || 'SUPER_ADMIN';
+                applyAdminRoleVisibility(activeRole);
+            }
+        } catch (e) {
+            console.warn('[FETCH ROLE PERMS WARN]', e);
+        }
     }
 
     // Mapping Modul yang Boleh Diakses per Peran
@@ -898,7 +1389,31 @@
     };
 
     /**
-     * Cek apakah sebuah modul boleh diakses oleh peran tertentu
+     * Dapatkan daftar modul yang boleh diakses berdasarkan izin yang dicentang oleh Super Admin
+     */
+    function getAllowedModulesForRole(roleKey) {
+        if (!roleKey) {
+            roleKey = (typeof ASNIdentity !== 'undefined' && ASNIdentity.currentRole) || 
+                      sessionStorage.getItem('ASN_ADMIN_ROLE') || 
+                      sessionStorage.getItem('mubarokah_admin_role') || 'SUPER_ADMIN';
+        }
+        roleKey = String(roleKey).toUpperCase();
+        if (roleKey === 'PEGAWAI' || roleKey === 'EDITOR') roleKey = 'ASATIDZ';
+
+        if (roleKey === 'SUPER_ADMIN') return Object.keys(MODULE_TO_PERMISSIONS);
+
+        const rolePerms = ROLE_PERMISSIONS_STATE[roleKey] || DEFAULT_ROLE_PERMISSIONS_MAP[roleKey] || [];
+        if (rolePerms.includes('*')) return Object.keys(MODULE_TO_PERMISSIONS);
+
+        return Object.keys(MODULE_TO_PERMISSIONS).filter(modKey => {
+            const reqPerms = MODULE_TO_PERMISSIONS[modKey];
+            if (!reqPerms || reqPerms.length === 0) return true;
+            return reqPerms.some(pk => rolePerms.includes(pk));
+        });
+    }
+
+    /**
+     * Cek apakah sebuah modul boleh diakses oleh peran tertentu (Dinamis dari Konfigurasi Izin)
      */
     function isModuleAllowedForRole(moduleKey, roleKey) {
         if (!roleKey) {
@@ -909,9 +1424,15 @@
         roleKey = String(roleKey).toUpperCase();
         if (roleKey === 'PEGAWAI' || roleKey === 'EDITOR') roleKey = 'ASATIDZ';
         
-        const allowed = ROLE_ALLOWED_MODULES[roleKey];
-        if (!allowed) return true;
-        return allowed.includes(moduleKey);
+        if (roleKey === 'SUPER_ADMIN') return true;
+
+        const rolePerms = ROLE_PERMISSIONS_STATE[roleKey] || DEFAULT_ROLE_PERMISSIONS_MAP[roleKey] || [];
+        if (rolePerms.includes('*')) return true;
+
+        const reqPerms = MODULE_TO_PERMISSIONS[moduleKey];
+        if (!reqPerms || reqPerms.length === 0) return true;
+
+        return reqPerms.some(pk => rolePerms.includes(pk));
     }
 
     /**
@@ -957,7 +1478,7 @@
         if (roleKey === 'PEGAWAI' || roleKey === 'EDITOR') roleKey = 'ASATIDZ';
 
         const profile = ROLE_DASHBOARD_PROFILES[roleKey] || ROLE_DASHBOARD_PROFILES['ADMIN'];
-        const allowedModules = ROLE_ALLOWED_MODULES[roleKey] || [];
+        const allowedModules = getAllowedModulesForRole(roleKey);
 
         // 1. Perbarui Banner Dashboard
         const banner = document.getElementById('admin-hub-welcome-banner');
@@ -1159,6 +1680,19 @@
     window.closeRoleDetailModal = closeRoleDetailModal;
     window.openRoleGuideModal = openRoleGuideModal;
     window.closeRoleGuideModal = closeRoleGuideModal;
+    window.openRolePermissionsModal = openRolePermissionsModal;
+    window.closeRolePermissionsModal = closeRolePermissionsModal;
+    window.renderRolePermissionsChecklist = renderRolePermissionsChecklist;
+    window.toggleRolePermissionItem = toggleRolePermissionItem;
+    window.toggleCategoryPermissions = toggleCategoryPermissions;
+    window.selectAllRolePermissions = selectAllRolePermissions;
+    window.filterRolePermissionsSearch = filterRolePermissionsSearch;
+    window.saveRolePermissionsFromModal = saveRolePermissionsFromModal;
+    window.fetchRolePermissionsFromBackend = fetchRolePermissionsFromBackend;
+    window.getAllowedModulesForRole = getAllowedModulesForRole;
+    window.getRoleActivePermissionsCount = getRoleActivePermissionsCount;
+    window.PERMISSION_CATEGORIES = PERMISSION_CATEGORIES;
+    window.ROLE_PERMISSIONS_STATE = ROLE_PERMISSIONS_STATE;
     window.ROLE_DEFINITIONS = ROLE_DEFINITIONS;
     window.MODULE_PERMISSIONS_MATRIX = MODULE_PERMISSIONS_MATRIX;
     window.ROLE_ALLOWED_MODULES = ROLE_ALLOWED_MODULES;

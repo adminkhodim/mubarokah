@@ -10117,6 +10117,99 @@
         </div>
     </div>
 
+    <!-- ==================== MODAL KONFIGURASI IZIN PERAN (RBAC KHODIM-STYLE) ==================== -->
+    <div id="modal-admin-role-permissions"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 md:p-4 hidden">
+        <div
+            class="bg-white dark:bg-[#15202d] w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-[#253447] flex flex-col max-h-[92vh] transform transition-all">
+            <!-- Modal Header -->
+            <div
+                class="px-5 py-4 bg-slate-50 dark:bg-[#1c2836] border-b border-slate-100 dark:border-[#253447] flex justify-between items-center shrink-0">
+                <div class="flex items-center space-x-3">
+                    <div id="role-perm-icon-wrapper"
+                        class="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-lg font-bold shadow-xs">
+                        <i id="role-perm-icon" class="fa-solid fa-sliders"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <h3 id="role-perm-title" class="text-sm md:text-base font-bold text-slate-800 dark:text-slate-100">
+                                Konfigurasi Izin: Super Admin</h3>
+                        </div>
+                        <p id="role-perm-subtitle" class="text-[10px] text-slate-500 dark:text-slate-400">
+                            Role ID: SUPER_ADMIN • Kendali penuh atas sistem, database, dan pengaturan global Mubarokah.
+                        </p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeRolePermissionsModal()"
+                    class="w-8 h-8 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-[#253447] rounded-xl flex items-center justify-center transition active:scale-95"
+                    title="Tutup">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-5 overflow-y-auto space-y-4 custom-scrollbar text-xs flex-1">
+                <!-- Banner Super Admin (Akses Penuh) -->
+                <div id="role-perm-superadmin-banner" class="hidden p-3.5 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200/70 dark:border-purple-800/40 flex items-start space-x-3">
+                    <i class="fa-solid fa-crown text-purple-600 dark:text-purple-400 text-sm mt-0.5 shrink-0"></i>
+                    <div>
+                        <h5 class="text-xs font-bold text-purple-900 dark:text-purple-200">Role Super Admin memiliki Akses Penuh (*)</h5>
+                        <p class="text-[11px] text-purple-700 dark:text-purple-300 mt-0.5 leading-relaxed">
+                            Role ini selalu memiliki izin bypass ke semua modul untuk menjamin kontrol sistem dan pemulihan data pesantren.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Search Input & Quick Controls -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-2.5 pb-2 border-b border-slate-100 dark:border-[#253447]">
+                    <div class="relative w-full sm:w-72">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-400"></i>
+                        <input type="text" id="role-perm-search-input" oninput="filterRolePermissionsSearch(this.value)"
+                            placeholder="Cari izin fitur..."
+                            class="w-full bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 placeholder:text-slate-400 pl-8 pr-3 py-1.5 rounded-xl text-xs border border-slate-200 dark:border-[#283a4e] focus:bg-white dark:focus:bg-[#15202d] focus:border-emerald-500 outline-none transition">
+                    </div>
+                    <div class="flex items-center space-x-2 text-[11px] self-end sm:self-auto">
+                        <button type="button" onclick="selectAllRolePermissions(true)"
+                            class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 font-bold hover:bg-emerald-100 transition">
+                            Pilih Semua
+                        </button>
+                        <button type="button" onclick="selectAllRolePermissions(false)"
+                            class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 dark:bg-[#1c2836] dark:text-slate-300 font-bold hover:bg-slate-200 transition">
+                            Kosongkan
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Dynamic Checklist Categories Container -->
+                <div id="role-permissions-categories-container" class="space-y-6">
+                    <!-- Injected by js/roles.js -->
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div
+                class="p-4 bg-slate-50 dark:bg-[#1c2836] border-t border-slate-100 dark:border-[#253447] flex justify-between items-center gap-2.5 shrink-0">
+                <div class="flex items-center space-x-2 text-xs">
+                    <span class="text-slate-400">Status Izin:</span>
+                    <span id="role-perm-counter-badge" class="px-2.5 py-0.5 rounded-full font-bold text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200/60">
+                        0 Izin Aktif
+                    </span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button type="button" onclick="closeRolePermissionsModal()"
+                        class="px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#253447] font-semibold text-xs transition">
+                        Batal
+                    </button>
+                    <button type="button" id="btn-save-role-permissions" onclick="saveRolePermissionsFromModal()"
+                        class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md transition flex items-center gap-2 active:scale-95">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>Simpan Perubahan</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ==================== MODAL PANDUAN RBAC & KEAMANAN ==================== -->
     <div id="modal-admin-role-guide"
         class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 md:p-4 hidden">
