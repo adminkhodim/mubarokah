@@ -7,8 +7,11 @@ const ASN_ROLES = Object.freeze({
     PUBLIC: 'PUBLIC',
     SUPER_ADMIN: 'SUPER_ADMIN',
     ADMIN: 'ADMIN',
-    PEGAWAI: 'PEGAWAI',
-    EDITOR: 'PEGAWAI', // Alias for backward compatibility
+    BENDAHARA: 'BENDAHARA',
+    PENGURUS: 'PENGURUS',
+    ASATIDZ: 'ASATIDZ',
+    PEGAWAI: 'ASATIDZ', // Alias for backward compatibility
+    EDITOR: 'ASATIDZ', // Alias for backward compatibility
     PENGASUH: 'PENGASUH',
     WALI_SANTRI: 'WALI_SANTRI'
 });
@@ -655,8 +658,8 @@ const ASNIdentity = {
                 this.currentState = ASN_STATES.PENGASUH_AUTH_ACTIVE;
                 this.isHydrating = false;
                 this.renderAccountCenterUI();
-            } else if (serverRole === 'SUPER_ADMIN' || serverRole === 'ADMIN' || serverRole === 'PEGAWAI' || serverRole === 'EDITOR') {
-                const normalizedRole = serverRole === 'EDITOR' ? ASN_ROLES.PEGAWAI : (ASN_ROLES[serverRole] || serverRole);
+            } else if (['SUPER_ADMIN', 'ADMIN', 'BENDAHARA', 'PENGURUS', 'ASATIDZ', 'PEGAWAI', 'EDITOR'].includes(serverRole)) {
+                const normalizedRole = (serverRole === 'EDITOR' || serverRole === 'PEGAWAI') ? ASN_ROLES.ASATIDZ : (ASN_ROLES[serverRole] || serverRole);
                 this.currentRole = normalizedRole;
                 this.currentUser = verifyRes.identity || {
                     name: 'Administrator Pesantren',
@@ -920,7 +923,7 @@ const ASNIdentity = {
                 if (emailEl) emailEl.innerHTML = `<i class="fa-regular fa-envelope mr-1.5 text-amber-400"></i> ${escapeHtml((this.currentUser && this.currentUser.email) || '-')}`;
                 this.updateAvatarUI(ASN_ROLES.PENGASUH, (this.currentUser && (this.currentUser.photoUrl || this.currentUser.photo_url)) || '');
             }
-        } else if (this.currentRole === ASN_ROLES.SUPER_ADMIN || this.currentRole === ASN_ROLES.ADMIN || this.currentRole === ASN_ROLES.PEGAWAI || this.currentRole === 'EDITOR') {
+        } else if (['SUPER_ADMIN', 'ADMIN', 'BENDAHARA', 'PENGURUS', 'ASATIDZ', 'PEGAWAI', 'EDITOR'].includes(this.currentRole)) {
             if (window.innerWidth >= 768) {
                 const pagePengaturan = document.getElementById('page-pengaturan');
                 if (pagePengaturan && !pagePengaturan.classList.contains('hidden')) {
@@ -937,7 +940,11 @@ const ASNIdentity = {
             if (nameEl) nameEl.innerText = (this.currentUser && this.currentUser.name) || 'Administrator';
             if (emailEl) emailEl.innerHTML = `<i class="fa-regular fa-envelope mr-1"></i> ${escapeHtml((this.currentUser && this.currentUser.email) || '')}`;
             if (roleBadgeEl) {
-                const displayRole = this.currentRole === ASN_ROLES.SUPER_ADMIN ? 'Super Admin' : (this.currentRole === ASN_ROLES.PEGAWAI ? 'Pegawai' : 'Admin');
+                let displayRole = 'Admin';
+                if (this.currentRole === ASN_ROLES.SUPER_ADMIN) displayRole = 'Super Admin';
+                else if (this.currentRole === 'BENDAHARA') displayRole = 'Bendahara';
+                else if (this.currentRole === 'PENGURUS') displayRole = 'Pengurus';
+                else if (this.currentRole === 'ASATIDZ' || this.currentRole === 'PEGAWAI') displayRole = 'Asatidz';
                 roleBadgeEl.innerText = displayRole;
             }
             this.updateAvatarUI(this.currentRole, (this.currentUser && (this.currentUser.photoUrl || this.currentUser.photo_url)) || '');
@@ -967,8 +974,13 @@ const ASNIdentity = {
             label.innerText = 'Pengasuh';
             if (icon) icon.className = 'fa-solid fa-kaaba text-xs text-amber-300';
             btn.className = 'bg-emerald-950 hover:bg-emerald-900 text-amber-200 border border-amber-500/40 px-3.5 py-2 rounded-xl font-bold text-xs shadow-sm transition-all duration-200 flex items-center space-x-1.5';
-        } else if (this.currentRole === ASN_ROLES.SUPER_ADMIN || this.currentRole === ASN_ROLES.ADMIN || this.currentRole === ASN_ROLES.PEGAWAI || this.currentRole === 'EDITOR') {
-            const roleLabel = this.currentRole === ASN_ROLES.SUPER_ADMIN ? 'Super Admin' : (this.currentRole === ASN_ROLES.PEGAWAI ? 'Pegawai' : 'Pengelola');
+        } else if (['SUPER_ADMIN', 'ADMIN', 'BENDAHARA', 'PENGURUS', 'ASATIDZ', 'PEGAWAI', 'EDITOR'].includes(this.currentRole)) {
+            let roleLabel = 'Pengelola';
+            if (this.currentRole === ASN_ROLES.SUPER_ADMIN) roleLabel = 'Super Admin';
+            else if (this.currentRole === 'BENDAHARA') roleLabel = 'Bendahara';
+            else if (this.currentRole === 'PENGURUS') roleLabel = 'Pengurus';
+            else if (this.currentRole === 'ASATIDZ' || this.currentRole === 'PEGAWAI') roleLabel = 'Asatidz';
+            else if (this.currentRole === ASN_ROLES.ADMIN) roleLabel = 'Admin';
             label.innerText = roleLabel;
             if (icon) icon.className = 'fa-solid fa-shield-halved text-xs text-emerald-300';
             btn.className = 'bg-brand-800 hover:bg-brand-700 text-emerald-300 border border-emerald-500/30 px-3.5 py-2 rounded-xl font-bold text-xs shadow-sm transition-all duration-200 flex items-center space-x-1.5';
@@ -1330,7 +1342,7 @@ const ASNIdentity = {
         if (normalizedRole === ASN_ROLES.PENGASUH) {
             imgId = 'pengasuh-avatar-img';
             iconId = 'pengasuh-avatar-icon';
-        } else if (normalizedRole === ASN_ROLES.SUPER_ADMIN || normalizedRole === ASN_ROLES.ADMIN || normalizedRole === ASN_ROLES.PEGAWAI || normalizedRole === 'EDITOR') {
+        } else if (['SUPER_ADMIN', 'ADMIN', 'BENDAHARA', 'PENGURUS', 'ASATIDZ', 'PEGAWAI', 'EDITOR'].includes(normalizedRole)) {
             imgId = 'admin-avatar-img';
             iconId = 'admin-avatar-icon';
         } else {
@@ -1408,7 +1420,7 @@ const ASNIdentity = {
                     if (role === ASN_ROLES.PENGASUH) {
                         sessionStorage.setItem(ASN_STORAGE_KEYS.PENGASUH_DATA, JSON.stringify(this.currentUser || {}));
                         localStorage.setItem(ASN_STORAGE_KEYS.PENGASUH_DATA, JSON.stringify(this.currentUser || {}));
-                    } else if (role === ASN_ROLES.SUPER_ADMIN || role === ASN_ROLES.ADMIN || role === ASN_ROLES.PEGAWAI || role === 'EDITOR') {
+                    } else if (['SUPER_ADMIN', 'ADMIN', 'BENDAHARA', 'PENGURUS', 'ASATIDZ', 'PEGAWAI', 'EDITOR'].includes(role)) {
                         sessionStorage.setItem(ASN_STORAGE_KEYS.ADMIN_DATA, JSON.stringify(this.currentUser || {}));
                         localStorage.setItem(ASN_STORAGE_KEYS.ADMIN_DATA, JSON.stringify(this.currentUser || {}));
                     } else if (role === ASN_ROLES.WALI_SANTRI) {
@@ -2729,9 +2741,9 @@ async function handleCredentialResponse(response) {
                 ASNIdentity.setPengasuhSession(ssoResult.token, ssoResult.pengasuh || ssoResult.identity);
                 if (typeof closePengasuhAuthModal === 'function') closePengasuhAuthModal();
                 if (typeof showToast === 'function') showToast(`Ahlan wa Sahlan, ${ssoResult.identity?.name || 'Pengasuh'}`);
-            } else if (role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'PEGAWAI' || role === 'EDITOR') {
+            } else if (['SUPER_ADMIN', 'ADMIN', 'BENDAHARA', 'PENGURUS', 'ASATIDZ', 'PEGAWAI', 'EDITOR'].includes(role)) {
                 const adminObj = ssoResult.admin || ssoResult.identity || {};
-                const normalizedRole = role === 'EDITOR' ? ASN_ROLES.PEGAWAI : (ASN_ROLES[role] || role);
+                const normalizedRole = (role === 'EDITOR' || role === 'PEGAWAI') ? ASN_ROLES.ASATIDZ : (ASN_ROLES[role] || role);
                 adminObj.role = normalizedRole;
                 ASNIdentity.setAdminSession(ssoResult.token, adminObj, normalizedRole);
                 if (typeof closeAdminAuthModal === 'function') closeAdminAuthModal();

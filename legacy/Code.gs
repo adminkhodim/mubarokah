@@ -5810,7 +5810,7 @@ function syncUserToRoleIdentitySheet(ss, userId, email, phone, name, role, statu
           photoUrl || ""
         ]);
       }
-    } else if (normalizedRole === "SUPER_ADMIN" || normalizedRole === "ADMIN" || normalizedRole === "PEGAWAI" || normalizedRole === "EDITOR") {
+    } else if (normalizedRole === "SUPER_ADMIN" || normalizedRole === "ADMIN" || normalizedRole === "BENDAHARA" || normalizedRole === "PENGURUS" || normalizedRole === "ASATIDZ" || normalizedRole === "PEGAWAI" || normalizedRole === "EDITOR") {
       const sheet = getAuthSheet(ss, SHEET_ADMIN_IDENTITIES);
       if (!sheet) return;
       const data = sheet.getDataRange().getValues();
@@ -7696,7 +7696,10 @@ function getAllUsersWithLinkedStudents(token) {
         total: users.length,
         wali: users.filter(u => u.role === "WALI_SANTRI").length,
         pengasuh: users.filter(u => u.role === "PENGASUH").length,
-        pegawai: users.filter(u => u.role === "PEGAWAI" || u.role === "EDITOR").length,
+        asatidz: users.filter(u => u.role === "ASATIDZ" || u.role === "PEGAWAI" || u.role === "EDITOR").length,
+        bendahara: users.filter(u => u.role === "BENDAHARA").length,
+        pengurus: users.filter(u => u.role === "PENGURUS").length,
+        pegawai: users.filter(u => u.role === "ASATIDZ" || u.role === "PEGAWAI" || u.role === "EDITOR").length,
         admin: users.filter(u => u.role === "ADMIN").length,
         superAdmin: users.filter(u => u.role === "SUPER_ADMIN").length
       }
@@ -7720,7 +7723,7 @@ function saveAdminUserData(payload, token) {
     if (token) {
       try {
         actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN", "PEGAWAI"]);
+        authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "ASATIDZ", "PEGAWAI"]);
       } catch (authErr) {
         verifySessionToken(token);
       }
@@ -8953,15 +8956,17 @@ function authorizeRole(actor, allowedRoles = []) {
   // Normalisasi array peran yang diizinkan
   const normalizedAllowed = allowedRoles.map(r => String(r || "").trim().toUpperCase());
 
-  // Kompatibilitas mundur & alias: PEGAWAI <-> EDITOR
-  if (normalizedAllowed.includes("PEGAWAI") && !normalizedAllowed.includes("EDITOR")) {
-    normalizedAllowed.push("EDITOR");
-  }
-  if (normalizedAllowed.includes("EDITOR") && !normalizedAllowed.includes("PEGAWAI")) {
-    normalizedAllowed.push("PEGAWAI");
+  // Kompatibilitas mundur & alias: ASATIDZ <-> PEGAWAI <-> EDITOR
+  if (normalizedAllowed.includes("ASATIDZ") || normalizedAllowed.includes("PEGAWAI") || normalizedAllowed.includes("EDITOR")) {
+    if (!normalizedAllowed.includes("ASATIDZ")) normalizedAllowed.push("ASATIDZ");
+    if (!normalizedAllowed.includes("PEGAWAI")) normalizedAllowed.push("PEGAWAI");
+    if (!normalizedAllowed.includes("EDITOR")) normalizedAllowed.push("EDITOR");
   }
 
-  if (!normalizedAllowed.includes(actorRole)) {
+  // Jika actorRole bertanda PEGAWAI atau EDITOR, perlakukan setara ASATIDZ
+  const normalizedActorRole = (actorRole === "PEGAWAI" || actorRole === "EDITOR") ? "ASATIDZ" : actorRole;
+
+  if (!normalizedAllowed.includes(actorRole) && !normalizedAllowed.includes(normalizedActorRole)) {
     throw new AuthorizationError(`Role '${actor.role}' is forbidden from accessing this resource.`);
   }
   return true;

@@ -278,13 +278,13 @@
                 if (typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn === true) return true;
                 if (typeof ASNIdentity !== 'undefined') {
                     const r = String(ASNIdentity.currentRole || '').toUpperCase();
-                    if (['SUPER_ADMIN', 'ADMIN', 'PEGAWAI', 'EDITOR'].includes(r)) return true;
+                    if (['SUPER_ADMIN', 'ADMIN', 'BENDAHARA', 'PENGURUS', 'ASATIDZ', 'PEGAWAI', 'EDITOR'].includes(r)) return true;
                 }
                 const tokenKey = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.storage && APP_CONFIG.storage.keys) ? APP_CONFIG.storage.keys.adminToken : "mubarokah_admin_token";
                 const token = sessionStorage.getItem(tokenKey) || localStorage.getItem(tokenKey);
                 const roleKey = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.storage && APP_CONFIG.storage.keys) ? APP_CONFIG.storage.keys.adminRole : "mubarokah_admin_role";
                 const role = String(sessionStorage.getItem(roleKey) || localStorage.getItem(roleKey) || '').toLowerCase();
-                if (token && (['super_admin', 'admin', 'pegawai', 'editor'].includes(role) || role === '')) {
+                if (token && (['super_admin', 'admin', 'bendahara', 'pengurus', 'asatidz', 'pegawai', 'editor'].includes(role) || role === '')) {
                     return true;
                 }
             } catch (e) {}

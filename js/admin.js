@@ -85,6 +85,7 @@
             'program': { group: 'kesiswaan', category: 'Kesiswaan & Akademik', title: 'Manajemen Program' },
             'unit-kegiatan': { group: 'kesiswaan', category: 'Kesiswaan & Akademik', title: 'Unit Kegiatan Santri (UKS)' },
             'users': { group: 'sdm', category: 'Pengguna & SDM', title: 'Manajemen Pengguna' },
+            'roles': { group: 'sdm', category: 'Pengguna & SDM', title: 'Manajemen Peran (Role)' },
             'pegawai': { group: 'sdm', category: 'Pengguna & SDM', title: 'Data Pegawai & Asatidz' },
             'berita': { group: 'konten', category: 'Konten & Publikasi', title: 'Manajemen Berita' },
             'banner': { group: 'konten', category: 'Konten & Publikasi', title: 'Banner Slider' },
@@ -200,6 +201,7 @@
             const notifikasiView = document.getElementById('admin-view-notifikasi');
             const pegawaiView = document.getElementById('admin-view-pegawai');
             const usersView = document.getElementById('admin-view-users');
+            const rolesView = document.getElementById('admin-view-roles');
 
             if (!hubView || !beritaView || !bannerView) return;
 
@@ -220,6 +222,7 @@
             if (notifikasiView) notifikasiView.classList.add('hidden');
             if (pegawaiView) pegawaiView.classList.add('hidden');
             if (usersView) usersView.classList.add('hidden');
+            if (rolesView) rolesView.classList.add('hidden');
 
             if (viewName === 'berita') {
                 beritaView.classList.remove('hidden');
@@ -230,6 +233,11 @@
             } else if (viewName === 'users') {
                 if (usersView) usersView.classList.remove('hidden');
                 loadAdminUsersData();
+            } else if (viewName === 'roles') {
+                if (rolesView) rolesView.classList.remove('hidden');
+                if (typeof loadAdminRolesData === 'function') {
+                    loadAdminRolesData();
+                }
             } else if (viewName === 'santri') {
                 if (santriView) santriView.classList.remove('hidden');
                 loadAdminStudentsData();
@@ -4420,7 +4428,10 @@
                     const totalCount = summary.total !== undefined ? summary.total : adminUsersList.length;
                     const waliCount = summary.wali !== undefined ? summary.wali : adminUsersList.filter(u => u.role === 'WALI_SANTRI').length;
                     const pengasuhCount = summary.pengasuh !== undefined ? summary.pengasuh : adminUsersList.filter(u => u.role === 'PENGASUH').length;
-                    const pegawaiCount = summary.pegawai !== undefined ? summary.pegawai : adminUsersList.filter(u => u.role === 'PEGAWAI' || u.role === 'EDITOR').length;
+                    const asatidzCount = summary.asatidz !== undefined ? summary.asatidz : adminUsersList.filter(u => u.role === 'ASATIDZ' || u.role === 'PEGAWAI' || u.role === 'EDITOR').length;
+                    const pengurusCount = summary.pengurus !== undefined ? summary.pengurus : adminUsersList.filter(u => u.role === 'PENGURUS').length;
+                    const bendaharaCount = summary.bendahara !== undefined ? summary.bendahara : adminUsersList.filter(u => u.role === 'BENDAHARA').length;
+                    const pegawaiCount = asatidzCount;
                     const adminCount = summary.admin !== undefined ? summary.admin : adminUsersList.filter(u => u.role === 'ADMIN').length;
                     const superAdminCount = summary.superAdmin !== undefined ? summary.superAdmin : adminUsersList.filter(u => u.role === 'SUPER_ADMIN').length;
 
@@ -4441,6 +4452,9 @@
                     // Update Tab Counts
                     const tabAll = document.getElementById('user-tab-count-all');
                     const tabWali = document.getElementById('user-tab-count-wali');
+                    const tabAsatidz = document.getElementById('user-tab-count-asatidz');
+                    const tabPengurus = document.getElementById('user-tab-count-pengurus');
+                    const tabBendahara = document.getElementById('user-tab-count-bendahara');
                     const tabPegawai = document.getElementById('user-tab-count-pegawai');
                     const tabPengasuh = document.getElementById('user-tab-count-pengasuh');
                     const tabAdmin = document.getElementById('user-tab-count-admin');
@@ -4448,6 +4462,9 @@
 
                     if (tabAll) tabAll.innerText = totalCount;
                     if (tabWali) tabWali.innerText = waliCount;
+                    if (tabAsatidz) tabAsatidz.innerText = asatidzCount;
+                    if (tabPengurus) tabPengurus.innerText = pengurusCount;
+                    if (tabBendahara) tabBendahara.innerText = bendaharaCount;
                     if (tabPegawai) tabPegawai.innerText = pegawaiCount;
                     if (tabPengasuh) tabPengasuh.innerText = pengasuhCount;
                     if (tabAdmin) tabAdmin.innerText = adminCount;
@@ -4480,8 +4497,8 @@
 
             // Filter Peran
             if (adminUsersFilterRole && adminUsersFilterRole !== 'ALL') {
-                if (adminUsersFilterRole === 'PEGAWAI') {
-                    filtered = filtered.filter(u => u.role === 'PEGAWAI' || u.role === 'EDITOR');
+                if (adminUsersFilterRole === 'ASATIDZ' || adminUsersFilterRole === 'PEGAWAI') {
+                    filtered = filtered.filter(u => u.role === 'ASATIDZ' || u.role === 'PEGAWAI' || u.role === 'EDITOR');
                 } else {
                     filtered = filtered.filter(u => u.role === adminUsersFilterRole);
                 }
@@ -4527,8 +4544,12 @@
                     roleBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40"><i class="fa-solid fa-user-group text-[9px] mr-1"></i>Wali Santri</span>`;
                 } else if (role === 'PENGASUH') {
                     roleBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40"><i class="fa-solid fa-hands-praying text-[9px] mr-1"></i>Pengasuh</span>`;
-                } else if (role === 'PEGAWAI' || role === 'EDITOR') {
-                    roleBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-sky-100 text-sky-800 dark:bg-sky-950/80 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/40"><i class="fa-solid fa-id-badge text-[9px] mr-1"></i>Pegawai</span>`;
+                } else if (role === 'ASATIDZ' || role === 'PEGAWAI' || role === 'EDITOR') {
+                    roleBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950/80 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/40"><i class="fa-solid fa-chalkboard-user text-[9px] mr-1"></i>Asatidz</span>`;
+                } else if (role === 'PENGURUS') {
+                    roleBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-teal-100 text-teal-800 dark:bg-teal-950/80 dark:text-teal-300 border border-teal-200/60 dark:border-teal-800/40"><i class="fa-solid fa-clipboard-user text-[9px] mr-1"></i>Pengurus</span>`;
+                } else if (role === 'BENDAHARA') {
+                    roleBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40"><i class="fa-solid fa-wallet text-[9px] mr-1"></i>Bendahara</span>`;
                 } else if (role === 'SUPER_ADMIN') {
                     roleBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/40"><i class="fa-solid fa-crown text-[9px] mr-1"></i>Super Admin</span>`;
                 } else {
