@@ -1075,7 +1075,7 @@
                     <div class="min-w-0 flex-1">
                         <span class="text-[9px] font-bold text-brand-700 bg-brand-50 px-2 py-0.5 rounded-md uppercase">${news.kategori}</span>
                         <h4 class="text-xs font-bold text-slate-800 truncate mt-1">${news.judul}</h4>
-                        <p class="text-[10px] text-slate-400">${news.tanggal} • Oleh: ${news.penulis}</p>
+                        <p class="text-[10px] text-slate-400">${news.tanggal} • Oleh: ${news.penulis} • <span class="text-slate-600 dark:text-slate-300 font-semibold"><i class="fa-solid fa-eye text-emerald-600 mr-0.5"></i> ${(Number(news.views) || 0).toLocaleString('id-ID')}</span></p>
                     </div>
                     <div class="flex items-center space-x-1.5 shrink-0">
                         <button onclick="editAdminNews('${news.news_id}')" class="w-8 h-8 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg flex items-center justify-center text-xs transition" title="Edit">

@@ -235,7 +235,8 @@
                 ringkasan: "Haflah Khotmil Qur’an ke-22 Pondok Pesantren Roudlotul Mubarokah menjadi momentum syukur atas pencapaian 35 peserta sekaligus pengingat bahwa khatam 30 juz bukan akhir perjalanan bersama Al-Qur’an.",
                 isi: "DEMAK — Menyelesaikan hafalan 30 juz Al-Qur'an bukanlah akhir perjalanan seorang penghafal. Dalam Haflah Khotmil Qur'an ke-22 Pondok Pesantren Roudlotul Mubarokah, khatam ditekankan sebagai awal tanggung jawab untuk menjaga hafalan, memahami kandungan Al-Qur'an, dan mengamalkan nilai-nilainya dalam kehidupan.\n\nPesan tersebut mengemuka dalam Haflah Khotmil Qur'an ke-22 Pondok Pesantren Roudlotul Mubarokah, Rimbukidul, Karangawen, Demak, Minggu (28/9/2025). Mengusung tema “Menuju Generasi Qur'ani penuh berkah, mulia dan membawa kedamaian bagi umat”, kegiatan ini diikuti 35 peserta, terdiri atas 10 peserta Bil Hifdhi, 14 peserta Bin Nadhor, dan 11 peserta Juz Amma.",
                 penulis: "Admin",
-                gambar: "https://lh3.googleusercontent.com/d/1teGHXQOypKuqq02-jCMsUV-E06ZY28L4"
+                gambar: "https://lh3.googleusercontent.com/d/1teGHXQOypKuqq02-jCMsUV-E06ZY28L4",
+                views: 24
             }
         ];
 

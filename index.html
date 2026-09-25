@@ -4919,52 +4919,75 @@
         <!-- ==================== TABS KHUSUS: DETAIL BACA BERITA (FULL PAGE) ==================== -->
         <div id="page-detail-berita" class="tab-content hidden space-y-4">
 
-            <!-- Baris Kembali & Kategori Header -->
+            <!-- Baris Kembali & Kontrol Baca Header -->
             <div
                 class="flex items-center justify-between bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447]">
                 <button type="button" onclick="kembaliDariBerita()"
-                    class="flex items-center space-x-2 text-xs font-bold text-slate-700 hover:text-brand-700 transition active:scale-95">
+                    class="flex items-center space-x-2 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 hover:text-brand-700 dark:hover:text-emerald-400 transition active:scale-95">
                     <div
-                        class="w-8 h-8 bg-slate-100 dark:bg-[#1c2836] hover:bg-slate-200 dark:hover:bg-[#253447] text-slate-700 dark:text-slate-300 rounded-lg flex items-center justify-center shrink-0">
-                        <i class="fa-solid fa-arrow-left text-xs"></i>
+                        class="w-8 h-8 sm:w-9 sm:h-9 bg-slate-100 dark:bg-[#1c2836] hover:bg-slate-200 dark:hover:bg-[#253447] text-slate-700 dark:text-slate-300 rounded-lg flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-arrow-left text-xs sm:text-sm"></i>
                     </div>
                     <span>Kembali</span>
                 </button>
-                <span id="detail-news-badge"
-                    class="text-[10px] font-extrabold bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full uppercase">Kategori</span>
+
+                <div class="flex items-center space-x-2">
+                    <!-- Tombol Pengatur Ukuran Font untuk Kenyamanan Baca di HP -->
+                    <div class="flex items-center bg-slate-100 dark:bg-[#1c2836] rounded-xl p-1 border border-slate-200/60 dark:border-slate-700">
+                        <button type="button" onclick="changeNewsFontSize(-1)" title="Kecilkan Font"
+                            class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 text-xs font-bold active:scale-90 transition">
+                            A-
+                        </button>
+                        <button type="button" onclick="changeNewsFontSize(1)" title="Besarkan Font"
+                            class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 text-xs font-bold active:scale-90 transition">
+                            A+
+                        </button>
+                    </div>
+                    <span id="detail-news-badge"
+                        class="text-xs font-extrabold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-400 px-3 py-1 rounded-full uppercase tracking-wider">Kategori</span>
+                </div>
             </div>
 
             <!-- Artikel Lengkap -->
-            <article class="bg-white p-4 md:p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
+            <article class="bg-white dark:bg-[#15202d] p-4 sm:p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-[#253447] space-y-5">
 
                 <!-- Judul & Meta Data -->
-                <div class="space-y-2">
-                    <h1 id="detail-news-title" class="text-base md:text-xl font-extrabold text-slate-800 leading-snug">
+                <div class="space-y-3">
+                    <h1 id="detail-news-title" class="text-lg sm:text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-slate-100 leading-snug tracking-tight">
                         Judul Berita
                     </h1>
-                    <div class="flex items-center space-x-2 text-[11px] text-slate-400 border-b border-slate-100 pb-3">
-                        <span id="detail-news-date"><i class="fa-solid fa-calendar mr-1"></i> Tanggal</span>
+                    <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs sm:text-sm text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-[#253447] pb-3.5">
+                        <span id="detail-news-date" class="flex items-center">
+                            <i class="fa-solid fa-calendar mr-1.5 text-emerald-600 dark:text-emerald-400"></i> Tanggal
+                        </span>
                         <span>•</span>
-                        <span>Penulis: <strong id="detail-news-author"
-                                class="text-brand-700 font-semibold">Admin</strong></span>
+                        <span class="flex items-center">
+                            <i class="fa-solid fa-user-pen mr-1.5 text-emerald-600 dark:text-emerald-400"></i>
+                            Penulis: <strong id="detail-news-author" class="text-slate-700 dark:text-slate-200 font-semibold ml-1">Admin</strong>
+                        </span>
+                        <span>•</span>
+                        <span id="detail-news-views" class="flex items-center text-slate-600 dark:text-slate-300 font-medium">
+                            <i class="fa-solid fa-eye mr-1.5 text-emerald-600 dark:text-emerald-400"></i>
+                            <strong id="detail-news-views-count" class="font-bold text-slate-800 dark:text-slate-100 mr-1">0</strong> kali dibaca
+                        </span>
                     </div>
                 </div>
 
                 <!-- Foto Utama Berita (16:9) -->
                 <div id="detail-news-img-container"
-                    class="w-full aspect-video rounded-2xl overflow-hidden bg-slate-100 border border-slate-100">
+                    class="w-full aspect-video rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-100 dark:border-slate-800">
                     <img id="detail-news-img" src="" alt="Foto Berita" class="w-full h-full object-cover">
                 </div>
 
                 <!-- Ringkasan Cuplikan (Lead Text) -->
                 <div id="detail-news-summary-box"
-                    class="p-3.5 bg-slate-50 border-l-4 border-brand-700 rounded-r-xl text-xs md:text-sm font-medium text-slate-700 italic leading-relaxed">
+                    class="p-4 sm:p-5 bg-emerald-50/70 dark:bg-emerald-950/30 border-l-4 border-emerald-600 dark:border-emerald-500 rounded-r-2xl text-sm sm:text-base md:text-lg font-medium text-slate-700 dark:text-slate-300 italic leading-relaxed">
                     <p id="detail-news-summary"></p>
                 </div>
 
-                <!-- Isi Berita Lengkap (Bisa Scroll Panjang Tanpa Batas) -->
+                <!-- Isi Berita Lengkap (Teks Nyaman & Mudah Dibaca di Mobile) -->
                 <div id="detail-news-body"
-                    class="text-xs md:text-sm text-slate-700 leading-loose space-y-3 whitespace-pre-line">
+                    class="text-base sm:text-lg text-slate-800 dark:text-slate-200 leading-[1.85] sm:leading-[1.9] space-y-4 whitespace-pre-line font-normal tracking-normal transition-all duration-150">
                     <!-- Isi Lengkap Artikel -->
                 </div>
 

@@ -674,21 +674,25 @@
                 const imgSource = (news.gambar && String(news.gambar).trim()) ? news.gambar : defaultNewsImage;
                 const imgHtml = `<img src="${imgSource}" alt="${escapeHtml(news.judul)}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.onerror=null;this.src='${defaultNewsImage}';">`;
 
+                const formattedViews = (Number(news.views) || 0).toLocaleString('id-ID');
+
                 card.innerHTML = `
-                    <div class="w-full h-40 bg-brand-800 rounded-xl relative flex items-center justify-center overflow-hidden">
+                    <div class="w-full h-40 sm:h-44 bg-brand-800 rounded-xl relative flex items-center justify-center overflow-hidden">
                         ${imgHtml}
-                        <span class="absolute top-2.5 left-2.5 bg-brand-600 text-white text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase">${news.kategori}</span>
+                        <span class="absolute top-2.5 left-2.5 bg-brand-600 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">${news.kategori}</span>
                     </div>
                     <div class="space-y-1.5">
-                        <div class="flex items-center space-x-2 text-[10px] text-slate-400 dark:text-slate-400">
+                        <div class="flex items-center flex-wrap gap-x-2 gap-y-1 text-xs text-slate-400 dark:text-slate-400">
                             <span><i class="fa-solid fa-calendar mr-1"></i> ${news.tanggal}</span>
                             <span>•</span>
                             <span class="text-brand-700 dark:text-emerald-400 font-bold">${news.penulis}</span>
+                            <span>•</span>
+                            <span class="text-slate-500 dark:text-slate-400 font-medium"><i class="fa-solid fa-eye mr-1 text-emerald-600 dark:text-emerald-400"></i> ${formattedViews}</span>
                         </div>
-                        <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition line-clamp-2 leading-snug">
+                        <h3 class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition line-clamp-2 leading-snug">
                             ${news.judul}
                         </h3>
-                        <p class="text-xs text-slate-500 dark:text-slate-300 line-clamp-2 leading-relaxed">
+                        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-300 line-clamp-2 leading-relaxed">
                             ${news.ringkasan}
                         </p>
                     </div>
@@ -711,12 +715,14 @@
                     item.className = `flex items-center justify-between gap-3 ${idx < topHeadline.length - 1 ? 'border-b border-slate-100 dark:border-[#253447] pb-4' : ''} cursor-pointer group`;
                     item.onclick = () => bacaBerita(news.news_id || news.slug);
                     const thumbSrc = news.gambar || defaultThumb;
+                    const formattedViews = (Number(news.views) || 0).toLocaleString('id-ID');
                     item.innerHTML = `
                         <div class="space-y-1.5 flex-1 min-w-0">
-                            <div>
+                            <div class="flex items-center gap-2">
                                 <span class="inline-block px-2.5 py-0.5 bg-emerald-700 text-white text-[9px] font-extrabold rounded-md uppercase tracking-wider">${news.kategori}</span>
+                                <span class="text-[11px] text-slate-400 dark:text-slate-400 font-medium"><i class="fa-solid fa-eye mr-1 text-emerald-600 dark:text-emerald-400"></i> ${formattedViews}</span>
                             </div>
-                            <h4 class="text-xs md:text-sm font-bold text-slate-800 dark:text-slate-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition line-clamp-2 leading-snug">
+                            <h4 class="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition line-clamp-2 leading-snug">
                                 ${news.judul}
                             </h4>
                         </div>
@@ -735,6 +741,7 @@
                     const bigNews = topHeadline[0];
                     const bigThumb = bigNews.gambar || defaultThumb;
                     const plainContent = (bigNews.ringkasan || bigNews.isi || "").replace(/<[^>]*>?/gm, '');
+                    const bigViews = (Number(bigNews.views) || 0).toLocaleString('id-ID');
 
                     let html = `
                         <!-- Featured Big News -->
@@ -744,7 +751,11 @@
                             </div>
                             <div class="col-span-6 flex flex-col justify-between py-1">
                                 <div class="space-y-2">
-                                    <span class="text-xs font-semibold text-emerald-700 dark:text-emerald-400">${bigNews.kategori} • ${bigNews.tanggal}</span>
+                                    <span class="text-xs font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
+                                        <span>${bigNews.kategori} • ${bigNews.tanggal}</span>
+                                        <span>•</span>
+                                        <span><i class="fa-solid fa-eye text-emerald-600 dark:text-emerald-400 mr-1"></i> ${bigViews} pembaca</span>
+                                    </span>
                                     <h4 onclick="bacaBerita('${bigNews.news_id || bigNews.slug}')"
                                         class="font-bold text-base text-slate-900 dark:text-slate-100 leading-snug hover:text-emerald-700 dark:hover:text-emerald-400 transition cursor-pointer line-clamp-2">
                                         ${bigNews.judul}
@@ -765,10 +776,14 @@
                         html += `<div class="grid grid-cols-2 gap-4 mt-6">`;
                         for (let i = 1; i < topHeadline.length; i++) {
                             const smallNews = topHeadline[i];
+                            const smallViews = (Number(smallNews.views) || 0).toLocaleString('id-ID');
                             html += `
                                 <div onclick="bacaBerita('${smallNews.news_id || smallNews.slug}')"
                                     class="bg-white dark:bg-[#15202d] p-4 rounded-xl border border-slate-200/70 dark:border-[#253447] hover:border-slate-300 dark:hover:border-slate-600 transition cursor-pointer">
-                                    <span class="text-[11px] font-medium text-slate-400 dark:text-slate-400">${smallNews.kategori} • ${smallNews.tanggal}</span>
+                                    <div class="flex items-center justify-between text-[11px] font-medium text-slate-400 dark:text-slate-400">
+                                        <span>${smallNews.kategori} • ${smallNews.tanggal}</span>
+                                        <span><i class="fa-solid fa-eye text-emerald-600 dark:text-emerald-400 mr-0.5"></i> ${smallViews}</span>
+                                    </div>
                                     <h5 class="font-bold text-xs text-slate-800 dark:text-slate-100 mt-1 line-clamp-2 hover:text-emerald-700 dark:hover:text-emerald-400">
                                         ${smallNews.judul}
                                     </h5>
@@ -782,6 +797,52 @@
             }
 
         }
+
+        // ==================== KONTROL UKURAN FONT BACA BERITA ====================
+        let currentNewsFontSizeIndex = (() => {
+            try {
+                const saved = localStorage.getItem('mubarokah_news_font_size');
+                return saved !== null ? parseInt(saved, 10) : 1; // Default index 1 (Nyaman)
+            } catch (e) {
+                return 1;
+            }
+        })();
+
+        const newsFontSizes = [
+            { bodyClass: 'text-[15px] sm:text-base leading-[1.8]', label: 'Normal' },
+            { bodyClass: 'text-base sm:text-lg leading-[1.85]', label: 'Nyaman' },
+            { bodyClass: 'text-lg sm:text-xl leading-[1.9]', label: 'Besar' },
+            { bodyClass: 'text-xl sm:text-2xl leading-[2]', label: 'Ekstra Besar' }
+        ];
+
+        function applyNewsFontSize() {
+            const bodyEl = document.getElementById('detail-news-body');
+            if (!bodyEl) return;
+            newsFontSizes.forEach(s => {
+                s.bodyClass.split(' ').forEach(cls => {
+                    if (cls.trim()) bodyEl.classList.remove(cls.trim());
+                });
+            });
+            const current = newsFontSizes[currentNewsFontSizeIndex] || newsFontSizes[1];
+            current.bodyClass.split(' ').forEach(cls => {
+                if (cls.trim()) bodyEl.classList.add(cls.trim());
+            });
+        }
+
+        function changeNewsFontSize(delta) {
+            const nextIndex = currentNewsFontSizeIndex + delta;
+            if (nextIndex >= 0 && nextIndex < newsFontSizes.length) {
+                currentNewsFontSizeIndex = nextIndex;
+                applyNewsFontSize();
+                try {
+                    localStorage.setItem('mubarokah_news_font_size', String(currentNewsFontSizeIndex));
+                } catch(e) {}
+                if (typeof showToast === 'function') {
+                    showToast(`Ukuran teks baca: ${newsFontSizes[currentNewsFontSizeIndex].label}`);
+                }
+            }
+        }
+        window.changeNewsFontSize = changeNewsFontSize;
 
         function bacaBerita(id, skipHistory = false) {
             const news = mockNewsData.find(n => n.news_id === id || n.slug === id);
@@ -801,8 +862,44 @@
 
             document.getElementById('detail-news-title').innerText = news.judul || '';
             document.getElementById('detail-news-badge').innerText = news.kategori || 'Kabar';
-            document.getElementById('detail-news-date').innerHTML = `<i class="fa-solid fa-calendar mr-1"></i> ${news.tanggal || '-'}`;
+            document.getElementById('detail-news-date').innerHTML = `<i class="fa-solid fa-calendar mr-1.5 text-emerald-600 dark:text-emerald-400"></i> ${news.tanggal || '-'}`;
             document.getElementById('detail-news-author').innerText = news.penulis || 'Admin';
+
+            // Tampilkan jumlah pembaca/view saat ini
+            const viewsEl = document.getElementById('detail-news-views-count');
+            if (viewsEl) {
+                viewsEl.innerText = (Number(news.views) || 0).toLocaleString('id-ID');
+            }
+
+            // Catat view baru per session browser untuk mencegah spam
+            const sessionKey = 'viewed_news_' + (news.news_id || news.slug);
+            if (!sessionStorage.getItem(sessionKey)) {
+                sessionStorage.setItem(sessionKey, '1');
+                news.views = (Number(news.views) || 0) + 1;
+                if (viewsEl) {
+                    viewsEl.innerText = news.views.toLocaleString('id-ID');
+                }
+                try {
+                    localStorage.setItem(NEWS_CACHE_KEY, JSON.stringify(mockNewsData));
+                } catch (e) {}
+
+                // Kirim increment ke backend
+                if (isApiConfigured()) {
+                    apiPost("incrementNewsView", { news_id: news.news_id || news.slug })
+                        .then(res => {
+                            if (res && res.success && typeof res.views === 'number') {
+                                news.views = res.views;
+                                if (viewsEl) {
+                                    viewsEl.innerText = res.views.toLocaleString('id-ID');
+                                }
+                                try {
+                                    localStorage.setItem(NEWS_CACHE_KEY, JSON.stringify(mockNewsData));
+                                } catch (e) {}
+                            }
+                        })
+                        .catch(err => console.warn('[incrementNewsView] silent error:', err));
+                }
+            }
 
             const summaryBox = document.getElementById('detail-news-summary-box');
             const summaryEl = document.getElementById('detail-news-summary');
@@ -824,6 +921,7 @@
                 imgContainer.classList.add('hidden');
             }
 
+            applyNewsFontSize();
             switchTab('detail-berita');
         }
 
