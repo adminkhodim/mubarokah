@@ -595,6 +595,11 @@ const ASNIdentity = {
         // Tampilkan antarmuka seketika (0 ms) tanpa kedipan skeleton
         this.renderAccountCenterUI();
 
+        // Muat konfigurasi izin peran dari backend
+        if (typeof fetchRolePermissionsFromBackend === 'function') {
+            fetchRolePermissionsFromBackend();
+        }
+
         // Silent background session re-validation
         if (pengasuhToken || adminToken || parentToken) {
             this.hydrateSession(true).catch(err => {
@@ -922,6 +927,9 @@ const ASNIdentity = {
                 if (nameEl) nameEl.innerText = (this.currentUser && (this.currentUser.titleName || this.currentUser.name)) || 'Pengasuh Pesantren';
                 if (emailEl) emailEl.innerHTML = `<i class="fa-regular fa-envelope mr-1.5 text-amber-400"></i> ${escapeHtml((this.currentUser && this.currentUser.email) || '-')}`;
                 this.updateAvatarUI(ASN_ROLES.PENGASUH, (this.currentUser && (this.currentUser.photoUrl || this.currentUser.photo_url)) || '');
+                if (typeof applyAdminRoleVisibility === 'function') {
+                    applyAdminRoleVisibility('PENGASUH');
+                }
             }
         } else if (['SUPER_ADMIN', 'ADMIN', 'BENDAHARA', 'PENGURUS', 'ASATIDZ', 'PEGAWAI', 'EDITOR'].includes(this.currentRole)) {
             if (window.innerWidth >= 768) {
@@ -948,6 +956,11 @@ const ASNIdentity = {
                 roleBadgeEl.innerText = displayRole;
             }
             this.updateAvatarUI(this.currentRole, (this.currentUser && (this.currentUser.photoUrl || this.currentUser.photo_url)) || '');
+
+            // Terapkan penyaringan menu Pusat Kontrol & Hub sesuai wewenang peran aktif
+            if (typeof applyAdminRoleVisibility === 'function') {
+                applyAdminRoleVisibility(this.currentRole);
+            }
         } else if (this.currentRole === ASN_ROLES.WALI_SANTRI) {
             waliStateEl.classList.remove('hidden');
             const nameEl = document.getElementById('parent-display-name');

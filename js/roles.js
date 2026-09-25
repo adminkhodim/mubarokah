@@ -1624,15 +1624,22 @@
 
         // 8. Filter Mobile Control Center Grid
         const mobileButtons = document.querySelectorAll('#admin-control-center-grid [data-admin-module]');
+        let visibleMobileCount = 0;
         mobileButtons.forEach(btn => {
             const modKey = btn.dataset.adminModule;
             const isAllowed = isModuleAllowedForRole(modKey, roleKey);
             if (isAllowed) {
                 btn.classList.remove('hidden');
+                visibleMobileCount++;
             } else {
                 btn.classList.add('hidden');
             }
         });
+
+        const mobileCountEl = document.getElementById('admin-control-center-count');
+        if (mobileCountEl) {
+            mobileCountEl.innerText = `${visibleMobileCount} Modul CMS`;
+        }
 
         // 9. Update Active Pill pada Role Switcher Bar
         const roleBtns = document.querySelectorAll('.role-switch-btn');

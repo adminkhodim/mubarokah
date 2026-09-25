@@ -8000,33 +8000,99 @@ const DEFAULT_ROLE_PERMISSIONS_MAP = {
   ]
 };
 
+const SHEET_ROLES_PERMISSIONS = "Roles_Permissions";
+
 /**
- * Ambil konfigurasi izin peran dari Script Properties (dengan fallback ke default baseline)
+ * Dapatkan atau inisialisasi sheet Roles_Permissions di Google Spreadsheet
+ */
+function getOrCreateRolesPermissionsSheet() {
+  const ss = getDatabaseSpreadsheet();
+  if (!ss) return null;
+
+  let sheet = ss.getSheetByName(SHEET_ROLES_PERMISSIONS);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_ROLES_PERMISSIONS);
+    const headers = [
+      "Role_Key",
+      "Role_Name",
+      "Total_Active",
+      "Active_Permissions_JSON",
+      "Updated_At",
+      "Updated_By"
+    ];
+    sheet.appendRow(headers);
+    sheet.getRange(1, 1, 1, headers.length)
+      .setFontWeight("bold")
+      .setBackground("#059669")
+      .setFontColor("#ffffff");
+
+    // Inisialisasi baris master 7 peran
+    const roleDescriptions = {
+      "SUPER_ADMIN": "Super Administrator",
+      "ADMIN": "Administrator Lembaga",
+      "ASATIDZ": "Dewan Asatidz / Pengajar",
+      "BENDAHARA": "Bendahara / Keuangan",
+      "PENGURUS": "Pengurus / Kesantrian",
+      "PENGASUH": "Dewan Masyayikh / Pengasuh",
+      "WALI_SANTRI": "Wali Santri / Orang Tua"
+    };
+
+    const nowIso = new Date().toISOString();
+    Object.keys(DEFAULT_ROLE_PERMISSIONS_MAP).forEach(k => {
+      const perms = DEFAULT_ROLE_PERMISSIONS_MAP[k] || [];
+      sheet.appendRow([
+        k,
+        roleDescriptions[k] || k,
+        perms.includes("*") ? 28 : perms.length,
+        JSON.stringify(perms),
+        nowIso,
+        "SYSTEM_INIT"
+      ]);
+    });
+  }
+  return sheet;
+}
+
+/**
+ * Ambil konfigurasi izin peran dari Sheet Roles_Permissions (dengan fallback ke Properties & Default)
  */
 function getRolePermissionsBackend(token) {
   try {
-    if (token) {
-      try {
-        const actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH"]);
-      } catch (authErr) {
-        verifySessionToken(token);
-      }
-    }
-
-    const props = PropertiesService.getScriptProperties();
-    const storedJson = props.getProperty("MUBAROKAH_ROLE_PERMISSIONS_CONFIG");
     let permissionsMap = {};
 
-    if (storedJson) {
-      try {
-        permissionsMap = JSON.parse(storedJson);
-      } catch (e) {
-        console.warn("[ROLE PERMS PARSE ERROR]", e);
+    // 1. Coba baca dari sheet Roles_Permissions
+    try {
+      const sheet = getOrCreateRolesPermissionsSheet();
+      if (sheet && sheet.getLastRow() > 1) {
+        const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getValues();
+        for (let i = 0; i < rows.length; i++) {
+          const rKey = String(rows[i][0] || "").trim().toUpperCase();
+          const rJson = String(rows[i][3] || "");
+          if (rKey && rJson) {
+            try {
+              permissionsMap[rKey] = JSON.parse(rJson);
+            } catch (pErr) {
+              console.warn("[PARSE PERMS ROW ERROR]", rKey, pErr);
+            }
+          }
+        }
+      }
+    } catch (sheetErr) {
+      console.warn("[GET ROLES SHEET ERROR]", sheetErr);
+    }
+
+    // 2. Fallback ke ScriptProperties jika sheet kosong
+    if (Object.keys(permissionsMap).length === 0) {
+      const props = PropertiesService.getScriptProperties();
+      const storedJson = props.getProperty("MUBAROKAH_ROLE_PERMISSIONS_CONFIG");
+      if (storedJson) {
+        try {
+          permissionsMap = JSON.parse(storedJson);
+        } catch (e) {}
       }
     }
 
-    // Gabungkan dengan baseline default
+    // 3. Gabungkan dengan baseline default untuk role yang belum terdefinisi
     const merged = {};
     Object.keys(DEFAULT_ROLE_PERMISSIONS_MAP).forEach(roleKey => {
       merged[roleKey] = (permissionsMap && Array.isArray(permissionsMap[roleKey]))
@@ -8051,17 +8117,18 @@ function getRolePermissionsBackend(token) {
 }
 
 /**
- * Simpan konfigurasi izin peran (Khusus Super Admin)
+ * Simpan konfigurasi izin peran ke Sheet Roles_Permissions dan ScriptProperties
  */
 function saveRolePermissionsBackend(roleKey, newPermissions, token) {
   try {
     if (!token) return { success: false, message: "Token autentikasi wajib dikirimkan." };
     
     // Verifikasi otorisasi: hanya SUPER_ADMIN (atau ADMIN) yang berhak mengatur izin
-    let actor = null;
+    let actorEmail = "ADMIN_USER";
     try {
-      actor = authenticateSession(token);
+      const actor = authenticateSession(token);
       authorizeRole(actor, ["ADMIN"]);
+      if (actor && actor.email) actorEmail = actor.email;
     } catch (authErr) {
       verifySessionToken(token);
     }
@@ -8078,29 +8145,60 @@ function saveRolePermissionsBackend(roleKey, newPermissions, token) {
       newPermissions = ["*"];
     }
 
-    const props = PropertiesService.getScriptProperties();
-    const storedJson = props.getProperty("MUBAROKAH_ROLE_PERMISSIONS_CONFIG");
-    let currentMap = {};
+    const nowIso = new Date().toISOString();
+    const countActive = newPermissions.includes("*") ? 28 : newPermissions.length;
+    const permsJson = JSON.stringify(newPermissions);
 
-    if (storedJson) {
-      try {
-        currentMap = JSON.parse(storedJson);
-      } catch (e) {}
+    // 1. Simpan ke Google Spreadsheet tab Roles_Permissions
+    try {
+      const sheet = getOrCreateRolesPermissionsSheet();
+      if (sheet) {
+        const lastRow = sheet.getLastRow();
+        let foundRowIndex = -1;
+        if (lastRow > 1) {
+          const keys = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+          for (let i = 0; i < keys.length; i++) {
+            if (String(keys[i][0]).trim().toUpperCase() === roleKey) {
+              foundRowIndex = i + 2;
+              break;
+            }
+          }
+        }
+
+        if (foundRowIndex !== -1) {
+          sheet.getRange(foundRowIndex, 3).setValue(countActive);
+          sheet.getRange(foundRowIndex, 4).setValue(permsJson);
+          sheet.getRange(foundRowIndex, 5).setValue(nowIso);
+          sheet.getRange(foundRowIndex, 6).setValue(actorEmail);
+        } else {
+          sheet.appendRow([roleKey, roleKey, countActive, permsJson, nowIso, actorEmail]);
+        }
+      }
+    } catch (sheetSaveErr) {
+      console.warn("[SAVE ROLE TO SHEET ERROR]", sheetSaveErr);
     }
 
-    // Isi default untuk role yang belum ada di map
-    Object.keys(DEFAULT_ROLE_PERMISSIONS_MAP).forEach(k => {
-      if (!currentMap[k]) currentMap[k] = DEFAULT_ROLE_PERMISSIONS_MAP[k];
-    });
-
-    currentMap[roleKey] = newPermissions;
-
-    props.setProperty("MUBAROKAH_ROLE_PERMISSIONS_CONFIG", JSON.stringify(currentMap));
+    // 2. Simpan juga ke ScriptProperties untuk fast-read cache
+    try {
+      const props = PropertiesService.getScriptProperties();
+      const storedJson = props.getProperty("MUBAROKAH_ROLE_PERMISSIONS_CONFIG");
+      let currentMap = {};
+      if (storedJson) {
+        try { currentMap = JSON.parse(storedJson); } catch (e) {}
+      }
+      Object.keys(DEFAULT_ROLE_PERMISSIONS_MAP).forEach(k => {
+        if (!currentMap[k]) currentMap[k] = DEFAULT_ROLE_PERMISSIONS_MAP[k];
+      });
+      currentMap[roleKey] = newPermissions;
+      props.setProperty("MUBAROKAH_ROLE_PERMISSIONS_CONFIG", JSON.stringify(currentMap));
+    } catch (propErr) {
+      console.warn("[SAVE ROLE TO PROPS ERROR]", propErr);
+    }
 
     return {
       success: true,
       status: "success",
-      message: `Konfigurasi izin untuk peran ${roleKey} berhasil disimpan.`,
+      message: `Konfigurasi izin untuk peran ${roleKey} berhasil disimpan ke Spreadsheet & cache.`,
       roleKey: roleKey,
       permissions: newPermissions
     };
