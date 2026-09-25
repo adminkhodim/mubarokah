@@ -68,7 +68,10 @@ const TAHFIDZ_CACHE_TTL_MS = 5 * 60 * 1000; // 5 menit
 /**
  * Helper untuk mengatur status loading visual (icon spinner berputar + teks) pada tombol simpan/aksi
  */
-function setTahfidzButtonLoading(btnOrId, isLoading, loadingText = "Menyimpan...") {
+function setTahfidzButtonLoading(btnOrId, isLoading, loadingText = "Menyimpan...", defaultText = "") {
+    if (typeof window.setButtonLoading === 'function') {
+        return window.setButtonLoading(btnOrId, isLoading, loadingText, defaultText);
+    }
     const btn = typeof btnOrId === 'string' ? document.getElementById(btnOrId) : btnOrId;
     if (!btn) return;
 
@@ -82,7 +85,9 @@ function setTahfidzButtonLoading(btnOrId, isLoading, loadingText = "Menyimpan...
     } else {
         btn.disabled = false;
         btn.classList.remove('opacity-75', 'cursor-not-allowed');
-        if (btn.dataset.originalHtml) {
+        if (defaultText) {
+            btn.innerHTML = defaultText;
+        } else if (btn.dataset.originalHtml) {
             btn.innerHTML = btn.dataset.originalHtml;
             delete btn.dataset.originalHtml;
         }
@@ -2545,7 +2550,7 @@ async function submitTahfidzBulkTarget() {
         if (typeof showToast === 'function') {
             showToast("⚠️ Tidak ada santri sasaran yang dipilih.");
         } else {
-            alert("Tidak ada santri sasaran yang dipilih.");
+            if (typeof showToast === "function") showToast("⚠️ Tidak ada santri sasaran yang dipilih."); else alert("Tidak ada santri sasaran yang dipilih.");
         }
         return;
     }
@@ -3547,6 +3552,14 @@ async function submitNewHalaqah(e) {
             populatePlottingHalaqahSelector();
             renderTahfidzMatriksBeban();
             populateTahfidzFilters();
+
+            // Transisi cerdas: Otomatis alihkan ke Tab 2 (Plotting Santri) dengan halaqah baru aktif
+            if (typeof openPlottingFromHalaqahCard === 'function') {
+                openPlottingFromHalaqahCard(newHalaqah.halaqahId);
+            }
+            if (typeof showToast === 'function') {
+                showToast(`✅ Halaqah ${newHalaqah.namaHalaqah} berhasil dibuat! Mengalihkan ke plotting santri...`);
+            }
         } else {
             if (typeof showToast === 'function') showToast("❌ Gagal membuat halaqah: " + ((res && res.message) || "Terjadi kesalahan"));
         }
@@ -3761,14 +3774,14 @@ async function triggerInitTahfidzSheets() {
             if (typeof showToast === 'function') {
                 showToast("✅ " + msg);
             }
-            alert("SUKSES:\n" + msg);
+            if (typeof showToast === "function") showToast("✅ " + msg); else alert(msg);
             loadAdminTahfidzData();
         } else {
-            alert("Pemberitahuan:\n" + ((res && res.message) || "Gagal membuat tab sheet. Pastikan Anda sudah login sebagai Admin."));
+            if (typeof showToast === "function") showToast("⚠️ " + ((res && res.message) || "Gagal membuat tab sheet.")); else alert((res && res.message) || "Gagal membuat tab sheet.");
         }
     } catch (err) {
         console.error("Error triggerInitTahfidzSheets:", err);
-        alert("Terjadi kendala koneksi: " + err.message);
+        if (typeof showToast === "function") showToast("❌ Terjadi kendala koneksi: " + err.message); else alert("Terjadi kendala koneksi: " + err.message);
     }
 }
 

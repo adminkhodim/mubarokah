@@ -547,3 +547,34 @@
                 else tagEl.innerHTML = `<i class="fa-solid fa-book-quran text-amber-400 mr-1"></i> Activity Normal Pesantren`;
             }
         }
+
+        /**
+         * Helper universal untuk tombol aksi / simpan seluruh modul:
+         * - Menangani state loading (spinner, disabled, cursor, teks)
+         * - Mencegah double-click / submit berulang
+         * - Menjamin pemulihan state tombol di blok finally
+         */
+        function setButtonLoading(btnOrId, isLoading, loadingText = "Menyimpan...", defaultText = "") {
+            const btn = typeof btnOrId === 'string' ? document.getElementById(btnOrId) : btnOrId;
+            if (!btn) return;
+
+            if (isLoading) {
+                if (!btn.dataset.originalHtml) {
+                    btn.dataset.originalHtml = btn.innerHTML;
+                }
+                btn.disabled = true;
+                btn.classList.add('opacity-75', 'cursor-not-allowed');
+                const safeText = (typeof escapeHtml === 'function') ? escapeHtml(loadingText) : loadingText;
+                btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i><span>${safeText}</span>`;
+            } else {
+                btn.disabled = false;
+                btn.classList.remove('opacity-75', 'cursor-not-allowed');
+                if (defaultText) {
+                    btn.innerHTML = defaultText;
+                } else if (btn.dataset.originalHtml) {
+                    btn.innerHTML = btn.dataset.originalHtml;
+                }
+            }
+        }
+        window.setButtonLoading = setButtonLoading;
+

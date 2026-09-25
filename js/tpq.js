@@ -887,7 +887,9 @@ async function submitSimakTPQ(e) {
         namaKelas: ASNTPQ.simakState.namaKelas || ""
     };
 
-    if (btn) {
+    if (typeof setButtonLoading === 'function') {
+        setButtonLoading(btn, true, "Menyimpan...");
+    } else if (btn) {
         btn.disabled = true;
         btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Menyimpan...`;
     }
@@ -915,12 +917,17 @@ async function submitSimakTPQ(e) {
             // Revalidate backend di latar belakang
             loadAdminTPQData(true);
         } else {
-            alert("Gagal mencatat bimbingan: " + (res && res.message ? res.message : "Kesalahan tidak dikenal"));
+            const msg = (res && res.message) || "Kesalahan tidak dikenal saat mencatat bimbingan TPQ.";
+            if (typeof showToast === 'function') showToast("❌ " + msg);
+            else alert(msg);
         }
     } catch (err) {
-        alert("Terjadi kesalahan jaringan saat menyimpan data TPQ.");
+        if (typeof showToast === 'function') showToast("❌ Terjadi kesalahan jaringan saat menyimpan data TPQ.");
+        else alert("Terjadi kesalahan jaringan saat menyimpan data TPQ.");
     } finally {
-        if (btn) {
+        if (typeof setButtonLoading === 'function') {
+            setButtonLoading(btn, false, "", `<i class="fa-solid fa-circle-check mr-1.5"></i> Selesai & Simpan`);
+        } else if (btn) {
             btn.disabled = false;
             btn.innerHTML = `<i class="fa-solid fa-circle-check mr-1.5"></i> Selesai & Simpan`;
         }
@@ -1129,11 +1136,14 @@ async function submitNewTPQKelas(e) {
     const deskripsi = inputTarget ? inputTarget.value.trim() : "";
 
     if (!ustadz) {
-        alert("Nama Ustadz / Ustadzah pengampu wajib dipilih dari daftar data pegawai!");
+        if (typeof showToast === 'function') showToast("⚠️ Nama Ustadz / Ustadzah pengampu wajib dipilih dari daftar data pegawai!");
+        else alert("Nama Ustadz / Ustadzah pengampu wajib dipilih dari daftar data pegawai!");
         return;
     }
 
-    if (btn) {
+    if (typeof setButtonLoading === 'function') {
+        setButtonLoading(btn, true, "Menyimpan...");
+    } else if (btn) {
         btn.disabled = true;
         btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Menyimpan...`;
     }
@@ -1148,7 +1158,6 @@ async function submitNewTPQKelas(e) {
         });
 
         if (res && (res.success || res.status === "success")) {
-            if (typeof showToast === 'function') showToast(res.message || "Kelas TPQ berhasil ditambahkan!");
             if (inputTarget) inputTarget.value = '';
             if (inputUstadz) inputUstadz.value = '';
 
@@ -1165,14 +1174,28 @@ async function submitNewTPQKelas(e) {
 
             renderTPQKelasCards();
             populateTPQFilters();
+            populatePlottingTPQKelasSelector();
             loadAdminTPQData(true);
+
+            // Transisi cerdas: Otomatis alihkan ke Tab 2 (Plotting Santri) dengan kelas baru aktif
+            if (typeof openPlottingFromKelasCard === 'function') {
+                openPlottingFromKelasCard(newK.kelasId);
+            }
+            if (typeof showToast === 'function') {
+                showToast(`✅ Kelas ${newK.namaKelas} berhasil dibuat! Mengalihkan ke plotting santri...`);
+            }
         } else {
-            alert("Gagal menyimpan kelas: " + ((res && res.message) || "Kesalahan server"));
+            const msg = ((res && res.message) || "Kesalahan server saat menyimpan kelas TPQ.");
+            if (typeof showToast === 'function') showToast("❌ " + msg);
+            else alert(msg);
         }
     } catch (err) {
-        alert("Terjadi kesalahan jaringan saat menyimpan kelas TPQ.");
+        if (typeof showToast === 'function') showToast("❌ Terjadi kesalahan jaringan saat menyimpan kelas TPQ.");
+        else alert("Terjadi kesalahan jaringan saat menyimpan kelas TPQ.");
     } finally {
-        if (btn) {
+        if (typeof setButtonLoading === 'function') {
+            setButtonLoading(btn, false, "", `<i class="fa-solid fa-plus text-[10px]"></i><span>Tambah Kelas</span>`);
+        } else if (btn) {
             btn.disabled = false;
             btn.innerHTML = `<i class="fa-solid fa-plus text-[10px]"></i><span>Tambah Kelas</span>`;
         }
@@ -1197,10 +1220,10 @@ async function deleteTPQKelasConfirm(kelasId, namaKelas) {
             populateTPQFilters();
             loadAdminTPQData(true);
         } else {
-            alert("Gagal menghapus: " + ((res && res.message) || "Error"));
+            if (typeof showToast === "function") showToast("❌ Gagal menghapus: " + ((res && res.message) || "Error")); else if (typeof showToast === "function") showToast("❌ Gagal menghapus: " + ((res && res.message) || "Error")); else alert("Gagal menghapus: " + ((res && res.message) || "Error"));
         }
     } catch (e) {
-        alert("Kesalahan jaringan saat menghapus kelas.");
+        if (typeof showToast === "function") showToast("❌ Kesalahan jaringan saat menghapus kelas."); else if (typeof showToast === "function") showToast("❌ Kesalahan jaringan saat menghapus sesi."); else alert("Kesalahan jaringan.");
     }
 }
 
@@ -1404,7 +1427,8 @@ function removeStudentFromTPQPlotting(studentId) {
 
 async function submitTPQPlotting() {
     if (!ASNTPQ.activePlottingKelas) {
-        alert("Pilih kelas TPQ terlebih dahulu.");
+        if (typeof showToast === 'function') showToast("⚠️ Pilih kelas TPQ terlebih dahulu.");
+        else alert("Pilih kelas TPQ terlebih dahulu.");
         return;
     }
 
@@ -1412,7 +1436,9 @@ async function submitTPQPlotting() {
     const studentIds = ASNTPQ.activePlottingStudentIds || [];
     const btn = document.getElementById('tab2-btn-save-tpq-plotting');
 
-    if (btn) {
+    if (typeof setButtonLoading === 'function') {
+        setButtonLoading(btn, true, "Menyimpan Plotting...");
+    } else if (btn) {
         btn.disabled = true;
         btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Menyimpan...`;
     }
@@ -1436,12 +1462,17 @@ async function submitTPQPlotting() {
             renderTPQMatriksBeban();
             loadAdminTPQData(true);
         } else {
-            alert("Gagal menyimpan plotting: " + ((res && res.message) || "Kesalahan server"));
+            const msg = ((res && res.message) || "Kesalahan server saat menyimpan plotting.");
+            if (typeof showToast === 'function') showToast("❌ " + msg);
+            else alert(msg);
         }
     } catch (e) {
-        alert("Kesalahan jaringan saat menyimpan plotting santri.");
+        if (typeof showToast === 'function') showToast("❌ Kesalahan jaringan saat menyimpan plotting santri.");
+        else alert("Kesalahan jaringan saat menyimpan plotting santri.");
     } finally {
-        if (btn) {
+        if (typeof setButtonLoading === 'function') {
+            setButtonLoading(btn, false, "", `<i class="fa-solid fa-floppy-disk"></i><span>Simpan Plotting Santri</span>`);
+        } else if (btn) {
             btn.disabled = false;
             btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i><span>Simpan Plotting Santri</span>`;
         }
@@ -1696,11 +1727,14 @@ async function submitTPQSesi(e) {
     };
 
     if (!payload.namaSesi) {
-        alert("Nama sesi wajib diisi!");
+        if (typeof showToast === 'function') showToast("⚠️ Nama sesi TPQ wajib diisi!");
+        else alert("Nama sesi wajib diisi!");
         return;
     }
 
-    if (btn) {
+    if (typeof setButtonLoading === 'function') {
+        setButtonLoading(btn, true, "Menyimpan...");
+    } else if (btn) {
         btn.disabled = true;
         btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Menyimpan...`;
     }
@@ -1722,12 +1756,17 @@ async function submitTPQSesi(e) {
             }
             renderTPQSesiCards();
         } else {
-            alert("Gagal: " + ((res && res.message) || "Kesalahan server"));
+            const msg = ((res && res.message) || "Kesalahan server saat menyimpan sesi.");
+            if (typeof showToast === 'function') showToast("❌ " + msg);
+            else alert(msg);
         }
     } catch (err) {
-        alert("Terjadi kesalahan jaringan saat menyimpan sesi.");
+        if (typeof showToast === 'function') showToast("❌ Terjadi kesalahan jaringan saat menyimpan sesi TPQ.");
+        else alert("Terjadi kesalahan jaringan saat menyimpan sesi.");
     } finally {
-        if (btn) {
+        if (typeof setButtonLoading === 'function') {
+            setButtonLoading(btn, false, "", `<i class="fa-solid fa-plus text-[10px]"></i><span id="btn-submit-tpq-sesi-text">Simpan Sesi</span>`);
+        } else if (btn) {
             btn.disabled = false;
             btn.innerHTML = `<i class="fa-solid fa-plus text-[10px]"></i><span id="btn-submit-tpq-sesi-text">Simpan Sesi</span>`;
         }
@@ -1881,7 +1920,9 @@ async function submitTPQTarget() {
 
     if (!studentId) return;
 
-    if (btn) {
+    if (typeof setButtonLoading === 'function') {
+        setButtonLoading(btn, true, "Menyimpan...");
+    } else if (btn) {
         btn.disabled = true;
         btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Menyimpan...`;
     }
@@ -1908,12 +1949,17 @@ async function submitTPQTarget() {
             };
             renderTPQTable();
         } else {
-            alert("Gagal: " + ((res && res.message) || "Error"));
+            const msg = ((res && res.message) || "Gagal menyimpan target santri.");
+            if (typeof showToast === 'function') showToast("❌ " + msg);
+            else alert(msg);
         }
     } catch (e) {
-        alert("Kesalahan jaringan saat menyimpan target.");
+        if (typeof showToast === 'function') showToast("❌ Kesalahan jaringan saat menyimpan target.");
+        else alert("Kesalahan jaringan saat menyimpan target.");
     } finally {
-        if (btn) {
+        if (typeof setButtonLoading === 'function') {
+            setButtonLoading(btn, false, "", `<i class="fa-solid fa-floppy-disk"></i><span>Simpan Target</span>`);
+        } else if (btn) {
             btn.disabled = false;
             btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i><span>Simpan Target</span>`;
         }
@@ -2078,7 +2124,8 @@ async function submitTPQBulkTarget() {
     }
 
     if (targetStudentIds.length === 0) {
-        alert("Tidak ada santri sasaran yang terpilih.");
+        if (typeof showToast === 'function') showToast("⚠️ Tidak ada santri sasaran yang terpilih.");
+        else alert("Tidak ada santri sasaran yang terpilih.");
         return;
     }
 
@@ -2086,7 +2133,9 @@ async function submitTPQBulkTarget() {
     const targetHalamanSesi = Number(sesiInp?.value || 1);
     const btn = document.getElementById('btn-save-tpq-target-bulk');
 
-    if (btn) {
+    if (typeof setButtonLoading === 'function') {
+        setButtonLoading(btn, true, "Menerapkan Target...");
+    } else if (btn) {
         btn.disabled = true;
         btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Menerapkan Target...`;
     }
@@ -2115,12 +2164,17 @@ async function submitTPQBulkTarget() {
             clearTPQSelectedStudents();
             renderTPQTable();
         } else {
-            alert("Gagal menerapkan target massal: " + ((res && res.message) || "Kesalahan server"));
+            const msg = ((res && res.message) || "Kesalahan server saat menerapkan target massal.");
+            if (typeof showToast === 'function') showToast("❌ " + msg);
+            else alert(msg);
         }
     } catch (e) {
-        alert("Kesalahan jaringan saat menyimpan target massal.");
+        if (typeof showToast === 'function') showToast("❌ Kesalahan jaringan saat menyimpan target massal.");
+        else alert("Kesalahan jaringan saat menyimpan target massal.");
     } finally {
-        if (btn) {
+        if (typeof setButtonLoading === 'function') {
+            setButtonLoading(btn, false, "", `<i class="fa-solid fa-bullseye"></i><span>Terapkan Target Massal</span>`);
+        } else if (btn) {
             btn.disabled = false;
             btn.innerHTML = `<i class="fa-solid fa-bullseye"></i><span>Terapkan Target Massal</span>`;
         }
@@ -2709,10 +2763,10 @@ async function deleteTPQSimakanLog(logId) {
             }
             loadAdminTPQData(true);
         } else {
-            alert("Gagal menghapus catatan: " + ((res && res.message) || "Terjadi kesalahan."));
+            if (typeof showToast === "function") showToast("❌ Gagal menghapus catatan: " + ((res && res.message) || "Terjadi kesalahan.")); else alert("Gagal menghapus catatan.");
         }
     } catch (e) {
-        alert("Kesalahan jaringan saat menghapus catatan: " + e.message);
+        if (typeof showToast === "function") showToast("❌ Kesalahan jaringan saat menghapus catatan: " + e.message); else alert("Kesalahan jaringan: " + e.message);
     }
 }
 
@@ -2722,7 +2776,7 @@ async function deleteTPQSimakanLog(logId) {
 function printTPQStudentMutabaah() {
     const res = ASNTPQ.activeStudentDetail;
     if (!res || !res.student) {
-        alert("Data mutaba'ah santri belum siap dicetak.");
+        if (typeof showToast === "function") showToast("⚠️ Data mutaba'ah santri belum siap dicetak."); else alert("Data mutaba'ah santri belum siap dicetak.");
         return;
     }
 
@@ -2737,7 +2791,7 @@ function printTPQStudentMutabaah() {
 
     const printWin = window.open('', '_blank');
     if (!printWin) {
-        alert("Izinkan pop-up peramban untuk mencetak rapor.");
+        if (typeof showToast === "function") showToast("⚠️ Izinkan pop-up peramban untuk mencetak rapor."); else alert("Izinkan pop-up peramban untuk mencetak rapor.");
         return;
     }
 

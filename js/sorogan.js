@@ -830,7 +830,9 @@ async function submitSimakSorogan(e) {
         sesi: sesiVal
     };
 
-    if (btn) {
+    if (typeof setButtonLoading === 'function') {
+        setButtonLoading(btn, true, "Menyimpan...");
+    } else if (btn) {
         btn.disabled = true;
         btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Menyimpan...`;
     }
@@ -856,12 +858,17 @@ async function submitSimakSorogan(e) {
 
             loadAdminSoroganData(true);
         } else {
-            alert("Gagal mencatat sorogan: " + (res && res.message ? res.message : "Kesalahan server"));
+            const msg = (res && res.message) || "Kesalahan server saat mencatat sorogan.";
+            if (typeof showToast === 'function') showToast("❌ " + msg);
+            else alert(msg);
         }
     } catch (err) {
-        alert("Terjadi kesalahan jaringan saat menyimpan sorogan.");
+        if (typeof showToast === 'function') showToast("❌ Terjadi kesalahan jaringan saat menyimpan sorogan.");
+        else alert("Terjadi kesalahan jaringan saat menyimpan sorogan.");
     } finally {
-        if (btn) {
+        if (typeof setButtonLoading === 'function') {
+            setButtonLoading(btn, false, "", `<i class="fa-solid fa-circle-check mr-1.5"></i> Selesai & Simpan`);
+        } else if (btn) {
             btn.disabled = false;
             btn.innerHTML = `<i class="fa-solid fa-circle-check mr-1.5"></i> Selesai & Simpan`;
         }
@@ -1087,11 +1094,14 @@ async function submitNewSoroganHalaqah(e) {
     const targetDeskripsi = inputTarget ? inputTarget.value.trim() : "";
 
     if (!muallim) {
-        alert("Pilih Kyai / Mu'allim Pengampu terlebih dahulu!");
+        if (typeof showToast === 'function') showToast("⚠️ Pilih Kyai / Mu'allim Pengampu terlebih dahulu!");
+        else alert("Pilih Kyai / Mu'allim Pengampu terlebih dahulu!");
         return;
     }
 
-    if (btn) {
+    if (typeof setButtonLoading === 'function') {
+        setButtonLoading(btn, true, "Menyimpan...");
+    } else if (btn) {
         btn.disabled = true;
         btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Menyimpan...`;
     }
@@ -1107,7 +1117,6 @@ async function submitNewSoroganHalaqah(e) {
         });
 
         if (res && (res.success || res.status === "success")) {
-            if (typeof showToast === 'function') showToast(res.message || "Halaqah Sorogan berhasil ditambahkan!");
             if (inputTarget) inputTarget.value = '';
 
             const newH = {
@@ -1123,14 +1132,28 @@ async function submitNewSoroganHalaqah(e) {
 
             renderSoroganHalaqahCards();
             populateSoroganFilters();
+            populatePlottingSoroganHalaqahSelector();
             loadAdminSoroganData(true);
+
+            // Transisi cerdas: Otomatis alihkan ke Tab 2 (Plotting Santri) dengan halaqah baru aktif
+            if (typeof openPlottingFromHalaqahCard === 'function') {
+                openPlottingFromHalaqahCard(newH.halaqahId);
+            }
+            if (typeof showToast === 'function') {
+                showToast(`✅ Halaqah ${newH.namaHalaqah} berhasil dibuat! Mengalihkan ke plotting santri...`);
+            }
         } else {
-            alert("Gagal menyimpan halaqah: " + ((res && res.message) || "Kesalahan server"));
+            const msg = ((res && res.message) || "Kesalahan server saat menyimpan halaqah.");
+            if (typeof showToast === 'function') showToast("❌ " + msg);
+            else alert(msg);
         }
     } catch (err) {
-        alert("Terjadi kesalahan jaringan saat menyimpan halaqah Sorogan.");
+        if (typeof showToast === 'function') showToast("❌ Terjadi kesalahan jaringan saat menyimpan halaqah Sorogan.");
+        else alert("Terjadi kesalahan jaringan saat menyimpan halaqah Sorogan.");
     } finally {
-        if (btn) {
+        if (typeof setButtonLoading === 'function') {
+            setButtonLoading(btn, false, "", `<i class="fa-solid fa-plus text-[10px]"></i><span>Tambah Halaqah</span>`);
+        } else if (btn) {
             btn.disabled = false;
             btn.innerHTML = `<i class="fa-solid fa-plus text-[10px]"></i><span>Tambah Halaqah</span>`;
         }
@@ -1155,10 +1178,10 @@ async function deleteSoroganHalaqahConfirm(halaqahId, namaHalaqah) {
             populateSoroganFilters();
             loadAdminSoroganData(true);
         } else {
-            alert("Gagal menghapus: " + ((res && res.message) || "Error"));
+            if (typeof showToast === "function") showToast("❌ Gagal menghapus: " + ((res && res.message) || "Error")); else if (typeof showToast === "function") showToast("❌ Gagal menghapus: " + ((res && res.message) || "Error")); else alert("Gagal menghapus: " + ((res && res.message) || "Error"));
         }
     } catch (e) {
-        alert("Kesalahan jaringan saat menghapus halaqah.");
+        if (typeof showToast === "function") showToast("❌ Kesalahan jaringan saat menghapus halaqah."); else if (typeof showToast === "function") showToast("❌ Kesalahan jaringan saat menghapus sesi."); else alert("Kesalahan jaringan.");
     }
 }
 
@@ -1367,7 +1390,8 @@ function removeStudentFromSoroganPlotting(studentId) {
 
 async function submitSoroganPlotting() {
     if (!ASNSorogan.activePlottingHalaqah) {
-        alert("Pilih halaqah Sorogan terlebih dahulu.");
+        if (typeof showToast === 'function') showToast("⚠️ Pilih halaqah Sorogan terlebih dahulu.");
+        else alert("Pilih halaqah Sorogan terlebih dahulu.");
         return;
     }
 
@@ -1375,7 +1399,9 @@ async function submitSoroganPlotting() {
     const studentIds = ASNSorogan.activePlottingStudentIds || [];
     const btn = document.getElementById('tab2-btn-save-sorogan-plotting');
 
-    if (btn) {
+    if (typeof setButtonLoading === 'function') {
+        setButtonLoading(btn, true, "Menyimpan Plotting...");
+    } else if (btn) {
         btn.disabled = true;
         btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Menyimpan...`;
     }
@@ -1399,12 +1425,17 @@ async function submitSoroganPlotting() {
             renderSoroganMatriksBeban();
             loadAdminSoroganData(true);
         } else {
-            alert("Gagal menyimpan plotting: " + ((res && res.message) || "Kesalahan server"));
+            const msg = ((res && res.message) || "Kesalahan server saat menyimpan plotting.");
+            if (typeof showToast === 'function') showToast("❌ " + msg);
+            else alert(msg);
         }
     } catch (e) {
-        alert("Kesalahan jaringan saat menyimpan plotting santri.");
+        if (typeof showToast === 'function') showToast("❌ Kesalahan jaringan saat menyimpan plotting santri.");
+        else alert("Kesalahan jaringan saat menyimpan plotting santri.");
     } finally {
-        if (btn) {
+        if (typeof setButtonLoading === 'function') {
+            setButtonLoading(btn, false, "", `<i class="fa-solid fa-floppy-disk"></i><span>Simpan Plotting Santri</span>`);
+        } else if (btn) {
             btn.disabled = false;
             btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i><span>Simpan Plotting Santri</span>`;
         }
@@ -1640,11 +1671,14 @@ async function submitSoroganSesi(e) {
     };
 
     if (!payload.namaSesi) {
-        alert("Nama sesi wajib diisi!");
+        if (typeof showToast === 'function') showToast("⚠️ Nama sesi Sorogan wajib diisi!");
+        else alert("Nama sesi wajib diisi!");
         return;
     }
 
-    if (btn) {
+    if (typeof setButtonLoading === 'function') {
+        setButtonLoading(btn, true, "Menyimpan...");
+    } else if (btn) {
         btn.disabled = true;
         btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Menyimpan...`;
     }
@@ -1671,12 +1705,17 @@ async function submitSoroganSesi(e) {
             }
             renderSoroganSesiCards();
         } else {
-            alert("Gagal: " + ((res && res.message) || "Kesalahan server"));
+            const msg = ((res && res.message) || "Kesalahan server saat menyimpan sesi.");
+            if (typeof showToast === 'function') showToast("❌ " + msg);
+            else alert(msg);
         }
     } catch (err) {
-        alert("Terjadi kesalahan jaringan saat menyimpan sesi.");
+        if (typeof showToast === 'function') showToast("❌ Terjadi kesalahan jaringan saat menyimpan sesi Sorogan.");
+        else alert("Terjadi kesalahan jaringan saat menyimpan sesi.");
     } finally {
-        if (btn) {
+        if (typeof setButtonLoading === 'function') {
+            setButtonLoading(btn, false, "", `<i class="fa-solid fa-plus text-[10px]"></i><span id="btn-submit-sorogan-sesi-text">Simpan Sesi</span>`);
+        } else if (btn) {
             btn.disabled = false;
             btn.innerHTML = `<i class="fa-solid fa-plus text-[10px]"></i><span id="btn-submit-sorogan-sesi-text">Simpan Sesi</span>`;
         }
@@ -1830,7 +1869,9 @@ async function submitSoroganTarget() {
 
     if (!studentId) return;
 
-    if (btn) {
+    if (typeof setButtonLoading === 'function') {
+        setButtonLoading(btn, true, "Menyimpan...");
+    } else if (btn) {
         btn.disabled = true;
         btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Menyimpan...`;
     }
@@ -1860,12 +1901,17 @@ async function submitSoroganTarget() {
             };
             renderSoroganTable();
         } else {
-            alert("Gagal: " + ((res && res.message) || "Error"));
+            const msg = ((res && res.message) || "Gagal menyimpan target sorogan santri.");
+            if (typeof showToast === 'function') showToast("❌ " + msg);
+            else alert(msg);
         }
     } catch (e) {
-        alert("Kesalahan jaringan saat menyimpan target.");
+        if (typeof showToast === 'function') showToast("❌ Kesalahan jaringan saat menyimpan target.");
+        else alert("Kesalahan jaringan saat menyimpan target.");
     } finally {
-        if (btn) {
+        if (typeof setButtonLoading === 'function') {
+            setButtonLoading(btn, false, "", `<i class="fa-solid fa-floppy-disk"></i><span>Simpan Target</span>`);
+        } else if (btn) {
             btn.disabled = false;
             btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i><span>Simpan Target</span>`;
         }
@@ -2069,12 +2115,17 @@ async function submitSoroganBulkTarget() {
             clearSoroganSelectedStudents();
             renderSoroganTable();
         } else {
-            alert("Gagal menerapkan target massal: " + ((res && res.message) || "Kesalahan server"));
+            const msg = ((res && res.message) || "Kesalahan server saat menerapkan target massal.");
+            if (typeof showToast === 'function') showToast("❌ " + msg);
+            else alert(msg);
         }
     } catch (e) {
-        alert("Kesalahan jaringan saat menyimpan target massal.");
+        if (typeof showToast === 'function') showToast("❌ Kesalahan jaringan saat menyimpan target massal.");
+        else alert("Kesalahan jaringan saat menyimpan target massal.");
     } finally {
-        if (btn) {
+        if (typeof setButtonLoading === 'function') {
+            setButtonLoading(btn, false, "", `<i class="fa-solid fa-bullseye"></i><span>Terapkan Target Massal</span>`);
+        } else if (btn) {
             btn.disabled = false;
             btn.innerHTML = `<i class="fa-solid fa-bullseye"></i><span>Terapkan Target Massal</span>`;
         }
@@ -2677,10 +2728,10 @@ async function deleteSoroganSimakanLog(logId) {
             }
             loadAdminSoroganData(true);
         } else {
-            alert("Gagal menghapus catatan: " + ((res && res.message) || "Terjadi kesalahan."));
+            if (typeof showToast === "function") showToast("❌ Gagal menghapus catatan: " + ((res && res.message) || "Terjadi kesalahan.")); else alert("Gagal menghapus catatan.");
         }
     } catch (e) {
-        alert("Kesalahan jaringan saat menghapus catatan: " + e.message);
+        if (typeof showToast === "function") showToast("❌ Kesalahan jaringan saat menghapus catatan: " + e.message); else alert("Kesalahan jaringan: " + e.message);
     }
 }
 
