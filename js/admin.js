@@ -781,12 +781,15 @@
             try {
                 const rawVideo = (document.getElementById('input-video-highlight')?.value || '').trim();
                 const formattedVideo = (typeof formatYoutubeEmbedUrl === 'function') ? formatYoutubeEmbedUrl(rawVideo) : rawVideo;
+                const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : '') ||
+                    localStorage.getItem('mubarokah_admin_token') || sessionStorage.getItem('mubarokah_admin_token') || '';
 
                 const payload = {
                     video_highlight: formattedVideo,
                     link_instagram: (document.getElementById('input-link-instagram')?.value || '').trim(),
                     link_youtube: (document.getElementById('input-link-youtube')?.value || '').trim(),
-                    link_facebook: (document.getElementById('input-link-facebook')?.value || '').trim()
+                    link_facebook: (document.getElementById('input-link-facebook')?.value || '').trim(),
+                    token: token
                 };
 
                 const result = await apiPost("savePengaturan", payload);
@@ -1576,7 +1579,124 @@
         }
 
         // ==================== DASHBOARD ADMIN: MANAJEMEN GALERI ====================
+        async function loadAdminGaleriVideoHighlight() {
+            const videoInput = document.getElementById('admin-galeri-video-input');
+            const previewIframe = document.getElementById('admin-galeri-video-preview-iframe');
+            if (!videoInput) return;
+
+            // 1. Ambil dari cache lokal terlebih dahulu jika ada
+            try {
+                const cached = localStorage.getItem('mubarokah_video_highlight');
+                if (cached && !videoInput.value) {
+                    videoInput.value = cached;
+                    if (previewIframe) previewIframe.src = cached;
+                }
+            } catch (_) {}
+
+            // 2. Ambil nilai resmi dari backend Pengaturan
+            try {
+                const res = await apiGet("getPengaturan");
+                if (res && res.status === "success" && res.data && res.data.video_highlight) {
+                    const embedUrl = (typeof formatYoutubeEmbedUrl === 'function')
+                        ? formatYoutubeEmbedUrl(res.data.video_highlight)
+                        : res.data.video_highlight;
+
+                    // Jangan timpa jika user sedang mengetik aktif di input
+                    if (document.activeElement !== videoInput) {
+                        videoInput.value = res.data.video_highlight;
+                    }
+                    if (previewIframe && embedUrl) {
+                        previewIframe.src = embedUrl;
+                    }
+                    try { localStorage.setItem('mubarokah_video_highlight', embedUrl); } catch (_) {}
+                }
+            } catch (err) {
+                console.warn("[loadAdminGaleriVideoHighlight] Gagal memuat video highlight:", err);
+            }
+        }
+        window.loadAdminGaleriVideoHighlight = loadAdminGaleriVideoHighlight;
+
+        function previewAdminGaleriVideo() {
+            const raw = (document.getElementById('admin-galeri-video-input')?.value || '').trim();
+            const iframe = document.getElementById('admin-galeri-video-preview-iframe');
+            if (!iframe) return;
+            if (!raw) return;
+            const embedUrl = (typeof formatYoutubeEmbedUrl === 'function') ? formatYoutubeEmbedUrl(raw) : raw;
+            if (embedUrl && (embedUrl.includes('youtube.com/embed/') || embedUrl.includes('youtube-nocookie.com/embed/'))) {
+                iframe.src = embedUrl;
+            }
+        }
+        window.previewAdminGaleriVideo = previewAdminGaleriVideo;
+
+        async function handleAdminGaleriVideoSubmit(e) {
+            if (e) e.preventDefault();
+            const btnSubmit = document.getElementById('btn-submit-galeri-video');
+            const originalBtnHtml = btnSubmit ? btnSubmit.innerHTML : `<i class="fa-solid fa-save"></i> Simpan Video Highlight`;
+
+            const rawInput = (document.getElementById('admin-galeri-video-input')?.value || '').trim();
+            if (!rawInput) {
+                showToast("Silakan masukkan URL video YouTube terlebih dahulu.");
+                return;
+            }
+
+            const formattedEmbed = (typeof formatYoutubeEmbedUrl === 'function')
+                ? formatYoutubeEmbedUrl(rawInput)
+                : rawInput;
+
+            if (btnSubmit) {
+                btnSubmit.disabled = true;
+                btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Menyimpan...`;
+            }
+
+            try {
+                const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : '') ||
+                    localStorage.getItem('mubarokah_admin_token') || sessionStorage.getItem('mubarokah_admin_token') || '';
+                const payload = {
+                    video_highlight: formattedEmbed,
+                    token: token
+                };
+
+                const res = await apiPost("savePengaturan", payload);
+                if (res && (res.success || res.status === "success" || res.ok)) {
+                    showToast("Video Highlight berhasil disimpan ke Pengaturan!");
+                    try {
+                        localStorage.setItem('mubarokah_video_highlight', formattedEmbed);
+                    } catch (_) {}
+
+                    // Update pratinjau lokal dan publik
+                    const previewIframe = document.getElementById('admin-galeri-video-preview-iframe');
+                    if (previewIframe) previewIframe.src = formattedEmbed;
+
+                    const publicIframe = document.getElementById('highlight-video-iframe');
+                    if (publicIframe) publicIframe.src = formattedEmbed;
+
+                    const extLink = document.getElementById('highlight-video-external-link');
+                    if (extLink && typeof getYoutubeWatchUrl === 'function') {
+                        extLink.href = getYoutubeWatchUrl(formattedEmbed);
+                    }
+
+                    // Sinkronkan juga input form Pengaturan Profil jika elemennya ada
+                    const inputPengaturan = document.getElementById('input-video-highlight');
+                    if (inputPengaturan) inputPengaturan.value = formattedEmbed;
+                } else {
+                    showToast("Gagal menyimpan video: " + (res && res.message ? res.message : "Terjadi kesalahan"));
+                }
+            } catch (err) {
+                console.error("[handleAdminGaleriVideoSubmit] Error:", err);
+                showToast("Terjadi kesalahan koneksi saat menyimpan video highlight.");
+            } finally {
+                if (btnSubmit) {
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = originalBtnHtml;
+                }
+            }
+        }
+        window.handleAdminGaleriVideoSubmit = handleAdminGaleriVideoSubmit;
+
         function renderAdminGaleriList() {
+            // Sinkronkan form Video Highlight di Manajemen Galeri
+            loadAdminGaleriVideoHighlight();
+
             const listContainer = document.getElementById('admin-galeri-list');
             const totalBadge = document.getElementById('admin-total-galeri');
             const hubBadge = document.getElementById('admin-hub-galeri-count');

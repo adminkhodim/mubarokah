@@ -930,7 +930,7 @@ function doPost(e) {
       const token = payload.token || (payload.data && payload.data.token) || null;
       try {
         const actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN", "EDITOR"]);
+        authorizeRole(actor, ["ADMIN", "EDITOR", "PENGURUS"]);
       } catch (authErr) {
         return createJsonResponse({ status: "error", message: authErr.message });
       }
