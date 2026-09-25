@@ -724,8 +724,8 @@
 
         // ==================== DASHBOARD ADMIN: PENGATURAN PROFIL ====================
         async function loadAdminPengaturan() {
+            const btnSubmit = document.getElementById('btn-submit-pengaturan');
             try {
-                const btnSubmit = document.getElementById('btn-submit-pengaturan');
                 if (btnSubmit) {
                     btnSubmit.disabled = true;
                     btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Memuat...`;
@@ -735,17 +735,22 @@
 
                 if (data && data.status === "success" && data.data) {
                     const config = data.data;
-                    document.getElementById('input-video-highlight').value = config.video_highlight || "";
-                    document.getElementById('input-link-instagram').value = config.link_instagram || "";
-                    document.getElementById('input-link-youtube').value = config.link_youtube || "";
-                    document.getElementById('input-link-facebook').value = config.link_facebook || "";
+                    const inputVideo = document.getElementById('input-video-highlight');
+                    if (inputVideo) {
+                        inputVideo.value = config.video_highlight || "";
+                    }
+                    const inputIg = document.getElementById('input-link-instagram');
+                    if (inputIg) inputIg.value = config.link_instagram || "";
+                    const inputYt = document.getElementById('input-link-youtube');
+                    if (inputYt) inputYt.value = config.link_youtube || "";
+                    const inputFb = document.getElementById('input-link-facebook');
+                    if (inputFb) inputFb.value = config.link_facebook || "";
                     previewPengaturanVideo();
                 }
             } catch (err) {
                 console.error("Gagal memuat pengaturan:", err);
                 showToast("Gagal memuat pengaturan profil.");
             } finally {
-                const btnSubmit = document.getElementById('btn-submit-pengaturan');
                 if (btnSubmit) {
                     btnSubmit.disabled = false;
                     btnSubmit.innerHTML = `<i class="fa-solid fa-save mr-2"></i> Simpan Pengaturan`;
@@ -767,38 +772,61 @@
         async function submitPengaturan(e) {
             e.preventDefault();
             const btnSubmit = document.getElementById('btn-submit-pengaturan');
-            const originalBtnText = btnSubmit.innerHTML;
-            btnSubmit.disabled = true;
-            btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Menyimpan...`;
+            const originalBtnText = btnSubmit ? btnSubmit.innerHTML : `<i class="fa-solid fa-save mr-2"></i> Simpan Pengaturan`;
+            if (btnSubmit) {
+                btnSubmit.disabled = true;
+                btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Menyimpan...`;
+            }
 
             try {
-                const rawVideo = document.getElementById('input-video-highlight').value;
+                const rawVideo = (document.getElementById('input-video-highlight')?.value || '').trim();
                 const formattedVideo = (typeof formatYoutubeEmbedUrl === 'function') ? formatYoutubeEmbedUrl(rawVideo) : rawVideo;
 
                 const payload = {
                     video_highlight: formattedVideo,
-                    link_instagram: document.getElementById('input-link-instagram').value,
-                    link_youtube: document.getElementById('input-link-youtube').value,
-                    link_facebook: document.getElementById('input-link-facebook').value
+                    link_instagram: (document.getElementById('input-link-instagram')?.value || '').trim(),
+                    link_youtube: (document.getElementById('input-link-youtube')?.value || '').trim(),
+                    link_facebook: (document.getElementById('input-link-facebook')?.value || '').trim()
                 };
 
                 const result = await apiPost("savePengaturan", payload);
-                if (result.success) {
+                if (result && (result.success || result.status === 'success' || result.ok)) {
                     showToast("Pengaturan profil berhasil disimpan!");
+                    try {
+                        localStorage.setItem('mubarokah_video_highlight', formattedVideo);
+                    } catch (_) {}
                     loadPengaturan(); // Refresh client side
+                    loadAdminPengaturan(); // Refresh admin form value
                 } else {
-                    showToast("Gagal menyimpan pengaturan: " + (result.message || "Unknown error"));
+                    showToast("Gagal menyimpan pengaturan: " + (result && result.message ? result.message : "Unknown error"));
                 }
             } catch (err) {
                 console.error(err);
-                showToast("Terjadi kesalahan koneksi.");
+                showToast("Terjadi kesalahan koneksi saat menyimpan pengaturan.");
             } finally {
-                btnSubmit.disabled = false;
-                btnSubmit.innerHTML = originalBtnText;
+                if (btnSubmit) {
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = originalBtnText;
+                }
             }
         }
 
         async function loadPengaturan() {
+            // Render cepat dari cache lokal (Stale-While-Revalidate)
+            try {
+                const cachedVideo = localStorage.getItem('mubarokah_video_highlight');
+                if (cachedVideo) {
+                    const iframeVideo = document.getElementById('highlight-video-iframe') || document.querySelector('iframe[title="Video Dokumentasi Pesantren"]');
+                    if (iframeVideo && iframeVideo.src !== cachedVideo) {
+                        iframeVideo.src = cachedVideo;
+                    }
+                    const externalLink = document.getElementById('highlight-video-external-link');
+                    if (externalLink) {
+                        externalLink.href = (typeof getYoutubeWatchUrl === 'function') ? getYoutubeWatchUrl(cachedVideo) : cachedVideo;
+                    }
+                }
+            } catch (_) {}
+
             try {
                 const data = await apiGet("getPengaturan");
 
@@ -813,13 +841,16 @@
                             : config.video_highlight;
                         if (embedUrl && (embedUrl.includes('youtube.com/embed/') || embedUrl.includes('youtube-nocookie.com/embed/'))) {
                             iframeVideo.src = embedUrl;
+                            try { localStorage.setItem('mubarokah_video_highlight', embedUrl); } catch (_) {}
                         }
                     }
 
                     // Update tautan eksternal YouTube
                     const externalLink = document.getElementById('highlight-video-external-link');
                     if (externalLink && config.video_highlight) {
-                        externalLink.href = config.video_highlight;
+                        externalLink.href = (typeof getYoutubeWatchUrl === 'function')
+                            ? getYoutubeWatchUrl(config.video_highlight)
+                            : config.video_highlight;
                     }
 
                     // Update social links

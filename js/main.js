@@ -514,6 +514,10 @@
                 if (typeof ASNJadwalSholat !== 'undefined') {
                     ASNJadwalSholat.init();
                 }
+            } else if (tabId === 'galeri') {
+                if (typeof loadPengaturan === 'function') {
+                    loadPengaturan();
+                }
             }
 
             // Nav Mobile Mapping
