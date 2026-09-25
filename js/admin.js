@@ -1096,6 +1096,7 @@
 
         // ==================== DASHBOARD ADMIN: MANAJEMEN BERITA ====================
         function renderAdminNewsList() {
+            if (typeof initAdminNewsKeyboardShortcuts === 'function') initAdminNewsKeyboardShortcuts();
             const container = document.getElementById('admin-news-list');
             const totalBadge = document.getElementById('admin-total-news');
             const hubBadge = document.getElementById('admin-hub-news-count');
@@ -1214,6 +1215,134 @@
             }
         }
 
+        function applyNewsFormat(formatType) {
+            const textarea = document.getElementById('admin-news-isi');
+            if (!textarea) return;
+
+            textarea.focus();
+            const start = textarea.selectionStart || 0;
+            const end = textarea.selectionEnd || 0;
+            const text = textarea.value || '';
+            const selected = text.substring(start, end);
+
+            let prefix = '';
+            let suffix = '';
+            let defaultPlaceholder = '';
+
+            switch (formatType) {
+                case 'bold':
+                    prefix = '**';
+                    suffix = '**';
+                    defaultPlaceholder = 'teks tebal';
+                    break;
+                case 'italic':
+                    prefix = '*';
+                    suffix = '*';
+                    defaultPlaceholder = 'teks miring';
+                    break;
+                case 'heading':
+                    prefix = '\n### ';
+                    suffix = '\n';
+                    defaultPlaceholder = 'Sub-judul Bagian';
+                    break;
+                case 'list':
+                    prefix = '\n- ';
+                    suffix = '';
+                    defaultPlaceholder = 'Poin daftar';
+                    break;
+                default:
+                    return;
+            }
+
+            const replacement = selected ? `${prefix}${selected}${suffix}` : `${prefix}${defaultPlaceholder}${suffix}`;
+
+            if (typeof textarea.setRangeText === 'function') {
+                textarea.setRangeText(replacement, start, end, 'select');
+            } else {
+                textarea.value = text.substring(0, start) + replacement + text.substring(end);
+            }
+
+            if (!selected) {
+                const newStart = start + prefix.length;
+                const newEnd = newStart + defaultPlaceholder.length;
+                textarea.setSelectionRange(newStart, newEnd);
+            } else {
+                textarea.setSelectionRange(start + prefix.length, end + prefix.length);
+            }
+
+            updateAdminNewsPreview();
+        }
+        window.applyNewsFormat = applyNewsFormat;
+
+        function updateAdminNewsPreview() {
+            const textarea = document.getElementById('admin-news-isi');
+            const previewContent = document.getElementById('admin-news-preview-content');
+            if (!textarea || !previewContent) return;
+
+            const raw = textarea.value || '';
+            if (typeof formatNewsArticleBody === 'function') {
+                previewContent.innerHTML = formatNewsArticleBody(raw) || '<span class="text-slate-400 italic">Belum ada isi berita yang ditulis.</span>';
+            } else {
+                previewContent.innerText = raw || 'Belum ada isi berita yang ditulis.';
+            }
+        }
+        window.updateAdminNewsPreview = updateAdminNewsPreview;
+
+        function toggleAdminNewsPreview() {
+            const textarea = document.getElementById('admin-news-isi');
+            const previewBox = document.getElementById('admin-news-preview-box');
+            const btn = document.getElementById('btn-toggle-news-preview');
+            const icon = document.getElementById('icon-toggle-news-preview');
+            const text = document.getElementById('text-toggle-news-preview');
+
+            if (!previewBox || !textarea) return;
+
+            const isHidden = previewBox.classList.contains('hidden');
+            if (isHidden) {
+                updateAdminNewsPreview();
+                previewBox.classList.remove('hidden');
+                if (icon) icon.className = "fa-solid fa-pen-to-square";
+                if (text) text.innerText = "Tutup Pratinjau";
+                if (btn) {
+                    btn.className = "px-2.5 py-1 text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 rounded-lg transition shadow-xs flex items-center gap-1 active:scale-95";
+                }
+            } else {
+                previewBox.classList.add('hidden');
+                if (icon) icon.className = "fa-solid fa-eye";
+                if (text) text.innerText = "Pratinjau";
+                if (btn) {
+                    btn.className = "px-2.5 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 rounded-lg transition shadow-xs flex items-center gap-1 active:scale-95";
+                }
+                textarea.focus();
+            }
+        }
+        window.toggleAdminNewsPreview = toggleAdminNewsPreview;
+
+        function initAdminNewsKeyboardShortcuts() {
+            const textarea = document.getElementById('admin-news-isi');
+            if (!textarea || textarea.dataset.hasShortcutListener === "true") return;
+
+            textarea.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'B')) {
+                    e.preventDefault();
+                    applyNewsFormat('bold');
+                } else if ((e.ctrlKey || e.metaKey) && (e.key === 'i' || e.key === 'I')) {
+                    e.preventDefault();
+                    applyNewsFormat('italic');
+                }
+            });
+
+            textarea.addEventListener('input', function() {
+                const previewBox = document.getElementById('admin-news-preview-box');
+                if (previewBox && !previewBox.classList.contains('hidden')) {
+                    updateAdminNewsPreview();
+                }
+            });
+
+            textarea.dataset.hasShortcutListener = "true";
+        }
+        window.initAdminNewsKeyboardShortcuts = initAdminNewsKeyboardShortcuts;
+
         function editAdminNews(id) {
             const news = mockNewsData.find(n => n.news_id === id);
             if (!news) return;
@@ -1229,6 +1358,12 @@
             document.getElementById('admin-submit-text').innerText = "Simpan Perubahan Berita";
             document.getElementById('admin-cancel-edit-btn').classList.remove('hidden');
 
+            initAdminNewsKeyboardShortcuts();
+            const previewBox = document.getElementById('admin-news-preview-box');
+            if (previewBox && !previewBox.classList.contains('hidden')) {
+                updateAdminNewsPreview();
+            }
+
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -1238,6 +1373,11 @@
             document.getElementById('admin-form-title').innerHTML = `<i class="fa-solid fa-pen-to-square text-brand-700 mr-2"></i> Tambah Berita Baru`;
             document.getElementById('admin-submit-text').innerText = "Publikasikan Berita";
             document.getElementById('admin-cancel-edit-btn').classList.add('hidden');
+
+            const previewBox = document.getElementById('admin-news-preview-box');
+            if (previewBox && !previewBox.classList.contains('hidden')) {
+                toggleAdminNewsPreview();
+            }
         }
 
         async function deleteAdminNews(id) {

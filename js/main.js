@@ -848,6 +848,93 @@
         }
         window.changeNewsFontSize = changeNewsFontSize;
 
+        function formatNewsArticleBody(rawContent) {
+            if (!rawContent) return '';
+
+            // 1. Normalisasi newline
+            let text = String(rawContent).replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+            if (!text) return '';
+
+            // 2. Escape HTML untuk mencegah XSS jika ada karakter script/markup asing
+            let safe = (typeof escapeHtml === 'function') ? escapeHtml(text) : String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+
+            // 3. Konversi tag HTML dasar yang mungkin ditulis langsung atau terbawa
+            safe = safe.replace(/&lt;b&gt;(.*?)&lt;\/b&gt;/gi, '<strong class="font-bold text-slate-900 dark:text-white">$1</strong>');
+            safe = safe.replace(/&lt;strong&gt;(.*?)&lt;\/strong&gt;/gi, '<strong class="font-bold text-slate-900 dark:text-white">$1</strong>');
+            safe = safe.replace(/&lt;i&gt;(.*?)&lt;\/i&gt;/gi, '<em class="italic">$1</em>');
+            safe = safe.replace(/&lt;em&gt;(.*?)&lt;\/em&gt;/gi, '<em class="italic">$1</em>');
+
+            // 4. Parsing Markdown Bold: **teks**
+            safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong class="font-bold text-slate-900 dark:text-white">$1</strong>');
+
+            // 5. Parsing Markdown Italic: *teks* atau _teks_
+            safe = safe.replace(/(^|[^\*])\*([^\*\n]+?)\*([^\*]|$)/g, '$1<em class="italic">$2</em>$3');
+            safe = safe.replace(/(^|[^_])_([^_\n]+?)_([^_]|$)/g, '$1<em class="italic">$2</em>$3');
+
+            // 6. Parsing Sub-judul: ### Judul atau ## Judul
+            safe = safe.replace(/^(?:###|##)\s*(.+)$/gm, '___HEADING___$1___ENDHEADING___');
+
+            // 7. Pecah blok paragraf (dipisahkan oleh 2 baris baru atau lebih)
+            const blocks = safe.split(/\n\s*\n/);
+            const resultBlocks = [];
+
+            for (let block of blocks) {
+                block = block.trim();
+                if (!block) continue;
+
+                const lines = block.split('\n');
+                let hasSpecial = lines.some(l => /^[-*•]\s+/.test(l.trim()) || /^___HEADING___/.test(l.trim()));
+
+                if (hasSpecial) {
+                    let listHtml = [];
+                    let inUl = false;
+                    for (let line of lines) {
+                        const trimmed = line.trim();
+                        if (/^___HEADING___/.test(trimmed)) {
+                            if (inUl) {
+                                listHtml.push('</ul>');
+                                inUl = false;
+                            }
+                            const hText = trimmed.replace('___HEADING___', '').replace('___ENDHEADING___', '');
+                            listHtml.push('<h4 class="text-base sm:text-lg font-bold text-emerald-800 dark:text-emerald-400 mt-5 mb-2 flex items-center gap-2"><i class="fa-solid fa-bookmark text-emerald-600 text-xs"></i> ' + hText + '</h4>');
+                            continue;
+                        }
+
+                        const m = trimmed.match(/^[-*•]\s+(.+)$/);
+                        if (m) {
+                            if (!inUl) {
+                                listHtml.push('<ul class="list-disc pl-5 my-2.5 space-y-1.5 text-slate-800 dark:text-slate-200">');
+                                inUl = true;
+                            }
+                            listHtml.push('  <li class="leading-relaxed">' + m[1] + '</li>');
+                        } else {
+                            if (inUl) {
+                                listHtml.push('</ul>');
+                                inUl = false;
+                            }
+                            if (trimmed) {
+                                listHtml.push('<p class="mb-2.5 leading-relaxed">' + trimmed + '</p>');
+                            }
+                        }
+                    }
+                    if (inUl) listHtml.push('</ul>');
+                    resultBlocks.push(listHtml.join('\n'));
+                } else {
+                    // Paragraf biasa: pertahankan single newline dengan <br>
+                    const pContent = block.replace(/\n/g, '<br>');
+                    resultBlocks.push('<p class="mb-3.5 leading-relaxed">' + pContent + '</p>');
+                }
+            }
+
+            return resultBlocks.join('\n');
+        }
+        window.formatNewsArticleBody = formatNewsArticleBody;
+
         function bacaBerita(id, skipHistory = false) {
             const news = mockNewsData.find(n => n.news_id === id || n.slug === id);
             if (!news) return;
@@ -914,7 +1001,7 @@
                 summaryBox.classList.add('hidden');
             }
 
-            document.getElementById('detail-news-body').innerText = news.isi || '';
+            document.getElementById('detail-news-body').innerHTML = formatNewsArticleBody(news.isi || '');
 
             const imgEl = document.getElementById('detail-news-img');
             const imgContainer = document.getElementById('detail-news-img-container');
