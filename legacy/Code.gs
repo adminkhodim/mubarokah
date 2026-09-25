@@ -99,10 +99,11 @@ function doPost(e) {
         const actor = authenticateSession(token);
         authorizeRole(actor, ["ADMIN", "EDITOR"]);
       } catch (authErr) {
-        return createJsonResponse({ status: "error", message: authErr.message });
+        return createJsonResponse({ success: false, status: "error", message: authErr.message });
       }
+      const res = simpanBerita(payload.data || payload);
       return createJsonResponse(
-        simpanBerita(payload.data || payload)
+        typeof res === "object" && res !== null ? Object.assign({ success: res.success !== false }, res) : res
       );
     }
 
@@ -112,10 +113,11 @@ function doPost(e) {
         const actor = authenticateSession(token);
         authorizeRole(actor, ["ADMIN", "EDITOR"]);
       } catch (authErr) {
-        return createJsonResponse({ status: "error", message: authErr.message });
+        return createJsonResponse({ success: false, status: "error", message: authErr.message });
       }
+      const res = updateBerita(payload.data || payload);
       return createJsonResponse(
-        updateBerita(payload.data || payload)
+        typeof res === "object" && res !== null ? Object.assign({ success: res.success !== false }, res) : res
       );
     }
 
@@ -125,10 +127,11 @@ function doPost(e) {
         const actor = authenticateSession(token);
         authorizeRole(actor, ["ADMIN", "EDITOR"]);
       } catch (authErr) {
-        return createJsonResponse({ status: "error", message: authErr.message });
+        return createJsonResponse({ success: false, status: "error", message: authErr.message });
       }
+      const res = deleteBeritaData(payload.data || payload);
       return createJsonResponse(
-        deleteBeritaData(payload.data || payload)
+        typeof res === "object" && res !== null ? Object.assign({ success: res.success !== false }, res) : res
       );
     }
 
@@ -6559,7 +6562,8 @@ function getAdminIdentityByEmail(email) {
       for (let j = 1; j < uData.length; j++) {
         const uEmail = uEmailIdx !== -1 ? String(uData[j][uEmailIdx] || "").trim().toLowerCase() : "";
         const uRole = uRoleIdx !== -1 ? String(uData[j][uRoleIdx] || "").trim().toUpperCase() : "";
-        if (uEmail === normalized && (uRole === "ADMIN" || uRole === "EDITOR")) {
+        const isAdminRole = ["SUPER_ADMIN", "ADMIN", "BENDAHARA", "ASATIDZ", "PEGAWAI", "PENGURUS", "EDITOR"].includes(uRole);
+        if (uEmail === normalized && isAdminRole) {
           const id = String(uData[j][uIdIdx] || "");
           const name = String(uData[j][uNameIdx] || "");
           const status = String(uData[j][uStatusIdx] || "ACTIVE").trim().toUpperCase();
@@ -6652,7 +6656,8 @@ function getAdminIdentityById(identityId) {
       for (let j = 1; j < uData.length; j++) {
         if (String(uData[j][uIdIdx] || "").trim() === targetId) {
           const uRole = uRoleIdx !== -1 ? String(uData[j][uRoleIdx] || "").trim().toUpperCase() : "";
-          if (uRole === "ADMIN" || uRole === "EDITOR") {
+          const isAdminRole = ["SUPER_ADMIN", "ADMIN", "BENDAHARA", "ASATIDZ", "PEGAWAI", "PENGURUS", "EDITOR"].includes(uRole);
+          if (isAdminRole) {
             const rawPhoto = uPhotoIdx !== -1 ? String(uData[j][uPhotoIdx] || "").trim() : "";
             return {
               identityId: targetId,
@@ -9170,23 +9175,44 @@ function findPendingOtpChallenge(channel, identifierHash) {
   if (!sheet) return null;
 
   const data = sheet.getDataRange().getValues();
+  if (!data || data.length < 2) return null;
+
+  const headers = data[0].map(h => String(h || "").trim().toLowerCase());
+  const channelIdx = headers.indexOf("channel") !== -1 ? headers.indexOf("channel") : 2;
+  const hashIdx = headers.indexOf("identifier_hash") !== -1 ? headers.indexOf("identifier_hash") : 3;
+  const otpHashIdx = headers.indexOf("otp_hash") !== -1 ? headers.indexOf("otp_hash") : 4;
+  const attemptsIdx = headers.indexOf("attempts") !== -1 ? headers.indexOf("attempts") : 5;
+  const maxAttemptsIdx = headers.indexOf("max_attempts") !== -1 ? headers.indexOf("max_attempts") : 6;
+  const expiresIdx = headers.indexOf("expires_at") !== -1 ? headers.indexOf("expires_at") : 7;
+  const statusIdx = headers.indexOf("status") !== -1 ? headers.indexOf("status") : 8;
+  const idIdx = headers.indexOf("identity_id") !== -1 ? headers.indexOf("identity_id") : 1;
+  const chlIdIdx = headers.indexOf("challenge_id") !== -1 ? headers.indexOf("challenge_id") : 0;
+  const consumedIdx = headers.indexOf("consumed_at") !== -1 ? headers.indexOf("consumed_at") : 10;
+
   const now = new Date();
 
   for (let i = data.length - 1; i >= 1; i--) {
-    if (String(data[i][2]).trim() === String(channel).trim() &&
-        String(data[i][3]).trim() === String(identifierHash).trim() &&
-        String(data[i][8]).trim() === "PENDING") {
+    const rowChannel = String(data[i][channelIdx] || "").trim().toUpperCase();
+    const rowHash = String(data[i][hashIdx] || "").trim();
+    const rowStatus = String(data[i][statusIdx] || "").trim().toUpperCase();
+
+    if (rowChannel === String(channel).trim().toUpperCase() &&
+        rowHash === String(identifierHash).trim() &&
+        rowStatus === "PENDING") {
       
-      const expDate = new Date(data[i][7]);
+      const expDate = new Date(data[i][expiresIdx]);
       return {
         rowIndex: i + 1,
-        challengeId: String(data[i][0]),
-        identityId: String(data[i][1]),
-        otpHash: String(data[i][4]),
-        attempts: Number(data[i][5] || 0),
-        maxAttempts: Number(data[i][6] || 3),
+        challengeId: String(data[i][chlIdIdx] || ""),
+        identityId: String(data[i][idIdx] || ""),
+        otpHash: String(data[i][otpHashIdx] || ""),
+        attempts: Number(data[i][attemptsIdx] || 0),
+        maxAttempts: Number(data[i][maxAttemptsIdx] || 3),
         expiresAt: expDate,
-        isExpired: now > expDate
+        isExpired: now > expDate,
+        attemptsColIdx: attemptsIdx + 1,
+        statusColIdx: statusIdx + 1,
+        consumedColIdx: consumedIdx + 1
       };
     }
   }
@@ -9199,11 +9225,22 @@ function cancelPreviousChallenges(channel, identifierHash) {
   if (!sheet) return;
 
   const data = sheet.getDataRange().getValues();
+  if (!data || data.length < 2) return;
+
+  const headers = data[0].map(h => String(h || "").trim().toLowerCase());
+  const channelIdx = headers.indexOf("channel") !== -1 ? headers.indexOf("channel") : 2;
+  const hashIdx = headers.indexOf("identifier_hash") !== -1 ? headers.indexOf("identifier_hash") : 3;
+  const statusIdx = headers.indexOf("status") !== -1 ? headers.indexOf("status") : 8;
+
   for (let i = data.length - 1; i >= 1; i--) {
-    if (String(data[i][2]).trim() === String(channel).trim() &&
-        String(data[i][3]).trim() === String(identifierHash).trim() &&
-        String(data[i][8]).trim() === "PENDING") {
-      sheet.getRange(i + 1, 9).setValue("CANCELLED");
+    const rowChannel = String(data[i][channelIdx] || "").trim().toUpperCase();
+    const rowHash = String(data[i][hashIdx] || "").trim();
+    const rowStatus = String(data[i][statusIdx] || "").trim().toUpperCase();
+
+    if (rowChannel === String(channel).trim().toUpperCase() &&
+        rowHash === String(identifierHash).trim() &&
+        rowStatus === "PENDING") {
+      sheet.getRange(i + 1, statusIdx + 1).setValue("CANCELLED");
     }
   }
 }
@@ -9235,7 +9272,7 @@ function authenticateSession(tokenString) {
   // P0-1: Cek Status Identitas di Master (Sheet Users first, then fallback)
   let identity = getUserIdentityById(claims.identityId);
   if (!identity) {
-    if (claims.role === "ADMIN" || claims.role === "EDITOR") {
+    if (["SUPER_ADMIN", "ADMIN", "BENDAHARA", "ASATIDZ", "PEGAWAI", "PENGURUS", "EDITOR"].includes(claims.role)) {
       identity = getAdminIdentityById(claims.identityId);
     } else if (claims.role === "WALI_SANTRI") {
       identity = getWaliIdentityById(claims.identityId);
@@ -9555,9 +9592,11 @@ function handleAuthApiAction(action, payload, e) {
 
         if (inputHash !== challenge.otpHash) {
           const newAttempts = challenge.attempts + 1;
-          otpSheet.getRange(challenge.rowIndex, 6).setValue(newAttempts);
+          const attCol = challenge.attemptsColIdx || 6;
+          const stCol = challenge.statusColIdx || 9;
+          otpSheet.getRange(challenge.rowIndex, attCol).setValue(newAttempts);
           if (newAttempts >= challenge.maxAttempts) {
-            otpSheet.getRange(challenge.rowIndex, 9).setValue("EXHAUSTED");
+            otpSheet.getRange(challenge.rowIndex, stCol).setValue("EXHAUSTED");
           }
           writeAuthAuditLog("OTP_VERIFY_FAIL", challenge.identityId, "", "EMAIL", false, requestId, { attempts: newAttempts });
           return createJsonResponse({
@@ -9567,8 +9606,10 @@ function handleAuthApiAction(action, payload, e) {
         }
 
         // OTP Valid => Konsumsi Challenge
-        otpSheet.getRange(challenge.rowIndex, 9).setValue("CONSUMED");
-        otpSheet.getRange(challenge.rowIndex, 11).setValue(new Date().toISOString());
+        const stCol = challenge.statusColIdx || 9;
+        const consCol = challenge.consumedColIdx || 11;
+        otpSheet.getRange(challenge.rowIndex, stCol).setValue("CONSUMED");
+        otpSheet.getRange(challenge.rowIndex, consCol).setValue(new Date().toISOString());
 
         // Resolve Identitas dari row challenge
         const admin = getAdminIdentityById(challenge.identityId);
@@ -9869,9 +9910,11 @@ function handleAuthApiAction(action, payload, e) {
 
         if (inputHash !== challenge.otpHash) {
           const newAttempts = challenge.attempts + 1;
-          otpSheet.getRange(challenge.rowIndex, 6).setValue(newAttempts);
+          const attCol = challenge.attemptsColIdx || 6;
+          const stCol = challenge.statusColIdx || 9;
+          otpSheet.getRange(challenge.rowIndex, attCol).setValue(newAttempts);
           if (newAttempts >= challenge.maxAttempts) {
-            otpSheet.getRange(challenge.rowIndex, 9).setValue("EXHAUSTED");
+            otpSheet.getRange(challenge.rowIndex, stCol).setValue("EXHAUSTED");
           }
           writeAuthAuditLog("OTP_VERIFY_FAIL", challenge.identityId, "", "EMAIL", false, requestId, { attempts: newAttempts });
           return createJsonResponse({
@@ -9880,8 +9923,10 @@ function handleAuthApiAction(action, payload, e) {
           });
         }
 
-        otpSheet.getRange(challenge.rowIndex, 9).setValue("CONSUMED");
-        otpSheet.getRange(challenge.rowIndex, 11).setValue(new Date().toISOString());
+        const stCol = challenge.statusColIdx || 9;
+        const consCol = challenge.consumedColIdx || 11;
+        otpSheet.getRange(challenge.rowIndex, stCol).setValue("CONSUMED");
+        otpSheet.getRange(challenge.rowIndex, consCol).setValue(new Date().toISOString());
 
         const wali = getWaliIdentityById(challenge.identityId);
         if (!wali || wali.status !== "ACTIVE") {
