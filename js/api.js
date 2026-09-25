@@ -323,13 +323,53 @@
         }
 
         function copyShareLink() {
+            const currentUrl = window.location.href;
+            const titleEl = document.getElementById('detail-news-title');
+            const title = titleEl ? titleEl.innerText.trim() : 'Warta Pesantren';
+
+            if (navigator.share) {
+                navigator.share({
+                    title: title,
+                    text: `${title}\n\nBaca warta selengkapnya di:`,
+                    url: currentUrl
+                }).catch(() => {});
+                return;
+            }
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(currentUrl).then(() => {
+                    showToast("Tautan berita berhasil disalin ke clipboard!");
+                }).catch(() => {
+                    fallbackCopy(currentUrl);
+                });
+            } else {
+                fallbackCopy(currentUrl);
+            }
+        }
+
+        function fallbackCopy(text) {
             const dummy = document.createElement('input');
-            dummy.value = window.location.href;
+            dummy.value = text;
             document.body.appendChild(dummy);
             dummy.select();
             document.execCommand('copy');
             document.body.removeChild(dummy);
-            showToast("Tautan berhasil disalin!");
+            showToast("Tautan berita berhasil disalin!");
+        }
+
+        function shareBeritaWhatsApp() {
+            const currentUrl = window.location.href;
+            const titleEl = document.getElementById('detail-news-title');
+            const title = titleEl ? titleEl.innerText.trim() : 'Warta Pesantren';
+            const text = `*${title}*\n\nBaca warta resmi selengkapnya di:\n${currentUrl}`;
+            const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+            window.open(waUrl, '_blank');
+        }
+
+        function shareBeritaFacebook() {
+            const currentUrl = window.location.href;
+            const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentUrl)}`;
+            window.open(fbUrl, '_blank');
         }
 
         // Logika Kalender
