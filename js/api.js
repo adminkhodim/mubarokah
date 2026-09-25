@@ -270,6 +270,45 @@
             }
         ];
 
+        let mockGaleriData = [
+            {
+                id: "GLR_1",
+                judul: "Halaqah Hafalan Al-Qur'an Santri",
+                kategori: "Kegiatan Santri",
+                keterangan: "Sima'an rutin bakda Subuh di Masjid Utama",
+                gambar: "https://images.unsplash.com/photo-1585036156171-384164a8c675?q=80&w=800&auto=format&fit=crop",
+                status: "Aktif",
+                timestamp: "2026-03-01T05:30:00.000Z"
+            },
+            {
+                id: "GLR_2",
+                judul: "Peringatan Hari Santri Nasional",
+                kategori: "Event Utama",
+                keterangan: "Apel akbar dan pawai santri pondok",
+                gambar: "https://images.unsplash.com/photo-1564769625905-50e93615e769?q=80&w=800&auto=format&fit=crop",
+                status: "Aktif",
+                timestamp: "2026-03-05T08:00:00.000Z"
+            },
+            {
+                id: "GLR_3",
+                judul: "Gedung Asrama & Perpustakaan Digital",
+                kategori: "Fasilitas Kampus",
+                keterangan: "Kawasan belajar terpadu santri",
+                gambar: "https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?q=80&w=800&auto=format&fit=crop",
+                status: "Aktif",
+                timestamp: "2026-03-10T10:00:00.000Z"
+            },
+            {
+                id: "GLR_4",
+                judul: "Juara Umum Musabaqah Hifdzil Qur'an",
+                kategori: "Prestasi",
+                keterangan: "Penghargaan tingkat kabupaten",
+                gambar: "https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=800&auto=format&fit=crop",
+                status: "Aktif",
+                timestamp: "2026-03-15T14:00:00.000Z"
+            }
+        ];
+
         let heroSlideTimer = null;
         let currentHeroSlide = 0;
         let previousTabBeforeNews = 'beranda';

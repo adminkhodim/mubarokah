@@ -1371,13 +1371,14 @@
                 const tagColor = bgColors[Math.abs(galeri.kategori.length) % bgColors.length];
 
                 const card = document.createElement('div');
-                card.className = "galeri-item relative aspect-video rounded-2xl overflow-hidden shadow-sm group border border-slate-100 dark:border-[#253447] bg-slate-100 dark:bg-[#1c2836]";
+                card.className = "galeri-item relative aspect-video rounded-2xl overflow-hidden shadow-sm hover:shadow-md group border border-slate-100 dark:border-[#253447] bg-slate-100 dark:bg-[#1c2836] cursor-pointer transition";
+                card.onclick = () => openGaleriLightbox(galeri);
                 card.innerHTML = `
-                    <img src="${galeri.gambar}" alt="${galeri.judul}" class="w-full h-full object-contain group-hover:scale-105 transition duration-500">
+                    <img src="${escapeHtml(galeri.gambar)}" alt="${escapeHtml(galeri.judul)}" class="w-full h-full object-contain group-hover:scale-105 transition duration-500">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-                        <span class="${tagColor} ${tagColor === 'bg-amber-500' ? 'text-brand-dark' : 'text-white'} text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase self-start mb-1 shadow-sm">${galeri.kategori}</span>
-                        <h4 class="text-xs font-bold text-white leading-snug">${galeri.judul}</h4>
-                        <p class="text-[10px] text-emerald-200 mt-0.5"><i class="fa-solid fa-tag mr-1"></i>${galeri.keterangan || '-'}</p>
+                        <span class="${tagColor} ${tagColor === 'bg-amber-500' ? 'text-brand-dark' : 'text-white'} text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase self-start mb-1 shadow-sm">${escapeHtml(galeri.kategori)}</span>
+                        <h4 class="text-xs font-bold text-white leading-snug">${escapeHtml(galeri.judul)}</h4>
+                        <p class="text-[10px] text-emerald-200 mt-0.5"><i class="fa-solid fa-tag mr-1"></i>${escapeHtml(galeri.keterangan || '-')}</p>
                     </div>
                 `;
                 gridContainer.appendChild(card);
@@ -1392,6 +1393,48 @@
             currentGaleriFilter = category;
             renderGaleriList();
         }
+
+        function openGaleriLightbox(galeri) {
+            if (!galeri) return;
+            const modal = document.getElementById('modal-galeri-lightbox');
+            const img = document.getElementById('lightbox-galeri-img');
+            const title = document.getElementById('lightbox-galeri-title');
+            const desc = document.getElementById('lightbox-galeri-desc');
+            const badge = document.getElementById('lightbox-galeri-badge');
+            const date = document.getElementById('lightbox-galeri-date');
+
+            if (!modal || !img) return;
+
+            img.src = galeri.gambar || '';
+            img.alt = galeri.judul || 'Foto Galeri';
+            if (title) title.innerText = galeri.judul || 'Dokumentasi Pesantren';
+            if (desc) desc.innerText = galeri.keterangan || '-';
+            if (badge) badge.innerText = galeri.kategori || 'Kegiatan';
+            if (date) {
+                if (galeri.timestamp) {
+                    try {
+                        const d = new Date(galeri.timestamp);
+                        date.innerText = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                    } catch (e) {
+                        date.innerText = '';
+                    }
+                } else {
+                    date.innerText = '';
+                }
+            }
+
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeGaleriLightbox() {
+            const modal = document.getElementById('modal-galeri-lightbox');
+            if (modal) modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        window.openGaleriLightbox = openGaleriLightbox;
+        window.closeGaleriLightbox = closeGaleriLightbox;
 
         // ==================== PUSAT NOTIFIKASI & POP-UP BERANDA ====================
         function escapeHtml(str) {

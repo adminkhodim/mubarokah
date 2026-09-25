@@ -1476,31 +1476,58 @@
         }
 
         // ==================== GALERI LOGIC (CLIENT & ADMIN) ====================
-        let mockGaleriData = [];
+        const MAIN_GALERI_CACHE_KEY = 'mubarokah_cached_galeri';
+        if (typeof mockGaleriData === 'undefined') {
+            mockGaleriData = [];
+        }
 
         async function loadGaleri() {
+            // 1. STALE: Render secepat kilat dari cache lokal jika ada
             try {
-                if (!isApiConfigured()) {
-                    renderGaleriList();
+                const cached = localStorage.getItem(MAIN_GALERI_CACHE_KEY);
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        mockGaleriData = parsed;
+                        if (typeof renderGaleriList === 'function') renderGaleriList();
+                        if (document.getElementById('admin-galeri-list')) renderAdminGaleriList();
+                    }
+                } else if (Array.isArray(mockGaleriData) && mockGaleriData.length > 0) {
+                    if (typeof renderGaleriList === 'function') renderGaleriList();
                     if (document.getElementById('admin-galeri-list')) renderAdminGaleriList();
-                    return;
                 }
+            } catch (e) {
+                console.warn("Gagal membaca cache galeri:", e);
+            }
 
-                const loader = document.getElementById('admin-galeri-loader');
-                if (loader) loader.classList.remove('hidden');
+            if (!isApiConfigured()) {
+                if (typeof renderGaleriList === 'function') renderGaleriList();
+                if (document.getElementById('admin-galeri-list')) renderAdminGaleriList();
+                return;
+            }
 
+            // 2. REVALIDATE: Ambil data segar dari backend di background
+            const loader = document.getElementById('admin-galeri-loader');
+            if (loader && (!mockGaleriData || mockGaleriData.length === 0)) loader.classList.remove('hidden');
+
+            try {
                 const response = await apiGet("getGaleri");
                 if (loader) loader.classList.add('hidden');
 
-                if (response && response.status === "success") {
-                    mockGaleriData = response.data || [];
-                }
+                if (response && response.status === "success" && Array.isArray(response.data)) {
+                    const newDataStr = JSON.stringify(response.data);
+                    const oldDataStr = localStorage.getItem(MAIN_GALERI_CACHE_KEY);
 
-                renderGaleriList();
-                if (document.getElementById('admin-galeri-list')) renderAdminGaleriList();
+                    localStorage.setItem(MAIN_GALERI_CACHE_KEY, newDataStr);
+                    mockGaleriData = response.data;
+
+                    if (newDataStr !== oldDataStr || !oldDataStr) {
+                        if (typeof renderGaleriList === 'function') renderGaleriList();
+                        if (document.getElementById('admin-galeri-list')) renderAdminGaleriList();
+                    }
+                }
             } catch (err) {
                 console.error("Kesalahan jaringan saat memuat galeri:", err);
-                const loader = document.getElementById('admin-galeri-loader');
                 if (loader) loader.classList.add('hidden');
             }
         }
@@ -1519,44 +1546,86 @@
             listContainer.innerHTML = "";
 
             if (mockGaleriData.length === 0) {
-                listContainer.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs">Belum ada foto galeri. Silakan tambah foto baru.</div>`;
+                listContainer.innerHTML = `<div class="text-center py-6 text-slate-400 dark:text-slate-500 text-xs">Belum ada foto galeri. Silakan tambah foto baru.</div>`;
                 return;
             }
 
             mockGaleriData.forEach((galeri) => {
                 const card = document.createElement('div');
-                card.className = "p-3 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2.5";
+                card.className = "p-3 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200/80 dark:border-[#253447] space-y-2.5";
 
                 const statusBadge = galeri.status === "Aktif"
-                    ? `<span class="text-[9px] font-extrabold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md uppercase">Aktif</span>`
-                    : `<span class="text-[9px] font-extrabold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-md uppercase">Draft</span>`;
+                    ? `<span class="text-[9px] font-extrabold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded-md uppercase">Aktif</span>`
+                    : `<span class="text-[9px] font-extrabold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-md uppercase">Draft</span>`;
 
                 card.innerHTML = `
                     <div class="flex items-start gap-3">
-                        <img src="${galeri.gambar}" alt="${galeri.judul}" class="w-20 h-16 object-cover rounded-lg border border-slate-200 shrink-0 bg-slate-100">
+                        <img src="${escapeHtml(galeri.gambar)}" alt="${escapeHtml(galeri.judul)}" class="w-20 h-16 object-cover rounded-lg border border-slate-200 dark:border-[#253447] shrink-0 bg-slate-100 dark:bg-slate-800">
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center space-x-2">
-                                <span class="text-[9px] font-extrabold bg-purple-100 text-purple-800 px-2 py-0.5 rounded-md uppercase shrink-0">${galeri.kategori}</span>
+                                <span class="text-[9px] font-extrabold bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 px-2 py-0.5 rounded-md uppercase shrink-0">${escapeHtml(galeri.kategori)}</span>
                                 ${statusBadge}
                             </div>
-                            <h4 class="text-xs font-bold text-slate-800 mt-1 truncate" title="${galeri.judul}">${galeri.judul}</h4>
-                            <p class="text-[10px] text-slate-500 truncate">${galeri.keterangan || '-'}</p>
+                            <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100 mt-1 truncate" title="${escapeHtml(galeri.judul)}">${escapeHtml(galeri.judul)}</h4>
+                            <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">${escapeHtml(galeri.keterangan || '-')}</p>
                         </div>
                     </div>
-                    <div class="flex justify-end gap-2 pt-2 border-t border-slate-100/60 mt-1">
-                        <button onclick="toggleAdminGaleriStatus('${galeri.id}', '${galeri.status === 'Aktif' ? 'Draft' : 'Aktif'}')" class="text-[10px] px-3 py-1.5 rounded-lg font-bold bg-slate-200 text-slate-700 hover:bg-slate-300 transition">
+                    <div class="flex justify-end gap-2 pt-2 border-t border-slate-100/60 dark:border-slate-800 mt-1">
+                        <button onclick="toggleAdminGaleriStatus('${galeri.id}', '${galeri.status === 'Aktif' ? 'Draft' : 'Aktif'}')" class="text-[10px] px-3 py-1.5 rounded-lg font-bold bg-slate-200 dark:bg-[#253447] text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-[#2e4057] transition">
                             ${galeri.status === 'Aktif' ? '<i class="fa-solid fa-eye-slash mr-1"></i> Sembunyikan' : '<i class="fa-solid fa-eye mr-1"></i> Tampilkan'}
                         </button>
-                        <button onclick='editAdminGaleri(${JSON.stringify(galeri)})' class="text-[10px] px-3 py-1.5 rounded-lg font-bold bg-brand-50 text-brand-700 hover:bg-brand-100 transition">
+                        <button onclick='editAdminGaleri(${JSON.stringify(galeri).replace(/'/g, "&apos;")})' class="text-[10px] px-3 py-1.5 rounded-lg font-bold bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900 transition">
                             <i class="fa-solid fa-pen mr-1"></i> Edit
                         </button>
-                        <button onclick="deleteAdminGaleri('${galeri.id}')" class="text-[10px] px-3 py-1.5 rounded-lg font-bold bg-rose-50 text-rose-700 hover:bg-rose-100 transition">
+                        <button onclick="deleteAdminGaleri('${galeri.id}')" class="text-[10px] px-3 py-1.5 rounded-lg font-bold bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:rose-300 hover:bg-rose-100 dark:hover:bg-rose-900 transition">
                             <i class="fa-solid fa-trash mr-1"></i> Hapus
                         </button>
                     </div>
                 `;
                 listContainer.appendChild(card);
             });
+        }
+
+        function handleAdminGaleriFileChange(event) {
+            const input = event ? (event.target || event.srcElement) : document.getElementById('admin-galeri-file');
+            const file = input && input.files ? input.files[0] : null;
+            const previewContainer = document.getElementById('galeri-preview-container');
+            const previewImg = document.getElementById('admin-galeri-preview-img');
+            const previewLabel = document.getElementById('admin-galeri-preview-label');
+
+            if (!file) {
+                const oldImg = document.getElementById('admin-galeri-gambar-lama').value;
+                if (oldImg) {
+                    previewImg.src = oldImg;
+                    if (previewLabel) previewLabel.innerText = "Gambar Saat Ini:";
+                    if (previewContainer) previewContainer.classList.remove('hidden');
+                } else {
+                    if (previewContainer) previewContainer.classList.add('hidden');
+                    previewImg.src = "";
+                }
+                return;
+            }
+
+            if (!file.type.startsWith('image/')) {
+                showToast("Mohon pilih berkas gambar (JPG, PNG, WebP)!");
+                if (input) input.value = "";
+                return;
+            }
+
+            try {
+                const objectUrl = URL.createObjectURL(file);
+                previewImg.src = objectUrl;
+                if (previewLabel) previewLabel.innerText = "Pratinjau Foto Terpilih:";
+                if (previewContainer) previewContainer.classList.remove('hidden');
+            } catch (e) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewImg.src = e.target.result;
+                    if (previewLabel) previewLabel.innerText = "Pratinjau Foto Terpilih:";
+                    if (previewContainer) previewContainer.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
         }
 
         async function handleAdminGaleriSubmit(event) {
@@ -1580,11 +1649,15 @@
             const btn = document.getElementById('admin-galeri-submit-btn');
             const originalBtnContent = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Menyimpan...';
 
             try {
                 let fileData = null;
-                if (file) fileData = await readFileAsBase64(file);
+                if (file) {
+                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Mengompres Foto...';
+                    fileData = await compressImageFile(file, 1200, 0.82);
+                }
+
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Menyimpan...';
 
                 const payload = {
                     id: id,
@@ -1626,10 +1699,12 @@
 
             const previewContainer = document.getElementById('galeri-preview-container');
             const previewImg = document.getElementById('admin-galeri-preview-img');
+            const previewLabel = document.getElementById('admin-galeri-preview-label');
+            if (previewLabel) previewLabel.innerText = "Gambar Saat Ini:";
             previewContainer.classList.remove('hidden');
             previewImg.src = galeriData.gambar;
 
-            document.getElementById('admin-galeri-form-title').innerHTML = '<i class="fa-solid fa-pen-to-square text-purple-700 mr-2"></i> Edit Galeri';
+            document.getElementById('admin-galeri-form-title').innerHTML = '<i class="fa-solid fa-pen-to-square text-purple-700 dark:text-purple-400 mr-2"></i> Edit Galeri';
             document.getElementById('admin-cancel-galeri-btn').classList.remove('hidden');
 
             window.scrollTo({ top: document.getElementById('adminGaleriForm').offsetTop - 100, behavior: 'smooth' });
@@ -1642,10 +1717,12 @@
             document.getElementById('admin-galeri-file').setAttribute('required', 'true');
             document.getElementById('req-galeri-img').classList.remove('hidden');
 
+            const previewLabel = document.getElementById('admin-galeri-preview-label');
+            if (previewLabel) previewLabel.innerText = "Gambar Saat Ini:";
             document.getElementById('galeri-preview-container').classList.add('hidden');
             document.getElementById('admin-galeri-preview-img').src = "";
 
-            document.getElementById('admin-galeri-form-title').innerHTML = '<i class="fa-solid fa-camera text-purple-700 mr-2"></i> Tambah Foto Galeri';
+            document.getElementById('admin-galeri-form-title').innerHTML = '<i class="fa-solid fa-camera text-purple-700 dark:text-purple-400 mr-2"></i> Tambah Foto Galeri';
             document.getElementById('admin-cancel-galeri-btn').classList.add('hidden');
         }
 
@@ -1653,7 +1730,14 @@
             try {
                 const response = await apiPost("toggleGaleri", { galeriId, newStatus });
                 showToast(response && response.message ? response.message : "Status diperbarui.");
-                if (response && response.success) await loadGaleri();
+                if (response && response.success) {
+                    const item = mockGaleriData.find(g => g.id === galeriId);
+                    if (item) {
+                        item.status = newStatus;
+                        localStorage.setItem(MAIN_GALERI_CACHE_KEY, JSON.stringify(mockGaleriData));
+                    }
+                    await loadGaleri();
+                }
             } catch (err) {
                 showToast("❌ Gagal mengubah status galeri: " + err.message);
             }
@@ -1664,11 +1748,24 @@
             try {
                 const response = await apiPost("deleteGaleri", { galeriId });
                 showToast(response && response.message ? response.message : "Galeri dihapus.");
-                if (response && response.success) await loadGaleri();
+                if (response && response.success) {
+                    mockGaleriData = mockGaleriData.filter(g => g.id !== galeriId);
+                    localStorage.setItem(MAIN_GALERI_CACHE_KEY, JSON.stringify(mockGaleriData));
+                    await loadGaleri();
+                }
             } catch (err) {
                 showToast("❌ Gagal menghapus galeri: " + err.message);
             }
         }
+
+        window.loadGaleri = loadGaleri;
+        window.renderAdminGaleriList = renderAdminGaleriList;
+        window.handleAdminGaleriFileChange = handleAdminGaleriFileChange;
+        window.handleAdminGaleriSubmit = handleAdminGaleriSubmit;
+        window.editAdminGaleri = editAdminGaleri;
+        window.resetAdminGaleriForm = resetAdminGaleriForm;
+        window.toggleAdminGaleriStatus = toggleAdminGaleriStatus;
+        window.deleteAdminGaleri = deleteAdminGaleri;
 
         // ==================== UNIT KEGIATAN SANTRI (UKS) LOGIC (CLIENT & ADMIN) ====================
         let mockUnitKegiatanData = [

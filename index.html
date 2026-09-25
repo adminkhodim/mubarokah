@@ -6046,7 +6046,7 @@
 
                                 <!-- Header Sub-View Galeri -->
                                 <div
-                                    class="bg-white p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+                                    class="bg-white dark:bg-[#151f2c] p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex items-center justify-between">
                                     <div class="flex items-center space-x-2.5">
                                         <button type="button" onclick="backFromAdminModule()"
                                             class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-lg flex items-center justify-center transition active:scale-95 shrink-0"
@@ -6063,15 +6063,15 @@
 
                                 <!-- Formulir Input Galeri -->
                                 <section
-                                    class="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-100 space-y-4">
-                                    <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                                    class="bg-white dark:bg-[#151f2c] p-4 md:p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] space-y-4">
+                                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-[#253447] pb-2.5">
                                         <h3 id="admin-galeri-form-title"
-                                            class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center">
-                                            <i class="fa-solid fa-camera text-purple-700 mr-2"></i> Tambah Foto Galeri
+                                            class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center">
+                                            <i class="fa-solid fa-camera text-purple-700 dark:text-purple-400 mr-2"></i> Tambah Foto Galeri
                                         </h3>
                                         <button type="button" id="admin-cancel-galeri-btn"
                                             onclick="resetAdminGaleriForm()"
-                                            class="text-xs text-rose-600 hover:underline hidden font-semibold">
+                                            class="text-xs text-rose-600 dark:text-rose-400 hover:underline hidden font-semibold">
                                             Batal Edit
                                         </button>
                                     </div>
@@ -6084,20 +6084,20 @@
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <!-- Judul Foto -->
                                             <div class="space-y-1.5 md:col-span-2">
-                                                <label class="text-xs font-semibold text-slate-600">Judul Foto <span
+                                                <label class="text-xs font-semibold text-slate-600 dark:text-slate-300">Judul Foto <span
                                                         class="text-rose-500">*</span></label>
                                                 <input type="text" id="admin-galeri-judul" required
                                                     placeholder="Contoh: Kegiatan Santri Pagi"
-                                                    class="w-full text-sm px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-purple-400 focus:bg-white transition">
+                                                    class="w-full text-sm px-3 py-2 bg-slate-50 dark:bg-[#1c2836] border border-slate-200 dark:border-[#253447] text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:border-purple-400 focus:bg-white dark:focus:bg-[#1c2836] transition">
                                             </div>
 
                                             <!-- Kategori (Datalist dinamis) -->
                                             <div class="space-y-1.5">
-                                                <label class="text-xs font-semibold text-slate-600">Kategori <span
+                                                <label class="text-xs font-semibold text-slate-600 dark:text-slate-300">Kategori <span
                                                         class="text-rose-500">*</span></label>
                                                 <input list="kategori-galeri-list" id="admin-galeri-kategori" required
                                                     placeholder="Pilih atau ketik baru..."
-                                                    class="w-full text-sm px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-purple-400 focus:bg-white transition">
+                                                    class="w-full text-sm px-3 py-2 bg-slate-50 dark:bg-[#1c2836] border border-slate-200 dark:border-[#253447] text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:border-purple-400 focus:bg-white dark:focus:bg-[#1c2836] transition">
                                                 <datalist id="kategori-galeri-list">
                                                     <option value="Kegiatan Santri">
                                                     <option value="Event Utama">
@@ -6110,10 +6110,10 @@
 
                                             <!-- Status -->
                                             <div class="space-y-1.5">
-                                                <label class="text-xs font-semibold text-slate-600">Status <span
+                                                <label class="text-xs font-semibold text-slate-600 dark:text-slate-300">Status <span
                                                         class="text-rose-500">*</span></label>
                                                 <select id="admin-galeri-status"
-                                                    class="w-full text-sm px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-purple-400 focus:bg-white transition appearance-none">
+                                                    class="w-full text-sm px-3 py-2 bg-slate-50 dark:bg-[#1c2836] border border-slate-200 dark:border-[#253447] text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:border-purple-400 focus:bg-white dark:focus:bg-[#1c2836] transition appearance-none">
                                                     <option value="Aktif">Aktif (Tampil di Beranda)</option>
                                                     <option value="Draft">Draft (Disembunyikan)</option>
                                                 </select>
@@ -6121,30 +6121,31 @@
 
                                             <!-- Keterangan -->
                                             <div class="space-y-1.5 md:col-span-2">
-                                                <label class="text-xs font-semibold text-slate-600">Keterangan
+                                                <label class="text-xs font-semibold text-slate-600 dark:text-slate-300">Keterangan
                                                     Singkat</label>
                                                 <input type="text" id="admin-galeri-keterangan"
                                                     placeholder="Contoh: Harian Asrama"
-                                                    class="w-full text-sm px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-purple-400 focus:bg-white transition">
+                                                    class="w-full text-sm px-3 py-2 bg-slate-50 dark:bg-[#1c2836] border border-slate-200 dark:border-[#253447] text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:border-purple-400 focus:bg-white dark:focus:bg-[#1c2836] transition">
                                             </div>
 
                                             <!-- Upload Gambar -->
                                             <div class="space-y-1.5 md:col-span-2">
-                                                <label class="text-xs font-semibold text-slate-600">Upload Gambar <span
+                                                <label class="text-xs font-semibold text-slate-600 dark:text-slate-300">Upload Gambar <span
                                                         id="req-galeri-img" class="text-rose-500">*</span></label>
                                                 <div class="flex items-center gap-3">
                                                     <input type="file" id="admin-galeri-file"
-                                                        accept="image/png, image/jpeg, image/jpg"
-                                                        class="w-full text-sm px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 transition">
+                                                        accept="image/png, image/jpeg, image/jpg, image/webp"
+                                                        onchange="handleAdminGaleriFileChange(event)"
+                                                        class="w-full text-sm px-3 py-2 bg-slate-50 dark:bg-[#1c2836] border border-slate-200 dark:border-[#253447] text-slate-700 dark:text-slate-300 rounded-lg file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-purple-50 dark:file:bg-purple-950/60 file:text-purple-700 dark:file:text-purple-300 hover:file:bg-purple-100 dark:hover:file:bg-purple-900 transition">
                                                 </div>
                                                 <p class="text-[10px] text-slate-400 dark:text-slate-500">Rekomendasi
-                                                    rasio 4:3 (Maks 1MB). Biarkan kosong
+                                                    rasio 4:3 (Maks 10MB - otomatis dikompres). Biarkan kosong
                                                     jika tidak ingin mengubah gambar saat mode Edit.</p>
                                                 <div id="galeri-preview-container" class="mt-2 hidden">
-                                                    <p class="text-[10px] font-semibold text-slate-500 mb-1">Gambar Saat
+                                                    <p id="admin-galeri-preview-label" class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Gambar Saat
                                                         Ini:</p>
                                                     <img id="admin-galeri-preview-img" src=""
-                                                        class="h-24 rounded-lg object-cover border border-slate-200 shadow-sm"
+                                                        class="h-24 rounded-lg object-cover border border-slate-200 dark:border-[#253447] shadow-sm"
                                                         alt="Preview">
                                                 </div>
                                             </div>
@@ -6163,20 +6164,20 @@
 
                                 <!-- Daftar Galeri -->
                                 <section
-                                    class="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-100 space-y-4">
-                                    <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                                    class="bg-white dark:bg-[#151f2c] p-4 md:p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] space-y-4">
+                                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-[#253447] pb-2.5">
                                         <h3
-                                            class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center">
+                                            class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center">
                                             <i class="fa-solid fa-images text-slate-400 mr-2"></i> Daftar Foto Galeri
                                         </h3>
                                         <span id="admin-total-galeri"
-                                            class="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">Memuat...</span>
+                                            class="text-[10px] font-bold bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-full">Memuat...</span>
                                     </div>
 
                                     <!-- Loader & Empty State -->
                                     <div id="admin-galeri-loader" class="text-center py-6 hidden">
                                         <i class="fa-solid fa-spinner fa-spin text-purple-600 text-2xl mb-2"></i>
-                                        <p class="text-xs text-slate-500">Memuat data galeri...</p>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400">Memuat data galeri...</p>
                                     </div>
 
                                     <!-- List Container -->
@@ -15493,6 +15494,31 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL LIGHTBOX PREVIEW GALERI ==================== -->
+    <div id="modal-galeri-lightbox" onclick="if(event.target === this) closeGaleriLightbox()" class="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-sm hidden transition-all duration-300">
+        <div class="relative max-w-3xl w-full bg-slate-900 text-white rounded-3xl overflow-hidden shadow-2xl border border-white/10 flex flex-col max-h-[90vh]">
+            <!-- Close Button Top Right -->
+            <button type="button" onclick="closeGaleriLightbox()" class="absolute top-3.5 right-3.5 z-10 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition active:scale-90" title="Tutup">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+
+            <!-- Image View -->
+            <div class="relative flex-1 min-h-[220px] max-h-[65vh] flex items-center justify-center bg-black/50 p-2">
+                <img id="lightbox-galeri-img" src="" alt="Pratinjau Foto" class="max-w-full max-h-[60vh] object-contain rounded-xl select-none">
+            </div>
+
+            <!-- Caption & Details -->
+            <div class="p-4 sm:p-5 bg-slate-900/95 border-t border-white/10 space-y-1.5">
+                <div class="flex items-center gap-2">
+                    <span id="lightbox-galeri-badge" class="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Kegiatan</span>
+                    <span id="lightbox-galeri-date" class="text-[10px] text-slate-400"></span>
+                </div>
+                <h3 id="lightbox-galeri-title" class="text-sm sm:text-base font-bold text-white leading-snug">Judul Foto</h3>
+                <p id="lightbox-galeri-desc" class="text-xs text-slate-300 leading-relaxed"></p>
+            </div>
         </div>
     </div>
 
