@@ -440,6 +440,12 @@
                 loadPublicProfilLembaga();
             }
 
+            if (tabId === 'pengaturan') {
+                if (typeof ASNJadwalSholat !== 'undefined') {
+                    ASNJadwalSholat.initPrayerSettings();
+                }
+            }
+
             document.querySelectorAll('.tab-content').forEach(el => {
                 el.classList.add('hidden');
                 el.classList.remove('block');
@@ -1276,8 +1282,29 @@
             showToast("Profil berhasil diperbarui!");
         }
 
-        function updatePrayerLocation(city) { showToast(`Lokasi shalat diubah ke: ${city}`); }
-        function togglePrayerNotification(enabled) { showToast(enabled ? "Notifikasi Azan diaktifkan" : "Notifikasi Azan dinonaktifkan"); }
+        function updatePrayerLocation(cityKey) {
+            if (typeof ASNJadwalSholat !== 'undefined') {
+                ASNJadwalSholat.changeCity(cityKey);
+            } else {
+                showToast(`Lokasi shalat diubah ke: ${cityKey}`);
+            }
+        }
+
+        function togglePrayerNotification(enabled) {
+            if (typeof ASNJadwalSholat !== 'undefined') {
+                ASNJadwalSholat.toggleNotification(enabled);
+            } else {
+                showToast(enabled ? "Notifikasi Azan diaktifkan" : "Notifikasi Azan dinonaktifkan");
+            }
+        }
+
+        function testPrayerNotificationAudio() {
+            if (typeof ASNJadwalSholat !== 'undefined') {
+                ASNJadwalSholat.playPrayerChime(true);
+                const city = ASNJadwalSholat.getCurrentCity();
+                showToast(`🔔 Uji coba pengingat azan berbunyi untuk wilayah ${city.name}!`);
+            }
+        }
         function openFeedbackModal() { document.getElementById('feedbackModal').classList.remove('hidden'); }
         function closeFeedbackModal() { document.getElementById('feedbackModal').classList.add('hidden'); }
 
