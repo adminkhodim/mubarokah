@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mubarokah-cache-v11';
+const CACHE_NAME = 'mubarokah-cache-v12';
 
 const PRECACHE_URLS = [
   '/',
@@ -22,7 +22,10 @@ const PRECACHE_URLS = [
   '/js/main.js',
   '/assets/img/splash-logo.png',
   '/assets/img/header-logo.png',
-  '/assets/img/hero-santri.png'
+  '/assets/img/hero-santri.png',
+  '/assets/audio/mecca_56_22.mp3',
+  '/assets/audio/Adzan-Shubuh-Abu-Hazim.mp3',
+  '/assets/audio/adzan_by_mishari_rashid_al-afasy-2.mp3'
 ];
 
 

@@ -696,19 +696,119 @@ const ASNJadwalSholat = (function () {
     // 8. NOTIFIKASI PENGINGAT AZAN & WAKTU SHALAT REAL-TIME
     // ----------------------------------------------------------------
     const NOTIF_STORAGE_KEY = "mubarokah_prayer_notification_enabled";
+    const ADZAN_SOUND_STORAGE_KEY = "mubarokah_adzan_sound_choice";
+    const ADZAN_SUBUH_STORAGE_KEY = "mubarokah_adzan_subuh_choice";
     let lastNotifiedKey = null;
     let notifCheckTimer = null;
+    let currentPrayerAudio = null;
+    let isPrayerAudioPlaying = false;
+
+    const ADZAN_SOUND_OPTIONS = [
+        { id: "mecca", name: "Makkah Al-Mukarramah", file: "assets/audio/mecca_56_22.mp3", badge: "Syahdu" },
+        { id: "misyari", name: "Syaikh Misyari Rasyid (Lengkap)", file: "assets/audio/Adzan-Misyari-Rasyid.mp3", badge: "Merdu" },
+        { id: "misyari_ringkas", name: "Misyari Rasyid (Ringkas)", file: "assets/audio/adzan_by_mishari_rashid_al-afasy-2.mp3", badge: "Cepat" },
+        { id: "alaqsa", name: "Masjid Al-Aqsa", file: "assets/audio/alaqsa1_64_22.mp3", badge: "Palestina" },
+        { id: "mesir1", name: "Langgam Mesir (Irama 1)", file: "assets/audio/adzan-mesir-1.mp3", badge: "Mesir" },
+        { id: "mesir3", name: "Langgam Mesir (Irama 2)", file: "assets/audio/adzan-mesir-3.mp3", badge: "Mesir" },
+        { id: "bosnia", name: "Langgam Bosnia", file: "assets/audio/Adzan-Bosnia.mp3", badge: "Eropa Timur" },
+        { id: "malaysia", name: "Imam Malaysia", file: "assets/audio/Adzan-imam-Malaysia.mp3", badge: "Nusantara" },
+        { id: "chime", name: "Genta Sintetis (Web Audio API)", file: null, badge: "Hemat 0 KB" }
+    ];
+
+    const ADZAN_SUBUH_OPTIONS = [
+        { id: "subuh_abuhazim", name: "Subuh Abu Hazim (Tatswib Subuh)", file: "assets/audio/Adzan-Shubuh-Abu-Hazim.mp3" },
+        { id: "subuh_fajr", name: "Subuh Fajr Standar", file: "assets/audio/fajr_128_44.mp3" },
+        { id: "same_as_regular", name: "Sama dengan Pilihan Adzan Reguler", file: null }
+    ];
 
     function isNotificationEnabled() {
         const val = localStorage.getItem(NOTIF_STORAGE_KEY);
         return val === null ? true : (val === "true");
     }
 
+    function getSelectedAdzanSound() {
+        return localStorage.getItem(ADZAN_SOUND_STORAGE_KEY) || "mecca";
+    }
+
+    function setSelectedAdzanSound(soundId) {
+        localStorage.setItem(ADZAN_SOUND_STORAGE_KEY, soundId);
+    }
+
+    function getSelectedSubuhSound() {
+        return localStorage.getItem(ADZAN_SUBUH_STORAGE_KEY) || "subuh_abuhazim";
+    }
+
+    function setSelectedSubuhSound(soundId) {
+        localStorage.setItem(ADZAN_SUBUH_STORAGE_KEY, soundId);
+    }
+
+    function stopPrayerAudio() {
+        if (currentPrayerAudio) {
+            try {
+                currentPrayerAudio.pause();
+                currentPrayerAudio.currentTime = 0;
+            } catch (e) {
+                console.warn("Gagal menghentikan audio azan:", e);
+            }
+            currentPrayerAudio = null;
+        }
+        isPrayerAudioPlaying = false;
+        updateAudioControlsUI(false);
+        const banner = document.getElementById('adzan-active-floating-banner');
+        if (banner) banner.remove();
+    }
+
+    function updateAudioControlsUI(playing) {
+        isPrayerAudioPlaying = playing;
+        const stopBtn = document.getElementById('prayer-stop-audio-btn');
+        const testBtn = document.getElementById('prayer-test-audio-btn');
+        if (stopBtn) {
+            if (playing) {
+                stopBtn.classList.remove('hidden');
+                stopBtn.classList.add('inline-flex');
+            } else {
+                stopBtn.classList.add('hidden');
+                stopBtn.classList.remove('inline-flex');
+            }
+        }
+        if (testBtn) {
+            if (playing) {
+                testBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-xs"></i> <span>Sedang Berbunyi...</span>`;
+            } else {
+                testBtn.innerHTML = `<i class="fa-solid fa-volume-high text-xs"></i> <span>Tes Bunyi Azan</span>`;
+            }
+        }
+    }
+
+    function showFloatingAdzanBanner(title, subtitle) {
+        let banner = document.getElementById('adzan-active-floating-banner');
+        if (!banner) {
+            banner = document.createElement('div');
+            banner.id = 'adzan-active-floating-banner';
+            banner.className = "fixed bottom-20 left-4 right-4 z-50 max-w-md mx-auto bg-slate-900/95 dark:bg-[#15202d]/95 text-white p-3.5 rounded-2xl shadow-2xl border border-emerald-500/50 backdrop-blur-md flex items-center justify-between transition-all";
+            document.body.appendChild(banner);
+        }
+        banner.innerHTML = `
+            <div class="flex items-center space-x-3 overflow-hidden mr-2">
+                <div class="w-9 h-9 shrink-0 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center text-sm animate-pulse">
+                    <i class="fa-solid fa-mosque"></i>
+                </div>
+                <div class="truncate">
+                    <h5 class="text-xs font-bold text-white truncate">${title}</h5>
+                    <p class="text-[10px] text-emerald-300 truncate">${subtitle || "Lantunan azan sedang berkumandang"}</p>
+                </div>
+            </div>
+            <button type="button" onclick="ASNJadwalSholat.stopPrayerAudio()" class="shrink-0 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-stop text-xs"></i>
+                <span>Hentikan</span>
+            </button>
+        `;
+    }
+
     /**
-     * Memainkan lantunan nada genta adzan / Islamic prayer chime menggunakan Web Audio API
-     * Bebas ketergantungan file eksternal (0 KB overhead, zero-network error)
+     * Memainkan nada genta sintetis islami menggunakan Web Audio API (Fallback jika file MP3 gagal/offline)
      */
-    function playPrayerChime(isTest = false) {
+    function playSynthesizedChimeFallback(isTest = false) {
         try {
             const AudioCtx = window.AudioContext || window.webkitAudioContext;
             if (!AudioCtx) return;
@@ -717,7 +817,6 @@ const ASNJadwalSholat = (function () {
                 ctx.resume();
             }
 
-            // Lantunan nada genta bertingkat bernuansa khidmat islami
             const notes = isTest ? [
                 { freq: 523.25, start: 0.0, dur: 0.5 }, // C5
                 { freq: 659.25, start: 0.45, dur: 0.6 }, // E5
@@ -737,7 +836,6 @@ const ASNJadwalSholat = (function () {
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(n.freq, ctx.currentTime + n.start);
 
-                // Attack lembut & decay bertahap
                 gain.gain.setValueAtTime(0.0001, ctx.currentTime + n.start);
                 gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + n.start + 0.06);
                 gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + n.start + n.dur);
@@ -753,8 +851,81 @@ const ASNJadwalSholat = (function () {
         }
     }
 
+    /**
+     * Memainkan lantunan suara adzan MP3 atau fallback ke Web Audio API
+     */
+    function playPrayerChime(isTest = false, prayerName = null) {
+        stopPrayerAudio();
+
+        let soundFile = null;
+        let soundTitle = "Azan Shalat";
+
+        const isSubuh = (prayerName && prayerName.toLowerCase().includes("subuh"));
+
+        if (isSubuh) {
+            const subuhChoice = getSelectedSubuhSound();
+            const subuhOpt = ADZAN_SUBUH_OPTIONS.find(o => o.id === subuhChoice);
+            if (subuhOpt && subuhOpt.file) {
+                soundFile = subuhOpt.file;
+                soundTitle = subuhOpt.name;
+            }
+        }
+
+        if (!soundFile) {
+            const regChoice = getSelectedAdzanSound();
+            const regOpt = ADZAN_SOUND_OPTIONS.find(o => o.id === regChoice);
+            if (regOpt) {
+                soundFile = regOpt.file;
+                soundTitle = regOpt.name;
+            }
+        }
+
+        // Jika opsi yang dipilih adalah nada genta sintetis (tanpa file)
+        if (!soundFile) {
+            playSynthesizedChimeFallback(isTest);
+            return;
+        }
+
+        // Putar file MP3 menggunakan HTML5 Audio
+        try {
+            const audio = new Audio(soundFile);
+            audio.volume = 1.0;
+            currentPrayerAudio = audio;
+
+            audio.addEventListener('play', () => {
+                updateAudioControlsUI(true);
+                showFloatingAdzanBanner(
+                    isTest ? `🔔 Uji Coba: ${soundTitle}` : `🕌 Waktu Shalat Telah Tiba`,
+                    isTest ? "Mengetes lantunan suara azan pilihan" : `${prayerName || 'Shalat'} - ${soundTitle}`
+                );
+            });
+
+            audio.addEventListener('ended', () => {
+                stopPrayerAudio();
+            });
+
+            audio.addEventListener('error', (err) => {
+                console.warn("Gagal memuat file MP3, beralih ke nada sintetis:", err);
+                stopPrayerAudio();
+                playSynthesizedChimeFallback(isTest);
+            });
+
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(err => {
+                    console.warn("Autoplay terhalang kebijakan browser, beralih ke nada sintetis:", err);
+                    stopPrayerAudio();
+                    playSynthesizedChimeFallback(isTest);
+                });
+            }
+        } catch (e) {
+            console.warn("Eksepsi saat memutar audio azan:", e);
+            playSynthesizedChimeFallback(isTest);
+        }
+    }
+
     function sendPrayerNotification(prayerName, timeStr, cityName) {
-        playPrayerChime(false);
+        playPrayerChime(false, prayerName);
 
         // 1. Browser Native Notification
         if ("Notification" in window && Notification.permission === "granted") {
@@ -848,6 +1019,7 @@ const ASNJadwalSholat = (function () {
                 playPrayerChime(true);
             }
         } else {
+            stopPrayerAudio();
             if (typeof showToast === 'function') showToast("Pengingat Azan dinonaktifkan");
         }
     }
@@ -869,9 +1041,30 @@ const ASNJadwalSholat = (function () {
         }
     }
 
+    function populateAdzanSoundSelectors() {
+        const regSelect = document.getElementById('prayer-adzan-sound-select');
+        if (regSelect) {
+            const currentChoice = getSelectedAdzanSound();
+            regSelect.innerHTML = ADZAN_SOUND_OPTIONS.map(opt => {
+                const selected = opt.id === currentChoice ? 'selected' : '';
+                return `<option value="${opt.id}" ${selected}>${opt.name}</option>`;
+            }).join('');
+        }
+
+        const subuhSelect = document.getElementById('prayer-adzan-subuh-select');
+        if (subuhSelect) {
+            const currentSubuh = getSelectedSubuhSound();
+            subuhSelect.innerHTML = ADZAN_SUBUH_OPTIONS.map(opt => {
+                const selected = opt.id === currentSubuh ? 'selected' : '';
+                return `<option value="${opt.id}" ${selected}>${opt.name}</option>`;
+            }).join('');
+        }
+    }
+
     function initPrayerSettings() {
         populateCitySelector();
         renderSettingsPreview();
+        populateAdzanSoundSelectors();
 
         const toggleEl = document.getElementById('prayer-notification-toggle');
         if (toggleEl) {
@@ -933,7 +1126,25 @@ const ASNJadwalSholat = (function () {
         initPrayerSettings: initPrayerSettings,
         renderSettingsPreview: renderSettingsPreview,
         populateCitySelector: populateCitySelector,
+        populateAdzanSoundSelectors: populateAdzanSoundSelectors,
         playPrayerChime: playPrayerChime,
+        stopPrayerAudio: stopPrayerAudio,
+        setAdzanSound: (val) => {
+            setSelectedAdzanSound(val);
+            if (typeof showToast === 'function') {
+                const opt = ADZAN_SOUND_OPTIONS.find(o => o.id === val);
+                showToast(`Suara azan: ${opt ? opt.name : val}`);
+            }
+        },
+        setAdzanSubuhSound: (val) => {
+            setSelectedSubuhSound(val);
+            if (typeof showToast === 'function') {
+                const opt = ADZAN_SUBUH_OPTIONS.find(o => o.id === val);
+                showToast(`Azan Subuh: ${opt ? opt.name : val}`);
+            }
+        },
+        getAdzanSoundOptions: () => ADZAN_SOUND_OPTIONS,
+        getAdzanSubuhOptions: () => ADZAN_SUBUH_OPTIONS,
         toggleNotification: toggleNotification,
         startPrayerNotificationChecker: startPrayerNotificationChecker
     };

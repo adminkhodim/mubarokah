@@ -1361,9 +1361,18 @@
             if (typeof ASNJadwalSholat !== 'undefined') {
                 ASNJadwalSholat.playPrayerChime(true);
                 const city = ASNJadwalSholat.getCurrentCity();
-                showToast(`🔔 Uji coba pengingat azan berbunyi untuk wilayah ${city.name}!`);
+                showToast(`🔔 Uji coba azan berbunyi untuk wilayah ${city.name}!`);
             }
         }
+
+        function stopPrayerNotificationAudio() {
+            if (typeof ASNJadwalSholat !== 'undefined') {
+                ASNJadwalSholat.stopPrayerAudio();
+                showToast("Suara azan dihentikan");
+            }
+        }
+        window.testPrayerNotificationAudio = testPrayerNotificationAudio;
+        window.stopPrayerNotificationAudio = stopPrayerNotificationAudio;
         function openFeedbackModal() { document.getElementById('feedbackModal').classList.remove('hidden'); }
         function closeFeedbackModal() { document.getElementById('feedbackModal').classList.add('hidden'); }
 
