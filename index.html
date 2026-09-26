@@ -535,31 +535,58 @@
             <!-- =================================================================== -->
             <!-- 1. KHUSUS TAMPILAN MOBILE (Hanya tampil di layar kecil / < 768px)  -->
             <!-- =================================================================== -->
-            <div id="beranda-mobile-section" class="block md:hidden max-w-xl mx-auto px-4 py-5 space-y-4">
+            <div id="beranda-mobile-section" class="block md:hidden max-w-xl mx-auto px-3.5 pt-2 pb-4 space-y-2.5">
 
-                <!-- Widget Lokasi & Jadwal Shalat (Mobile) -->
+                <!-- Widget Lokasi & Jadwal Shalat (Mobile - Aesthetic & Compact) -->
                 <section onclick="openJadwalSholatPage()" title="Buka Portal Ibadah Jadwal Sholat"
-                    class="bg-gradient-to-r from-brand-900 via-brand-800 to-emerald-800 text-white p-3.5 sm:p-4 rounded-xl shadow-md border border-brand-700 relative overflow-hidden space-y-1 cursor-pointer active:scale-[0.99] transition hover:brightness-105">
+                    class="bg-gradient-to-r from-brand-900 via-brand-800 to-emerald-800 text-white px-3.5 py-2.5 rounded-xl shadow-sm border border-brand-700/80 relative overflow-hidden space-y-1.5 cursor-pointer active:scale-[0.99] transition hover:brightness-105">
                     <div class="absolute -right-6 -bottom-6 text-white/5 text-8xl pointer-events-none">
                         <i class="fa-solid fa-kaaba"></i>
                     </div>
-                    <div class="flex justify-between items-center text-xs">
-                        <div class="flex items-center space-x-1.5 font-bold">
-                            <i class="fa-solid fa-location-dot text-amber-400 text-xs"></i>
-                            <span id="home-prayer-location" class="tracking-wide">Kab. Demak (Default), Jawa Tengah</span>
+
+                    <!-- 1. Bagian Atas: Kiri (Lokasi & Hari) | Kanan (Shalat Terdekat & Countdown) -->
+                    <div class="flex justify-between items-start gap-2 relative z-10">
+                        <!-- Sebelah Kiri -->
+                        <div class="flex flex-col items-start space-y-1 min-w-0">
+                            <!-- Baris 1: Lokasi -->
+                            <div class="flex items-center space-x-1.5 font-bold text-white leading-tight" style="font-size: 11.5px;">
+                                <i class="fa-solid fa-location-dot text-amber-400 shrink-0 text-xs"></i>
+                                <span id="home-prayer-location" class="truncate tracking-wide">Kab. Demak, Jawa Tengah</span>
+                            </div>
+                            <!-- Baris 2: Hari (Model & Font Disamakan dengan Countdown Waktu Shalat) -->
+                            <div id="home-current-day"
+                                class="font-mono font-bold text-amber-300 bg-black/40 px-2 py-0.5 rounded border border-amber-400/20 shadow-inner inline-flex items-center tracking-wide"
+                                style="font-size: 10.5px; line-height: 1;">
+                                Sabtu Legi
+                            </div>
                         </div>
-                        <div id="home-next-prayer-name" class="font-extrabold text-white">
-                            Zuhur <span id="home-next-prayer-time" class="text-amber-300 font-normal ml-1">11:32
-                                WIB</span>
+
+                        <!-- Sebelah Kanan -->
+                        <div class="flex flex-col items-end space-y-1 shrink-0">
+                            <!-- Baris 1: Waktu Shalat Terdekat -->
+                            <div id="home-next-prayer-name" class="font-bold text-white text-right leading-tight" style="font-size: 11.5px;">
+                                Zuhur <span id="home-next-prayer-time" class="text-amber-300 font-semibold ml-1">11:32 WIB</span>
+                            </div>
+                            <!-- Baris 2: Countdown Waktu Shalat -->
+                            <div id="home-prayer-countdown"
+                                class="font-mono font-bold text-amber-300 bg-black/40 px-2 py-0.5 rounded border border-amber-400/20 shadow-inner inline-flex items-center tracking-wider"
+                                style="font-size: 10.5px; line-height: 1;">
+                                00:00:00
+                            </div>
                         </div>
                     </div>
-                    <div class="flex justify-between items-center text-xs pt-0.5">
-                        <div id="home-current-date" class="font-bold text-amber-300">
-                            Sabtu Legi, 26 September 2026
+
+                    <!-- 2. Baris 3 Paling Bawah: (Tanggal Masehi / Tanggal Hijriyah) Rata Kanan Kiri (Font Diperkecil & Estetik) -->
+                    <div class="flex justify-between items-center text-emerald-100/90 relative z-10 pt-0.5" style="font-size: 10px; line-height: 1.2;">
+                        <!-- Tanggal Masehi (Rata Kiri) -->
+                        <div id="home-date-masehi" class="flex items-center space-x-1.5 text-slate-200/90" style="white-space: nowrap; font-size: 10px;">
+                            <i class="fa-regular fa-calendar text-emerald-300 text-[10px]"></i>
+                            <span class="home-date-masehi-val font-medium">26 September 2026</span>
                         </div>
-                        <div id="home-prayer-countdown"
-                            class="text-xs font-mono font-extrabold text-amber-400 bg-black/30 px-2.5 py-0.5 rounded-lg">
-                            00:00:00
+                        <!-- Tanggal Hijriyah (Rata Kanan) -->
+                        <div id="home-date-hijri" class="flex items-center space-x-1.5 text-amber-200/90" style="white-space: nowrap; font-size: 10px;">
+                            <i class="fa-solid fa-moon text-amber-300 text-[10px]"></i>
+                            <span class="home-date-hijri-val font-medium">14 Rabi'ul Akhir 1448 H</span>
                         </div>
                     </div>
                 </section>
@@ -2418,7 +2445,7 @@
                             Lokasi Anda</label>
                         <select id="prayer-city-select" onchange="updatePrayerLocation(this.value)"
                             class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#283a4e] text-xs font-semibold text-slate-700 dark:text-slate-100 bg-slate-50 dark:bg-[#1c2836] focus:outline-none focus:ring-2 focus:ring-brand-700 dark:focus:ring-emerald-500 transition-colors">
-                            <option value="demak" selected>Kab. Demak (Default)</option>
+                            <option value="demak" selected>Kab. Demak</option>
                             <option value="semarang">Kota Semarang</option>
                             <option value="kudus">Kab. Kudus</option>
                             <option value="jepara">Kab. Jepara</option>
