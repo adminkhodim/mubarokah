@@ -1359,6 +1359,13 @@
 
             if (typeof ASNJadwalSholat !== 'undefined' && typeof ASNJadwalSholat.calculateDay === 'function') {
                 const curCity = ASNJadwalSholat.getCurrentCity();
+                if (curCity) {
+                    const locText = `${curCity.name}${curCity.province ? ', ' + curCity.province : ''}`;
+                    ['home-prayer-location', 'home-prayer-location-desktop'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.innerText = locText;
+                    });
+                }
                 const calc = ASNJadwalSholat.calculateDay(now, curCity);
                 if (calc && calc.times) {
                     activeTimes = [

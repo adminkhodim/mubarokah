@@ -516,15 +516,27 @@ const ASNJadwalSholat = (function () {
         if (nextTimeEl) nextTimeEl.innerText = `${nextInfo.nextPrayer.time} ${todaySchedule.tzName}`;
         if (countdownEl) countdownEl.innerText = nextInfo.countdown;
 
-        // Sinkronisasi otomatis ke Widget Beranda (agar beranda juga dinamis dan akurat)
-        const homeNextName = document.getElementById('home-next-prayer-name');
-        const homeNextCountdown = document.getElementById('home-prayer-countdown');
-        if (homeNextName) {
-            homeNextName.innerHTML = `${nextInfo.nextPrayer.name} <span class="text-amber-300 font-normal ml-1">${nextInfo.nextPrayer.time} ${todaySchedule.tzName}</span>`;
-        }
-        if (homeNextCountdown) {
-            homeNextCountdown.innerText = nextInfo.countdown;
-        }
+        // Sinkronisasi otomatis ke Widget Beranda (Mobile & Desktop)
+        ['home-prayer-location', 'home-prayer-location-desktop'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = `${city.name}${city.province ? ', ' + city.province : ''}`;
+        });
+        ['home-next-prayer-name', 'home-next-prayer-name-desktop'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = `${nextInfo.nextPrayer.name} <span class="text-amber-300 font-normal ml-1">${nextInfo.nextPrayer.time} ${todaySchedule.tzName}</span>`;
+        });
+        ['home-prayer-countdown', 'home-prayer-countdown-desktop'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = nextInfo.countdown;
+        });
+        ['home-current-date', 'home-current-date-desktop'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el && todaySchedule) {
+                const hari = todaySchedule.dayName;
+                const pasaran = todaySchedule.pasaran ? ` ${todaySchedule.pasaran},` : ',';
+                el.innerText = `${hari}${pasaran} ${todaySchedule.masehiDay} ${namaBulanIndo[todaySchedule.masehiMonth - 1]} ${todaySchedule.masehiYear}`;
+            }
+        });
     }
 
     // ----------------------------------------------------------------

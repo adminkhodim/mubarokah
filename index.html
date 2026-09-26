@@ -538,24 +538,24 @@
             <div id="beranda-mobile-section" class="block md:hidden max-w-xl mx-auto px-4 py-5 space-y-4">
 
                 <!-- Widget Lokasi & Jadwal Shalat (Mobile) -->
-                <section
-                    class="bg-gradient-to-r from-brand-900 via-brand-800 to-emerald-800 text-white p-4 rounded-xl shadow-md border border-brand-700 relative overflow-hidden space-y-1">
+                <section onclick="openJadwalSholatPage()" title="Buka Portal Ibadah Jadwal Sholat"
+                    class="bg-gradient-to-r from-brand-900 via-brand-800 to-emerald-800 text-white p-3.5 sm:p-4 rounded-xl shadow-md border border-brand-700 relative overflow-hidden space-y-1 cursor-pointer active:scale-[0.99] transition hover:brightness-105">
                     <div class="absolute -right-6 -bottom-6 text-white/5 text-8xl pointer-events-none">
                         <i class="fa-solid fa-kaaba"></i>
                     </div>
                     <div class="flex justify-between items-center text-xs">
                         <div class="flex items-center space-x-1.5 font-bold">
                             <i class="fa-solid fa-location-dot text-amber-400 text-xs"></i>
-                            <span id="home-prayer-location" class="tracking-wide">Demak, Jawa Tengah</span>
+                            <span id="home-prayer-location" class="tracking-wide">Kab. Demak (Default), Jawa Tengah</span>
                         </div>
                         <div id="home-next-prayer-name" class="font-extrabold text-white">
-                            Dzuhur <span id="home-next-prayer-time" class="text-amber-300 font-normal ml-1">11:51
+                            Zuhur <span id="home-next-prayer-time" class="text-amber-300 font-normal ml-1">11:32
                                 WIB</span>
                         </div>
                     </div>
                     <div class="flex justify-between items-center text-xs pt-0.5">
                         <div id="home-current-date" class="font-bold text-amber-300">
-                            Rabu Kliwon, 12 Agustus 2026
+                            Sabtu Legi, 26 September 2026
                         </div>
                         <div id="home-prayer-countdown"
                             class="text-xs font-mono font-extrabold text-amber-400 bg-black/30 px-2.5 py-0.5 rounded-lg">
@@ -4072,68 +4072,63 @@
                 </div>
             </div>
 
-            <!-- HERO CARD: SHOLAT BERIKUTNYA & COUNTDOWN REALTIME (COMPACT & MODERN) -->
+            <!-- HERO CARD: SHOLAT BERIKUTNYA & COUNTDOWN REALTIME (MINIMALIS & HEMAT RUANG) -->
             <section
-                class="relative bg-gradient-to-br from-brand-900 via-brand-800 to-emerald-800 text-white p-4 md:p-5 rounded-2xl md:rounded-3xl overflow-hidden shadow-md space-y-3">
-                <div class="absolute -right-6 -bottom-6 text-white/5 text-8xl pointer-events-none">
+                class="relative bg-gradient-to-br from-brand-900 via-brand-800 to-emerald-800 text-white px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl overflow-hidden shadow-xs space-y-2">
+                <div class="absolute -right-5 -bottom-5 text-white/5 text-7xl pointer-events-none">
                     <i class="fa-solid fa-kaaba"></i>
                 </div>
 
-                <div class="relative z-10 flex items-center justify-between gap-3">
-                    <!-- Sisi Kiri: Status Sholat Berikutnya -->
-                    <div class="space-y-0.5 min-w-0">
+                <!-- Baris 1: Sholat Terdekat & Countdown Ringkas Sejajar -->
+                <div class="relative z-10 flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2 min-w-0">
                         <span
-                            class="inline-flex items-center gap-1 bg-amber-400 text-brand-dark text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                            <i class="fa-regular fa-clock text-[8px]"></i> Waktu Terdekat
+                            class="inline-flex items-center gap-1 bg-amber-400 text-brand-dark text-[8px] sm:text-[9px] font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider shrink-0">
+                            <i class="fa-regular fa-clock text-[7.5px]"></i> Terdekat
                         </span>
-                        <div class="flex items-baseline gap-2 pt-0.5">
-                            <h2 class="text-xl md:text-2xl font-black tracking-tight text-white">
+                        <div class="flex items-baseline gap-1.5 truncate">
+                            <h2 class="text-sm sm:text-base font-black tracking-tight text-white truncate">
                                 <span id="sholat-next-name">Zuhur</span>
                             </h2>
-                            <span id="sholat-next-time" class="text-base md:text-lg font-extrabold text-amber-300">
-                                11:36 WIB
+                            <span id="sholat-next-time" class="text-xs sm:text-sm font-extrabold text-amber-300 shrink-0">
+                                11:32 WIB
                             </span>
                         </div>
                     </div>
 
-                    <!-- Sisi Kanan: Countdown Ringkas -->
-                    <div
-                        class="bg-black/25 backdrop-blur-sm px-3.5 py-1.5 md:py-2 rounded-xl border border-white/10 text-right shrink-0">
-                        <span
-                            class="text-[8px] md:text-[9px] text-emerald-200 font-bold uppercase tracking-wider block">Menuju
-                            Waktu</span>
-                        <div id="sholat-next-countdown"
-                            class="font-mono text-base md:text-xl font-black text-amber-300 tracking-wider">
+                    <!-- Countdown Menuju Sholat -->
+                    <div class="flex items-center gap-1.5 bg-black/25 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-white/10 shrink-0">
+                        <span class="text-[8.5px] text-emerald-200 font-semibold hidden xs:inline">Menuju:</span>
+                        <div id="sholat-next-countdown" class="font-mono text-xs sm:text-sm font-extrabold text-amber-300 tracking-wider">
                             00:00:00
                         </div>
                     </div>
                 </div>
 
-                <!-- Bilah Tanggal Masehi & Hijriyah (Satu Baris Ramping) -->
-                <div
-                    class="relative z-10 pt-2 border-t border-white/10 flex items-center justify-between gap-2 text-xs">
+                <!-- Baris 2: Navigasi Hari & Label Tanggal Masehi - Hijriyah (1 Baris Ramping) -->
+                <div class="relative z-10 pt-1.5 border-t border-white/10 flex items-center justify-between gap-2 text-[10px] sm:text-xs">
                     <div class="flex items-center space-x-1 shrink-0">
                         <button type="button" onclick="ASNJadwalSholat.shiftDate(-1)" title="Hari Sebelumnya"
-                            class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition active:scale-95 text-xs text-white">
-                            <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                            class="w-6 h-6 rounded-md bg-white/10 hover:bg-white/20 flex items-center justify-center transition active:scale-90 text-white">
+                            <i class="fa-solid fa-chevron-left text-[9px]"></i>
                         </button>
                         <button type="button" onclick="ASNJadwalSholat.shiftDate(1)" title="Hari Berikutnya"
-                            class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition active:scale-95 text-xs text-white">
-                            <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                            class="w-6 h-6 rounded-md bg-white/10 hover:bg-white/20 flex items-center justify-center transition active:scale-90 text-white">
+                            <i class="fa-solid fa-chevron-right text-[9px]"></i>
                         </button>
                         <button type="button" onclick="ASNJadwalSholat.resetToToday()" title="Kembali ke Hari Ini"
-                            class="text-[9px] font-bold bg-amber-400 hover:bg-amber-300 text-brand-dark px-2 py-1 rounded-md transition active:scale-95">
+                            class="text-[8px] sm:text-[9px] font-bold bg-amber-400 hover:bg-amber-300 text-brand-dark px-2 py-0.5 rounded transition active:scale-90">
                             Hari Ini
                         </button>
                     </div>
 
-                    <div class="text-right truncate pl-2">
-                        <span id="sholat-date-masehi"
-                            class="font-bold text-white text-[11px] md:text-xs block truncate">
-                            Ahad, 13 September 2026
+                    <div class="text-right truncate flex items-center justify-end gap-1.5 min-w-0">
+                        <span id="sholat-date-masehi" class="font-bold text-white text-[10px] sm:text-xs truncate">
+                            Sabtu Legi, 26 September 2026
                         </span>
-                        <span id="sholat-date-hijri" class="text-[10px] text-amber-300 font-medium block truncate">
-                            1 Rabi'ul Akhir 1448 H
+                        <span class="text-white/40 hidden sm:inline">•</span>
+                        <span id="sholat-date-hijri" class="text-[9.5px] sm:text-[11px] text-amber-300 font-medium truncate hidden sm:inline">
+                            14 Rabi'ul Akhir 1448 H
                         </span>
                     </div>
                 </div>
