@@ -617,12 +617,27 @@
         const NEWS_CACHE_KEY = 'mubarokah_cached_news';
 
         async function loadNews() {
+            // Cek apakah ada data awal berita yang disuntikkan dari Serverless Function (SSR)
+            if (typeof window !== 'undefined' && window.__INITIAL_NEWS__ && typeof window.__INITIAL_NEWS__ === 'object') {
+                const initNews = window.__INITIAL_NEWS__;
+                if (!mockNewsData.some(n => n.news_id === initNews.news_id || n.slug === initNews.slug)) {
+                    mockNewsData.unshift(initNews);
+                }
+            }
+
             // SWR: Tampilkan cache secepat kilat (0ms) agar pengguna langsung melihat data riil tanpa jeda atau dummy mock
             try {
                 const cached = localStorage.getItem(NEWS_CACHE_KEY);
                 if (cached) {
                     const parsed = JSON.parse(cached);
                     if (Array.isArray(parsed) && parsed.length > 0) {
+                        // Gabungkan dengan __INITIAL_NEWS__ jika ada
+                        if (typeof window !== 'undefined' && window.__INITIAL_NEWS__) {
+                            const initNews = window.__INITIAL_NEWS__;
+                            if (!parsed.some(n => n.news_id === initNews.news_id || n.slug === initNews.slug)) {
+                                parsed.unshift(initNews);
+                            }
+                        }
                         mockNewsData = parsed;
                         renderAllNewsViews(mockNewsData);
                         checkPendingNewsRoute();
@@ -942,8 +957,52 @@
         window.formatNewsArticleBody = formatNewsArticleBody;
 
         function bacaBerita(id, skipHistory = false) {
-            const news = mockNewsData.find(n => n.news_id === id || n.slug === id);
-            if (!news) return;
+            // 1. Cek apakah ada data awal berita dari SSR
+            if (typeof window !== 'undefined' && window.__INITIAL_NEWS__ && typeof window.__INITIAL_NEWS__ === 'object') {
+                const initNews = window.__INITIAL_NEWS__;
+                if (!mockNewsData.some(n => n.news_id === initNews.news_id || n.slug === initNews.slug)) {
+                    mockNewsData.unshift(initNews);
+                }
+            }
+
+            let news = mockNewsData.find(n => n.news_id === id || n.slug === id);
+
+            // 2. Coba cari di cache localStorage jika belum ada di memori
+            if (!news) {
+                try {
+                    const cached = localStorage.getItem(NEWS_CACHE_KEY);
+                    if (cached) {
+                        const parsed = JSON.parse(cached);
+                        if (Array.isArray(parsed)) {
+                            news = parsed.find(n => n.news_id === id || n.slug === id);
+                            if (news && !mockNewsData.some(n => n.news_id === news.news_id)) {
+                                mockNewsData.push(news);
+                            }
+                        }
+                    }
+                } catch (e) {}
+            }
+
+            // 3. Jika masih belum ditemukan, tampilkan skeleton loading pada halaman detail berita
+            if (!news) {
+                const activeTabEl = document.querySelector('.tab-content:not(.hidden)');
+                if (activeTabEl && activeTabEl.id !== 'page-detail-berita') {
+                    previousTabBeforeNews = activeTabEl.id.replace('page-', '');
+                }
+                const titleEl = document.getElementById('detail-news-title');
+                if (titleEl) titleEl.innerText = "Memuat Warta Pesantren...";
+                const bodyEl = document.getElementById('detail-news-body');
+                if (bodyEl) {
+                    bodyEl.innerHTML = `
+                        <div class="py-16 text-center space-y-3">
+                            <i class="fa-solid fa-circle-notch fa-spin text-3xl text-emerald-600 dark:text-emerald-400"></i>
+                            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Mengambil naskah warta dari server pesantren...</p>
+                        </div>
+                    `;
+                }
+                switchTab('detail-berita');
+                return;
+            }
 
             if (!skipHistory) {
                 const canonicalUrl = `/berita/${news.slug}`;

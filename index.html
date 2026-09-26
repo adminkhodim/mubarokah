@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <base href="/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mubarokah App | Portal Resmi Pesantren</title>
 
@@ -30,10 +31,10 @@
     <meta name="twitter:image" content="https://www.mubarokah.my.id/assets/img/og-image.png">
 
     <!-- PWA & Mobile Web App Setup -->
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#0f766e">
-    <link rel="icon" type="image/png" href="assets/img/splash-logo.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="assets/img/splash-logo.png">
+    <link rel="icon" type="image/png" href="/assets/img/splash-logo.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/splash-logo.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Mubarokah">
@@ -55,7 +56,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <!-- Compiled & Minified Tailwind CSS -->
-    <link rel="stylesheet" href="css/styles.min.css">
+    <link rel="stylesheet" href="/css/styles.min.css">
 
 
 
@@ -66,7 +67,7 @@
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <!-- Central Tenant Configuration Contract -->
-    <script src="js/app-config.js"></script>
+    <script src="/js/app-config.js"></script>
 
     <!-- Anti-Flicker Dark Mode Script -->
     <script>
@@ -96,7 +97,7 @@
         <div class="relative flex flex-col items-center transform scale-100 opacity-100 transition-all duration-700 ease-out"
             id="mobile-splash-logo-container">
             <div class="w-32 h-32 md:w-36 md:h-36 flex items-center justify-center">
-                <img src="assets/img/splash-logo.png" alt="PP. Roudlotul Mubarokah"
+                <img src="/assets/img/splash-logo.png" alt="PP. Roudlotul Mubarokah"
                     class="w-full h-full object-contain drop-shadow-md">
             </div>
             <div class="mt-3 overflow-hidden text-center">
@@ -131,7 +132,7 @@
 
                 <!-- Logo Pesantren -->
                 <div class="flex items-center cursor-pointer group" onclick="switchTab('beranda');">
-                    <img src="assets/img/header-logo.png" alt="PP. Roudlotul Mubarokah"
+                    <img src="/assets/img/header-logo.png" alt="PP. Roudlotul Mubarokah"
                         class="h-11 md:h-12 w-auto object-contain transition-transform group-hover:scale-105 drop-shadow-sm">
                 </div>
 
@@ -326,7 +327,7 @@
         class="md:hidden bg-teal-900 dark:bg-[#042020] dark:border-b dark:border-teal-500/20 text-white px-4 py-3 sticky top-0 z-50 flex justify-between items-center shadow-md">
         <!-- Logo & Nama Pesantren -->
         <div class="flex items-center cursor-pointer" onclick="switchTab('beranda'); closeMobileMenu();">
-            <img src="assets/img/header-logo.png" alt="PP. Roudlotul Mubarokah"
+            <img src="/assets/img/header-logo.png" alt="PP. Roudlotul Mubarokah"
                 class="h-9 w-auto object-contain drop-shadow-sm">
         </div>
 
@@ -754,7 +755,7 @@
 
                         <!-- Hero Image (Kanan - 5 Kolom) -->
                         <div class="col-span-5 relative flex justify-end items-end h-[400px]">
-                            <img src="assets/img/hero-santri.png" alt="Santri Pondok Pesantren Roudlotul Mubarokah"
+                            <img src="/assets/img/hero-santri.png" alt="Santri Pondok Pesantren Roudlotul Mubarokah"
                                 class="absolute -bottom-[7rem] -right-[2rem] w-[135%] xl:w-[140%] max-w-none object-contain animate-slide-up-dynamic z-10 pointer-events-none drop-shadow-2xl">
                         </div>
 
@@ -15312,7 +15313,7 @@
             <div
                 class="px-5 py-3.5 bg-emerald-900 text-white border-b border-emerald-800/60 flex justify-between items-center shrink-0">
                 <div class="flex items-center space-x-2.5">
-                    <img src="assets/img/header-logo.png" alt="PP. Roudlotul Mubarokah"
+                    <img src="/assets/img/header-logo.png" alt="PP. Roudlotul Mubarokah"
                         class="h-7 sm:h-8 w-auto object-contain drop-shadow-sm">
                     <div class="leading-none pl-2.5 border-l border-emerald-700">
                         <span class="text-[11px] font-extrabold uppercase tracking-wider text-amber-300 block">QR Code Identitas</span>
@@ -15364,7 +15365,7 @@
         <div class="flex items-center space-x-3 min-w-0">
             <div
                 class="w-10 h-10 rounded-xl bg-white dark:bg-emerald-950 p-1 flex items-center justify-center shadow-sm shrink-0 border border-emerald-500/20">
-                <img src="assets/img/splash-logo.png" alt="Logo" class="w-full h-full object-contain">
+                <img src="/assets/img/splash-logo.png" alt="Logo" class="w-full h-full object-contain">
             </div>
             <div class="min-w-0">
                 <h4 class="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-100 truncate">
@@ -15680,33 +15681,33 @@
     </script>
 
     <!-- PWA Smart Install Controller -->
-    <script src="js/pwa.js"></script>
+    <script src="/js/pwa.js"></script>
 
     <!-- Data & API Core -->
-    <script src="data-maulid-dibai.js"></script>
-    <script src="data-qasidah-burdah.js"></script>
-    <script src="data-tahlil-yasin.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/data-programs.js"></script>
+    <script src="/data-maulid-dibai.js"></script>
+    <script src="/data-qasidah-burdah.js"></script>
+    <script src="/data-tahlil-yasin.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/data-programs.js"></script>
 
     <!-- Logic Modules -->
-    <script src="js/programs.js"></script>
-    <script src="js/ppdb.js"></script>
-    <script src="js/ibadah.js"></script>
-    <script src="js/jadwal-sholat.js"></script>
-    <script src="js/admin.js"></script>
-    <script src="js/roles.js"></script>
-    <script src="js/alumni.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/pegawai.js"></script>
-    <script src="js/tahfidz.js"></script>
-    <script src="js/tpq.js"></script>
-    <script src="js/sorogan.js"></script>
+    <script src="/js/programs.js"></script>
+    <script src="/js/ppdb.js"></script>
+    <script src="/js/ibadah.js"></script>
+    <script src="/js/jadwal-sholat.js"></script>
+    <script src="/js/admin.js"></script>
+    <script src="/js/roles.js"></script>
+    <script src="/js/alumni.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/pegawai.js"></script>
+    <script src="/js/tahfidz.js"></script>
+    <script src="/js/tpq.js"></script>
+    <script src="/js/sorogan.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
-    <script src="js/presensi.js"></script>
+    <script src="/js/presensi.js"></script>
 
     <!-- Main Controller & Navigation -->
-    <script src="js/main.js"></script>
+    <script src="/js/main.js"></script>
 </body>
 
 </html>

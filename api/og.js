@@ -104,6 +104,16 @@ module.exports = async function handler(req, res) {
             } else {
                 html = html.replace(/<title>.*?<\/title>/is, dynamicMetaTags.trim());
             }
+
+            // Suntikkan data awal berita (SSR Injection) agar langsung tampil instan (0ms)
+            const safeNewsJson = JSON.stringify(newsItem).replace(/</g, '\\u003c');
+            const initialNewsScript = `\n    <script>window.__INITIAL_NEWS__ = ${safeNewsJson};</script>`;
+            html = html.replace('</head>', `${initialNewsScript}\n</head>`);
+        }
+
+        // Pastikan <base href="/"> selalu ada di <head> untuk mencegah salah resolusi relative assets
+        if (!html.includes('<base href="/"')) {
+            html = html.replace(/<head[^>]*>/i, '$&\n    <base href="/">');
         }
 
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
