@@ -9,7 +9,7 @@ const ASNJadwalSholat = (function () {
     // 1. DATABASE KOORDINAT KOTA (DEFAULT: KAB. DEMAK)
     const CITIES = {
         demak: {
-            name: "Kab. Demak (Default)",
+            name: "Kab. Demak",
             province: "Jawa Tengah",
             lat: -6.9535,
             lng: 110.6402,
@@ -517,24 +517,65 @@ const ASNJadwalSholat = (function () {
         if (countdownEl) countdownEl.innerText = nextInfo.countdown;
 
         // Sinkronisasi otomatis ke Widget Beranda (Mobile & Desktop)
+        const cleanCityName = (city.name || '').replace(/\s*\(Default\)/gi, '');
+        const locString = `${cleanCityName}${city.province ? ', ' + city.province : ''}`;
+
+        // 1. Lokasi (Kiri Baris 1)
         ['home-prayer-location', 'home-prayer-location-desktop'].forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.innerText = `${city.name}${city.province ? ', ' + city.province : ''}`;
+            if (el) el.innerText = locString;
         });
+
+        // 2. Hari (Kiri Baris 2)
+        ['home-current-day', 'home-current-day-desktop'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el && todaySchedule) {
+                const pasaran = todaySchedule.pasaran ? ` ${todaySchedule.pasaran}` : '';
+                el.innerText = `${todaySchedule.dayName}${pasaran}`;
+            }
+        });
+
+        // 3. Waktu Shalat Terdekat (Kanan Baris 1)
         ['home-next-prayer-name', 'home-next-prayer-name-desktop'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.innerHTML = `${nextInfo.nextPrayer.name} <span class="text-amber-300 font-normal ml-1">${nextInfo.nextPrayer.time} ${todaySchedule.tzName}</span>`;
         });
+
+        // 4. Countdown Waktu Shalat (Kanan Baris 2)
         ['home-prayer-countdown', 'home-prayer-countdown-desktop'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.innerText = nextInfo.countdown;
         });
+
+        // 5. Tanggal Masehi (Baris 3 Kiri)
+        const masehiStr = `${todaySchedule.masehiDay} ${namaBulanIndo[todaySchedule.masehiMonth - 1]} ${todaySchedule.masehiYear}`;
+        ['home-date-masehi', 'home-date-masehi-desktop'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                const valEl = el.querySelector('.home-date-masehi-val');
+                if (valEl) valEl.innerText = masehiStr;
+                else el.innerText = masehiStr;
+            }
+        });
+
+        // 6. Tanggal Hijriyah (Baris 3 Kanan)
+        const hijriStr = todaySchedule.hijri ? todaySchedule.hijri.formatted : '';
+        ['home-date-hijri', 'home-date-hijri-desktop'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el && hijriStr) {
+                const valEl = el.querySelector('.home-date-hijri-val');
+                if (valEl) valEl.innerText = hijriStr;
+                else el.innerText = hijriStr;
+            }
+        });
+
+        // Fallback untuk home-current-date
         ['home-current-date', 'home-current-date-desktop'].forEach(id => {
             const el = document.getElementById(id);
             if (el && todaySchedule) {
                 const hari = todaySchedule.dayName;
                 const pasaran = todaySchedule.pasaran ? ` ${todaySchedule.pasaran},` : ',';
-                el.innerText = `${hari}${pasaran} ${todaySchedule.masehiDay} ${namaBulanIndo[todaySchedule.masehiMonth - 1]} ${todaySchedule.masehiYear}`;
+                el.innerText = `${hari}${pasaran} ${masehiStr}`;
             }
         });
     }

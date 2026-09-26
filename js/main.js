@@ -1360,7 +1360,8 @@
             if (typeof ASNJadwalSholat !== 'undefined' && typeof ASNJadwalSholat.calculateDay === 'function') {
                 const curCity = ASNJadwalSholat.getCurrentCity();
                 if (curCity) {
-                    const locText = `${curCity.name}${curCity.province ? ', ' + curCity.province : ''}`;
+                    const cleanCityName = (curCity.name || '').replace(/\s*\(Default\)/gi, '');
+                    const locText = `${cleanCityName}${curCity.province ? ', ' + curCity.province : ''}`;
                     ['home-prayer-location', 'home-prayer-location-desktop'].forEach(id => {
                         const el = document.getElementById(id);
                         if (el) el.innerText = locText;
@@ -1418,7 +1419,7 @@
                 if (el) el.innerText = formattedCountdown;
             });
 
-            // Update Current Date dynamically
+            // Update Hari, Tanggal Masehi, dan Tanggal Hijriyah
             if (typeof namaHariIndo !== 'undefined' && typeof namaBulanIndo !== 'undefined' && typeof getPasaranJawa !== 'undefined') {
                 const hari = namaHariIndo[now.getDay()];
                 const pasaran = getPasaranJawa(now);
@@ -1426,6 +1427,40 @@
                 const bln = namaBulanIndo[now.getMonth()];
                 const thn = now.getFullYear();
 
+                // 2. Hari (Baris 2 Kiri)
+                ['home-current-day', 'home-current-day-desktop'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.innerText = `${hari} ${pasaran}`;
+                });
+
+                // 5. Tanggal Masehi (Baris 3 Kiri)
+                ['home-date-masehi', 'home-date-masehi-desktop'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        const valEl = el.querySelector('.home-date-masehi-val');
+                        if (valEl) valEl.innerText = `${tgl} ${bln} ${thn}`;
+                        else el.innerText = `${tgl} ${bln} ${thn}`;
+                    }
+                });
+
+                // 6. Tanggal Hijriyah (Baris 3 Kanan)
+                let hijriFormatted = "";
+                if (typeof getHijriDate === 'function') {
+                    const h = getHijriDate(now);
+                    if (h && h.formatted) hijriFormatted = h.formatted;
+                }
+                if (hijriFormatted) {
+                    ['home-date-hijri', 'home-date-hijri-desktop'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) {
+                            const valEl = el.querySelector('.home-date-hijri-val');
+                            if (valEl) valEl.innerText = hijriFormatted;
+                            else el.innerText = hijriFormatted;
+                        }
+                    });
+                }
+
+                // Fallback untuk home-current-date
                 ['home-current-date', 'home-current-date-desktop'].forEach(id => {
                     const el = document.getElementById(id);
                     if (el) el.innerText = `${hari} ${pasaran}, ${tgl} ${bln} ${thn}`;

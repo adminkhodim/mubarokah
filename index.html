@@ -547,11 +547,11 @@
                     <!-- 1. Bagian Atas: Kiri (Lokasi & Hari) | Kanan (Shalat Terdekat & Countdown) -->
                     <div class="flex justify-between items-start gap-2 relative z-10">
                         <!-- Sebelah Kiri -->
-                        <div class="flex flex-col items-start space-y-1 min-w-0">
+                        <div class="flex flex-col items-start space-y-1 min-w-0 flex-1">
                             <!-- Baris 1: Lokasi -->
-                            <div class="flex items-center space-x-1.5 font-bold text-white leading-tight" style="font-size: 11.5px;">
+                            <div class="flex items-center space-x-1.5 font-bold text-white leading-tight min-w-0 w-full" style="font-size: 11px;">
                                 <i class="fa-solid fa-location-dot text-amber-400 shrink-0 text-xs"></i>
-                                <span id="home-prayer-location" class="truncate tracking-wide">Kab. Demak, Jawa Tengah</span>
+                                <span id="home-prayer-location" class="truncate tracking-tight">Kab. Demak, Jawa Tengah</span>
                             </div>
                             <!-- Baris 2: Hari (Model & Font Disamakan dengan Countdown Waktu Shalat) -->
                             <div id="home-current-day"
@@ -562,7 +562,7 @@
                         </div>
 
                         <!-- Sebelah Kanan -->
-                        <div class="flex flex-col items-end space-y-1 shrink-0">
+                        <div class="flex flex-col items-end space-y-1 shrink-0 ml-1">
                             <!-- Baris 1: Waktu Shalat Terdekat -->
                             <div id="home-next-prayer-name" class="font-bold text-white text-right leading-tight" style="font-size: 11.5px;">
                                 Zuhur <span id="home-next-prayer-time" class="text-amber-300 font-semibold ml-1">11:32 WIB</span>
