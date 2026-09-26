@@ -1661,89 +1661,85 @@
         </div>
 
         <!-- ==================== TABS BARU: KALENDER INDONESIA & JAWA ==================== -->
-        <div id="page-kalender" class="tab-content hidden space-y-6">
+        <!-- ==================== TABS BARU: KALENDER INDONESIA & JAWA ==================== -->
+        <div id="page-kalender" class="tab-content hidden space-y-3 sm:space-y-4">
             <div
-                class="bg-white dark:bg-[#15202d] p-5 md:p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-[#253447] space-y-5">
+                class="bg-white dark:bg-[#15202d] p-3 sm:p-5 md:p-6 rounded-2xl md:rounded-3xl shadow-sm border border-slate-100 dark:border-[#253447] space-y-3 sm:space-y-4">
 
-                <!-- Header Kontrol Kalender -->
-                <div
-                    class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-[#253447] pb-4">
-                    <div>
-                        <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center">
-                            <i class="fa-solid fa-calendar-days text-brand-700 dark:text-emerald-500 mr-2"></i> Kalender Masehi, Hijriyah & Jawa
-                        </h2>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Disertai informasi Penanggalan Hijriyah, Pasaran Jawa, Puasa Sunnah & Hari Besar Islam.</p>
+                <!-- Header Kontrol Kalender: Tombol Kembali + Judul + Navigasi Bulan Sejajar -->
+                <div class="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-[#253447] pb-2.5">
+                    <!-- Kiri: Tombol Kembali & Judul Kalender -->
+                    <div class="flex items-center space-x-2.5 min-w-0">
+                        <button onclick="switchTab('beranda')"
+                            class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-200 rounded-xl flex items-center justify-center transition active:scale-95 shrink-0 shadow-xs"
+                            title="Kembali ke Beranda">
+                            <i class="fa-solid fa-arrow-left text-xs"></i>
+                        </button>
+                        <div class="min-w-0">
+                            <h2 class="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100 truncate flex items-center gap-1.5">
+                                <i class="fa-solid fa-calendar-days text-brand-700 dark:text-emerald-500 text-xs sm:text-sm"></i>
+                                <span>Kalender Pesantren</span>
+                            </h2>
+                            <p class="text-[10px] text-slate-400 dark:text-slate-500 truncate hidden sm:block leading-none mt-0.5">Masehi • Hijriyah • Pasaran Jawa</p>
+                        </div>
                     </div>
 
-                    <!-- Navigasi Bulan & Tahun -->
-                    <div
-                        class="flex items-center justify-between md:justify-end space-x-2 bg-slate-50 dark:bg-[#1c2836] p-1.5 rounded-2xl border border-slate-200/60 dark:border-[#253447]">
+                    <!-- Kanan: Navigasi Bulan & Tahun (Kompak & Elegan) -->
+                    <div class="flex items-center space-x-1 bg-slate-50 dark:bg-[#1c2836] p-1 rounded-xl border border-slate-200/60 dark:border-[#253447] shrink-0">
                         <button onclick="changeCalMonth(-1)"
-                            class="w-8 h-8 bg-white dark:bg-[#253447] hover:bg-slate-200 dark:hover:bg-[#2d4058] text-slate-700 dark:text-slate-300 rounded-xl flex items-center justify-center shadow-sm transition"
+                            class="w-7 h-7 bg-white dark:bg-[#253447] hover:bg-slate-200 dark:hover:bg-[#2d4058] text-slate-700 dark:text-slate-300 rounded-lg flex items-center justify-center shadow-xs transition active:scale-90"
                             title="Bulan Sebelumnya">
-                            <i class="fa-solid fa-chevron-left text-xs"></i>
+                            <i class="fa-solid fa-chevron-left text-[10px]"></i>
                         </button>
-                        <div class="text-center px-3 min-w-[150px]">
+                        <div class="text-center px-1.5 min-w-[115px] sm:min-w-[135px]">
                             <span id="cal-month-year-text"
                                 class="text-xs font-extrabold text-brand-900 dark:text-emerald-300 block leading-tight">
                                 September 2026
                             </span>
                             <span id="cal-hijri-month-text"
-                                class="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 block tracking-tight">
+                                class="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 block leading-none mt-0.5 truncate max-w-[135px]">
                                 1448 H
                             </span>
                         </div>
                         <button onclick="changeCalMonth(1)"
-                            class="w-8 h-8 bg-white dark:bg-[#253447] hover:bg-slate-200 dark:hover:bg-[#2d4058] text-slate-700 dark:text-slate-300 rounded-xl flex items-center justify-center shadow-sm transition"
+                            class="w-7 h-7 bg-white dark:bg-[#253447] hover:bg-slate-200 dark:hover:bg-[#2d4058] text-slate-700 dark:text-slate-300 rounded-lg flex items-center justify-center shadow-xs transition active:scale-90"
                             title="Bulan Berikutnya">
-                            <i class="fa-solid fa-chevron-right text-xs"></i>
+                            <i class="fa-solid fa-chevron-right text-[10px]"></i>
                         </button>
                     </div>
                 </div>
 
-                <!-- Box Detail Tanggal yang Dipilih -->
+                <!-- Box Detail Tanggal yang Dipilih: Pita Ramping Hemat Ruang -->
                 <div id="selected-date-card"
-                    class="bg-gradient-to-r from-brand-900 via-brand-800 to-brand-700 dark:from-emerald-950 dark:via-emerald-900 dark:to-[#15202d] text-white p-4 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-                    <div>
-                        <span class="text-[10px] font-bold text-amber-400 uppercase tracking-widest block">Detail Hari
-                            Ini</span>
-                        <h3 id="selected-date-title" class="text-base font-bold">Sabtu Legi, 26 September 2026</h3>
-                        <p id="selected-date-subtitle" class="text-xs text-emerald-200 mt-0.5">15 Rabi'ul Akhir 1448 H • Weton:
-                            Sabtu Legi</p>
+                    class="bg-gradient-to-r from-brand-900 via-brand-800 to-brand-700 dark:from-emerald-950 dark:via-emerald-900 dark:to-[#15202d] text-white px-3 py-1.5 sm:py-2 rounded-xl shadow-xs flex flex-wrap items-center justify-between gap-1.5">
+                    <div class="flex items-center space-x-2 min-w-0">
+                        <span class="text-[8.5px] font-extrabold uppercase bg-amber-400/25 text-amber-300 px-1.5 py-0.5 rounded tracking-wide shrink-0">Hari Ini</span>
+                        <h3 id="selected-date-title" class="text-xs sm:text-sm font-bold truncate">Sabtu Legi, 26 September 2026</h3>
+                        <span class="text-emerald-300 text-xs hidden md:inline">•</span>
+                        <p id="selected-date-subtitle" class="text-[10px] sm:text-xs text-emerald-200 truncate">15 Rabi'ul Akhir 1448 H</p>
                     </div>
                     <div id="selected-date-tag"
-                        class="bg-white/10 px-3 py-1.5 rounded-xl border border-white/10 text-xs font-semibold text-amber-300">
-                        <i class="fa-solid fa-moon text-emerald-300 mr-1.5"></i> Puasa Sunnah Ayyamul Bidh
+                        class="bg-white/10 px-2 py-0.5 rounded-lg border border-white/10 text-[9.5px] sm:text-[10px] font-semibold text-amber-300 truncate max-w-full">
+                        <i class="fa-solid fa-moon text-emerald-300 mr-1"></i> Puasa Sunnah Ayyamul Bidh
                     </div>
                 </div>
 
-                <!-- Mini Legend Penanggalan -->
-                <div class="flex flex-wrap items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 px-3 py-1.5 bg-slate-50/70 dark:bg-[#1c2836]/60 rounded-xl border border-slate-100 dark:border-[#253447] gap-2">
-                    <div class="flex items-center space-x-1.5">
-                        <span class="font-extrabold text-slate-700 dark:text-slate-200">12</span>
-                        <span>Masehi</span>
+                <!-- Mini Legend Penanggalan: 1 Baris Kompak -->
+                <div class="flex flex-wrap items-center justify-between text-[9px] text-slate-500 dark:text-slate-400 px-1 gap-1">
+                    <div class="flex items-center space-x-2">
+                        <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span> Puasa Sunnah</span>
+                        <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block"></span> Hari Besar Islam</span>
                     </div>
-                    <div class="flex items-center space-x-1.5">
-                        <span class="font-bold text-emerald-600 dark:text-emerald-400">15</span>
-                        <span>Hijriyah</span>
-                    </div>
-                    <div class="flex items-center space-x-1.5">
-                        <span class="font-semibold text-amber-600 dark:text-amber-400">Legi</span>
-                        <span>Pasaran Jawa</span>
-                    </div>
-                    <div class="flex items-center space-x-1.5">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-                        <span>Puasa Sunnah</span>
-                    </div>
-                    <div class="flex items-center space-x-1.5">
-                        <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
-                        <span>Hari Besar Islam</span>
+                    <div class="flex items-center space-x-2 font-medium">
+                        <span class="text-slate-700 dark:text-slate-300 font-bold">12 Masehi</span>
+                        <span class="text-emerald-600 dark:text-emerald-400 font-bold">15 Hijriyah</span>
+                        <span class="text-amber-600 dark:text-amber-400 font-semibold">Legi (Jawa)</span>
                     </div>
                 </div>
 
                 <!-- Grid Nama Hari -->
                 <div
-                    class="grid grid-cols-7 gap-1 text-center font-bold text-xs text-slate-500 dark:text-slate-400 py-2 border-b border-slate-100 dark:border-[#253447]">
+                    class="grid grid-cols-7 gap-1 text-center font-bold text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 py-1 border-y border-slate-100 dark:border-[#253447]">
                     <div class="text-red-500 dark:text-red-400">Ahad</div>
                     <div>Senin</div>
                     <div>Selasa</div>
@@ -1754,19 +1750,19 @@
                 </div>
 
                 <!-- Grid Angka Tanggal & Pasaran (Didesain Dinamis via JS) -->
-                <div id="calendar-days-grid" class="grid grid-cols-7 gap-1 md:gap-2">
+                <div id="calendar-days-grid" class="grid grid-cols-7 gap-1">
                     <!-- Tanggal akan di-render otomatis oleh Javascript -->
                 </div>
 
                 <!-- Agenda Pesantren & Libur Bulan Ini -->
-                <div class="pt-4 border-t border-slate-100 dark:border-[#253447] space-y-3">
+                <div class="pt-3 border-t border-slate-100 dark:border-[#253447] space-y-2.5">
                     <div class="flex items-center justify-between">
                         <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center">
                             <span class="w-1.5 h-4 bg-brand-600 dark:bg-emerald-500 rounded-full mr-2"></span> Agenda & Hari Besar Islam Bulan Ini
                         </h3>
-                        <span id="cal-events-count" class="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-200/50 dark:border-emerald-800/40"></span>
+                        <span id="cal-events-count" class="text-[10px] sm:text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200/50 dark:border-emerald-800/40"></span>
                     </div>
-                    <div id="calendar-events-container" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div id="calendar-events-container" class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                         <!-- Agenda akan di-render otomatis oleh Javascript -->
                     </div>
                 </div>

@@ -640,7 +640,7 @@
 
             for (let i = 0; i < firstDayIndex; i++) {
                 const emptyCell = document.createElement('div');
-                emptyCell.className = "p-1.5 md:p-2 min-h-[56px] md:min-h-[64px] bg-slate-50/50 dark:bg-[#15202d]/40 rounded-2xl";
+                emptyCell.className = "p-1 min-h-[44px] sm:min-h-[52px] md:min-h-[58px] bg-slate-50/40 dark:bg-[#15202d]/30 rounded-xl md:rounded-2xl";
                 gridContainer.appendChild(emptyCell);
             }
 
@@ -697,7 +697,7 @@
                 }
 
                 const dayCell = document.createElement('div');
-                let cellStyle = "p-1 md:p-1.5 min-h-[56px] md:min-h-[64px] rounded-2xl flex flex-col justify-between items-center cursor-pointer transition border border-slate-100 dark:border-[#253447] hover:border-brand-600 dark:hover:border-emerald-500 ";
+                let cellStyle = "p-1 min-h-[44px] sm:min-h-[52px] md:min-h-[58px] rounded-xl md:rounded-2xl flex flex-col justify-between items-center cursor-pointer transition border border-slate-100 dark:border-[#253447] hover:border-brand-600 dark:hover:border-emerald-500 ";
 
                 if (isToday) {
                     cellStyle += "bg-brand-700 dark:bg-emerald-600 text-white font-bold shadow-md ring-2 ring-brand-500/30 dark:ring-emerald-400/30";
@@ -716,12 +716,12 @@
                 const pasaranColor = isToday ? "text-amber-300" : (dayOfWeek === 0 ? "text-red-400 dark:text-red-400" : "text-slate-400 dark:text-slate-400");
 
                 dayCell.innerHTML = `
-                    <div class="flex justify-between items-center w-full px-1">
-                        <div class="flex items-center space-x-1">${dotIndicator}</div>
-                        <span class="text-[9px] md:text-[10px] font-bold ${hijriColor}">${calInfo.hijri.day}</span>
+                    <div class="flex justify-between items-center w-full px-0.5 sm:px-1 leading-none">
+                        <div class="flex items-center">${dotIndicator}</div>
+                        <span class="text-[8.5px] sm:text-[9.5px] font-bold ${hijriColor}">${calInfo.hijri.day}</span>
                     </div>
-                    <span class="text-xs md:text-sm font-extrabold my-0.5">${day}</span>
-                    <span class="text-[8px] md:text-[9px] font-semibold ${pasaranColor}">${pasaran}</span>
+                    <span class="text-xs sm:text-sm font-extrabold my-0 leading-tight">${day}</span>
+                    <span class="text-[7.5px] sm:text-[8.5px] font-semibold leading-none ${pasaranColor}">${pasaran}</span>
                 `;
                 gridContainer.appendChild(dayCell);
             }
