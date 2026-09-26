@@ -512,6 +512,11 @@
             "10-22": { title: "Hari Santri Nasional", desc: "22 Oktober - Apel Akbar & Kirab Resolusi Jihad", type: "pesantren", badgeColor: "emerald", icon: "fa-users" }
         };
 
+        // Standar Koreksi Kalender Hijriyah Lembaga Falakiyah PBNU (LF PBNU) & Kemenag RI
+        // Kalender Ummul Qura (Arab Saudi) umumnya mendahului 1 hari dibanding Imkanur Rukyah MABIMS LF PBNU di Indonesia.
+        // Dengan koreksi -1 hari, tanggal 26 September 2026 bertepatan dengan 14 Rabi'ul Akhir 1448 H (sesuai Falakiyah PBNU).
+        const HIJRI_OFFSET_PBNU = -1;
+
         function getPasaranJawa(dateObj) {
             const timestamp = dateObj.getTime();
             const totalHari = Math.floor((timestamp + (7 * 3600 * 1000)) / 86400000);
@@ -519,9 +524,13 @@
             return pasaranJawa[(pasaranIdx + 5) % 5];
         }
 
-        function getHijriDate(dateObj) {
+        function getHijriDate(dateObj, offsetDays = HIJRI_OFFSET_PBNU) {
             if (!dateObj) dateObj = new Date();
             try {
+                // Terapkan penyesuaian hari sesuai hisab / rukyah LF PBNU
+                const targetTime = dateObj.getTime() + (offsetDays * 86400000);
+                const adjustedDate = new Date(targetTime);
+
                 let fmt;
                 try {
                     fmt = new Intl.DateTimeFormat('id-ID-u-ca-islamic-umalqura', {
@@ -536,7 +545,7 @@
                         year: 'numeric'
                     });
                 }
-                const parts = fmt.formatToParts(dateObj);
+                const parts = fmt.formatToParts(adjustedDate);
                 let day = 1, month = 1, year = 1448;
                 for (const p of parts) {
                     if (p.type === 'day') day = parseInt(p.value, 10);
@@ -781,17 +790,29 @@
 
         function selectCalDate(year, month, day, pasaran, dayOfWeek) {
             const thisDate = new Date(year, month, day);
+            const today = new Date();
+            const isToday = (day === today.getDate() && month === today.getMonth() && year === today.getFullYear());
             const info = getIslamicCalendarInfo(thisDate);
             const hari = namaHariIndo[dayOfWeek];
             const bulan = namaBulanIndo[month];
 
+            const statusBadgeEl = document.getElementById('selected-date-status-badge');
             const titleEl = document.getElementById('selected-date-title');
             const subtitleEl = document.getElementById('selected-date-subtitle');
             const tagEl = document.getElementById('selected-date-tag');
 
-            if (titleEl) titleEl.innerText = `${hari} ${pasaran}, ${day} ${bulan} ${year}`;
-            if (subtitleEl) subtitleEl.innerText = `${info.hijri.formatted} • Weton: ${hari} ${pasaran}`;
+            // Baris 1: Status Badge (Hari Ini / Tanggal Terpilih)
+            if (statusBadgeEl) {
+                if (isToday) {
+                    statusBadgeEl.innerText = "Hari Ini";
+                    statusBadgeEl.className = "text-[9px] font-extrabold uppercase bg-amber-400/25 text-amber-300 px-2 py-0.5 rounded tracking-wider shrink-0";
+                } else {
+                    statusBadgeEl.innerText = "Tanggal Terpilih";
+                    statusBadgeEl.className = "text-[9px] font-bold uppercase bg-white/15 text-slate-200 px-2 py-0.5 rounded tracking-wider shrink-0";
+                }
+            }
 
+            // Baris 1: Tag Ibadah / Peringatan / Agenda
             if (tagEl) {
                 if (info.holiday) {
                     tagEl.innerHTML = `<i class="fa-solid ${info.holiday.icon} text-amber-300 mr-1.5"></i> ${info.holiday.title}`;
@@ -802,12 +823,22 @@
                 } else if (info.national) {
                     tagEl.innerHTML = `<i class="fa-solid ${info.national.icon} text-amber-300 mr-1.5"></i> ${info.national.title}`;
                 } else if (hari === "Jumat") {
-                    tagEl.innerHTML = `<i class="fa-solid fa-mosque text-emerald-300 mr-1.5"></i> Sayyidul Ayyam / Kajian Rutin`;
+                    tagEl.innerHTML = `<i class="fa-solid fa-mosque text-emerald-300 mr-1.5"></i> Sayyidul Ayyam`;
                 } else if (hari === "Minggu") {
-                    tagEl.innerHTML = `<i class="fa-solid fa-mug-hot text-amber-300 mr-1.5"></i> Libur Kegiatan KBM Santri`;
+                    tagEl.innerHTML = `<i class="fa-solid fa-mug-hot text-amber-300 mr-1.5"></i> Libur KBM Santri`;
                 } else {
-                    tagEl.innerHTML = `<i class="fa-solid fa-book-quran text-amber-300 mr-1.5"></i> Kegiatan Normal Pesantren`;
+                    tagEl.innerHTML = `<i class="fa-solid fa-book-quran text-amber-300 mr-1.5"></i> Kegiatan Normal`;
                 }
+            }
+
+            // Baris 2: Hari, tgl bln thn MASEHI
+            if (titleEl) {
+                titleEl.innerText = `${hari} ${pasaran}, ${day} ${bulan} ${year}`;
+            }
+
+            // Baris 3: Hari, tgl bln thn HIJRIYAH (Standar LF PBNU)
+            if (subtitleEl) {
+                subtitleEl.innerText = `${hari} ${pasaran}, ${info.hijri.day} ${info.hijri.monthName} ${info.hijri.year} H`;
             }
         }
 
