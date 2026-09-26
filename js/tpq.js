@@ -224,18 +224,25 @@ async function loadAdminTPQData(forceRefresh = false) {
 
     if (refreshIcon && forceRefresh) {
         refreshIcon.classList.add('fa-spin');
+        try {
+            sessionStorage.removeItem(TPQ_CACHE_KEY);
+            localStorage.removeItem(TPQ_CACHE_KEY);
+        } catch (e) {}
+        ASNTPQ.cache = null;
     }
 
+    // 1. Cek cache lokal (Memory, localStorage, atau sessionStorage)
+    // Strategi SWR: Jika ada data, LANGSUNG RENDER INSTAN (< 50ms) tanpa menunggu server!
     let hasRenderedFromCache = false;
     if (!forceRefresh) {
         let cached = ASNTPQ.cache;
         if (!cached) {
             try {
-                const stored = sessionStorage.getItem(TPQ_CACHE_KEY);
+                const stored = localStorage.getItem(TPQ_CACHE_KEY) || sessionStorage.getItem(TPQ_CACHE_KEY);
                 if (stored) {
                     const parsed = JSON.parse(stored);
-                    if (parsed && parsed.data && (Date.now() - (parsed.timestamp || 0) < TPQ_CACHE_TTL_MS)) {
-                        cached = parsed.data;
+                    if (parsed && (parsed.data || parsed.students)) {
+                        cached = parsed.data || parsed;
                         ASNTPQ.cache = cached;
                     }
                 }
@@ -253,42 +260,60 @@ async function loadAdminTPQData(forceRefresh = false) {
             if (emptyState && ASNTPQ.filteredStudents.length > 0) {
                 emptyState.classList.add('hidden');
             }
+            if (loader) loader.classList.add('hidden');
         }
     }
 
+    // Hanya tampilkan full loader jika SAMA SEKALI belum ada data di cache lokal
     if (!hasRenderedFromCache) {
         if (loader) loader.classList.remove('hidden');
         if (emptyState) emptyState.classList.add('hidden');
     }
 
-    try {
-        const token = getTPQToken();
-        let response;
-        try {
-            response = await apiPost("getTPQDashboard", { token });
-        } catch (apiErr) {
-            response = await apiPost("getTPQDashboard", {});
-        }
-
-        if (response && (response.success || response.status === "success")) {
-            ASNTPQ.data = response;
-            ASNTPQ.cache = response;
-            try {
-                sessionStorage.setItem(TPQ_CACHE_KEY, JSON.stringify({ data: response, timestamp: Date.now() }));
-            } catch (e) {}
-
-            renderTPQSummaryCards();
-            populateTPQFilters();
-            filterTPQList();
-        } else {
-            console.warn("Respon TPQ kosong atau tidak sukses:", response);
-        }
-    } catch (err) {
-        console.error("Gagal sinkronisasi data TPQ dari server:", err);
-    } finally {
-        if (loader) loader.classList.add('hidden');
-        if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+    // Hindari pemanggilan server duplikat jika request sedang berjalan
+    if (ASNTPQ._fetchPromise) {
+        return ASNTPQ._fetchPromise;
     }
+
+    ASNTPQ._fetchPromise = (async () => {
+        try {
+            const token = getTPQToken();
+            let response;
+            try {
+                response = await apiPost("getTPQDashboard", { token });
+            } catch (apiErr) {
+                response = await apiPost("getTPQDashboard", {});
+            }
+
+            if (response && (response.success || response.status === "success")) {
+                ASNTPQ.data = response;
+                ASNTPQ.cache = response;
+                try {
+                    const cachePayload = JSON.stringify({ data: response, timestamp: Date.now() });
+                    localStorage.setItem(TPQ_CACHE_KEY, cachePayload);
+                    sessionStorage.setItem(TPQ_CACHE_KEY, cachePayload);
+                } catch (e) {}
+
+                renderTPQSummaryCards();
+                populateTPQFilters();
+                filterTPQList();
+
+                if (forceRefresh && typeof showToast === 'function') {
+                    showToast("✅ Data TPQ berhasil diperbarui.");
+                }
+            } else {
+                console.warn("Respon TPQ kosong atau tidak sukses:", response);
+            }
+        } catch (err) {
+            console.error("Gagal sinkronisasi data TPQ dari server:", err);
+        } finally {
+            ASNTPQ._fetchPromise = null;
+            if (loader) loader.classList.add('hidden');
+            if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+        }
+    })();
+
+    return ASNTPQ._fetchPromise;
 }
 
 /**

@@ -147,17 +147,18 @@ async function loadAdminTahfidzData(forceRefresh = false) {
         refreshIcon.classList.add('fa-spin');
     }
 
-    // 1. Cek cache lokal (Memory atau SessionStorage)
+    // 1. Cek cache lokal (Memory, localStorage, atau sessionStorage)
+    // Strategi SWR: Jika ada data, LANGSUNG RENDER INSTAN (< 50ms) tanpa menunggu server!
     let hasRenderedFromCache = false;
     if (!forceRefresh) {
         let cached = ASNTahfidz.cache;
         if (!cached) {
             try {
-                const stored = sessionStorage.getItem(TAHFIDZ_CACHE_KEY);
+                const stored = localStorage.getItem(TAHFIDZ_CACHE_KEY) || sessionStorage.getItem(TAHFIDZ_CACHE_KEY);
                 if (stored) {
                     const parsed = JSON.parse(stored);
-                    if (parsed && parsed.data && (Date.now() - (parsed.timestamp || 0) < TAHFIDZ_CACHE_TTL_MS)) {
-                        cached = parsed.data;
+                    if (parsed && (parsed.data || parsed.students)) {
+                        cached = parsed.data || parsed;
                         ASNTahfidz.cache = cached;
                     }
                 }
@@ -168,6 +169,7 @@ async function loadAdminTahfidzData(forceRefresh = false) {
 
         if (cached && (cached.success || cached.status === "success") && Array.isArray(cached.students)) {
             ASNTahfidz.data = cached;
+            if (typeof buildTahfidzHalaqahIndex === 'function') buildTahfidzHalaqahIndex();
 
             renderTahfidzSummaryCards();
             populateTahfidzFilters();
@@ -182,70 +184,85 @@ async function loadAdminTahfidzData(forceRefresh = false) {
             if (emptyState && ASNTahfidz.filteredStudents.length > 0) {
                 emptyState.classList.add('hidden');
             }
+            if (loader) loader.classList.add('hidden');
         }
     }
 
-    // Hanya tampilkan loader jika TIDAK ada data di cache sebelumnya
+    // Hanya tampilkan full loader jika SAMA SEKALI belum ada data di cache lokal
     if (!hasRenderedFromCache) {
         if (loader) loader.classList.remove('hidden');
         if (emptyState) emptyState.classList.add('hidden');
     }
 
-    try {
-        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(TAHFIDZ_STORAGE_KEYS.adminToken)) || "";
-        const response = await apiPost("getTahfidzDashboard", token ? { token } : {});
-
-        if (response && (response.success || response.status === "success")) {
-            // Gabungkan halaqah lokal jika ada halaqah baru yang belum terangkum
-            if (Array.isArray(response.halaqahs)) {
-                const currentHalaqahs = ASNTahfidz.data?.halaqahs || [];
-                const mergedHalaqahs = [...response.halaqahs];
-                currentHalaqahs.forEach(loc => {
-                    if (loc && loc.halaqahId && !mergedHalaqahs.some(s => s.halaqahId === loc.halaqahId)) {
-                        mergedHalaqahs.push(loc);
-                    }
-                });
-                response.halaqahs = mergedHalaqahs;
-            }
-
-            ASNTahfidz.data = response;
-            ASNTahfidz.cache = response;
-            try {
-                sessionStorage.setItem(TAHFIDZ_CACHE_KEY, JSON.stringify({
-                    data: response,
-                    timestamp: Date.now()
-                }));
-            } catch (e) {
-                console.warn("Gagal menyimpan cache Tahfidz:", e);
-            }
-
-            renderTahfidzSummaryCards();
-            populateTahfidzFilters();
-            filterTahfidzList();
-            updateHubTahfidzBadge();
-            renderTahfidzHalaqahCards();
-            populatePlottingHalaqahSelector();
-            renderTahfidzMatriksBeban();
-            populateTahfidzCatatSesiDropdown();
-
-            if (forceRefresh && typeof showToast === 'function') {
-                showToast("✅ Data Tahfidz berhasil diperbarui.");
-            }
-        } else {
-            console.warn("Gagal memuat tahfidz dashboard:", response);
-            if (!hasRenderedFromCache && typeof showToast === 'function') {
-                showToast("⚠️ " + ((response && response.message) || "Gagal memuat data Tahfidz."));
-            }
-        }
-    } catch (err) {
-        console.error("Error loadAdminTahfidzData:", err);
-        if (!hasRenderedFromCache && typeof showToast === 'function') {
-            showToast("❌ Terjadi kendala saat memuat data: " + (err.message || "Gagal memuat data Tahfidz."));
-        }
-    } finally {
-        if (loader) loader.classList.add('hidden');
-        if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+    // Hindari pemanggilan server duplikat jika request sedang berjalan
+    if (ASNTahfidz._fetchPromise) {
+        return ASNTahfidz._fetchPromise;
     }
+
+    ASNTahfidz._fetchPromise = (async () => {
+        try {
+            const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : (sessionStorage.getItem(TAHFIDZ_STORAGE_KEYS.adminToken) || localStorage.getItem(TAHFIDZ_STORAGE_KEYS.adminToken))) || "";
+            const response = await apiPost("getTahfidzDashboard", token ? { token } : {});
+
+            if (response && (response.success || response.status === "success")) {
+                // Gabungkan halaqah lokal jika ada halaqah baru yang belum terangkum
+                if (Array.isArray(response.halaqahs)) {
+                    const currentHalaqahs = ASNTahfidz.data?.halaqahs || [];
+                    const mergedHalaqahs = [...response.halaqahs];
+                    currentHalaqahs.forEach(loc => {
+                        if (loc && loc.halaqahId && !mergedHalaqahs.some(s => s.halaqahId === loc.halaqahId)) {
+                            mergedHalaqahs.push(loc);
+                        }
+                    });
+                    response.halaqahs = mergedHalaqahs;
+                }
+
+                ASNTahfidz.data = response;
+                ASNTahfidz.cache = response;
+                if (typeof buildTahfidzHalaqahIndex === 'function') buildTahfidzHalaqahIndex();
+
+                try {
+                    const cachePayload = JSON.stringify({
+                        data: response,
+                        timestamp: Date.now()
+                    });
+                    localStorage.setItem(TAHFIDZ_CACHE_KEY, cachePayload);
+                    sessionStorage.setItem(TAHFIDZ_CACHE_KEY, cachePayload);
+                } catch (e) {
+                    console.warn("Gagal menyimpan cache Tahfidz:", e);
+                }
+
+                renderTahfidzSummaryCards();
+                populateTahfidzFilters();
+                filterTahfidzList();
+                updateHubTahfidzBadge();
+                renderTahfidzHalaqahCards();
+                populatePlottingHalaqahSelector();
+                renderTahfidzMatriksBeban();
+                populateTahfidzCatatSesiDropdown();
+
+                if (forceRefresh && typeof showToast === 'function') {
+                    showToast("✅ Data Tahfidz berhasil diperbarui.");
+                }
+            } else {
+                console.warn("Gagal memuat tahfidz dashboard:", response);
+                if (!hasRenderedFromCache && typeof showToast === 'function') {
+                    showToast("⚠️ " + ((response && response.message) || "Gagal memuat data Tahfidz."));
+                }
+            }
+        } catch (err) {
+            console.error("Error loadAdminTahfidzData:", err);
+            if (!hasRenderedFromCache && typeof showToast === 'function') {
+                showToast("❌ Terjadi kendala saat memuat data: " + (err.message || "Gagal memuat data Tahfidz."));
+            }
+        } finally {
+            ASNTahfidz._fetchPromise = null;
+            if (loader) loader.classList.add('hidden');
+            if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+        }
+    })();
+
+    return ASNTahfidz._fetchPromise;
 }
 
 /**
@@ -335,7 +352,33 @@ function updateHubTahfidzBadge() {
 }
 
 /**
- * Memeriksa apakah santri sudah ditambahkan ke dalam salah satu kelompok halaqah
+ * Membangun index Set O(1) untuk seluruh anggota halaqah (eliminasi nested loop O(N*M))
+ */
+function buildTahfidzHalaqahIndex() {
+    const memberSet = new Set();
+    const nameSet = new Set();
+    const idSet = new Set();
+    const halaqahs = ASNTahfidz.data?.halaqahs || [];
+
+    for (let i = 0; i < halaqahs.length; i++) {
+        const h = halaqahs[i];
+        if (!h) continue;
+        if (h.namaHalaqah) nameSet.add(h.namaHalaqah.trim().toLowerCase());
+        if (h.halaqahId) idSet.add(String(h.halaqahId).trim().toLowerCase());
+        if (Array.isArray(h.studentIds)) {
+            for (let j = 0; j < h.studentIds.length; j++) {
+                const clean = String(h.studentIds[j] || "").trim().toLowerCase();
+                if (clean) memberSet.add(clean);
+            }
+        }
+    }
+    ASNTahfidz._halaqahMemberSet = memberSet;
+    ASNTahfidz._halaqahNameSet = nameSet;
+    ASNTahfidz._halaqahIdSet = idSet;
+}
+
+/**
+ * Memeriksa apakah santri sudah ditambahkan ke dalam salah satu kelompok halaqah (Super Cepat O(1))
  */
 function isStudentInHalaqah(st) {
     if (!st) return false;
@@ -344,40 +387,36 @@ function isStudentInHalaqah(st) {
     }
 
     // 1. Cek properti halaqahId pada santri
-    const hid = st.halaqahId || (st.halaqah && st.halaqah.halaqahId);
-    if (hid && String(hid).trim() !== "" && String(hid).trim() !== "0") {
+    const hid = String(st.halaqahId || (st.halaqah && st.halaqah.halaqahId) || "").trim();
+    if (hid !== "" && hid !== "0" && hid !== "undefined") {
         return true;
     }
 
-    // 2. Cek apakah nama halaqah valid (bukan 'Belum Masuk Halaqah')
-    const hname = st.halaqah?.namaHalaqah || st.halaqahName || "";
-    if (hname && hname !== "Belum Masuk Halaqah") {
-        const registeredHalaqahs = ASNTahfidz.data?.halaqahs || [];
-        if (registeredHalaqahs.length === 0) return true;
-        const existsInRegistered = registeredHalaqahs.some(h => 
-            (h.namaHalaqah && h.namaHalaqah.trim().toLowerCase() === hname.trim().toLowerCase()) ||
-            (h.halaqahId && hid && h.halaqahId === hid)
-        );
-        if (existsInRegistered) return true;
+    if (!ASNTahfidz._halaqahMemberSet) {
+        buildTahfidzHalaqahIndex();
     }
 
-    // 3. Cek apakah ID/NIS santri terdaftar di studentIds salah satu halaqah
+    // 2. Cek apakah nama halaqah valid
+    const hname = (st.halaqah?.namaHalaqah || st.halaqahName || "").trim().toLowerCase();
+    if (hname && hname !== "belum masuk halaqah") {
+        if (ASNTahfidz._halaqahNameSet.size === 0 || ASNTahfidz._halaqahNameSet.has(hname)) {
+            return true;
+        }
+        if (hid && ASNTahfidz._halaqahIdSet.has(hid.toLowerCase())) {
+            return true;
+        }
+    }
+
+    // 3. O(1) Set lookup instan (bebas freeze loop)
     const sId = String(st.studentId || st.nis || st.id || "").trim().toLowerCase();
     const sNis = String(st.nis || "").trim().toLowerCase();
     const sName = String(st.name || "").trim().toLowerCase();
-    const halaqahs = ASNTahfidz.data?.halaqahs || [];
 
-    for (let i = 0; i < halaqahs.length; i++) {
-        const h = halaqahs[i];
-        if (!h || !Array.isArray(h.studentIds)) continue;
-        const hasMember = h.studentIds.some(mId => {
-            const clean = String(mId).trim().toLowerCase();
-            return clean === sId || (sNis && clean === sNis) || (sName && clean === sName);
-        });
-        if (hasMember) return true;
-    }
-
-    return false;
+    return Boolean(
+        (sId && ASNTahfidz._halaqahMemberSet.has(sId)) ||
+        (sNis && ASNTahfidz._halaqahMemberSet.has(sNis)) ||
+        (sName && ASNTahfidz._halaqahMemberSet.has(sName))
+    );
 }
 
 /**

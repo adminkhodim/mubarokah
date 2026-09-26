@@ -114,20 +114,25 @@ async function loadAdminSoroganData(forceRefresh = false) {
 
     if (forceRefresh) {
         if (refreshIcon) refreshIcon.classList.add('fa-spin');
-        try { sessionStorage.removeItem(SOROGAN_CACHE_KEY); } catch (e) {}
+        try {
+            sessionStorage.removeItem(SOROGAN_CACHE_KEY);
+            localStorage.removeItem(SOROGAN_CACHE_KEY);
+        } catch (e) {}
         ASNSorogan.cache = null;
     }
 
+    // 1. Cek cache lokal (Memory, localStorage, atau sessionStorage)
+    // Strategi SWR: Jika ada data, LANGSUNG RENDER INSTAN (< 50ms) tanpa menunggu server!
     let hasRenderedFromCache = false;
     if (!forceRefresh) {
         let cached = ASNSorogan.cache;
         if (!cached) {
             try {
-                const stored = sessionStorage.getItem(SOROGAN_CACHE_KEY);
+                const stored = localStorage.getItem(SOROGAN_CACHE_KEY) || sessionStorage.getItem(SOROGAN_CACHE_KEY);
                 if (stored) {
                     const parsed = JSON.parse(stored);
-                    if (parsed && parsed.data && (Date.now() - (parsed.timestamp || 0) < SOROGAN_CACHE_TTL_MS)) {
-                        cached = parsed.data;
+                    if (parsed && (parsed.data || parsed.students)) {
+                        cached = parsed.data || parsed;
                         ASNSorogan.cache = cached;
                     }
                 }
@@ -145,44 +150,62 @@ async function loadAdminSoroganData(forceRefresh = false) {
             if (emptyState && ASNSorogan.filteredStudents.length > 0) {
                 emptyState.classList.add('hidden');
             }
+            if (loader) loader.classList.add('hidden');
         }
     }
 
+    // Hanya tampilkan full loader jika SAMA SEKALI belum ada data di cache lokal
     if (!hasRenderedFromCache) {
         if (loader) loader.classList.remove('hidden');
         if (emptyState) emptyState.classList.add('hidden');
     }
 
-    try {
-        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(SOROGAN_STORAGE_KEYS.adminToken)) || "";
-        let response;
-        try {
-            response = await apiPost("getSoroganDashboard", { token });
-        } catch (apiErr) {
-            response = await apiPost("getSoroganDashboard", {});
-        }
-
-        if (response && (response.success || response.status === "success")) {
-            ASNSorogan.data = response;
-            ASNSorogan.cache = response;
-            try {
-                sessionStorage.setItem(SOROGAN_CACHE_KEY, JSON.stringify({ data: response, timestamp: Date.now() }));
-            } catch (e) {}
-
-            renderSoroganSummaryCards();
-            populateSoroganFilters();
-            populateSoroganProgramDropdown();
-            populateSoroganMuallimDropdown();
-            filterSoroganList();
-        } else if (response && (response.message || response.error)) {
-            console.warn("Respon Sorogan gagal:", response.message || response.error);
-        }
-    } catch (err) {
-        console.error("Gagal sinkronisasi data Sorogan:", err);
-    } finally {
-        if (loader) loader.classList.add('hidden');
-        if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+    // Hindari pemanggilan server duplikat jika request sedang berjalan
+    if (ASNSorogan._fetchPromise) {
+        return ASNSorogan._fetchPromise;
     }
+
+    ASNSorogan._fetchPromise = (async () => {
+        try {
+            const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : (sessionStorage.getItem(SOROGAN_STORAGE_KEYS.adminToken) || localStorage.getItem(SOROGAN_STORAGE_KEYS.adminToken))) || "";
+            let response;
+            try {
+                response = await apiPost("getSoroganDashboard", { token });
+            } catch (apiErr) {
+                response = await apiPost("getSoroganDashboard", {});
+            }
+
+            if (response && (response.success || response.status === "success")) {
+                ASNSorogan.data = response;
+                ASNSorogan.cache = response;
+                try {
+                    const cachePayload = JSON.stringify({ data: response, timestamp: Date.now() });
+                    localStorage.setItem(SOROGAN_CACHE_KEY, cachePayload);
+                    sessionStorage.setItem(SOROGAN_CACHE_KEY, cachePayload);
+                } catch (e) {}
+
+                renderSoroganSummaryCards();
+                populateSoroganFilters();
+                populateSoroganProgramDropdown();
+                populateSoroganMuallimDropdown();
+                filterSoroganList();
+
+                if (forceRefresh && typeof showToast === 'function') {
+                    showToast("✅ Data Sorogan berhasil diperbarui.");
+                }
+            } else if (response && (response.message || response.error)) {
+                console.warn("Respon Sorogan gagal:", response.message || response.error);
+            }
+        } catch (err) {
+            console.error("Gagal sinkronisasi data Sorogan:", err);
+        } finally {
+            ASNSorogan._fetchPromise = null;
+            if (loader) loader.classList.add('hidden');
+            if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+        }
+    })();
+
+    return ASNSorogan._fetchPromise;
 }
 
 /**

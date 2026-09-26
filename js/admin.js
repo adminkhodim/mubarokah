@@ -307,6 +307,8 @@
                 if (typeof applyAdminRoleVisibility === 'function') {
                     applyAdminRoleVisibility();
                 }
+                // Idle background pre-fetching agar modul Tahfidz, Sorogan, dan TPQ instan saat dibuka
+                scheduleAdminDataPrefetch();
             }
 
             // Sembunyikan double header di layar mobile saat sub-view aktif
@@ -322,6 +324,40 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
         window.showAdminView = showAdminView;
+
+        let _adminPrefetchScheduled = false;
+        function scheduleAdminDataPrefetch() {
+            if (_adminPrefetchScheduled) return;
+            _adminPrefetchScheduled = true;
+
+            const runPrefetch = () => {
+                // Beri jeda kecil agar UI Hub Admin render duluan dengan sangat mulus
+                setTimeout(() => {
+                    if (typeof loadAdminTahfidzData === 'function') {
+                        loadAdminTahfidzData().catch(() => {});
+                    }
+                }, 800);
+
+                setTimeout(() => {
+                    if (typeof loadAdminSoroganData === 'function') {
+                        loadAdminSoroganData().catch(() => {});
+                    }
+                }, 1800);
+
+                setTimeout(() => {
+                    if (typeof loadAdminTPQData === 'function') {
+                        loadAdminTPQData().catch(() => {});
+                    }
+                }, 2800);
+            };
+
+            if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+                window.requestIdleCallback(runPrefetch, { timeout: 3500 });
+            } else {
+                setTimeout(runPrefetch, 600);
+            }
+        }
+        window.scheduleAdminDataPrefetch = scheduleAdminDataPrefetch;
 
         /**
          * Navigasi Kembali Pintar untuk Sub-View Admin:
