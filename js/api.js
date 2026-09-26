@@ -464,17 +464,147 @@
             window.open(fbUrl, '_blank');
         }
 
-        // Logika Kalender
+        // ==================== LOGIKA KALENDER (TRI-KALENDER: MASEHI, HIJRIYAH & JAWA) ====================
         let currentCalDate = new Date();
         const namaBulanIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
         const namaHariIndo = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
         const pasaranJawa = ["Legi", "Pahing", "Pon", "Wage", "Kliwon"];
+
+        const namaBulanHijriyah = [
+            "",
+            "Muharram",
+            "Safar",
+            "Rabi'ul Awwal",
+            "Rabi'ul Akhir",
+            "Jumadil Ula",
+            "Jumadil Akhirah",
+            "Rajab",
+            "Sya'ban",
+            "Ramadhan",
+            "Syawal",
+            "Dzulqa'dah",
+            "Dzulhijjah"
+        ];
+
+        // Database Hari Besar Islam Berdasarkan Kalender Hijriyah (Format: "Bulan-Tanggal")
+        const HARI_BESAR_ISLAM = {
+            "1-1": { title: "Tahun Baru Islam", desc: "1 Muharram - Awal Tahun Baru Hijriyah", type: "holiday", badgeColor: "amber", icon: "fa-star-and-crescent" },
+            "1-9": { title: "Puasa Tasu'a", desc: "9 Muharram - Puasa Sunnah Tasu'a", type: "fasting", badgeColor: "emerald", icon: "fa-moon" },
+            "1-10": { title: "Hari Asyura & Puasa Asyura", desc: "10 Muharram - Puasa Sunnah Pelebur Dosa Setahun", type: "fasting", badgeColor: "emerald", icon: "fa-moon" },
+            "3-12": { title: "Maulid Nabi Muhammad SAW", desc: "12 Rabi'ul Awwal - Peringatan Kelahiran Rasulullah SAW", type: "holiday", badgeColor: "amber", icon: "fa-mosque" },
+            "7-27": { title: "Isra' Mi'raj Nabi Muhammad SAW", desc: "27 Rajab - Peristiwa Agung Isra' & Mi'raj", type: "holiday", badgeColor: "amber", icon: "fa-mosque" },
+            "8-15": { title: "Malam Nisfu Sya'ban", desc: "15 Sya'ban - Malam Pertengahan Bulan Sya'ban & Doa Bersama", type: "event", badgeColor: "indigo", icon: "fa-star" },
+            "9-1": { title: "Awal Puasa Ramadhan", desc: "1 Ramadhan - Pembuka Ibadah Puasa Wajib Umat Islam", type: "ramadhan", badgeColor: "emerald", icon: "fa-moon" },
+            "9-17": { title: "Peringatan Nuzulul Qur'an", desc: "17 Ramadhan - Peringatan Turunnya Al-Qur'anul Karim", type: "holiday", badgeColor: "amber", icon: "fa-book-quran" },
+            "10-1": { title: "Hari Raya Idul Fitri", desc: "1 Syawal - Hari Kemenangan & Shalat Ied (Haram Puasa)", type: "eid", badgeColor: "rose", icon: "fa-mosque" },
+            "10-2": { title: "Hari Raya Idul Fitri (Hari Ke-2)", desc: "2 Syawal - Silaturahmi Syawal & Halalbihalal", type: "eid", badgeColor: "rose", icon: "fa-mosque" },
+            "12-8": { title: "Hari Tarwiyah", desc: "8 Dzulhijjah - Puasa Sunnah Tarwiyah", type: "fasting", badgeColor: "emerald", icon: "fa-moon" },
+            "12-9": { title: "Hari Arafah", desc: "9 Dzulhijjah - Puasa Sunnah Arafah Penghapus Dosa 2 Tahun", type: "fasting", badgeColor: "emerald", icon: "fa-moon" },
+            "12-10": { title: "Hari Raya Idul Adha", desc: "10 Dzulhijjah - Shalat Ied Qurban & Penyembelihan (Haram Puasa)", type: "eid", badgeColor: "rose", icon: "fa-cow" },
+            "12-11": { title: "Hari Tasyrik Ke-1", desc: "11 Dzulhijjah - Hari Tasyrik Qurban (Haram Puasa)", type: "tasyrik", badgeColor: "rose", icon: "fa-ban" },
+            "12-12": { title: "Hari Tasyrik Ke-2", desc: "12 Dzulhijjah - Hari Tasyrik Qurban (Haram Puasa)", type: "tasyrik", badgeColor: "rose", icon: "fa-ban" },
+            "12-13": { title: "Hari Tasyrik Ke-3", desc: "13 Dzulhijjah - Hari Tasyrik Qurban (Haram Puasa)", type: "tasyrik", badgeColor: "rose", icon: "fa-ban" }
+        };
+
+        // Agenda Tahunan Nasional & Pesantren (Berdasarkan Penanggalan Masehi "Bulan-Tanggal")
+        const AGENDA_MASEHI = {
+            "8-17": { title: "HUT Kemerdekaan RI", desc: "17 Agustus - Upacara Bendera Santri & Asatidz", type: "national", badgeColor: "red", icon: "fa-flag" },
+            "10-22": { title: "Hari Santri Nasional", desc: "22 Oktober - Apel Akbar & Kirab Resolusi Jihad", type: "pesantren", badgeColor: "emerald", icon: "fa-users" }
+        };
 
         function getPasaranJawa(dateObj) {
             const timestamp = dateObj.getTime();
             const totalHari = Math.floor((timestamp + (7 * 3600 * 1000)) / 86400000);
             const pasaranIdx = (totalHari + 3) % 5;
             return pasaranJawa[(pasaranIdx + 5) % 5];
+        }
+
+        function getHijriDate(dateObj) {
+            if (!dateObj) dateObj = new Date();
+            try {
+                let fmt;
+                try {
+                    fmt = new Intl.DateTimeFormat('id-ID-u-ca-islamic-umalqura', {
+                        day: 'numeric',
+                        month: 'numeric',
+                        year: 'numeric'
+                    });
+                } catch (e1) {
+                    fmt = new Intl.DateTimeFormat('id-ID-u-ca-islamic', {
+                        day: 'numeric',
+                        month: 'numeric',
+                        year: 'numeric'
+                    });
+                }
+                const parts = fmt.formatToParts(dateObj);
+                let day = 1, month = 1, year = 1448;
+                for (const p of parts) {
+                    if (p.type === 'day') day = parseInt(p.value, 10);
+                    if (p.type === 'month') month = parseInt(p.value, 10);
+                    if (p.type === 'year') {
+                        const cleanYear = p.value.replace(/[^0-9]/g, '');
+                        if (cleanYear) year = parseInt(cleanYear, 10);
+                    }
+                }
+                const monthName = namaBulanHijriyah[month] || `Bulan ${month}`;
+                return {
+                    day,
+                    month,
+                    year,
+                    monthName,
+                    formatted: `${day} ${monthName} ${year} H`
+                };
+            } catch (e) {
+                return {
+                    day: 1,
+                    month: 1,
+                    year: 1448,
+                    monthName: "Hijriyah",
+                    formatted: "1448 H"
+                };
+            }
+        }
+
+        function getIslamicCalendarInfo(dateObj) {
+            const hijri = getHijriDate(dateObj);
+            const dayOfWeek = dateObj.getDay();
+            const masehiKey = `${dateObj.getMonth() + 1}-${dateObj.getDate()}`;
+            const hijriKey = `${hijri.month}-${hijri.day}`;
+
+            const holiday = HARI_BESAR_ISLAM[hijriKey] || null;
+            const national = AGENDA_MASEHI[masehiKey] || null;
+
+            // Hari yang Diharamkan Berpuasa (1 Syawal & 10-13 Dzulhijjah)
+            const isHaramPuasa = (hijri.month === 10 && hijri.day === 1) ||
+                                 (hijri.month === 12 && [10, 11, 12, 13].includes(hijri.day));
+
+            // Puasa Wajib Ramadhan
+            const isRamadhan = (hijri.month === 9);
+
+            // Puasa Sunnah Ayyamul Bidh (13, 14, 15 Hijriyah) kecuali Ramadhan & 13 Dzulhijjah
+            const isAyyamulBidh = !isRamadhan && !isHaramPuasa && [13, 14, 15].includes(hijri.day);
+
+            // Puasa Sunnah Rutin Senin & Kamis
+            const isSeninKamis = !isRamadhan && !isHaramPuasa && (dayOfWeek === 1 || dayOfWeek === 4);
+
+            let fastingInfo = null;
+            if (isRamadhan) {
+                fastingInfo = { name: `Puasa Ramadhan (Hari Ke-${hijri.day})`, type: 'ramadhan' };
+            } else if (isAyyamulBidh) {
+                const urutan = hijri.day === 13 ? "Hari Ke-1" : hijri.day === 14 ? "Hari Ke-2" : "Hari Ke-3";
+                fastingInfo = { name: `Puasa Sunnah Ayyamul Bidh (${urutan})`, type: 'ayyamul-bidh' };
+            } else if (isSeninKamis) {
+                fastingInfo = { name: `Puasa Sunnah ${dayOfWeek === 1 ? 'Senin' : 'Kamis'}`, type: 'senin-kamis' };
+            }
+
+            return {
+                hijri,
+                holiday,
+                national,
+                fastingInfo,
+                isHaramPuasa,
+                isSayyidulAyyam: dayOfWeek === 5
+            };
         }
 
         function renderCalendar() {
@@ -484,46 +614,164 @@
             const monthYearText = document.getElementById('cal-month-year-text');
             if (monthYearText) monthYearText.innerText = `${namaBulanIndo[month]} ${year}`;
 
+            const firstDateObj = new Date(year, month, 1);
+            const lastDate = new Date(year, month + 1, 0).getDate();
+            const lastDateObj = new Date(year, month, lastDate);
+
+            // Subheader Rentang Bulan Hijriyah
+            const hijriMonthText = document.getElementById('cal-hijri-month-text');
+            if (hijriMonthText) {
+                const hStart = getHijriDate(firstDateObj);
+                const hEnd = getHijriDate(lastDateObj);
+                if (hStart.month === hEnd.month) {
+                    hijriMonthText.innerText = `${hStart.monthName} ${hStart.year} H`;
+                } else if (hStart.year === hEnd.year) {
+                    hijriMonthText.innerText = `${hStart.monthName} - ${hEnd.monthName} ${hEnd.year} H`;
+                } else {
+                    hijriMonthText.innerText = `${hStart.monthName} ${hStart.year} - ${hEnd.monthName} ${hEnd.year} H`;
+                }
+            }
+
             const gridContainer = document.getElementById('calendar-days-grid');
             if (!gridContainer) return;
             gridContainer.innerHTML = "";
 
-            const firstDayIndex = new Date(year, month, 1).getDay();
-            const lastDate = new Date(year, month + 1, 0).getDate();
+            const firstDayIndex = firstDateObj.getDay();
 
             for (let i = 0; i < firstDayIndex; i++) {
                 const emptyCell = document.createElement('div');
-                emptyCell.className = "p-2 min-h-[50px] md:min-h-[60px] bg-slate-50/50 dark:bg-[#15202d]/40 rounded-2xl";
+                emptyCell.className = "p-1.5 md:p-2 min-h-[56px] md:min-h-[64px] bg-slate-50/50 dark:bg-[#15202d]/40 rounded-2xl";
                 gridContainer.appendChild(emptyCell);
             }
 
             const today = new Date();
+            const eventsInMonth = [];
+
             for (let day = 1; day <= lastDate; day++) {
                 const thisDate = new Date(year, month, day);
                 const dayOfWeek = thisDate.getDay();
                 const pasaran = getPasaranJawa(thisDate);
+                const calInfo = getIslamicCalendarInfo(thisDate);
                 const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
 
-                const dayCell = document.createElement('div');
-                let cellStyle = "p-1.5 md:p-2 min-h-[50px] md:min-h-[60px] rounded-2xl flex flex-col justify-between items-center cursor-pointer transition border border-slate-100 dark:border-[#253447] hover:border-brand-600 dark:hover:border-emerald-500 ";
+                // Koleksi Agenda & Hari Besar Bulan Ini
+                if (calInfo.holiday) {
+                    eventsInMonth.push({
+                        day,
+                        title: calInfo.holiday.title,
+                        desc: calInfo.holiday.desc,
+                        badgeText: "Hari Besar Islam",
+                        badgeClass: "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300",
+                        boxBg: "bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-300"
+                    });
+                }
+                if (calInfo.national) {
+                    eventsInMonth.push({
+                        day,
+                        title: calInfo.national.title,
+                        desc: calInfo.national.desc,
+                        badgeText: "Agenda Nasional",
+                        badgeClass: "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300",
+                        boxBg: "bg-rose-100 text-rose-900 dark:bg-rose-900/40 dark:text-rose-300"
+                    });
+                }
+                if (calInfo.hijri.day === 13 && !calInfo.isHaramPuasa && calInfo.hijri.month !== 9) {
+                    eventsInMonth.push({
+                        day,
+                        title: `Awal Puasa Ayyamul Bidh (${calInfo.hijri.monthName})`,
+                        desc: `Puasa Sunnah 13, 14, 15 ${calInfo.hijri.monthName} ${calInfo.hijri.year} H`,
+                        badgeText: "Puasa Sunnah",
+                        badgeClass: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300",
+                        boxBg: "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-300"
+                    });
+                }
 
-                if (isToday) cellStyle += "bg-brand-700 dark:bg-emerald-600 text-white font-bold shadow-md";
-                else if (dayOfWeek === 0) cellStyle += "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40";
-                else if (dayOfWeek === 5) cellStyle += "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/40";
-                else cellStyle += "bg-slate-50 dark:bg-[#1c2836] text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#253447]";
+                // Dot Indikator di Kotak Kalender
+                let dotIndicator = `<span class="w-1.5 h-1.5 inline-block"></span>`;
+                if (calInfo.holiday) {
+                    dotIndicator = `<span class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" title="${calInfo.holiday.title}"></span>`;
+                } else if (calInfo.fastingInfo) {
+                    dotIndicator = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" title="${calInfo.fastingInfo.name}"></span>`;
+                } else if (calInfo.isSayyidulAyyam) {
+                    dotIndicator = `<span class="w-1.5 h-1.5 rounded-full bg-teal-400/80 shrink-0" title="Sayyidul Ayyam"></span>`;
+                }
+
+                const dayCell = document.createElement('div');
+                let cellStyle = "p-1 md:p-1.5 min-h-[56px] md:min-h-[64px] rounded-2xl flex flex-col justify-between items-center cursor-pointer transition border border-slate-100 dark:border-[#253447] hover:border-brand-600 dark:hover:border-emerald-500 ";
+
+                if (isToday) {
+                    cellStyle += "bg-brand-700 dark:bg-emerald-600 text-white font-bold shadow-md ring-2 ring-brand-500/30 dark:ring-emerald-400/30";
+                } else if (dayOfWeek === 0) {
+                    cellStyle += "bg-red-50/60 dark:bg-red-950/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40";
+                } else if (dayOfWeek === 5) {
+                    cellStyle += "bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/40";
+                } else {
+                    cellStyle += "bg-slate-50/70 dark:bg-[#1c2836] text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#253447]";
+                }
 
                 dayCell.className = cellStyle;
                 dayCell.onclick = () => selectCalDate(year, month, day, pasaran, dayOfWeek);
 
+                const hijriColor = isToday ? "text-amber-200" : "text-emerald-600 dark:text-emerald-400";
                 const pasaranColor = isToday ? "text-amber-300" : (dayOfWeek === 0 ? "text-red-400 dark:text-red-400" : "text-slate-400 dark:text-slate-400");
+
                 dayCell.innerHTML = `
-                    <span class="text-xs md:text-sm font-extrabold">${day}</span>
+                    <div class="flex justify-between items-center w-full px-1">
+                        <div class="flex items-center space-x-1">${dotIndicator}</div>
+                        <span class="text-[9px] md:text-[10px] font-bold ${hijriColor}">${calInfo.hijri.day}</span>
+                    </div>
+                    <span class="text-xs md:text-sm font-extrabold my-0.5">${day}</span>
                     <span class="text-[8px] md:text-[9px] font-semibold ${pasaranColor}">${pasaran}</span>
                 `;
                 gridContainer.appendChild(dayCell);
             }
 
-            selectCalDate(today.getFullYear(), today.getMonth(), today.getDate(), getPasaranJawa(today), today.getDay());
+            // Render Daftar Agenda & Hari Besar Bulan Ini
+            renderCalendarEvents(eventsInMonth, month);
+
+            // Set Tanggal Terpilih Default
+            if (month === today.getMonth() && year === today.getFullYear()) {
+                selectCalDate(today.getFullYear(), today.getMonth(), today.getDate(), getPasaranJawa(today), today.getDay());
+            } else {
+                selectCalDate(year, month, 1, getPasaranJawa(firstDateObj), firstDateObj.getDay());
+            }
+        }
+
+        function renderCalendarEvents(events, month) {
+            const container = document.getElementById('calendar-events-container');
+            const countEl = document.getElementById('cal-events-count');
+            if (!container) return;
+
+            if (countEl) {
+                countEl.innerText = `${events.length} Agenda`;
+            }
+
+            if (events.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full p-4 text-center rounded-2xl bg-slate-50 dark:bg-[#1c2836] border border-dashed border-slate-200 dark:border-[#253447] text-xs text-slate-400 dark:text-slate-500">
+                        <i class="fa-solid fa-calendar-check text-base text-slate-300 dark:text-slate-600 mb-1 block"></i>
+                        Tidak ada peringatan hari besar khusus di bulan ${namaBulanIndo[month]}. Kegiatan pengajian & KBM santri berjalan normal.
+                    </div>
+                `;
+                return;
+            }
+
+            const shortMonth = namaBulanIndo[month].substring(0, 3);
+            container.innerHTML = events.map(ev => `
+                <div class="p-3 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-100 dark:border-[#253447] flex items-center space-x-3 transition hover:border-emerald-500/40">
+                    <div class="w-10 h-10 ${ev.boxBg} rounded-xl flex flex-col items-center justify-center font-bold shrink-0 shadow-xs">
+                        <span class="text-xs font-extrabold leading-none">${ev.day}</span>
+                        <span class="text-[8px] uppercase font-semibold leading-none mt-0.5">${shortMonth}</span>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">${ev.title}</h4>
+                            <span class="text-[9px] font-semibold px-1.5 py-0.5 rounded-md ${ev.badgeClass}">${ev.badgeText}</span>
+                        </div>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 truncate">${ev.desc}</p>
+                    </div>
+                </div>
+            `).join('');
         }
 
         function changeCalMonth(delta) {
@@ -532,6 +780,8 @@
         }
 
         function selectCalDate(year, month, day, pasaran, dayOfWeek) {
+            const thisDate = new Date(year, month, day);
+            const info = getIslamicCalendarInfo(thisDate);
             const hari = namaHariIndo[dayOfWeek];
             const bulan = namaBulanIndo[month];
 
@@ -540,13 +790,32 @@
             const tagEl = document.getElementById('selected-date-tag');
 
             if (titleEl) titleEl.innerText = `${hari} ${pasaran}, ${day} ${bulan} ${year}`;
-            if (subtitleEl) subtitleEl.innerText = `Weton: ${hari} ${pasaran} • Kalender Jawa & Nasional`;
+            if (subtitleEl) subtitleEl.innerText = `${info.hijri.formatted} • Weton: ${hari} ${pasaran}`;
+
             if (tagEl) {
-                if (hari === "Jumat") tagEl.innerHTML = `<i class="fa-solid fa-mosque text-emerald-400 mr-1"></i> Sayyidul Ayyam / Kajian Rutin`;
-                else if (hari === "Minggu") tagEl.innerHTML = `<i class="fa-solid fa-mug-hot text-amber-400 mr-1"></i> Hari Libur Kegiatan KBM`;
-                else tagEl.innerHTML = `<i class="fa-solid fa-book-quran text-amber-400 mr-1"></i> Activity Normal Pesantren`;
+                if (info.holiday) {
+                    tagEl.innerHTML = `<i class="fa-solid ${info.holiday.icon} text-amber-300 mr-1.5"></i> ${info.holiday.title}`;
+                } else if (info.isHaramPuasa) {
+                    tagEl.innerHTML = `<i class="fa-solid fa-ban text-rose-300 mr-1.5"></i> Hari Diharamkan Berpuasa`;
+                } else if (info.fastingInfo) {
+                    tagEl.innerHTML = `<i class="fa-solid fa-moon text-emerald-300 mr-1.5"></i> ${info.fastingInfo.name}`;
+                } else if (info.national) {
+                    tagEl.innerHTML = `<i class="fa-solid ${info.national.icon} text-amber-300 mr-1.5"></i> ${info.national.title}`;
+                } else if (hari === "Jumat") {
+                    tagEl.innerHTML = `<i class="fa-solid fa-mosque text-emerald-300 mr-1.5"></i> Sayyidul Ayyam / Kajian Rutin`;
+                } else if (hari === "Minggu") {
+                    tagEl.innerHTML = `<i class="fa-solid fa-mug-hot text-amber-300 mr-1.5"></i> Libur Kegiatan KBM Santri`;
+                } else {
+                    tagEl.innerHTML = `<i class="fa-solid fa-book-quran text-amber-300 mr-1.5"></i> Kegiatan Normal Pesantren`;
+                }
             }
         }
+
+        window.renderCalendar = renderCalendar;
+        window.changeCalMonth = changeCalMonth;
+        window.selectCalDate = selectCalDate;
+        window.getHijriDate = getHijriDate;
+        window.getPasaranJawa = getPasaranJawa;
 
         /**
          * Helper universal untuk tombol aksi / simpan seluruh modul:
