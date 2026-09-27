@@ -96,6 +96,23 @@
             'keuangan': { group: 'keuangan', category: 'Keuangan & Kasir', title: 'Kasir & Tagihan Santri' }
         };
 
+        
+        /**
+         * Navigasi Kembali Cerdas untuk Header Mobile Admin
+         */
+        function backFromAdminMobileNav() {
+            const curActive = document.querySelector('.admin-nav-item.active');
+            const viewKey = curActive ? curActive.dataset.view : 'hub';
+            if (viewKey && viewKey !== 'hub') {
+                showAdminView('hub');
+            } else {
+                if (typeof switchTab === 'function') {
+                    switchTab('pengaturan');
+                }
+            }
+        }
+        window.backFromAdminMobileNav = backFromAdminMobileNav;
+
         function toggleAdminAccordion(groupId, forceOpen) {
             if (adminSidebarCollapsed) {
                 toggleAdminSidebar();
@@ -174,6 +191,19 @@
                 toggleAdminAccordion(meta.group, true);
             } else {
                 toggleAdminAccordion(null, false);
+            }
+
+            // Update Mobile Admin Header Bar
+            const mobBackText = document.getElementById('admin-mobile-back-text');
+            const mobHeaderBadge = document.getElementById('admin-mobile-header-badge');
+            if (mobBackText && mobHeaderBadge) {
+                if (viewName === 'hub') {
+                    mobBackText.textContent = 'Kembali ke Pengaturan';
+                    mobHeaderBadge.textContent = 'Pusat Kontrol';
+                } else {
+                    mobBackText.textContent = 'Dashboard Hub';
+                    mobHeaderBadge.textContent = meta.title || 'Panel Layanan';
+                }
             }
 
             // Update Breadcrumb Desktop
@@ -285,6 +315,12 @@
                     loadAdminPresensiData();
                 }
             } else if (viewName === 'keuangan') {
+                if (typeof checkKeuanganRoleAccess === 'function') {
+                    const chk = checkKeuanganRoleAccess();
+                    if (!chk.isAllowed && typeof showToast === 'function') {
+                        showToast("⚠️ Akses Terbatas: Fitur Keuangan khusus untuk Super Admin, Admin, dan Bendahara.");
+                    }
+                }
                 if (keuanganView) keuanganView.classList.remove('hidden');
                 if (typeof loadAdminKeuanganData === 'function') {
                     loadAdminKeuanganData();
@@ -379,12 +415,6 @@
          * - Pada desktop, kembali ke Hub Menu Admin
          */
         function backFromAdminModule() {
-            if (window.innerWidth < 1024) {
-                if (typeof switchTab === 'function') {
-                    switchTab('pengaturan');
-                    return;
-                }
-            }
             showAdminView('hub');
         }
         window.backFromAdminModule = backFromAdminModule;

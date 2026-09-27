@@ -81,12 +81,69 @@ function getNamaBulanIndo(bulanNum) {
 }
 window.getNamaBulanIndo = getNamaBulanIndo;
 
+// ====================================================================
+// ROLE ACCESS CONTROL (SUPER_ADMIN, ADMIN, BENDAHARA)
+// ====================================================================
+
+function getKeuanganActiveRole() {
+    let r = (typeof ASNIdentity !== 'undefined' && ASNIdentity.currentRole) || 
+            sessionStorage.getItem('ASN_ADMIN_ROLE') || 
+            sessionStorage.getItem('mubarokah_admin_role') || 'SUPER_ADMIN';
+    return String(r).toUpperCase().trim();
+}
+window.getKeuanganActiveRole = getKeuanganActiveRole;
+
+function checkKeuanganRoleAccess() {
+    const role = getKeuanganActiveRole();
+    const isAllowed = ['SUPER_ADMIN', 'ADMIN', 'BENDAHARA'].includes(role);
+    return { isAllowed, role };
+}
+window.checkKeuanganRoleAccess = checkKeuanganRoleAccess;
+
 /**
  * Muat data lengkap dashboard Keuangan dengan pola SWR (Stale-While-Revalidate)
  */
 async function loadAdminKeuanganData(forceRefresh = false) {
     const loader = document.getElementById('admin-keuangan-loader');
     const refreshIcon = document.getElementById('btn-refresh-keuangan-icon');
+
+    // 0. Cek Hak Akses Role Khusus (SUPER_ADMIN, ADMIN, BENDAHARA)
+    const roleCheck = checkKeuanganRoleAccess();
+    const deniedEl = document.getElementById('keuangan-access-denied');
+    const mainEl = document.getElementById('keuangan-main-content');
+    const roleBadgeEl = document.getElementById('keuangan-operator-role');
+    const roleIconEl = document.getElementById('keuangan-operator-icon');
+
+    if (!roleCheck.isAllowed) {
+        if (mainEl) mainEl.classList.add('hidden');
+        if (deniedEl) {
+            deniedEl.classList.remove('hidden');
+            const roleNameEl = document.getElementById('keuangan-denied-role-name');
+            if (roleNameEl) roleNameEl.innerText = roleCheck.role || "AKUN TERBATAS";
+        }
+        if (loader) loader.classList.add('hidden');
+        return false;
+    }
+
+    if (deniedEl) deniedEl.classList.add('hidden');
+    if (mainEl) mainEl.classList.remove('hidden');
+    if (roleBadgeEl) {
+        const roleLabels = {
+            'SUPER_ADMIN': 'Super Admin',
+            'ADMIN': 'Administrator',
+            'BENDAHARA': 'Bendahara Pesantren'
+        };
+        roleBadgeEl.innerText = roleLabels[roleCheck.role] || roleCheck.role;
+    }
+    if (roleIconEl) {
+        if (roleCheck.role === 'SUPER_ADMIN') {
+            roleIconEl.className = "fa-solid fa-crown text-[8px] text-amber-500";
+        } else if (roleCheck.role === 'ADMIN') {
+            roleIconEl.className = "fa-solid fa-shield-halved text-[8px] text-indigo-500";
+        } else {
+            roleIconEl.className = "fa-solid fa-wallet text-[8px] text-emerald-600";
+        }
+    }
 
     if (refreshIcon && forceRefresh) {
         refreshIcon.classList.add('fa-spin');
@@ -567,8 +624,37 @@ function calcKeuanganPOSTotal() {
             btnSubmit.classList.add('opacity-50', 'cursor-not-allowed');
         }
     }
+
+    // Update Floating Sticky Bottom Bar khusus Mobile POS
+    const mobileBar = document.getElementById('keuangan-pos-mobile-bar');
+    const mobileTotal = document.getElementById('keuangan-pos-mobile-total');
+    const mobileCount = document.getElementById('keuangan-pos-mobile-count');
+    const selCount = ASNKeuangan.pos.selectedTagihanIds.size;
+
+    if (mobileTotal) mobileTotal.innerText = formatRupiah(subtotal);
+    if (mobileCount) mobileCount.innerText = `${selCount} Tagihan Dipilih`;
+    if (mobileBar) {
+        if (subtotal > 0 && selCount > 0) {
+            mobileBar.classList.remove('hidden');
+        } else {
+            mobileBar.classList.add('hidden');
+        }
+    }
 }
 window.calcKeuanganPOSTotal = calcKeuanganPOSTotal;
+
+function scrollKeuanganPOSToCheckout() {
+    const target = document.getElementById('keuangan-pos-wrap-diterima') || document.getElementById('keuangan-pos-btn-submit');
+    if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const btn = document.getElementById('keuangan-pos-btn-submit');
+        if (btn) {
+            btn.classList.add('ring-4', 'ring-emerald-400');
+            setTimeout(() => btn.classList.remove('ring-4', 'ring-emerald-400'), 1500);
+        }
+    }
+}
+window.scrollKeuanganPOSToCheckout = scrollKeuanganPOSToCheckout;
 
 function setKeuanganPOSMetode(metode) {
     ASNKeuangan.pos.metodeBayar = metode;
@@ -706,6 +792,9 @@ function resetKeuanganPOS() {
 
     const container = document.getElementById('keuangan-pos-tagihan-container');
     if (container) container.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Pilih santri terlebih dahulu untuk menampilkan tagihan.</p>`;
+
+    const mobileBar = document.getElementById('keuangan-pos-mobile-bar');
+    if (mobileBar) mobileBar.classList.add('hidden');
 
     calcKeuanganPOSTotal();
 }
@@ -1041,18 +1130,22 @@ window.submitGenerateBulkTagihan = submitGenerateBulkTagihan;
 
 function renderKeuanganTransaksiTable() {
     const tbody = document.getElementById('keuangan-transaksi-table-body');
+    const mobileList = document.getElementById('keuangan-transaksi-mobile-list');
     const list = ASNKeuangan.data.recentTransactions || [];
 
-    if (!tbody) return;
+    if (!tbody && !mobileList) return;
 
     if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-xs text-slate-400">Belum ada riwayat transaksi pembayaran.</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-xs text-slate-400">Belum ada riwayat transaksi pembayaran.</td></tr>`;
+        if (mobileList) mobileList.innerHTML = `<div class="p-6 text-center bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] text-xs text-slate-400"><i class="fa-solid fa-receipt text-2xl text-slate-300 dark:text-slate-600 block mb-1.5"></i>Belum ada riwayat transaksi pembayaran kasir.</div>`;
         return;
     }
 
-    let html = '';
+    let htmlDesktop = '';
+    let htmlMobile = '';
+
     list.forEach((trx, idx) => {
-        html += `
+        htmlDesktop += `
             <tr class="hover:bg-slate-50/80 dark:hover:bg-[#1a2636]/60 transition border-b border-slate-100 dark:border-[#202f42] text-xs">
                 <td class="p-3 text-center text-slate-400 font-medium">${idx + 1}</td>
                 <td class="p-3 font-mono font-bold text-emerald-700 dark:text-emerald-400">${escapeHtml(trx.noKuitansi)}</td>
@@ -1072,9 +1165,49 @@ function renderKeuanganTransaksiTable() {
                 </td>
             </tr>
         `;
+
+        htmlMobile += `
+            <div class="p-3.5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-xs space-y-2.5">
+                <div class="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-[#202f42] pb-2">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-receipt"></i>
+                        </div>
+                        <span class="font-mono text-xs font-bold text-emerald-700 dark:text-emerald-400">${escapeHtml(trx.noKuitansi)}</span>
+                    </div>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#253447]">
+                        ${escapeHtml(trx.metodeBayar)}
+                    </span>
+                </div>
+                <div class="flex items-start justify-between gap-2">
+                    <div>
+                        <div class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(trx.studentName)}</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">${formatTglIndo(trx.tanggalBayar)}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm font-black text-emerald-600 dark:text-emerald-400">${formatRupiah(trx.nominalTotal)}</div>
+                        <span class="text-[9px] text-slate-400">Total Diterima</span>
+                    </div>
+                </div>
+                <div class="pt-1 flex items-center gap-2">
+                    <button type="button" onclick="openKuitansiModal(${escapeHtml(JSON.stringify(trx))})"
+                        class="flex-1 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 dark:text-emerald-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border border-emerald-200 dark:border-emerald-800">
+                        <i class="fa-solid fa-receipt text-xs"></i>
+                        <span>Buka Kuitansi</span>
+                    </button>
+                    ${trx.phone ? `
+                        <button type="button" onclick="shareKuitansiWhatsApp(${escapeHtml(JSON.stringify(trx))})"
+                            class="py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1" title="Kirim ke WhatsApp">
+                            <i class="fa-brands fa-whatsapp text-sm"></i>
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        `;
     });
 
-    tbody.innerHTML = html;
+    if (tbody) tbody.innerHTML = htmlDesktop;
+    if (mobileList) mobileList.innerHTML = htmlMobile;
 }
 window.renderKeuanganTransaksiTable = renderKeuanganTransaksiTable;
 
@@ -1177,16 +1310,20 @@ window.populateKeuanganTagihanProgramFilter = populateKeuanganTagihanProgramFilt
 
 function renderKeuanganTarifTable() {
     const tbody = document.getElementById('keuangan-tarif-table-body');
+    const mobileList = document.getElementById('keuangan-tarif-mobile-list');
     const list = ASNKeuangan.data.tarifList || [];
 
-    if (!tbody) return;
+    if (!tbody && !mobileList) return;
 
     if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-xs text-slate-400">Belum ada master tarif biaya terdaftar.</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-xs text-slate-400">Belum ada master tarif biaya terdaftar.</td></tr>`;
+        if (mobileList) mobileList.innerHTML = `<div class="p-6 text-center bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] text-xs text-slate-400"><i class="fa-solid fa-tags text-2xl text-slate-300 dark:text-slate-600 block mb-1.5"></i>Belum ada master tarif biaya terdaftar.</div>`;
         return;
     }
 
-    let html = '';
+    let htmlDesktop = '';
+    let htmlMobile = '';
+
     list.forEach((trf, idx) => {
         const isAllProg = (!trf.program || trf.program === 'SEMUA' || trf.program.toUpperCase() === 'SEMUA SANTRI' || trf.program.toUpperCase() === 'SEMUA PROGRAM');
         const progBadge = isAllProg
@@ -1195,7 +1332,7 @@ function renderKeuanganTarifTable() {
                 <i class="fa-solid fa-graduation-cap text-[9px]"></i> ${escapeHtml(trf.program)}
                </span>`;
 
-        html += `
+        htmlDesktop += `
             <tr class="hover:bg-slate-50/80 dark:hover:bg-[#1a2636]/60 transition border-b border-slate-100 dark:border-[#202f42] text-xs">
                 <td class="p-3 text-center text-slate-400 font-medium">${idx + 1}</td>
                 <td class="p-3 font-bold text-slate-800 dark:text-slate-100">${escapeHtml(trf.namaPos)}</td>
@@ -1223,9 +1360,45 @@ function renderKeuanganTarifTable() {
                 </td>
             </tr>
         `;
+
+        htmlMobile += `
+            <div class="p-3.5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-xs space-y-2.5">
+                <div class="flex items-start justify-between gap-2">
+                    <div>
+                        <div class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(trf.namaPos)}</div>
+                        <div class="flex items-center gap-1.5 mt-1 flex-wrap">
+                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${trf.kategori === 'BULANAN' ? 'bg-teal-50 text-teal-700 border border-teal-200/50' : 'bg-amber-50 text-amber-700 border border-amber-200/50'}">
+                                ${escapeHtml(trf.kategori)}
+                            </span>
+                            ${progBadge}
+                        </div>
+                    </div>
+                    <span class="px-2 py-0.5 rounded text-[9px] font-bold shrink-0 ${trf.isActive ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/50' : 'bg-slate-100 text-slate-400'}">
+                        ${trf.isActive ? 'Aktif' : 'Non-Aktif'}
+                    </span>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-[#202f42]">
+                    <div>
+                        <span class="text-[9px] text-slate-400 block">Nominal Standar</span>
+                        <div class="text-sm font-black text-slate-800 dark:text-slate-100">${formatRupiah(trf.nominalDefault)}</div>
+                    </div>
+                    <div class="flex items-center space-x-1.5">
+                        <button type="button" onclick="openTarifModal('${escapeHtml(trf.tarifId)}')"
+                            class="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 rounded-xl text-xs font-bold transition flex items-center gap-1">
+                            <i class="fa-solid fa-pen-to-square text-[10px]"></i> Edit
+                        </button>
+                        <button type="button" onclick="deleteMasterTarif('${escapeHtml(trf.tarifId)}')"
+                            class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400 rounded-xl text-xs font-bold transition" title="Hapus">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
     });
 
-    tbody.innerHTML = html;
+    if (tbody) tbody.innerHTML = htmlDesktop;
+    if (mobileList) mobileList.innerHTML = htmlMobile;
 }
 window.renderKeuanganTarifTable = renderKeuanganTarifTable;
 

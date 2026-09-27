@@ -239,7 +239,7 @@
         'notifikasi': ['notifikasi.broadcast'],
         'profil-lembaga': ['profil.manage'],
         'pengaturan': ['system.config'],
-        'keuangan': ['keuangan.view', 'keuangan.spp']
+        'keuangan': ['keuangan.view', 'keuangan.spp', 'keuangan.verify']
     };
 
     // Default Baseline Permissions per Role
@@ -1197,12 +1197,14 @@
     const ROLE_ALLOWED_MODULES = {
         'SUPER_ADMIN': [
             'santri', 'tahfidz', 'tpq', 'sorogan', 'presensi', 'ppdb', 'program', 'unit-kegiatan',
+            'keuangan',
             'users', 'roles', 'pegawai',
             'berita', 'banner', 'galeri', 'notifikasi',
             'profil-lembaga', 'pengaturan'
         ],
         'ADMIN': [
             'santri', 'tahfidz', 'tpq', 'sorogan', 'presensi', 'ppdb', 'program', 'unit-kegiatan',
+            'keuangan',
             'users', 'roles', 'pegawai',
             'berita', 'banner', 'galeri', 'notifikasi',
             'profil-lembaga', 'pengaturan'
@@ -1211,7 +1213,7 @@
             'tahfidz', 'tpq', 'sorogan', 'presensi', 'santri', 'pegawai', 'profil-lembaga'
         ],
         'BENDAHARA': [
-            'santri', 'ppdb', 'notifikasi', 'pegawai', 'profil-lembaga'
+            'keuangan', 'santri', 'ppdb', 'notifikasi', 'pegawai', 'profil-lembaga'
         ],
         'PENGURUS': [
             'presensi', 'unit-kegiatan', 'ppdb', 'santri', 'berita', 'banner', 'galeri', 'notifikasi', 'profil-lembaga'
@@ -1312,9 +1314,9 @@
             noticeIconClass: 'fa-wallet text-emerald-600 dark:text-emerald-400',
             noticeBadgeClass: 'bg-emerald-200/70 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
             kpis: [
-                { label: 'Kas & Keuangan Pondok', icon: 'fa-vault', color: 'emerald', value: 'Tercatat', sub: 'Buku Kas Resmi' },
+                { label: 'Kas Masuk Bulan Ini', icon: 'fa-vault', color: 'emerald', valueKey: 'keuangan_kas', sub: 'Penerimaan Loket' },
                 { label: 'Total Santri Terdata', icon: 'fa-users', color: 'teal', valueKey: 'santri', sub: 'Subjek Iuran' },
-                { label: 'Verifikasi Pembayaran PPDB', icon: 'fa-file-invoice-dollar', color: 'amber', valueKey: 'ppdb', sub: 'Pendaftar Baru' },
+                { label: 'Tunggakan Belum Lunas', icon: 'fa-file-invoice-dollar', color: 'amber', valueKey: 'keuangan_tunggakan', sub: 'Piutang Aktif' },
                 { label: 'Broadcast Tagihan', icon: 'fa-bell', color: 'rose', value: 'Tersedia', sub: 'Notifikasi Wali' }
             ]
         },
@@ -1462,6 +1464,18 @@
         }
         if (valueKey === 'ppdb') {
             return (typeof adminPPDBList !== 'undefined' && Array.isArray(adminPPDBList)) ? adminPPDBList.length + ' Santri' : '0 Pendaftar';
+        }
+        if (valueKey === 'keuangan_kas') {
+            if (typeof ASNKeuangan !== 'undefined' && ASNKeuangan.data && ASNKeuangan.data.summary && ASNKeuangan.data.summary.totalPendapatanBulanIni > 0) {
+                return typeof formatRupiah === 'function' ? formatRupiah(ASNKeuangan.data.summary.totalPendapatanBulanIni) : 'Rp ' + ASNKeuangan.data.summary.totalPendapatanBulanIni;
+            }
+            return 'Aktif';
+        }
+        if (valueKey === 'keuangan_tunggakan') {
+            if (typeof ASNKeuangan !== 'undefined' && ASNKeuangan.data && ASNKeuangan.data.summary && ASNKeuangan.data.summary.totalTunggakan > 0) {
+                return typeof formatRupiah === 'function' ? formatRupiah(ASNKeuangan.data.summary.totalTunggakan) : 'Rp ' + ASNKeuangan.data.summary.totalTunggakan;
+            }
+            return 'Terpantau';
         }
         return '-';
     }
