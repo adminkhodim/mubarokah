@@ -792,6 +792,46 @@ function doPost(e) {
     }
 
     // ========================================================
+    // KEUANGAN & PEMBAYARAN SANTRI ACTIONS (doPost)
+    // ========================================================
+    if (action === "getKeuanganDashboard" || action === "keuangan.dashboard" || action === "keuangan.getDashboard") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(getKeuanganDashboard(token));
+    }
+
+    if (action === "getStudentBilling" || action === "keuangan.studentBilling" || action === "keuangan.getStudentBilling") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      const studentId = payload.studentId || (payload.data && payload.data.studentId) || "";
+      return createJsonResponse(getStudentBilling(studentId, token));
+    }
+
+    if (action === "bayarTagihan" || action === "keuangan.bayarTagihan" || action === "prosesPembayaranTagihan") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(prosesPembayaranTagihan(payload.data || payload, token));
+    }
+
+    if (action === "generateBulkMonthlyBills" || action === "keuangan.generateBulanan" || action === "generateBulkTagihan") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(generateBulkMonthlyBills(payload.data || payload, token));
+    }
+
+    if (action === "saveMasterTarif" || action === "keuangan.saveTarif") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(saveMasterTarif(payload.data || payload, token));
+    }
+
+    if (action === "deleteMasterTarif" || action === "keuangan.deleteTarif") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      const tarifId = payload.tarifId || (payload.data && payload.data.tarifId) || "";
+      return createJsonResponse(deleteMasterTarif(tarifId, token));
+    }
+
+    if (action === "initKeuanganSheets" || action === "keuangan.initSheets") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(initKeuanganSheets(token));
+    }
+
+    // ========================================================
     // DATA PEGAWAI (ASATIDZ & KARYAWAN) ACTIONS (doPost)
     // ========================================================
     if (action === "getEmployees" || action === "employee.list") {
@@ -1866,6 +1906,17 @@ function doGet(e) {
       if (e.parameter.kegiatanId) filter.kegiatanId = e.parameter.kegiatanId;
       if (e.parameter.gender) filter.gender = e.parameter.gender;
       return createJsonResponse(getPresensiRekap(filter, token));
+    }
+
+    if (action === "getKeuanganDashboard" || action === "keuangan.dashboard" || action === "keuangan.getDashboard") {
+      const token = e.parameter.token || null;
+      return createJsonResponse(getKeuanganDashboard(token));
+    }
+
+    if (action === "getStudentBilling" || action === "keuangan.studentBilling" || action === "keuangan.getStudentBilling") {
+      const token = e.parameter.token || null;
+      const studentId = e.parameter.studentId || e.parameter.student_id || null;
+      return createJsonResponse(getStudentBilling(studentId, token));
     }
 
     // ========================================================
@@ -17613,6 +17664,622 @@ function getPresensiRekap(filter, token) {
     return { status: "error", success: false, ok: false, message: err.message };
   }
 }
+
+// ====================================================================
+// MODUL KEUANGAN & PEMBAYARAN SANTRI (TAHAP 1: KASIR & TAGIHAN RUTIN)
+// PPTQ Roudlotul Mubarokah Kudus
+// ====================================================================
+
+const SHEET_KEUANGAN_TARIF = "Keuangan_Tarif";
+const SHEET_KEUANGAN_TAGIHAN = "Keuangan_Tagihan";
+const SHEET_KEUANGAN_TRANSAKSI = "Keuangan_Transaksi";
+
+function getOrCreateKeuanganSheet(ss, sheetName, headers, bgHeaderColor) {
+  let sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.getRange(1, 1, 1, headers.length)
+      .setFontWeight("bold")
+      .setBackground(bgHeaderColor || "#0d9488")
+      .setFontColor("#ffffff");
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function initKeuanganSheets(token) {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error("Spreadsheet database tidak ditemukan.");
+
+    // 1. Sheet Master Tarif
+    const headersTarif = ["tarif_id", "nama_pos", "kategori", "tipe_periode", "nominal_default", "program", "is_active", "created_at"];
+    const tSheet = getOrCreateKeuanganSheet(ss, SHEET_KEUANGAN_TARIF, headersTarif, "#0f766e");
+    
+    // Seed default master tarif jika sheet baru dibuat / kosong
+    if (tSheet.getLastRow() <= 1) {
+      const nowIso = new Date().toISOString();
+      const defaultTarifs = [
+        ["TRF-SPP-01", "SPP & Syahriah Pesantren", "BULANAN", "BULANAN", 350000, "SEMUA", "TRUE", nowIso],
+        ["TRF-MKN-01", "Katering & Makan Santri", "BULANAN", "BULANAN", 250000, "SEMUA", "TRUE", nowIso],
+        ["TRF-DU-01", "Daftar Ulang Tahunan", "TAHUNAN", "TAHUNAN", 500000, "SEMUA", "TRUE", nowIso],
+        ["TRF-KTB-01", "Kitab Kuning & Yanbu'a", "INSIDENTAL", "TAHUNAN", 150000, "SEMUA", "TRUE", nowIso],
+        ["TRF-GDG-01", "Uang Gedung & Sarpras", "INSIDENTAL", "INSIDENTAL", 1000000, "SEMUA", "TRUE", nowIso]
+      ];
+      tSheet.getRange(2, 1, defaultTarifs.length, headersTarif.length).setValues(defaultTarifs);
+    }
+
+    // 2. Sheet Tagihan Santri
+    const headersTagihan = ["tagihan_id", "student_id", "student_name", "pos_id", "nama_pos", "periode", "nominal_tagihan", "nominal_terbayar", "sisa_tagihan", "status", "due_date", "updated_at"];
+    getOrCreateKeuanganSheet(ss, SHEET_KEUANGAN_TAGIHAN, headersTagihan, "#b45309");
+
+    // 3. Sheet Transaksi / Buku Kas
+    const headersTransaksi = ["transaksi_id", "no_kuitansi", "tanggal_bayar", "student_id", "student_name", "tagihan_ids_json", "nominal_total", "metode_bayar", "nama_kasir", "catatan", "created_at"];
+    getOrCreateKeuanganSheet(ss, SHEET_KEUANGAN_TRANSAKSI, headersTransaksi, "#1e3a8a");
+
+    return {
+      status: "success",
+      success: true,
+      message: "Sheet Keuangan berhasil diinisialisasi dengan struktur standar."
+    };
+  } catch (err) {
+    return { status: "error", success: false, message: "Gagal inisialisasi sheet keuangan: " + err.message };
+  }
+}
+
+function getKeuanganDashboard(token) {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error("Spreadsheet database tidak ditemukan.");
+
+    // Pastikan sheet master tarif & tagihan siap
+    const headersTarif = ["tarif_id", "nama_pos", "kategori", "tipe_periode", "nominal_default", "program", "is_active", "created_at"];
+    const tSheet = getOrCreateKeuanganSheet(ss, SHEET_KEUANGAN_TARIF, headersTarif, "#0f766e");
+    if (tSheet.getLastRow() <= 1) {
+      initKeuanganSheets(token);
+    }
+
+    const headersTagihan = ["tagihan_id", "student_id", "student_name", "pos_id", "nama_pos", "periode", "nominal_tagihan", "nominal_terbayar", "sisa_tagihan", "status", "due_date", "updated_at"];
+    const tagihanSheet = getOrCreateKeuanganSheet(ss, SHEET_KEUANGAN_TAGIHAN, headersTagihan, "#b45309");
+
+    const headersTransaksi = ["transaksi_id", "no_kuitansi", "tanggal_bayar", "student_id", "student_name", "tagihan_ids_json", "nominal_total", "metode_bayar", "nama_kasir", "catatan", "created_at"];
+    const trxSheet = getOrCreateKeuanganSheet(ss, SHEET_KEUANGAN_TRANSAKSI, headersTransaksi, "#1e3a8a");
+
+    // 1. Ambil Master Tarif
+    const tarifList = [];
+    const tData = tSheet.getDataRange().getValues();
+    if (tData.length >= 2) {
+      for (let i = 1; i < tData.length; i++) {
+        const row = tData[i];
+        if (row[0]) {
+          tarifList.push({
+            tarifId: String(row[0]).trim(),
+            namaPos: String(row[1] || "").trim(),
+            kategori: String(row[2] || "BULANAN").trim(),
+            tipePeriode: String(row[3] || "BULANAN").trim(),
+            nominalDefault: Number(row[4]) || 0,
+            program: String(row[5] || "SEMUA").trim(),
+            isActive: String(row[6]).toUpperCase() === "TRUE",
+            createdAt: String(row[7] || "").trim()
+          });
+        }
+      }
+    }
+
+    // 2. Ambil Master Santri (untuk search & info santri di POS)
+    const studentsSheet = ss.getSheetByName(SHEET_STUDENTS);
+    const students = [];
+    if (studentsSheet) {
+      const sData = studentsSheet.getDataRange().getValues();
+      if (sData.length >= 2) {
+        const sHead = sData[0].map(h => String(h || "").trim().toLowerCase());
+        const idIdx = sHead.indexOf("student_id");
+        const nisIdx = sHead.indexOf("nis");
+        const nameIdx = sHead.indexOf("name");
+        const genderIdx = sHead.indexOf("gender");
+        const programIdx = sHead.indexOf("program");
+        const statusIdx = sHead.indexOf("status");
+        const photoIdx = sHead.indexOf("photo_url");
+
+        for (let i = 1; i < sData.length; i++) {
+          const stStatus = statusIdx !== -1 ? String(sData[i][statusIdx] || "").trim().toUpperCase() : "AKTIF";
+          if (["AKTIF", "ACTIVE", ""].includes(stStatus)) {
+            students.push({
+              studentId: String(sData[i][idIdx] || "").trim(),
+              nis: String(sData[i][nisIdx] || "").trim(),
+              name: String(sData[i][nameIdx] || "").trim(),
+              gender: String(sData[i][genderIdx] || "L").trim().toUpperCase(),
+              program: programIdx !== -1 ? String(sData[i][programIdx] || "Tahfidz").trim() : "Tahfidz",
+              photoUrl: photoIdx !== -1 ? String(sData[i][photoIdx] || "").trim() : "",
+              status: "AKTIF"
+            });
+          }
+        }
+      }
+    }
+
+    // 3. Ambil Tagihan Santri & Hitung Agregat
+    const tagihanList = [];
+    let totalTunggakan = 0;
+    let countLunas = 0;
+    let countBelumLunas = 0;
+
+    const tagihanData = tagihanSheet.getDataRange().getValues();
+    if (tagihanData.length >= 2) {
+      for (let i = 1; i < tagihanData.length; i++) {
+        const r = tagihanData[i];
+        if (r[0]) {
+          const nomTagihan = Number(r[6]) || 0;
+          const nomTerbayar = Number(r[7]) || 0;
+          const sisa = Math.max(0, nomTagihan - nomTerbayar);
+          const stStatus = String(r[9] || "BELUM_BAYAR").trim().toUpperCase();
+
+          if (stStatus === "LUNAS") {
+            countLunas++;
+          } else {
+            countBelumLunas++;
+            totalTunggakan += sisa;
+          }
+
+          tagihanList.push({
+            tagihanId: String(r[0]).trim(),
+            studentId: String(r[1] || "").trim(),
+            studentName: String(r[2] || "").trim(),
+            posId: String(r[3] || "").trim(),
+            namaPos: String(r[4] || "").trim(),
+            periode: String(r[5] || "").trim(),
+            nominalTagihan: nomTagihan,
+            nominalTerbayar: nomTerbayar,
+            sisaTagihan: sisa,
+            status: stStatus,
+            dueDate: String(r[10] || "").substring(0, 10),
+            updatedAt: String(r[11] || "").trim()
+          });
+        }
+      }
+    }
+
+    // 4. Ambil Riwayat Transaksi Terbaru (50 data terakhir)
+    const recentTransactions = [];
+    let totalPendapatanBulanIni = 0;
+    const currentMonthPrefix = new Date().toISOString().substring(0, 7); // e.g. "2026-09"
+
+    const trxData = trxSheet.getDataRange().getValues();
+    if (trxData.length >= 2) {
+      // Loop dari paling baru ke lama
+      for (let i = trxData.length - 1; i >= 1; i--) {
+        const r = trxData[i];
+        if (r[0]) {
+          const nomTotal = Number(r[6]) || 0;
+          const tglStr = String(r[2] || "").trim();
+
+          if (tglStr.startsWith(currentMonthPrefix)) {
+            totalPendapatanBulanIni += nomTotal;
+          }
+
+          if (recentTransactions.length < 50) {
+            let rincianItems = [];
+            try {
+              const rawJson = String(r[5] || "");
+              if (rawJson.startsWith("[")) {
+                rincianItems = JSON.parse(rawJson);
+              }
+            } catch (e) {}
+
+            recentTransactions.push({
+              transaksiId: String(r[0]).trim(),
+              noKuitansi: String(r[1] || "").trim(),
+              tanggalBayar: tglStr,
+              studentId: String(r[3] || "").trim(),
+              studentName: String(r[4] || "").trim(),
+              rincianItems: rincianItems,
+              nominalTotal: nomTotal,
+              metodeBayar: String(r[7] || "TUNAI").trim(),
+              namaKasir: String(r[8] || "-").trim(),
+              catatan: String(r[9] || "").trim(),
+              createdAt: String(r[10] || "").trim()
+            });
+          }
+        }
+      }
+    }
+
+    const totalTagihanSemua = countLunas + countBelumLunas;
+    const persentasePelunasan = totalTagihanSemua > 0 ? Math.round((countLunas / totalTagihanSemua) * 100) : 100;
+
+    return {
+      status: "success",
+      success: true,
+      summary: {
+        totalPendapatanBulanIni: totalPendapatanBulanIni,
+        totalTunggakan: totalTunggakan,
+        countLunas: countLunas,
+        countBelumLunas: countBelumLunas,
+        persentasePelunasan: persentasePelunasan,
+        totalSantriAktif: students.length
+      },
+      tarifList: tarifList,
+      tagihanList: tagihanList,
+      recentTransactions: recentTransactions,
+      students: students
+    };
+  } catch (err) {
+    console.error("[GET KEUANGAN DASHBOARD ERROR]", err);
+    return { status: "error", success: false, message: "Gagal memuat dashboard keuangan: " + err.message };
+  }
+}
+
+function getStudentBilling(studentId, token) {
+  try {
+    const sId = String(studentId || "").trim();
+    if (!sId) throw new Error("ID Santri wajib disertakan.");
+
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error("Spreadsheet database tidak ditemukan.");
+
+    const tagihanSheet = ss.getSheetByName(SHEET_KEUANGAN_TAGIHAN);
+    const tagihanSantri = [];
+
+    if (tagihanSheet) {
+      const data = tagihanSheet.getDataRange().getValues();
+      if (data.length >= 2) {
+        for (let i = 1; i < data.length; i++) {
+          const r = data[i];
+          if (String(r[1] || "").trim() === sId) {
+            const nomTagihan = Number(r[6]) || 0;
+            const nomTerbayar = Number(r[7]) || 0;
+            const sisa = Math.max(0, nomTagihan - nomTerbayar);
+            tagihanSantri.push({
+              tagihanId: String(r[0]).trim(),
+              posId: String(r[3] || "").trim(),
+              namaPos: String(r[4] || "").trim(),
+              periode: String(r[5] || "").trim(),
+              nominalTagihan: nomTagihan,
+              nominalTerbayar: nomTerbayar,
+              sisaTagihan: sisa,
+              status: String(r[9] || "BELUM_BAYAR").trim().toUpperCase(),
+              dueDate: String(r[10] || "").substring(0, 10)
+            });
+          }
+        }
+      }
+    }
+
+    return {
+      status: "success",
+      success: true,
+      studentId: sId,
+      tagihanList: tagihanSantri
+    };
+  } catch (err) {
+    return { status: "error", success: false, message: err.message };
+  }
+}
+
+function prosesPembayaranTagihan(payload, token) {
+  return withScriptLock(() => {
+    try {
+      const ss = getDatabaseSpreadsheet();
+      if (!ss) throw new Error("Spreadsheet database tidak ditemukan.");
+
+      const studentId = String(payload.studentId || "").trim();
+      const studentName = String(payload.studentName || "").trim();
+      const nis = String(payload.nis || "").trim();
+      const metodeBayar = String(payload.metodeBayar || "TUNAI").trim().toUpperCase();
+      const catatan = String(payload.catatan || "").trim();
+      let namaKasir = String(payload.namaKasir || "").trim();
+
+      if (!namaKasir && token) {
+        try {
+          const actor = authenticateSession(token);
+          if (actor && actor.name) namaKasir = actor.name;
+        } catch (e) {}
+      }
+      if (!namaKasir) namaKasir = "Bendahara Pesantren";
+
+      const items = Array.isArray(payload.items) ? payload.items : [];
+      if (items.length === 0) throw new Error("Pilih minimal satu pos tagihan yang ingin dibayar.");
+
+      const tagihanSheet = ss.getSheetByName(SHEET_KEUANGAN_TAGIHAN);
+      const trxSheet = ss.getSheetByName(SHEET_KEUANGAN_TRANSAKSI);
+      if (!tagihanSheet || !trxSheet) throw new Error("Sheet keuangan belum siap. Silakan inisialisasi terlebih dahulu.");
+
+      // 1. Generate Nomor Kuitansi Unik
+      const now = new Date();
+      const yr = now.getFullYear();
+      const mo = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      const dateStr = `${yr}-${mo}-${day}`;
+      const nowIso = now.toISOString();
+
+      const lastTrxRow = trxSheet.getLastRow();
+      const counter = String(Math.max(1, lastTrxRow)).padStart(4, "0");
+      const noKuitansi = `KW/RM/${yr}/${mo}/${counter}`;
+      const transaksiId = `TRX-${yr}${mo}${day}-${Date.now().toString().slice(-4)}`;
+
+      // 2. Baca seluruh data tagihan untuk update status
+      const tData = tagihanSheet.getDataRange().getValues();
+      let totalNominalBayar = 0;
+      const rincianKuitansi = [];
+
+      items.forEach(item => {
+        const tId = String(item.tagihanId || "").trim();
+        const bayarNom = Number(item.bayarNominal) || 0;
+        if (!tId || bayarNom <= 0) return;
+
+        // Cari row tagihan
+        for (let i = 1; i < tData.length; i++) {
+          if (String(tData[i][0]).trim() === tId) {
+            const rowNumber = i + 1;
+            const nomTagihan = Number(tData[i][6]) || 0;
+            const curTerbayar = Number(tData[i][7]) || 0;
+            const newTerbayar = curTerbayar + bayarNom;
+            const newSisa = Math.max(0, nomTagihan - newTerbayar);
+            const newStatus = newSisa <= 0 ? "LUNAS" : "SEBAGIAN";
+
+            // Update sel di Google Sheets
+            tagihanSheet.getRange(rowNumber, 8).setValue(newTerbayar); // nominal_terbayar
+            tagihanSheet.getRange(rowNumber, 9).setValue(newSisa);      // sisa_tagihan
+            tagihanSheet.getRange(rowNumber, 10).setValue(newStatus);  // status
+            tagihanSheet.getRange(rowNumber, 12).setValue(nowIso);     // updated_at
+
+            totalNominalBayar += bayarNom;
+            rincianKuitansi.push({
+              tagihanId: tId,
+              namaPos: String(tData[i][4] || "Tagihan"),
+              periode: String(tData[i][5] || "-"),
+              nominalBayar: bayarNom,
+              statusAkhir: newStatus,
+              sisaTagihan: newSisa
+            });
+            break;
+          }
+        }
+      });
+
+      if (totalNominalBayar <= 0) {
+        throw new Error("Total nominal pembayaran harus lebih besar dari Rp 0.");
+      }
+
+      // 3. Catat di Sheet Transaksi
+      const newTrxRow = [
+        transaksiId,
+        noKuitansi,
+        dateStr,
+        studentId,
+        studentName,
+        JSON.stringify(rincianKuitansi),
+        totalNominalBayar,
+        metodeBayar,
+        namaKasir,
+        catatan,
+        nowIso
+      ];
+      trxSheet.appendRow(newTrxRow);
+
+      return {
+        status: "success",
+        success: true,
+        message: "Pembayaran berhasil diproses.",
+        kuitansi: {
+          transaksiId: transaksiId,
+          noKuitansi: noKuitansi,
+          tanggalBayar: dateStr,
+          studentId: studentId,
+          studentName: studentName,
+          nis: nis,
+          nominalTotal: totalNominalBayar,
+          metodeBayar: metodeBayar,
+          namaKasir: namaKasir,
+          catatan: catatan,
+          rincianItems: rincianKuitansi
+        }
+      };
+    } catch (err) {
+      console.error("[PROSES PEMBAYARAN ERROR]", err);
+      return { status: "error", success: false, message: "Gagal memproses pembayaran: " + err.message };
+    }
+  });
+}
+
+function generateBulkMonthlyBills(payload, token) {
+  return withScriptLock(() => {
+    try {
+      const ss = getDatabaseSpreadsheet();
+      if (!ss) throw new Error("Spreadsheet database tidak ditemukan.");
+
+      const periode = String(payload.periode || "").trim(); // misal "2026-10"
+      if (!periode || !/^\d{4}-\d{2}$/.test(periode)) {
+        throw new Error("Format periode harus YYYY-MM (contoh: 2026-10)");
+      }
+
+      const dueDate = String(payload.dueDate || `${periode}-10`).trim();
+      const posIds = Array.isArray(payload.posIds) ? payload.posIds : [];
+
+      const tSheet = ss.getSheetByName(SHEET_KEUANGAN_TARIF);
+      const tagihanSheet = ss.getSheetByName(SHEET_KEUANGAN_TAGIHAN);
+      const studentsSheet = ss.getSheetByName(SHEET_STUDENTS);
+
+      if (!tSheet || !tagihanSheet || !studentsSheet) {
+        throw new Error("Sheet database belum lengkap.");
+      }
+
+      // 1. Ambil pos tarif bulanan aktif
+      const activeTarifs = [];
+      const tData = tSheet.getDataRange().getValues();
+      for (let i = 1; i < tData.length; i++) {
+        const tId = String(tData[i][0]).trim();
+        const isAct = String(tData[i][6]).toUpperCase() === "TRUE";
+        const kat = String(tData[i][2]).toUpperCase();
+        if (tId && isAct && (kat === "BULANAN" || posIds.includes(tId))) {
+          activeTarifs.push({
+            tarifId: tId,
+            namaPos: String(tData[i][1] || "").trim(),
+            nominal: Number(tData[i][4]) || 0,
+            program: String(tData[i][5] || "SEMUA").trim()
+          });
+        }
+      }
+
+      if (activeTarifs.length === 0) {
+        throw new Error("Tidak ada pos tarif bulanan aktif yang ditemukan.");
+      }
+
+      // 2. Ambil data santri aktif
+      const activeStudents = [];
+      const sData = studentsSheet.getDataRange().getValues();
+      const sHead = sData[0].map(h => String(h || "").trim().toLowerCase());
+      const idIdx = sHead.indexOf("student_id");
+      const nameIdx = sHead.indexOf("name");
+      const progIdx = sHead.indexOf("program");
+      const statusIdx = sHead.indexOf("status");
+
+      for (let i = 1; i < sData.length; i++) {
+        const st = statusIdx !== -1 ? String(sData[i][statusIdx] || "").trim().toUpperCase() : "AKTIF";
+        if (["AKTIF", "ACTIVE", ""].includes(st)) {
+          const sId = String(sData[i][idIdx] || "").trim();
+          if (sId) {
+            activeStudents.push({
+              studentId: sId,
+              name: String(sData[i][nameIdx] || "").trim(),
+              program: progIdx !== -1 ? String(sData[i][progIdx] || "").trim() : "Tahfidz"
+            });
+          }
+        }
+      }
+
+      if (activeStudents.length === 0) {
+        throw new Error("Tidak ada data santri aktif.");
+      }
+
+      // 3. Index tagihan yang sudah ada di periode ini untuk mencegah duplikasi
+      const existingTagihanKeys = new Set();
+      const curTagihanData = tagihanSheet.getDataRange().getValues();
+      for (let i = 1; i < curTagihanData.length; i++) {
+        const sId = String(curTagihanData[i][1] || "").trim();
+        const pId = String(curTagihanData[i][3] || "").trim();
+        const per = String(curTagihanData[i][5] || "").trim();
+        if (sId && pId && per) {
+          existingTagihanKeys.add(`${sId}_${pId}_${per}`);
+        }
+      }
+
+      // 4. Buat baris tagihan baru
+      const nowIso = new Date().toISOString();
+      const newRows = [];
+
+      activeStudents.forEach(st => {
+        activeTarifs.forEach(trf => {
+          // Cek kesesuaian program
+          if (trf.program !== "SEMUA" && !st.program.toLowerCase().includes(trf.program.toLowerCase())) {
+            return;
+          }
+
+          const key = `${st.studentId}_${trf.tarifId}_${periode}`;
+          if (!existingTagihanKeys.has(key)) {
+            const tagihanId = `TGH-${periode.replace("-", "")}-${st.studentId}-${trf.tarifId}`;
+            newRows.push([
+              tagihanId,
+              st.studentId,
+              st.name,
+              trf.tarifId,
+              trf.namaPos,
+              periode,
+              trf.nominal,
+              0,          // nominal_terbayar
+              trf.nominal,// sisa_tagihan
+              "BELUM_BAYAR",
+              dueDate,
+              nowIso
+            ]);
+            existingTagihanKeys.add(key);
+          }
+        });
+      });
+
+      if (newRows.length > 0) {
+        const startRow = tagihanSheet.getLastRow() + 1;
+        tagihanSheet.getRange(startRow, 1, newRows.length, newRows[0].length).setValues(newRows);
+      }
+
+      return {
+        status: "success",
+        success: true,
+        countGenerated: newRows.length,
+        message: `Berhasil menerbitkan ${newRows.length} item tagihan baru untuk periode ${periode}.`
+      };
+    } catch (err) {
+      console.error("[GENERATE BULK BILLS ERROR]", err);
+      return { status: "error", success: false, message: "Gagal menerbitkan tagihan massal: " + err.message };
+    }
+  });
+}
+
+function saveMasterTarif(payload, token) {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error("Spreadsheet database tidak ditemukan.");
+
+    const tSheet = getOrCreateKeuanganSheet(ss, SHEET_KEUANGAN_TARIF, ["tarif_id", "nama_pos", "kategori", "tipe_periode", "nominal_default", "program", "is_active", "created_at"], "#0f766e");
+    const tarifId = String(payload.tarifId || `TRF-${Date.now().toString().slice(-6)}`).trim();
+    const namaPos = String(payload.namaPos || "").trim();
+    const kategori = String(payload.kategori || "BULANAN").trim().toUpperCase();
+    const tipePeriode = String(payload.tipePeriode || "BULANAN").trim().toUpperCase();
+    const nominal = Number(payload.nominalDefault) || 0;
+    const program = String(payload.program || "SEMUA").trim();
+    const isActive = payload.isActive !== false ? "TRUE" : "FALSE";
+    const nowIso = new Date().toISOString();
+
+    if (!namaPos) throw new Error("Nama Pos Biaya wajib diisi.");
+
+    const data = tSheet.getDataRange().getValues();
+    let foundRow = -1;
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim() === tarifId) {
+        foundRow = i + 1;
+        break;
+      }
+    }
+
+    if (foundRow > 0) {
+      tSheet.getRange(foundRow, 2, 1, 6).setValues([[namaPos, kategori, tipePeriode, nominal, program, isActive]]);
+    } else {
+      tSheet.appendRow([tarifId, namaPos, kategori, tipePeriode, nominal, program, isActive, nowIso]);
+    }
+
+    return {
+      status: "success",
+      success: true,
+      message: "Master tarif berhasil disimpan.",
+      tarifId: tarifId
+    };
+  } catch (err) {
+    return { status: "error", success: false, message: err.message };
+  }
+}
+
+function deleteMasterTarif(tarifId, token) {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error("Spreadsheet database tidak ditemukan.");
+    const tSheet = ss.getSheetByName(SHEET_KEUANGAN_TARIF);
+    if (!tSheet) throw new Error("Sheet master tarif tidak ditemukan.");
+
+    const tId = String(tarifId || "").trim();
+    const data = tSheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim() === tId) {
+        tSheet.deleteRow(i + 1);
+        return { status: "success", success: true, message: "Tarif berhasil dihapus." };
+      }
+    }
+    throw new Error("Tarif dengan ID tersebut tidak ditemukan.");
+  } catch (err) {
+    return { status: "error", success: false, message: err.message };
+  }
+}
+
 
 
 

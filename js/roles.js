@@ -238,7 +238,8 @@
         'galeri': ['galeri.manage'],
         'notifikasi': ['notifikasi.broadcast'],
         'profil-lembaga': ['profil.manage'],
-        'pengaturan': ['system.config']
+        'pengaturan': ['system.config'],
+        'keuangan': ['keuangan.view', 'keuangan.spp']
     };
 
     // Default Baseline Permissions per Role

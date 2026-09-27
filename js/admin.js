@@ -92,7 +92,8 @@
             'galeri': { group: 'konten', category: 'Konten & Publikasi', title: 'Manajemen Galeri' },
             'notifikasi': { group: 'konten', category: 'Konten & Publikasi', title: 'Manajemen Notifikasi' },
             'profil-lembaga': { group: 'kelembagaan', category: 'Kelembagaan & Pengaturan', title: 'Profil & Kepengurusan' },
-            'pengaturan': { group: 'kelembagaan', category: 'Kelembagaan & Pengaturan', title: 'Tautan & Sosmed' }
+            'pengaturan': { group: 'kelembagaan', category: 'Kelembagaan & Pengaturan', title: 'Tautan & Sosmed' },
+            'keuangan': { group: 'keuangan', category: 'Keuangan & Kasir', title: 'Kasir & Tagihan Santri' }
         };
 
         function toggleAdminAccordion(groupId, forceOpen) {
@@ -203,6 +204,7 @@
             const tpqView = document.getElementById('admin-view-tpq');
             const soroganView = document.getElementById('admin-view-sorogan');
             const presensiView = document.getElementById('admin-view-presensi');
+            const keuanganView = document.getElementById('admin-view-keuangan');
             const ppdbView = document.getElementById('admin-view-ppdb');
             const programView = document.getElementById('admin-view-program');
             const galeriView = document.getElementById('admin-view-galeri');
@@ -224,6 +226,7 @@
             if (tpqView) tpqView.classList.add('hidden');
             if (soroganView) soroganView.classList.add('hidden');
             if (presensiView) presensiView.classList.add('hidden');
+            if (keuanganView) keuanganView.classList.add('hidden');
             if (ppdbView) ppdbView.classList.add('hidden');
             if (programView) programView.classList.add('hidden');
             if (galeriView) galeriView.classList.add('hidden');
@@ -280,6 +283,11 @@
                 if (presensiView) presensiView.classList.remove('hidden');
                 if (typeof loadAdminPresensiData === 'function') {
                     loadAdminPresensiData();
+                }
+            } else if (viewName === 'keuangan') {
+                if (keuanganView) keuanganView.classList.remove('hidden');
+                if (typeof loadAdminKeuanganData === 'function') {
+                    loadAdminKeuanganData();
                 }
             } else if (viewName === 'notifikasi') {
                 if (notifikasiView) notifikasiView.classList.remove('hidden');
@@ -349,6 +357,12 @@
                         loadAdminTPQData().catch(() => {});
                     }
                 }, 2800);
+
+                setTimeout(() => {
+                    if (typeof loadAdminKeuanganData === 'function') {
+                        loadAdminKeuanganData().catch(() => {});
+                    }
+                }, 3800);
             };
 
             if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
