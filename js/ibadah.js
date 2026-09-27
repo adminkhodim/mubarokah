@@ -1049,7 +1049,7 @@
 
                 let badgeText = `Bacaan ke-${index + 1}`;
                 if (index === 0) {
-                    badgeText = "Hadhrah Fatihah Masyayikh";
+                    badgeText = "Hadhrah Fatihah";
                 } else if (item.isDoa) {
                     badgeText = `Doa Tahlil • Bagian ${item.no - 21}`;
                 }
