@@ -17746,6 +17746,38 @@ function getKeuanganDashboard(token) {
     const headersTransaksi = ["transaksi_id", "no_kuitansi", "tanggal_bayar", "student_id", "student_name", "tagihan_ids_json", "nominal_total", "metode_bayar", "nama_kasir", "catatan", "created_at"];
     const trxSheet = getOrCreateKeuanganSheet(ss, SHEET_KEUANGAN_TRANSAKSI, headersTransaksi, "#1e3a8a");
 
+    // 0. Ambil Master Program dari Sheet "Programs" (Kolom B: name, Kolom A: id)
+    let programsSheet = ss.getSheetByName("Programs") || ss.getSheetByName("Program");
+    const programsList = [];
+    if (programsSheet) {
+      const prData = programsSheet.getDataRange().getValues();
+      if (prData && prData.length > 1) {
+        const prHead = prData[0].map(h => String(h || "").trim().toLowerCase());
+        const nameIdx = prHead.indexOf("name") !== -1 ? prHead.indexOf("name") : prHead.indexOf("nama");
+        const idIdx = prHead.indexOf("id");
+        for (let i = 1; i < prData.length; i++) {
+          const row = prData[i];
+          const prName = nameIdx !== -1 ? String(row[nameIdx] || "").trim() : "";
+          const prId = idIdx !== -1 ? String(row[idIdx] || "").trim() : "";
+          if (prName && !programsList.some(p => p.name === prName)) {
+            programsList.push({
+              id: prId || prName,
+              name: prName
+            });
+          }
+        }
+      }
+    }
+    // Fallback jika tab Programs kosong/belum disinkronkan
+    if (programsList.length === 0) {
+      programsList.push(
+        { id: "tahfidz-dewasa", name: "Pesantren Tahfidz Dewasa" },
+        { id: "reguler-putra-putri", name: "Pesantren Reguler Putra Putri" },
+        { id: "tahfidz-anak", name: "Pesantren Tahfidz Anak" },
+        { id: "ma-tahfidz", name: "MA Tahfidz" }
+      );
+    }
+
     // 1. Ambil Master Tarif
     const tarifList = [];
     const tData = tSheet.getDataRange().getValues();
@@ -17770,6 +17802,7 @@ function getKeuanganDashboard(token) {
     // 2. Ambil Master Santri (untuk search & info santri di POS)
     const studentsSheet = ss.getSheetByName(SHEET_STUDENTS);
     const students = [];
+    const studentMap = {};
     if (studentsSheet) {
       const sData = studentsSheet.getDataRange().getValues();
       if (sData.length >= 2) {
@@ -17785,15 +17818,19 @@ function getKeuanganDashboard(token) {
         for (let i = 1; i < sData.length; i++) {
           const stStatus = statusIdx !== -1 ? String(sData[i][statusIdx] || "").trim().toUpperCase() : "AKTIF";
           if (["AKTIF", "ACTIVE", ""].includes(stStatus)) {
-            students.push({
+            const sObj = {
               studentId: String(sData[i][idIdx] || "").trim(),
               nis: String(sData[i][nisIdx] || "").trim(),
               name: String(sData[i][nameIdx] || "").trim(),
               gender: String(sData[i][genderIdx] || "L").trim().toUpperCase(),
-              program: programIdx !== -1 ? String(sData[i][programIdx] || "Tahfidz").trim() : "Tahfidz",
+              program: programIdx !== -1 ? String(sData[i][programIdx] || "").trim() : "",
               photoUrl: photoIdx !== -1 ? String(sData[i][photoIdx] || "").trim() : "",
               status: "AKTIF"
-            });
+            };
+            if (sObj.studentId) {
+              students.push(sObj);
+              studentMap[sObj.studentId] = sObj;
+            }
           }
         }
       }
@@ -17822,10 +17859,14 @@ function getKeuanganDashboard(token) {
             totalTunggakan += sisa;
           }
 
+          const sId = String(r[1] || "").trim();
+          const stObj = studentMap[sId];
+
           tagihanList.push({
             tagihanId: String(r[0]).trim(),
-            studentId: String(r[1] || "").trim(),
+            studentId: sId,
             studentName: String(r[2] || "").trim(),
+            studentProgram: stObj ? stObj.program : "",
             posId: String(r[3] || "").trim(),
             namaPos: String(r[4] || "").trim(),
             periode: String(r[5] || "").trim(),
@@ -17902,7 +17943,8 @@ function getKeuanganDashboard(token) {
       tarifList: tarifList,
       tagihanList: tagihanList,
       recentTransactions: recentTransactions,
-      students: students
+      students: students,
+      programs: programsList
     };
   } catch (err) {
     console.error("[GET KEUANGAN DASHBOARD ERROR]", err);
@@ -18171,9 +18213,23 @@ function generateBulkMonthlyBills(payload, token) {
 
       activeStudents.forEach(st => {
         activeTarifs.forEach(trf => {
-          // Cek kesesuaian program
-          if (trf.program !== "SEMUA" && !st.program.toLowerCase().includes(trf.program.toLowerCase())) {
-            return;
+          // Cek kesesuaian program berdasarkan Sheet Programs kolom B (name)
+          const trfProg = String(trf.program || "SEMUA").trim();
+          const stProg = String(st.program || "").trim();
+
+          const isAll = (
+            trfProg === "SEMUA" ||
+            trfProg.toUpperCase() === "SEMUA SANTRI" ||
+            trfProg.toUpperCase() === "SEMUA PROGRAM" ||
+            trfProg === ""
+          );
+
+          if (!isAll) {
+            const matchExact = (stProg.toLowerCase() === trfProg.toLowerCase());
+            const matchIncludes = (stProg.toLowerCase().includes(trfProg.toLowerCase()) || trfProg.toLowerCase().includes(stProg.toLowerCase()));
+            if (!matchExact && !matchIncludes) {
+              return;
+            }
           }
 
           const key = `${st.studentId}_${trf.tarifId}_${periode}`;

@@ -151,6 +151,7 @@ async function loadAdminKeuanganData(forceRefresh = false) {
             ASNKeuangan.data = cached;
             renderKeuanganSummaryCards();
             renderKeuanganTarifTable();
+            populateKeuanganTagihanProgramFilter();
             filterKeuanganTagihan();
             renderKeuanganTransaksiTable();
             hasRenderedFromCache = true;
@@ -188,6 +189,7 @@ async function loadAdminKeuanganData(forceRefresh = false) {
 
                 renderKeuanganSummaryCards();
                 renderKeuanganTarifTable();
+                populateKeuanganTagihanProgramFilter();
                 filterKeuanganTagihan();
                 renderKeuanganTransaksiTable();
 
@@ -814,10 +816,12 @@ window.shareKuitansiWhatsApp = shareKuitansiWhatsApp;
 function filterKeuanganTagihan() {
     const searchInput = document.getElementById('keuangan-tagihan-search');
     const filterStatus = document.getElementById('keuangan-tagihan-filter-status');
+    const filterProgram = document.getElementById('keuangan-tagihan-filter-program');
     const filterPeriode = document.getElementById('keuangan-tagihan-filter-periode');
 
     const q = searchInput ? searchInput.value.trim().toLowerCase() : "";
     const stStatus = filterStatus ? filterStatus.value : "ALL";
+    const stProgram = filterProgram ? filterProgram.value : "ALL";
     const stPeriode = filterPeriode ? filterPeriode.value : "ALL";
 
     const all = ASNKeuangan.data.tagihanList || [];
@@ -827,11 +831,17 @@ function filterKeuanganTagihan() {
             const mName = (t.studentName || "").toLowerCase().includes(q);
             const mPos = (t.namaPos || "").toLowerCase().includes(q);
             const mPer = (t.periode || "").toLowerCase().includes(q);
-            if (!mName && !mPos && !mPer) return false;
+            const mProg = (t.studentProgram || "").toLowerCase().includes(q);
+            if (!mName && !mPos && !mPer && !mProg) return false;
         }
 
         if (stStatus !== "ALL") {
             if (t.status !== stStatus) return false;
+        }
+
+        if (stProgram !== "ALL") {
+            const curProg = (t.studentProgram || "").toLowerCase();
+            if (curProg !== stProgram.toLowerCase()) return false;
         }
 
         if (stPeriode !== "ALL") {
@@ -878,12 +888,17 @@ function renderKeuanganTagihanTable() {
             ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/50 dark:text-amber-300"><i class="fa-solid fa-clock-rotate-left"></i> Cicilan</span>`
             : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/50 dark:text-rose-300"><i class="fa-solid fa-circle-exclamation"></i> Belum Lunas</span>`;
 
+        const progBadge = t.studentProgram ? `<span class="inline-block px-1.5 py-0.5 text-[9px] font-bold rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/50"><i class="fa-solid fa-graduation-cap text-[8px] mr-1"></i>${escapeHtml(t.studentProgram)}</span>` : '';
+
         htmlDesktop += `
             <tr class="hover:bg-slate-50/80 dark:hover:bg-[#1a2636]/60 transition border-b border-slate-100 dark:border-[#202f42] text-xs">
                 <td class="p-3 text-center text-slate-400 font-medium">${idx + 1}</td>
                 <td class="p-3">
                     <div class="font-bold text-slate-800 dark:text-slate-100">${escapeHtml(t.studentName)}</div>
-                    <div class="text-[10px] text-slate-400">ID: ${escapeHtml(t.studentId)}</div>
+                    <div class="flex items-center gap-1.5 mt-0.5">
+                        ${progBadge}
+                        <span class="text-[10px] text-slate-400">ID: ${escapeHtml(t.studentId)}</span>
+                    </div>
                 </td>
                 <td class="p-3">
                     <div class="font-semibold text-slate-800 dark:text-slate-200">${escapeHtml(t.namaPos)}</div>
@@ -911,6 +926,7 @@ function renderKeuanganTagihanTable() {
                 <div class="flex items-start justify-between gap-2">
                     <div>
                         <div class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(t.studentName)}</div>
+                        <div class="flex items-center gap-1.5 mt-0.5 mb-1">${progBadge}</div>
                         <div class="text-[10px] text-slate-400">${escapeHtml(t.namaPos)} • Periode: ${escapeHtml(t.periode)}</div>
                     </div>
                     ${badge}
@@ -1063,6 +1079,99 @@ function renderKeuanganTransaksiTable() {
 window.renderKeuanganTransaksiTable = renderKeuanganTransaksiTable;
 
 // ====================================================================
+// PROGRAM PESANTREN SYNC (SHEET "Programs" KOLOM B: name)
+// ====================================================================
+
+function getKeuanganProgramsList() {
+    const list = new Set();
+
+    // 1. Dari respons backend getKeuanganDashboard (Sheet Programs resmi)
+    if (Array.isArray(ASNKeuangan.data.programs)) {
+        ASNKeuangan.data.programs.forEach(p => {
+            const name = typeof p === 'string' ? p : (p && (p.name || p.title));
+            if (name && name.trim()) list.add(name.trim());
+        });
+    }
+
+    // 2. Dari adminProgramData (jika sudah di-load di admin.js)
+    if (typeof adminProgramData !== 'undefined' && Array.isArray(adminProgramData)) {
+        adminProgramData.forEach(p => {
+            const name = (p && (p.name || p.title)) ? String(p.name || p.title).trim() : "";
+            if (name) list.add(name);
+        });
+    }
+
+    // 3. Dari localStorage mubarokah_programs_cache_v3
+    try {
+        const cachedRaw = localStorage.getItem('mubarokah_programs_cache_v3') || localStorage.getItem('mubarokah_programs_cache_v2');
+        if (cachedRaw) {
+            const cached = JSON.parse(cachedRaw);
+            if (Array.isArray(cached)) {
+                cached.forEach(p => {
+                    const name = (p && (p.name || p.title)) ? String(p.name || p.title).trim() : "";
+                    if (name) list.add(name);
+                });
+            }
+        }
+    } catch (e) {}
+
+    // 4. Dari data santri yang sedang aktif di keuangan
+    if (Array.isArray(ASNKeuangan.data.students)) {
+        ASNKeuangan.data.students.forEach(s => {
+            if (s && s.program && s.program.trim() && s.program !== "Tahfidz") {
+                list.add(s.program.trim());
+            }
+        });
+    }
+
+    // 5. Fallback resmi jika belum ada cache
+    if (list.size === 0) {
+        list.add("Pesantren Tahfidz Dewasa");
+        list.add("Pesantren Reguler Putra Putri");
+        list.add("Pesantren Tahfidz Anak");
+        list.add("MA Tahfidz");
+    }
+
+    return Array.from(list);
+}
+window.getKeuanganProgramsList = getKeuanganProgramsList;
+
+function populateKeuanganTarifProgramDropdown(selectedProg = "") {
+    const selectEl = document.getElementById('tarif-input-program');
+    if (!selectEl) return;
+
+    const progList = getKeuanganProgramsList();
+    const selVal = selectedProg ? selectedProg.trim() : "SEMUA";
+
+    let html = `<option value="SEMUA"${selVal === 'SEMUA' || selVal.toLowerCase() === 'semua santri' ? ' selected' : ''}>Semua Santri / Program</option>`;
+    progList.forEach(prog => {
+        const isSel = (selVal.toLowerCase() === prog.toLowerCase());
+        html += `<option value="${escapeHtml(prog)}"${isSel ? ' selected' : ''}>Khusus ${escapeHtml(prog)}</option>`;
+    });
+
+    selectEl.innerHTML = html;
+    selectEl.value = selVal;
+}
+window.populateKeuanganTarifProgramDropdown = populateKeuanganTarifProgramDropdown;
+
+function populateKeuanganTagihanProgramFilter() {
+    const filterEl = document.getElementById('keuangan-tagihan-filter-program');
+    if (!filterEl) return;
+
+    const curVal = filterEl.value || "ALL";
+    const progList = getKeuanganProgramsList();
+
+    let html = `<option value="ALL">Semua Program</option>`;
+    progList.forEach(prog => {
+        html += `<option value="${escapeHtml(prog)}"${curVal === prog ? ' selected' : ''}>${escapeHtml(prog)}</option>`;
+    });
+
+    filterEl.innerHTML = html;
+    if (curVal !== "ALL") filterEl.value = curVal;
+}
+window.populateKeuanganTagihanProgramFilter = populateKeuanganTagihanProgramFilter;
+
+// ====================================================================
 // SUB-MODUL 5: MASTER POS & TARIF BIAYA
 // ====================================================================
 
@@ -1079,6 +1188,13 @@ function renderKeuanganTarifTable() {
 
     let html = '';
     list.forEach((trf, idx) => {
+        const isAllProg = (!trf.program || trf.program === 'SEMUA' || trf.program.toUpperCase() === 'SEMUA SANTRI' || trf.program.toUpperCase() === 'SEMUA PROGRAM');
+        const progBadge = isAllProg
+            ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-[#1c2836] dark:text-slate-300">Semua Program</span>`
+            : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 inline-flex items-center gap-1">
+                <i class="fa-solid fa-graduation-cap text-[9px]"></i> ${escapeHtml(trf.program)}
+               </span>`;
+
         html += `
             <tr class="hover:bg-slate-50/80 dark:hover:bg-[#1a2636]/60 transition border-b border-slate-100 dark:border-[#202f42] text-xs">
                 <td class="p-3 text-center text-slate-400 font-medium">${idx + 1}</td>
@@ -1089,7 +1205,7 @@ function renderKeuanganTarifTable() {
                     </span>
                 </td>
                 <td class="p-3 font-black text-slate-800 dark:text-slate-100">${formatRupiah(trf.nominalDefault)}</td>
-                <td class="p-3 text-slate-500">${escapeHtml(trf.program || 'SEMUA')}</td>
+                <td class="p-3">${progBadge}</td>
                 <td class="p-3 text-center">
                     <span class="px-2 py-0.5 rounded text-[10px] font-bold ${trf.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-400'}">
                         ${trf.isActive ? 'Aktif' : 'Non-Aktif'}
@@ -1121,9 +1237,10 @@ function openTarifModal(tarifId = "") {
     const namaInput = document.getElementById('tarif-input-nama');
     const katInput = document.getElementById('tarif-input-kategori');
     const nomInput = document.getElementById('tarif-input-nominal');
-    const progInput = document.getElementById('tarif-input-program');
     const actInput = document.getElementById('tarif-input-active');
     const titleEl = document.getElementById('modal-tarif-title');
+
+    let currentProgram = "SEMUA";
 
     if (tarifId) {
         const list = ASNKeuangan.data.tarifList || [];
@@ -1133,7 +1250,7 @@ function openTarifModal(tarifId = "") {
             if (namaInput) namaInput.value = t.namaPos;
             if (katInput) katInput.value = t.kategori;
             if (nomInput) nomInput.value = t.nominalDefault;
-            if (progInput) progInput.value = t.program || "SEMUA";
+            currentProgram = t.program || "SEMUA";
             if (actInput) actInput.checked = t.isActive !== false;
             if (titleEl) titleEl.innerText = "Edit Master Tarif Biaya";
         }
@@ -1142,10 +1259,13 @@ function openTarifModal(tarifId = "") {
         if (namaInput) namaInput.value = "";
         if (katInput) katInput.value = "BULANAN";
         if (nomInput) nomInput.value = "";
-        if (progInput) progInput.value = "SEMUA";
+        currentProgram = "SEMUA";
         if (actInput) actInput.checked = true;
         if (titleEl) titleEl.innerText = "Tambah Master Tarif Biaya";
     }
+
+    // Populate dropdown Program secara dinamis sesuai Sheet "Programs" (kolom B: name)
+    populateKeuanganTarifProgramDropdown(currentProgram);
 
     modal.classList.remove('hidden');
 }
