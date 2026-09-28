@@ -292,14 +292,17 @@ function populateSoroganFilters() {
     const filterHalaqah = document.getElementById('sorogan-filter-halaqah');
     if (filterHalaqah && Array.isArray(ASNSorogan.data.halaqahs)) {
         const currentVal = filterHalaqah.value;
-        let opt = '<option value="ALL">Semua Santri Terplot (Halaqah)</option>';
-        opt += '<option value="UNPLOTTED">Santri Belum Masuk Halaqah</option>';
-        opt += '<option value="ALL_STUDENTS">Semua Santri (Termasuk Belum Masuk)</option>';
+        let opt = '<option value="ALL">Semua Halaqah</option>';
         ASNSorogan.data.halaqahs.forEach(h => {
-            opt += `<option value="${escapeHtml(h.halaqahId)}">${escapeHtml(h.namaHalaqah)}</option>`;
+            if (h && h.namaHalaqah) {
+                opt += `<option value="${escapeHtml(h.halaqahId)}">${escapeHtml(h.namaHalaqah)}</option>`;
+            }
         });
+        opt += '<option value="UNASSIGNED">Belum Masuk Halaqah</option>';
         filterHalaqah.innerHTML = opt;
-        if (currentVal) filterHalaqah.value = currentVal;
+        if (currentVal && Array.from(filterHalaqah.options).some(o => o.value === currentVal)) {
+            filterHalaqah.value = currentVal;
+        }
     }
 }
 
@@ -328,20 +331,24 @@ function filterSoroganList() {
             if (!matchName && !matchNis && !matchHalaqah && !matchMuallim) return false;
         }
 
-        // Filter berdasarkan Halaqah & Plotting
+        // Filter berdasarkan Halaqah & Plotting (Mengadopsi pola Tahfidz)
+        const inHalaqah = isStudentInSoroganHalaqah(st);
         if (selHalaqah === "ALL") {
-            // Default: Daftar Capaian Sorogan HANYA untuk santri yang sudah dimasukkan ke plotting kelompok halaqah
-            if (!isStudentInSoroganHalaqah(st)) return false;
-        } else if (selHalaqah === "UNPLOTTED") {
+            // Default "Semua Halaqah": Menampilkan santri yang sudah dimasukkan ke kelompok halaqah
+            if (!inHalaqah) return false;
+        } else if (selHalaqah === "UNASSIGNED" || selHalaqah === "UNPLOTTED") {
             // Khusus santri yang belum masuk kelompok halaqah
-            if (isStudentInSoroganHalaqah(st)) return false;
+            if (inHalaqah) return false;
         } else if (selHalaqah === "ALL_STUDENTS") {
-            // Tampilkan semua santri
+            // Tampilkan semua santri (fallback)
         } else {
             // Filter per halaqah tertentu
             const halaqahs = (ASNSorogan.data && ASNSorogan.data.halaqahs) || [];
-            const curH = halaqahs.find(h => h.halaqahId === selHalaqah);
-            const inCurHalaqah = (st.halaqahId === selHalaqah) || (curH && Array.isArray(curH.studentIds) && (curH.studentIds.includes(st.studentId) || curH.studentIds.includes(st.nis)));
+            const curH = halaqahs.find(h => h.halaqahId === selHalaqah || h.namaHalaqah === selHalaqah);
+            const inCurHalaqah = (st.halaqahId === selHalaqah) || 
+                (st.namaHalaqah === selHalaqah) || 
+                (curH && (curH.halaqahId === st.halaqahId || curH.namaHalaqah === st.namaHalaqah)) || 
+                (curH && Array.isArray(curH.studentIds) && (curH.studentIds.includes(st.studentId) || curH.studentIds.includes(st.nis)));
             if (!inCurHalaqah) return false;
         }
 
