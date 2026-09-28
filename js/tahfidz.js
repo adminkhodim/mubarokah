@@ -720,6 +720,8 @@ function renderTahfidzStudentTable() {
             const manzilJuz = Number(mur.manzilJuz || cap.manzilJuz) || 1;
             const manzilHalaman = Number(mur.manzilHalaman || cap.manzilHalaman) || 1;
             const manzilPutaran = Number(mur.manzilPutaran || cap.manzilPutaran) || 1;
+            const targetMPekan = st.target?.murajaahPekan || (targetM * 5);
+            const rekapM = st.rekapPekan?.murojaah || { realita: 0, isTuntas: false, sisaHalaman: targetMPekan };
 
             return `
             <div class="p-3 bg-white dark:bg-[#15202d] rounded-2xl border ${isSelected ? 'border-amber-400 dark:border-amber-600 bg-amber-50/20' : 'border-slate-100 dark:border-[#253447]'} shadow-sm space-y-2.5">
