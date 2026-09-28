@@ -14057,8 +14057,9 @@ function getTPQDashboard(token) {
       }
     });
 
-    // Gabungkan status capaian ke setiap siswa & hitung statistik
+    // Gabungkan status capaian ke setiap siswa & hitung statistik (Hanya santri yang telah terplot ke Kelas TPQ)
     const perJilidCount = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0 };
+    let totalPlotted = 0;
     let totalLanjut = 0;
     let totalUlang = 0;
     const ustadzSet = new Set();
@@ -14083,9 +14084,19 @@ function getTPQDashboard(token) {
 
       const isPemula = (cp.jilidAktif === 0 || String(cp.jilidAktif).toLowerCase() === "pemula");
       const jld = isPemula ? 0 : Math.max(1, Math.min(7, Number(cp.jilidAktif) || 1));
-      perJilidCount[jld] = (perJilidCount[jld] || 0) + 1;
-      if (cp.statusTerakhir === "ULANG") totalUlang++;
-      else totalLanjut++;
+
+      // Cek apakah santri telah dimasukkan ke dalam kelompok kelas TPQ
+      const isPlotted = Boolean(
+        (cp.kelasId && cp.namaKelas && cp.namaKelas !== "Belum Ditentukan" && cp.namaKelas !== "Belum Ada Kelas") ||
+        kelasList.some(k => Array.isArray(k.studentIds) && (k.studentIds.includes(st.studentId) || (st.nis && k.studentIds.includes(st.nis))))
+      );
+
+      if (isPlotted) {
+        totalPlotted++;
+        perJilidCount[jld] = (perJilidCount[jld] || 0) + 1;
+        if (cp.statusTerakhir === "ULANG") totalUlang++;
+        else totalLanjut++;
+      }
 
       if (cp.ustadzPengampu && cp.ustadzPengampu !== "-") {
         ustadzSet.add(cp.ustadzPengampu);
@@ -14140,10 +14151,10 @@ function getTPQDashboard(token) {
       status: "success",
       success: true,
       summary: {
-        totalSantri: enrichedStudents.length,
+        totalSantri: totalPlotted,
         totalLanjut: totalLanjut,
         totalUlang: totalUlang,
-        persentaseLanjut: enrichedStudents.length > 0 ? Math.round((totalLanjut / enrichedStudents.length) * 100) : 100,
+        persentaseLanjut: totalPlotted > 0 ? Math.round((totalLanjut / totalPlotted) * 100) : 100,
         distribusiJilid: perJilidCount
       },
       weeklySessions: tpqWeeklySessions,

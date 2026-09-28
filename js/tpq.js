@@ -317,42 +317,6 @@ async function loadAdminTPQData(forceRefresh = false) {
 }
 
 /**
- * Render kartu ringkasan statistik TPQ
- */
-function renderTPQSummaryCards() {
-    const sum = ASNTPQ.data.summary || {};
-    const dist = sum.distribusiJilid || {};
-
-    const elTotal = document.getElementById('tpq-stat-total-santri');
-    const elLanjut = document.getElementById('tpq-stat-total-lanjut');
-    const elUlang = document.getElementById('tpq-stat-total-ulang');
-    const elPersen = document.getElementById('tpq-stat-persentase-lanjut');
-    const elDistBar = document.getElementById('tpq-stat-distribusi-container');
-
-    if (elTotal) elTotal.innerText = sum.totalSantri || 0;
-    if (elLanjut) elLanjut.innerText = sum.totalLanjut || 0;
-    if (elUlang) elUlang.innerText = sum.totalUlang || 0;
-    if (elPersen) elPersen.innerText = `${sum.persentaseLanjut || 100}%`;
-
-    // Render bar jilid mini
-    if (elDistBar) {
-        let html = '';
-        for (let j = 0; j <= 7; j++) {
-            const count = dist[j] || 0;
-            const jInfo = YANBUA_JILID_INFO[j] || { name: (j === 0 ? "Pemula" : `Jilid ${j}`) };
-            html += `
-                <div class="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-50 dark:bg-[#1c2836] border border-slate-100 dark:border-[#253447] text-center min-w-[70px]">
-                    <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400">${jInfo.name}</span>
-                    <span class="text-sm font-black text-emerald-600 dark:text-emerald-400 mt-0.5">${count}</span>
-                    <span class="text-[9px] text-slate-400">Santri</span>
-                </div>
-            `;
-        }
-        elDistBar.innerHTML = html;
-    }
-}
-
-/**
  * Cek apakah seorang santri telah dimasukkan ke dalam kelompok kelas TPQ Yanbu'a
  */
 function isStudentInTPQKelas(st) {
@@ -378,6 +342,60 @@ function isStudentInTPQKelas(st) {
     return false;
 }
 window.isStudentInTPQKelas = isStudentInTPQKelas;
+
+/**
+ * Render kartu ringkasan statistik TPQ (Hanya dihitung berdasarkan santri yang telah dimasukkan ke Plotting Kelas TPQ)
+ */
+function renderTPQSummaryCards() {
+    const all = ASNTPQ.data.students || [];
+    const plotted = all.filter(isStudentInTPQKelas);
+
+    const totalSantri = plotted.length;
+    let totalLanjut = 0;
+    let totalUlang = 0;
+    const dist = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0 };
+
+    plotted.forEach(st => {
+        const isPemula = (st.jilidAktif === 0 || String(st.jilidAktif).toLowerCase() === "pemula");
+        const jld = isPemula ? 0 : Math.max(1, Math.min(7, Number(st.jilidAktif) || 1));
+        dist[jld] = (dist[jld] || 0) + 1;
+        if (st.statusTerakhir === 'ULANG') {
+            totalUlang++;
+        } else {
+            totalLanjut++;
+        }
+    });
+
+    const persentaseLanjut = totalSantri > 0 ? Math.round((totalLanjut / totalSantri) * 100) : 100;
+
+    const elTotal = document.getElementById('tpq-stat-total-santri');
+    const elLanjut = document.getElementById('tpq-stat-total-lanjut');
+    const elUlang = document.getElementById('tpq-stat-total-ulang');
+    const elPersen = document.getElementById('tpq-stat-persentase-lanjut');
+    const elDistBar = document.getElementById('tpq-stat-distribusi-container');
+
+    if (elTotal) elTotal.innerText = totalSantri;
+    if (elLanjut) elLanjut.innerText = totalLanjut;
+    if (elUlang) elUlang.innerText = totalUlang;
+    if (elPersen) elPersen.innerText = `${persentaseLanjut}%`;
+
+    // Render bar jilid mini
+    if (elDistBar) {
+        let html = '';
+        for (let j = 0; j <= 7; j++) {
+            const count = dist[j] || 0;
+            const jInfo = YANBUA_JILID_INFO[j] || { name: (j === 0 ? "Pemula" : `Jilid ${j}`) };
+            html += `
+                <div class="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-50 dark:bg-[#1c2836] border border-slate-100 dark:border-[#253447] text-center min-w-[70px]">
+                    <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400">${jInfo.name}</span>
+                    <span class="text-sm font-black text-emerald-600 dark:text-emerald-400 mt-0.5">${count}</span>
+                    <span class="text-[9px] text-slate-400">Santri</span>
+                </div>
+            `;
+        }
+        elDistBar.innerHTML = html;
+    }
+}
 
 /**
  * Isi dropdown filter kelas & jilid
