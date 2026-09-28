@@ -278,7 +278,19 @@ function renderTahfidzSummaryCards() {
     if (elRata) elRata.innerText = sum.rataRataHafalan || "0.0 Juz / Santri";
 
     const elTotal = document.getElementById('tahfidz-stat-total');
-    if (elTotal) elTotal.innerText = `${sum.totalHafalanJuz || 0} Akumulasi Juz`;
+    if (elTotal) {
+        let count = 0;
+        if (Array.isArray(ASNTahfidz.data?.students) && ASNTahfidz.data.students.length > 0) {
+            count = ASNTahfidz.data.students.filter(st => {
+                const statusClean = String(st.status || "Aktif").trim().toLowerCase();
+                const isAktif = statusClean === "aktif" || statusClean === "active" || statusClean === "";
+                return isAktif && isStudentInHalaqah(st);
+            }).length;
+        } else if (typeof sum.totalSantriHalaqah === 'number') {
+            count = sum.totalSantriHalaqah;
+        }
+        elTotal.innerText = count;
+    }
 
     const elZiyadahBar = document.getElementById('tahfidz-stat-bar-ziyadah');
     const elZiyadahText = document.getElementById('tahfidz-stat-text-ziyadah');
