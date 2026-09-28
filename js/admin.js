@@ -3,6 +3,10 @@
             const isUserAdmin = (typeof checkIsAdminLoggedIn === 'function') ? checkIsAdminLoggedIn() : isAdminLoggedIn;
             if (isUserAdmin) {
                 if (typeof isAdminLoggedIn !== 'undefined') isAdminLoggedIn = true;
+                if (window.innerWidth < 1024) {
+                    if (typeof switchTab === 'function') switchTab('pengaturan');
+                    return;
+                }
                 switchTab('admin');
                 showAdminView('hub');
                 renderAdminNewsList();
@@ -101,14 +105,8 @@
          * Navigasi Kembali Cerdas untuk Header Mobile Admin
          */
         function backFromAdminMobileNav() {
-            const curActive = document.querySelector('.admin-nav-item.active');
-            const viewKey = curActive ? curActive.dataset.view : 'hub';
-            if (viewKey && viewKey !== 'hub') {
-                showAdminView('hub');
-            } else {
-                if (typeof switchTab === 'function') {
-                    switchTab('pengaturan');
-                }
+            if (typeof switchTab === 'function') {
+                switchTab('pengaturan');
             }
         }
         window.backFromAdminMobileNav = backFromAdminMobileNav;
@@ -162,12 +160,24 @@
         window.toggleAdminAccordion = toggleAdminAccordion;
 
         function showAdminView(viewName) {
+            // Pada layar ponsel (< 1024px), jika ingin membuka hub, langsung alihkan ke Pusat Kontrol Tab Pengaturan
+            if (window.innerWidth < 1024 && (!viewName || viewName === 'hub')) {
+                if (typeof switchTab === 'function') {
+                    switchTab('pengaturan');
+                    return;
+                }
+            }
+
             // Guard Otorisasi Peran RBAC: Cegah navigasi ke modul yang tidak diizinkan
             if (viewName && viewName !== 'hub') {
                 if (typeof isModuleAllowedForRole === 'function' && !isModuleAllowedForRole(viewName)) {
                     const fallbackMeta = ADMIN_VIEW_META[viewName] || {};
                     if (typeof showToast === 'function') {
                         showToast(`⛔ Akses Terbatas: Peran Anda tidak memiliki izin untuk modul ${fallbackMeta.title || viewName}.`);
+                    }
+                    if (window.innerWidth < 1024) {
+                        if (typeof switchTab === 'function') switchTab('pengaturan');
+                        return;
                     }
                     viewName = 'hub';
                 }
@@ -415,6 +425,12 @@
          * - Pada desktop, kembali ke Hub Menu Admin
          */
         function backFromAdminModule() {
+            if (window.innerWidth < 1024) {
+                if (typeof switchTab === 'function') {
+                    switchTab('pengaturan');
+                    return;
+                }
+            }
             showAdminView('hub');
         }
         window.backFromAdminModule = backFromAdminModule;
