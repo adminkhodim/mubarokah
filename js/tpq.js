@@ -353,6 +353,33 @@ function renderTPQSummaryCards() {
 }
 
 /**
+ * Cek apakah seorang santri telah dimasukkan ke dalam kelompok kelas TPQ Yanbu'a
+ */
+function isStudentInTPQKelas(st) {
+    if (!st) return false;
+    const kelasList = (ASNTPQ.data && ASNTPQ.data.kelasList) || [];
+    const sId = String(st.studentId || "").trim();
+    const sNis = String(st.nis || "").trim();
+
+    // 1. Cek jika ID atau NIS santri ada di dalam list studentIds salah satu kelas
+    const inKelasList = kelasList.some(k => {
+        const sids = Array.isArray(k.studentIds) ? k.studentIds.map(x => String(x).trim()) : [];
+        return (sId && sids.includes(sId)) || (sNis && sids.includes(sNis));
+    });
+    if (inKelasList) return true;
+
+    // 2. Cek jika properti kelasId atau namaKelas terisi valid
+    const kId = String(st.kelasId || "").trim();
+    const kName = String(st.namaKelas || "").trim();
+    if (kId && kName && kName !== "Belum Ditentukan" && kName !== "Belum Ada Kelas") {
+        return true;
+    }
+
+    return false;
+}
+window.isStudentInTPQKelas = isStudentInTPQKelas;
+
+/**
  * Isi dropdown filter kelas & jilid
  */
 function populateTPQFilters() {
@@ -361,10 +388,15 @@ function populateTPQFilters() {
         const currentVal = filterKelas.value;
         let opt = '<option value="ALL">Semua Kelas TPQ</option>';
         ASNTPQ.data.kelasList.forEach(k => {
-            opt += `<option value="${escapeHtml(k.kelasId)}">${escapeHtml(k.namaKelas)}</option>`;
+            if (k && k.namaKelas) {
+                opt += `<option value="${escapeHtml(k.kelasId)}">${escapeHtml(k.namaKelas)}</option>`;
+            }
         });
+        opt += '<option value="UNASSIGNED">Belum Masuk Kelas</option>';
         filterKelas.innerHTML = opt;
-        if (currentVal) filterKelas.value = currentVal;
+        if (currentVal && Array.from(filterKelas.options).some(o => o.value === currentVal)) {
+            filterKelas.value = currentVal;
+        }
     }
 }
 
@@ -394,9 +426,23 @@ function filterTPQList() {
             if (!matchName && !matchNis && !matchKelas && !matchUstadz) return false;
         }
 
-        // Kelas
-        if (selKelas !== "ALL") {
-            if (st.kelasId !== selKelas) return false;
+        // Kelas (Mengadopsi pola Tahfidz & Sorogan: Semua Kelas, Kelas, Belum Masuk Kelas)
+        const inKelas = isStudentInTPQKelas(st);
+        if (selKelas === "ALL") {
+            // Default "Semua Kelas TPQ": Menampilkan santri yang sudah dimasukkan ke kelompok kelas
+            if (!inKelas) return false;
+        } else if (selKelas === "UNASSIGNED") {
+            // Khusus santri yang belum masuk kelompok kelas
+            if (inKelas) return false;
+        } else {
+            // Filter per kelas tertentu
+            const kelasList = (ASNTPQ.data && ASNTPQ.data.kelasList) || [];
+            const curK = kelasList.find(k => k.kelasId === selKelas || k.namaKelas === selKelas);
+            const inCurKelas = (st.kelasId === selKelas) || 
+                (st.namaKelas === selKelas) || 
+                (curK && (curK.kelasId === st.kelasId || curK.namaKelas === st.namaKelas)) || 
+                (curK && Array.isArray(curK.studentIds) && (curK.studentIds.includes(st.studentId) || curK.studentIds.includes(st.nis)));
+            if (!inCurKelas) return false;
         }
 
         // Jilid
