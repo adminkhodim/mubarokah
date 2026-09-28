@@ -15091,11 +15091,14 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <!-- Target Juz Sasaran -->
                     <div class="p-3.5 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200 dark:border-[#283a4e] space-y-2">
-                        <label class="font-bold text-slate-700 dark:text-slate-300 block">Target Juz Sasaran <span class="text-rose-500">*</span></label>
+                        <div class="flex items-center justify-between">
+                            <label class="font-bold text-slate-700 dark:text-slate-300 block">Target Juz Sasaran <span class="text-rose-500">*</span></label>
+                            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300">Default: 30 Juz</span>
+                        </div>
                         <select id="input-sorogan-target-juz" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-bold bg-white dark:bg-[#15202d] text-slate-800 dark:text-slate-100">
                             <!-- Populated with Juz 1 to 30 -->
                         </select>
-                        <p class="text-[9px] text-slate-400">Target juz akhir yang ditargetkan khatam disimak secara binnazhar.</p>
+                        <p class="text-[9px] text-slate-400">Target akhir kelulusan binnazhar (Khatam 30 Juz Al-Qur'an atau tonggak juz tertentu).</p>
                     </div>
 
                     <!-- Target Halaman per Sesi -->
@@ -15117,7 +15120,7 @@
                     </div>
                     <div class="p-3 bg-slate-50 dark:bg-[#1c2836] rounded-xl border border-slate-200 dark:border-[#283a4e]">
                         <span class="text-[10px] font-bold text-slate-400 block mb-0.5">Estimasi Target Bulanan (4 Pekan):</span>
-                        <input type="text" id="input-sorogan-target-bulan" readonly value="88 Halaman (~4.4 Juz)" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#253447] text-xs font-bold bg-white/80 dark:bg-[#15202d] text-slate-700 dark:text-slate-200">
+                        <input type="text" id="input-sorogan-target-bulan" readonly value="88 Halaman (~4.4 Juz)" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#283a4e] text-xs font-bold bg-white/80 dark:bg-[#15202d] text-slate-700 dark:text-slate-200">
                     </div>
                 </div>
             </div>
@@ -15215,9 +15218,19 @@
 
                 <!-- 2. PARAMETER TARGET -->
                 <div class="p-4 bg-sky-50/40 dark:bg-sky-950/20 rounded-2xl border border-sky-200/80 dark:border-sky-900/40 space-y-3">
-                    <span class="font-black text-sky-800 dark:text-sky-300 flex items-center gap-1.5">
-                        <i class="fa-solid fa-bullseye"></i> 2. TARGET RITME SOROGAN MUSHAF POJOK
-                    </span>
+                    <div class="flex items-center justify-between">
+                        <span class="font-black text-sky-800 dark:text-sky-300 flex items-center gap-1.5">
+                            <i class="fa-solid fa-bullseye"></i> 2. TARGET RITME SOROGAN MUSHAF POJOK
+                        </span>
+                        <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300/60 flex items-center gap-1">
+                            <i class="fa-solid fa-crown text-amber-500 text-[9px]"></i>
+                            <span>Sasaran: Khatam 30 Juz</span>
+                        </span>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-white/80 dark:bg-[#15202d] border border-sky-100 dark:border-sky-800/40 text-[11px] text-slate-600 dark:text-slate-300 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                        <span>Seluruh santri Sorogan Binnazhar otomatis ditargetkan <b>Khatam 30 Juz Al-Qur'an (600 Halaman)</b>. Form ini menetapkan ritme setoran harian untuk mencapainya.</span>
+                    </div>
                     <div class="space-y-1.5">
                         <label class="font-bold text-slate-700 dark:text-slate-300 block">Target Halaman per Sesi / Setoran <span class="text-rose-500">*</span></label>
                         <input type="number" id="input-sorogan-bulk-target-sesi" oninput="recalculateSoroganBulkTargetWeekly()" value="2" min="1" step="1" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-bold bg-white dark:bg-[#1c2836] outline-none focus:ring-2 focus:ring-sky-500">

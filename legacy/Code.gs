@@ -15554,8 +15554,16 @@ function getSoroganDashboard(token) {
         const sid = String(tData[i][sIdIdx] || "").trim();
         if (sid) {
           const sSesi = Number(tData[i][sSesiIdx]) || 2;
+          let rawTj = Number(tData[i][jIdx]);
+          // Jika target_juz bernilai 1 atau kosong, selaraskan ke 30 (Khatam 30 Juz Al-Qur'an)
+          if (!rawTj || rawTj <= 1) {
+            rawTj = 30;
+            try {
+              if (jIdx !== -1) targetSheet.getRange(i + 1, jIdx + 1).setValue(30);
+            } catch (healErr) {}
+          }
           targetMap[sid] = {
-            targetJuz: Number(tData[i][jIdx]) || 1,
+            targetJuz: rawTj,
             targetHalamanSesi: sSesi,
             targetHalamanPekan: Number(tData[i][sPekanIdx]) || (sSesi * 11)
           };
@@ -15667,7 +15675,7 @@ function getSoroganDashboard(token) {
       }
 
       const tgt = targetMap[st.studentId] || {
-        targetJuz: Math.min(30, juz + 1),
+        targetJuz: 30,
         targetHalamanSesi: 2,
         targetHalamanPekan: 2 * soroganWeeklySessions
       };
@@ -16212,7 +16220,7 @@ function saveSoroganTarget(payload, token) {
       const headers = ["student_id", "target_juz", "target_halaman_sesi", "target_halaman_pekan", "updated_at"];
       const sheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_TARGET, headers, "#f59e0b");
 
-      const targetJuz = Number(payload.targetJuz || payload.target_juz || 1);
+      const targetJuz = Number(payload.targetJuz || payload.target_juz || 30);
       const targetHalamanSesi = Number(payload.targetHalamanSesi || payload.target_halaman_sesi || 2);
       const targetHalamanPekan = Number(payload.targetHalamanPekan || payload.target_halaman_pekan || (targetHalamanSesi * 11));
       const updatedAt = new Date().toISOString();
@@ -16264,6 +16272,7 @@ function saveBulkSoroganTarget(payload, token) {
       const headers = ["student_id", "target_juz", "target_halaman_sesi", "target_halaman_pekan", "updated_at"];
       const sheet = getOrCreateSoroganSheet(ss, SHEET_SOROGAN_TARGET, headers, "#f59e0b");
 
+      const targetJuz = Number(payload.targetJuz || payload.target_juz || 30);
       const targetHalamanSesi = Number(payload.targetHalamanSesi || payload.target_halaman_sesi || 2);
       const targetHalamanPekan = Number(payload.targetHalamanPekan || payload.target_halaman_pekan || (targetHalamanSesi * 11));
       const updatedAt = new Date().toISOString();
@@ -16279,7 +16288,7 @@ function saveBulkSoroganTarget(payload, token) {
           if (sid) {
             existingRowMap[sid] = {
               row: i + 1,
-              targetJuz: targetJuzIdx !== -1 ? Number(data[i][targetJuzIdx]) || 1 : 1
+              targetJuz: targetJuzIdx !== -1 ? Number(data[i][targetJuzIdx]) || 30 : 30
             };
           }
         }
@@ -16289,10 +16298,11 @@ function saveBulkSoroganTarget(payload, token) {
       studentIds.forEach(id => {
         if (existingRowMap[id]) {
           const r = existingRowMap[id].row;
-          const tj = existingRowMap[id].targetJuz || 1;
+          const currentTj = Number(existingRowMap[id].targetJuz);
+          const tj = (currentTj && currentTj > 1) ? currentTj : targetJuz;
           sheet.getRange(r, 1, 1, 5).setValues([[id, tj, targetHalamanSesi, targetHalamanPekan, updatedAt]]);
         } else {
-          newRows.push([id, 1, targetHalamanSesi, targetHalamanPekan, updatedAt]);
+          newRows.push([id, targetJuz, targetHalamanSesi, targetHalamanPekan, updatedAt]);
         }
       });
 
