@@ -209,10 +209,57 @@ async function loadAdminSoroganData(forceRefresh = false) {
 }
 
 /**
- * Render kartu ringkasan Sorogan
+ * Cek apakah seorang santri telah dimasukkan ke dalam plotting kelompok halaqah Sorogan
+ */
+function isStudentInSoroganHalaqah(st) {
+    if (!st) return false;
+    const halaqahs = (ASNSorogan.data && ASNSorogan.data.halaqahs) || [];
+    const sId = String(st.studentId || "").trim();
+    const sNis = String(st.nis || "").trim();
+
+    // 1. Cek jika ID atau NIS santri ada di dalam list studentIds salah satu halaqah
+    const inHalaqahList = halaqahs.some(h => {
+        const sids = Array.isArray(h.studentIds) ? h.studentIds.map(x => String(x).trim()) : [];
+        return (sId && sids.includes(sId)) || (sNis && sids.includes(sNis));
+    });
+    if (inHalaqahList) return true;
+
+    // 2. Cek jika properti halaqahId atau namaHalaqah terisi valid
+    const hId = String(st.halaqahId || "").trim();
+    const hName = String(st.namaHalaqah || "").trim();
+    if (hId && hName && hName !== "Belum Ditentukan" && hName !== "Belum Ada Halaqah") {
+        return true;
+    }
+
+    return false;
+}
+window.isStudentInSoroganHalaqah = isStudentInSoroganHalaqah;
+
+/**
+ * Render kartu ringkasan Sorogan (Dihitung berdasarkan santri binaan yang telah dimasukkan ke halaqah)
  */
 function renderSoroganSummaryCards() {
-    const sum = ASNSorogan.data.summary || {};
+    const all = ASNSorogan.data.students || [];
+    const plotted = all.filter(isStudentInSoroganHalaqah);
+    const activeCohort = plotted.length > 0 ? plotted : all;
+
+    let totalJuzSum = 0;
+    let khatam30 = 0;
+    let totalLanjut = 0;
+    let totalUlang = 0;
+
+    activeCohort.forEach(st => {
+        const j = Math.max(1, Math.min(30, Number(st.juzAktif) || 1));
+        totalJuzSum += j;
+        if (j === 30 && Number(st.halamanTerakhir) >= 20) khatam30++;
+        if (st.statusTerakhir === 'ULANG') totalUlang++;
+        else totalLanjut++;
+    });
+
+    const totalSantri = activeCohort.length;
+    const avgJuz = totalSantri > 0 ? (totalJuzSum / totalSantri).toFixed(1) : "1.0";
+    const pctLanjut = totalSantri > 0 ? Math.round((totalLanjut / totalSantri) * 100) : 100;
+    const pctUlang = Math.max(0, 100 - pctLanjut);
 
     const elTotal = document.getElementById('sorogan-stat-total-santri');
     const elAvgJuz = document.getElementById('sorogan-stat-avg-juz');
@@ -222,13 +269,10 @@ function renderSoroganSummaryCards() {
     const elTextUlang = document.getElementById('sorogan-stat-text-ulang');
     const elBarLanjut = document.getElementById('sorogan-stat-bar-lanjut');
 
-    if (elTotal) elTotal.innerText = sum.totalSantri || 0;
-    if (elAvgJuz) elAvgJuz.innerText = `Juz ${sum.rataRataJuz || '1.0'}`;
-    if (elKhatam) elKhatam.innerText = `${sum.khatam30Juz || 0} Santri`;
-    if (elPersen) elPersen.innerText = `${sum.persentaseLanjut || 100}%`;
-
-    const pctLanjut = Math.max(0, Math.min(100, Number(sum.persentaseLanjut !== undefined ? sum.persentaseLanjut : 100)));
-    const pctUlang = Math.max(0, 100 - pctLanjut);
+    if (elTotal) elTotal.innerText = totalSantri;
+    if (elAvgJuz) elAvgJuz.innerText = `Juz ${avgJuz}`;
+    if (elKhatam) elKhatam.innerText = `${khatam30} Santri`;
+    if (elPersen) elPersen.innerText = `${pctLanjut}%`;
 
     if (elTextLanjut) {
         elTextLanjut.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-sky-600 shrink-0"></span> Lancar (${pctLanjut}%)`;
@@ -248,7 +292,9 @@ function populateSoroganFilters() {
     const filterHalaqah = document.getElementById('sorogan-filter-halaqah');
     if (filterHalaqah && Array.isArray(ASNSorogan.data.halaqahs)) {
         const currentVal = filterHalaqah.value;
-        let opt = '<option value="ALL">Semua Halaqah Sorogan</option>';
+        let opt = '<option value="ALL">Semua Santri Terplot (Halaqah)</option>';
+        opt += '<option value="UNPLOTTED">Santri Belum Masuk Halaqah</option>';
+        opt += '<option value="ALL_STUDENTS">Semua Santri (Termasuk Belum Masuk)</option>';
         ASNSorogan.data.halaqahs.forEach(h => {
             opt += `<option value="${escapeHtml(h.halaqahId)}">${escapeHtml(h.namaHalaqah)}</option>`;
         });
@@ -258,7 +304,7 @@ function populateSoroganFilters() {
 }
 
 /**
- * Filter santri sorogan
+ * Filter santri sorogan berdasarkan plotting kelompok halaqah
  */
 function filterSoroganList() {
     const searchInput = document.getElementById('sorogan-search-input');
@@ -282,7 +328,23 @@ function filterSoroganList() {
             if (!matchName && !matchNis && !matchHalaqah && !matchMuallim) return false;
         }
 
-        if (selHalaqah !== "ALL" && st.halaqahId !== selHalaqah) return false;
+        // Filter berdasarkan Halaqah & Plotting
+        if (selHalaqah === "ALL") {
+            // Default: Daftar Capaian Sorogan HANYA untuk santri yang sudah dimasukkan ke plotting kelompok halaqah
+            if (!isStudentInSoroganHalaqah(st)) return false;
+        } else if (selHalaqah === "UNPLOTTED") {
+            // Khusus santri yang belum masuk kelompok halaqah
+            if (isStudentInSoroganHalaqah(st)) return false;
+        } else if (selHalaqah === "ALL_STUDENTS") {
+            // Tampilkan semua santri
+        } else {
+            // Filter per halaqah tertentu
+            const halaqahs = (ASNSorogan.data && ASNSorogan.data.halaqahs) || [];
+            const curH = halaqahs.find(h => h.halaqahId === selHalaqah);
+            const inCurHalaqah = (st.halaqahId === selHalaqah) || (curH && Array.isArray(curH.studentIds) && (curH.studentIds.includes(st.studentId) || curH.studentIds.includes(st.nis)));
+            if (!inCurHalaqah) return false;
+        }
+
         if (selJuz !== "ALL" && String(st.juzAktif) !== String(selJuz)) return false;
         if (selStatus !== "ALL" && st.statusTerakhir !== selStatus) return false;
 
@@ -664,8 +726,24 @@ function openSimakSoroganModal(studentId = null) {
     }
 
     onSoroganJuzChanged();
+
+    // Set Nilai Default & Listener otomatisasi status (persis seperti modul Tahfidz)
+    const elNilai = document.getElementById('sorogan-simak-modal-nilai');
+    if (elNilai) {
+        elNilai.value = "MUMTAZ";
+        ASNSorogan.simakState.nilai = "MUMTAZ";
+        elNilai.onchange = function() {
+            ASNSorogan.simakState.nilai = this.value;
+            if (this.value === 'DHAIF') {
+                selectSoroganQuickStatus('ULANG');
+            } else {
+                selectSoroganQuickStatus('LANJUT');
+            }
+        };
+    }
+
+    // Set Keputusan Default: LANJUT
     selectSoroganQuickStatus("LANJUT");
-    selectSoroganQuickNilai("MUMTAZ");
 
     const modal = document.getElementById('modal-simak-sorogan');
     if (modal) modal.classList.remove('hidden');
@@ -757,66 +835,67 @@ function selectSoroganQuickRange(count) {
 }
 
 /**
- * Status simakan sorogan
+ * Status simakan sorogan (Keputusan Hasil Setoran: Lulus & Lanjut vs Wajib Ulang I'adah)
  */
 function selectSoroganQuickStatus(status) {
     ASNSorogan.simakState.statusSetoran = status;
 
-    const btnLanjut = document.getElementById('sorogan-btn-status-lanjut');
-    const btnUlang = document.getElementById('sorogan-btn-status-ulang');
-    const btnKhatam = document.getElementById('sorogan-btn-status-khatam');
+    const radioLanjut = document.getElementById('sorogan-radio-status-lanjut');
+    const radioUlang = document.getElementById('sorogan-radio-status-ulang');
+    const labelLanjut = document.getElementById('sorogan-label-status-lanjut');
+    const labelUlang = document.getElementById('sorogan-label-status-ulang');
+    const badgePreview = document.getElementById('sorogan-status-badge-preview');
+    const hint = document.getElementById('sorogan-status-hint');
 
-    const statusMap = {
-        'LANJUT': {
-            btn: btnLanjut,
-            iconClass: 'fa-solid fa-circle-check text-sm',
-            activeBtnClass: 'sorogan-btn-status py-2.5 px-3 rounded-xl border border-sky-600 bg-sky-600 text-white shadow-md text-xs font-bold flex flex-col items-center gap-1 transition active:scale-95 ring-2 ring-sky-400/80 ring-offset-1 dark:ring-offset-[#15202d]',
-            inactiveBtnClass: 'sorogan-btn-status py-2.5 px-3 rounded-xl border border-slate-200 dark:border-[#253447] bg-white dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95 hover:bg-slate-50 dark:hover:bg-[#253447]',
-            activeIconClass: 'text-white',
-            inactiveIconClass: 'text-sky-500',
-            label: 'Lanjut Halaman'
-        },
-        'ULANG': {
-            btn: btnUlang,
-            iconClass: 'fa-solid fa-rotate-left text-sm',
-            activeBtnClass: 'sorogan-btn-status py-2.5 px-3 rounded-xl border border-rose-600 bg-rose-600 text-white shadow-md text-xs font-bold flex flex-col items-center gap-1 transition active:scale-95 ring-2 ring-rose-400/80 ring-offset-1 dark:ring-offset-[#15202d]',
-            inactiveBtnClass: 'sorogan-btn-status py-2.5 px-3 rounded-xl border border-slate-200 dark:border-[#253447] bg-white dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95 hover:bg-slate-50 dark:hover:bg-[#253447]',
-            activeIconClass: 'text-white',
-            inactiveIconClass: 'text-rose-500',
-            label: "Ulang / I'adah"
-        },
-        'KHATAM_30JUZ': {
-            btn: btnKhatam,
-            iconClass: 'fa-solid fa-crown text-sm',
-            activeBtnClass: 'sorogan-btn-status py-2.5 px-3 rounded-xl border border-amber-500 bg-amber-500 text-white shadow-md text-xs font-bold flex flex-col items-center gap-1 transition active:scale-95 ring-2 ring-amber-400/80 ring-offset-1 dark:ring-offset-[#15202d]',
-            inactiveBtnClass: 'sorogan-btn-status py-2.5 px-3 rounded-xl border border-slate-200 dark:border-[#253447] bg-white dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95 hover:bg-slate-50 dark:hover:bg-[#253447]',
-            activeIconClass: 'text-white',
-            inactiveIconClass: 'text-amber-500',
-            label: 'Khatam 30 Juz'
+    if (status === 'ULANG') {
+        if (radioUlang) radioUlang.checked = true;
+        if (radioLanjut) radioLanjut.checked = false;
+        if (labelUlang) {
+            labelUlang.className = "flex items-center justify-center gap-2 p-2.5 rounded-xl border-2 border-rose-500 bg-rose-50/90 dark:bg-rose-950/50 text-rose-800 dark:text-rose-200 cursor-pointer font-bold text-xs transition";
         }
-    };
-
-    Object.keys(statusMap).forEach(key => {
-        const item = statusMap[key];
-        if (!item.btn) return;
-        const isActive = (key === status);
-        item.btn.className = isActive ? item.activeBtnClass : item.inactiveBtnClass;
-        item.btn.innerHTML = `
-            <i class="${item.iconClass} ${isActive ? item.activeIconClass : item.inactiveIconClass}"></i>
-            <span class="${isActive ? 'text-white font-bold' : 'text-slate-700 dark:text-slate-300'}">${item.label}</span>
-        `;
-    });
+        if (labelLanjut) {
+            labelLanjut.className = "flex items-center justify-center gap-2 p-2.5 rounded-xl border-2 border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-slate-600 dark:text-slate-400 cursor-pointer font-bold text-xs transition hover:border-sky-300";
+        }
+        if (badgePreview) {
+            badgePreview.innerText = "Wajib Ulang (I'adah)";
+            badgePreview.className = "text-[9px] font-black px-2 py-0.5 rounded-md uppercase bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300";
+        }
+        if (hint) {
+            hint.innerHTML = `<span class="text-rose-600 dark:text-rose-400 font-semibold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Santri dinilai belum lancar. Posisi capaian sorogan belum bertambah, santri wajib mengulang halaman ini pada sesi berikutnya.</span>`;
+        }
+    } else {
+        if (radioLanjut) radioLanjut.checked = true;
+        if (radioUlang) radioUlang.checked = false;
+        if (labelLanjut) {
+            labelLanjut.className = "flex items-center justify-center gap-2 p-2.5 rounded-xl border-2 border-sky-500 bg-sky-50/90 dark:bg-sky-950/50 text-sky-800 dark:text-sky-200 cursor-pointer font-bold text-xs transition";
+        }
+        if (labelUlang) {
+            labelUlang.className = "flex items-center justify-center gap-2 p-2.5 rounded-xl border-2 border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-slate-600 dark:text-slate-400 cursor-pointer font-bold text-xs transition hover:border-rose-300";
+        }
+        if (badgePreview) {
+            badgePreview.innerText = "Lulus & Lanjut";
+            badgePreview.className = "text-[9px] font-black px-2 py-0.5 rounded-md uppercase bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300";
+        }
+        if (hint) {
+            hint.innerText = "Santri dinyatakan tuntas dan berhak melanjutkan ke halaman berikutnya.";
+        }
+    }
 }
 
+/**
+ * Pilihan cepat nilai (Sinkron dengan dropdown Kualitas Nilai)
+ */
 function selectSoroganQuickNilai(nilai) {
     ASNSorogan.simakState.nilai = nilai;
-    document.querySelectorAll('.sorogan-btn-nilai').forEach(btn => {
-        if (btn.dataset.nilai === nilai) {
-            btn.className = 'sorogan-btn-nilai py-2 rounded-xl text-xs font-bold transition bg-sky-600 text-white shadow-sm ring-2 ring-sky-400/50';
+    const elNilai = document.getElementById('sorogan-simak-modal-nilai');
+    if (elNilai) {
+        elNilai.value = nilai;
+        if (nilai === 'DHAIF') {
+            selectSoroganQuickStatus('ULANG');
         } else {
-            btn.className = 'sorogan-btn-nilai py-2 rounded-xl text-xs font-semibold transition bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] dark:hover:bg-[#253447] text-slate-700 dark:text-slate-300';
+            selectSoroganQuickStatus('LANJUT');
         }
-    });
+    }
 }
 
 /**
@@ -831,10 +910,12 @@ async function submitSimakSorogan(e) {
     const elCatatan = document.getElementById('sorogan-simak-modal-catatan');
     const elTanggal = document.getElementById('sorogan-simak-modal-tanggal');
     const elSesi = document.getElementById('sorogan-simak-modal-sesi');
+    const elNilai = document.getElementById('sorogan-simak-modal-nilai');
 
     const selectedPages = ASNSorogan.simakState.selectedPages || [1];
     const tanggalVal = (elTanggal && elTanggal.value) ? elTanggal.value : new Date().toISOString().substring(0, 10);
     const sesiVal = (elSesi && elSesi.value) ? elSesi.value : "Pagi (Ba'da Subuh)";
+    const nilaiVal = (elNilai && elNilai.value) ? elNilai.value : (ASNSorogan.simakState.nilai || "MUMTAZ");
 
     const payload = {
         studentId: ASNSorogan.simakState.studentId,
@@ -845,8 +926,8 @@ async function submitSimakSorogan(e) {
         juz: elJuz ? Number(elJuz.value) : ASNSorogan.simakState.juz,
         halamanList: selectedPages,
         totalHalaman: selectedPages.length,
-        statusSetoran: ASNSorogan.simakState.statusSetoran,
-        nilai: ASNSorogan.simakState.nilai,
+        statusSetoran: ASNSorogan.simakState.statusSetoran || "LANJUT",
+        nilai: nilaiVal,
         muallim: elMuallim ? elMuallim.value.trim() : ASNSorogan.simakState.muallim,
         catatan: elCatatan ? elCatatan.value.trim() : "",
         tanggal: tanggalVal,

@@ -15722,8 +15722,11 @@ function saveSoroganLog(data, token) {
       const juz = Number(data.juz) || 1;
       const halamanList = Array.isArray(data.halamanList) ? data.halamanList : (data.halaman ? [Number(data.halaman)] : [1]);
       const totalHalaman = Number(data.totalHalaman) || halamanList.length || 1;
-      const statusSetoran = String(data.statusSetoran || data.status_setoran || "LANJUT").trim().toUpperCase();
       const nilai = String(data.nilai || "MUMTAZ").trim().toUpperCase();
+      let statusSetoran = String(data.statusSetoran || data.status_setoran || "").trim().toUpperCase();
+      if (!statusSetoran) {
+        statusSetoran = (nilai === "DHAIF") ? "ULANG" : "LANJUT";
+      }
       const muallim = String(data.muallim || data.ustadz || "Guru Sorogan").trim();
       const catatan = String(data.catatan || "").trim();
       const tanggal = String(data.tanggal || new Date().toISOString().substring(0, 10)).trim();

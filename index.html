@@ -13065,53 +13065,50 @@
                     </div>
                 </div>
 
-                <!-- Status Simakan Sorogan -->
+                <!-- 1. Kualitas Nilai (Penilaian) -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1.5">
-                        Status Sorogan <span class="text-rose-500">*</span>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
+                        <i class="fa-solid fa-award text-sky-600"></i>
+                        <span>Kualitas Nilai <span class="text-rose-500">*</span></span>
                     </label>
-                    <div class="grid grid-cols-3 gap-2">
-                        <button type="button" id="sorogan-btn-status-lanjut" data-status="LANJUT" onclick="selectSoroganQuickStatus('LANJUT')"
-                            class="sorogan-btn-status py-2.5 px-3 rounded-xl border border-sky-600 bg-sky-600 text-white shadow-md text-xs font-bold flex flex-col items-center gap-1 transition active:scale-95 ring-2 ring-sky-400/80 ring-offset-1 dark:ring-offset-[#15202d]">
-                            <i class="fa-solid fa-circle-check text-white text-sm"></i>
-                            <span class="text-white font-bold">Lanjut Halaman</span>
-                        </button>
-                        <button type="button" id="sorogan-btn-status-ulang" data-status="ULANG" onclick="selectSoroganQuickStatus('ULANG')"
-                            class="sorogan-btn-status py-2.5 px-3 rounded-xl border border-slate-200 dark:border-[#253447] bg-white dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95 hover:bg-slate-50 dark:hover:bg-[#253447]">
-                            <i class="fa-solid fa-rotate-left text-rose-500 text-sm"></i>
-                            <span>Ulang / I'adah</span>
-                        </button>
-                        <button type="button" id="sorogan-btn-status-khatam" data-status="KHATAM_30JUZ" onclick="selectSoroganQuickStatus('KHATAM_30JUZ')"
-                            class="sorogan-btn-status py-2.5 px-3 rounded-xl border border-slate-200 dark:border-[#253447] bg-white dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95 hover:bg-slate-50 dark:hover:bg-[#253447]">
-                            <i class="fa-solid fa-crown text-amber-500 text-sm"></i>
-                            <span>Khatam 30 Juz</span>
-                        </button>
-                    </div>
+                    <select id="sorogan-simak-modal-nilai"
+                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-semibold focus:ring-2 focus:ring-sky-500 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white transition">
+                        <option value="MUMTAZ">Mumtaz (A / Sangat Lancar & Mutqin)</option>
+                        <option value="JAYYID_JIDDAN">Jayyid Jiddan (B+ / Lancar)</option>
+                        <option value="JAYYID">Jayyid (B / Cukup, Ada Sedikit Lupa)</option>
+                        <option value="DHAIF">Dha'if (C / Perlu Diulang)</option>
+                    </select>
                 </div>
 
-                <!-- Nilai Kualitas Bacaan -->
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1.5">
-                        Kualitas Tartil & Tajwid
-                    </label>
-                    <div class="grid grid-cols-4 gap-1.5">
-                        <button type="button" data-nilai="MUMTAZ" onclick="selectSoroganQuickNilai('MUMTAZ')"
-                            class="sorogan-btn-nilai py-2 rounded-xl text-xs font-bold transition">
-                            Mumtaz
-                        </button>
-                        <button type="button" data-nilai="JAYYID_JIDDAN" onclick="selectSoroganQuickNilai('JAYYID_JIDDAN')"
-                            class="sorogan-btn-nilai py-2 rounded-xl text-xs font-bold transition">
-                            Jayyid J.
-                        </button>
-                        <button type="button" data-nilai="JAYYID" onclick="selectSoroganQuickNilai('JAYYID')"
-                            class="sorogan-btn-nilai py-2 rounded-xl text-xs font-bold transition">
-                            Jayyid
-                        </button>
-                        <button type="button" data-nilai="MAQBUL" onclick="selectSoroganQuickNilai('MAQBUL')"
-                            class="sorogan-btn-nilai py-2 rounded-xl text-xs font-bold transition">
-                            Maqbul
-                        </button>
+                <!-- 2. Keputusan Hasil Setoran (Status Sorogan) -->
+                <div class="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-[#1c2836]/60 border border-slate-200/80 dark:border-[#253447] space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 text-xs flex items-center gap-1.5">
+                            <i class="fa-solid fa-clipboard-check text-sky-600"></i>
+                            <span>Keputusan Hasil Setoran <span class="text-rose-500">*</span></span>
+                        </label>
+                        <span id="sorogan-status-badge-preview"
+                            class="text-[9px] font-black px-2 py-0.5 rounded-md uppercase bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300">
+                            Lulus & Lanjut
+                        </span>
                     </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label id="sorogan-label-status-lanjut" onclick="selectSoroganQuickStatus('LANJUT')"
+                            class="flex items-center justify-center gap-2 p-2.5 rounded-xl border-2 border-sky-500 bg-sky-50/90 dark:bg-sky-950/50 text-sky-800 dark:text-sky-200 cursor-pointer font-bold text-xs transition">
+                            <input type="radio" name="sorogan-status-setoran" id="sorogan-radio-status-lanjut" value="LANJUT" checked class="hidden">
+                            <i class="fa-solid fa-circle-check text-sky-600"></i>
+                            <span>Lulus & Lanjut</span>
+                        </label>
+                        <label id="sorogan-label-status-ulang" onclick="selectSoroganQuickStatus('ULANG')"
+                            class="flex items-center justify-center gap-2 p-2.5 rounded-xl border-2 border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-slate-600 dark:text-slate-400 cursor-pointer font-bold text-xs transition hover:border-rose-300">
+                            <input type="radio" name="sorogan-status-setoran" id="sorogan-radio-status-ulang" value="ULANG" class="hidden">
+                            <i class="fa-solid fa-rotate-left text-rose-500"></i>
+                            <span>Wajib Ulang (I'adah)</span>
+                        </label>
+                    </div>
+                    <p id="sorogan-status-hint" class="text-[10px] text-slate-500 dark:text-slate-400">
+                        Santri dinyatakan tuntas dan berhak melanjutkan ke halaman berikutnya.
+                    </p>
                 </div>
 
                 <!-- Mu'allim & Catatan -->
