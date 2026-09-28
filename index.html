@@ -7652,34 +7652,31 @@
                                         </div>
                                     </div>
 
-                                    <!-- 4. Aktivitas Pekan Ini -->
+                                    <!-- 4. Capaian Muroja'ah Pekan Ini -->
                                     <div
                                         class="bg-white dark:bg-[#15202d] p-2.5 md:p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm space-y-1 relative overflow-hidden">
                                         <div class="flex justify-between items-center">
                                             <span
-                                                class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">AKTIVITAS
-                                                PEKAN INI</span>
+                                                class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">CAPAIAN MUROJA'AH PEKAN INI</span>
                                             <span
-                                                class="w-5 h-5 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-500 flex items-center justify-center text-[9px] shrink-0">
-                                                <i class="fa-solid fa-chart-pie"></i>
+                                                class="w-5 h-5 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-500 flex items-center justify-center text-[9px] shrink-0">
+                                                <i class="fa-solid fa-repeat"></i>
                                             </span>
                                         </div>
-                                        <div class="flex items-center space-x-2 text-[9px] md:text-[10px] font-bold">
-                                            <span class="flex items-center gap-1 text-emerald-600 truncate"
-                                                id="tahfidz-stat-text-ziyadah">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 shrink-0"></span>
-                                                Ziyadah (100%)
-                                            </span>
-                                            <span class="flex items-center gap-1 text-amber-500 truncate"
-                                                id="tahfidz-stat-text-murajaah">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
-                                                Muraja'ah
+                                        <div class="flex items-center justify-between text-[9px] md:text-[10px] font-bold">
+                                            <div class="flex items-baseline gap-1 min-w-0">
+                                                <span id="tahfidz-stat-murojaah-pages" class="text-base md:text-lg font-black text-amber-600 dark:text-amber-400">0</span>
+                                                <span class="text-slate-400 font-normal text-[9px]">Hlm Disetor</span>
+                                            </div>
+                                            <span class="flex items-center gap-1 text-emerald-600 truncate" id="tahfidz-stat-text-murajaah">
+                                                <span id="tahfidz-stat-murojaah-tuntas-santri" class="font-black text-xs">0%</span>
+                                                <span class="text-[9px] font-normal text-slate-400">Tuntas</span>
                                             </span>
                                         </div>
-                                        <div class="w-full bg-amber-400 h-1.5 rounded-full overflow-hidden flex mt-0.5">
+                                        <div class="w-full bg-slate-100 dark:bg-[#1c2836] h-1.5 rounded-full overflow-hidden flex mt-0.5">
                                             <div id="tahfidz-stat-bar-ziyadah"
-                                                class="bg-emerald-600 h-full transition-all duration-500"
-                                                style="width: 100%;"></div>
+                                                class="bg-gradient-to-r from-amber-500 to-emerald-500 h-full transition-all duration-500"
+                                                style="width: 0%;"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -7706,7 +7703,9 @@
                                         <select id="tahfidz-filter-status" onchange="filterTahfidzList()"
                                             class="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 transition">
                                             <option value="ALL">Semua Status</option>
-                                            <option value="ON_TRACK">On-Track</option>
+                                            <option value="MUROJAAH_TUNTAS">🎯 Target Muroja'ah Tuntas (Pekan Ini)</option>
+                                            <option value="MUROJAAH_BELUM">⚠️ Target Muroja'ah Belum Tuntas (Pekan Ini)</option>
+                                            <option value="ON_TRACK">On-Track (Aktif)</option>
                                             <option value="BELUM_SETOR">Belum Setor</option>
                                             <option value="ULANG">Wajib Mengulang (I'adah)</option>
                                         </select>
@@ -11597,27 +11596,51 @@
                         </div>
                     </div>
 
-                    <!-- Jenis Setoran (3 Big Buttons) -->
+                    <!-- Jenis Setoran (4 Buttons: Ziyadah, Sabqi, Manzil, Tasmi') -->
                     <div>
-                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                            Jenis Setoran <span class="text-rose-500">*</span>
-                        </label>
-                        <div class="grid grid-cols-3 gap-2">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block font-bold text-slate-700 dark:text-slate-300">
+                                Jenis Setoran <span class="text-rose-500">*</span>
+                            </label>
+                            <span id="tahfidz-catat-tipe-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                                Ziyadah (Hafalan Baru)
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             <button type="button" id="btn-tipe-ziyadah" onclick="setTahfidzCatatTipe('ZIYADAH')"
-                                class="py-2.5 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 bg-emerald-600 text-white border-emerald-600 shadow-sm">
-                                <i class="fa-solid fa-circle-plus"></i>
-                                <span>Ziyadah (Baru)</span>
+                                class="py-2.5 px-2 rounded-xl border font-bold text-xs flex flex-col items-center justify-center gap-1 transition active:scale-95 bg-emerald-600 text-white border-emerald-600 shadow-sm ring-2 ring-emerald-500/20">
+                                <i class="fa-solid fa-circle-plus text-sm"></i>
+                                <span>Ziyadah</span>
+                                <span class="text-[9px] font-normal opacity-90">Hafalan Baru</span>
                             </button>
-                            <button type="button" id="btn-tipe-murajaah" onclick="setTahfidzCatatTipe('MURAJAAH')"
-                                class="py-2.5 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 bg-slate-50 dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#283a4e]">
-                                <i class="fa-solid fa-rotate"></i>
-                                <span>Muraja'ah</span>
+                            <button type="button" id="btn-tipe-sabqi" onclick="setTahfidzCatatTipe('MURAJAAH_SABQI')"
+                                class="py-2.5 px-2 rounded-xl border font-bold text-xs flex flex-col items-center justify-center gap-1 transition active:scale-95 bg-slate-50 dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#283a4e] hover:border-amber-400">
+                                <i class="fa-solid fa-rotate-left text-sm text-amber-500"></i>
+                                <span>Muroja'ah Sabqi</span>
+                                <span class="text-[9px] font-normal text-slate-400">Hafalan Dekat</span>
+                            </button>
+                            <button type="button" id="btn-tipe-manzil" onclick="setTahfidzCatatTipe('MURAJAAH_MANZIL')"
+                                class="py-2.5 px-2 rounded-xl border font-bold text-xs flex flex-col items-center justify-center gap-1 transition active:scale-95 bg-slate-50 dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#283a4e] hover:border-sky-400">
+                                <i class="fa-solid fa-repeat text-sm text-sky-500"></i>
+                                <span>Muroja'ah Manzil</span>
+                                <span class="text-[9px] font-normal text-slate-400">Putaran Juz Lama</span>
                             </button>
                             <button type="button" id="btn-tipe-tasmi" onclick="setTahfidzCatatTipe('TASMI')"
-                                class="py-2.5 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 bg-slate-50 dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#283a4e]">
-                                <i class="fa-solid fa-award"></i>
-                                <span>Tasmi' Ujian</span>
+                                class="py-2.5 px-2 rounded-xl border font-bold text-xs flex flex-col items-center justify-center gap-1 transition active:scale-95 bg-slate-50 dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#283a4e] hover:border-purple-400">
+                                <i class="fa-solid fa-award text-sm text-purple-500"></i>
+                                <span>Tasmi'</span>
+                                <span class="text-[9px] font-normal text-slate-400">Ujian 1 Duduk</span>
                             </button>
+                        </div>
+                        <!-- Info Rekomendasi Pintar Setoran -->
+                        <div id="tahfidz-catat-tipe-info" class="mt-2 p-2 rounded-xl bg-slate-50 dark:bg-[#1c2836] border border-slate-200/80 dark:border-[#253447] text-[11px] text-slate-600 dark:text-slate-300 flex items-center justify-between">
+                            <span id="tahfidz-catat-tipe-desc" class="flex items-center gap-1.5 font-semibold">
+                                <i class="fa-solid fa-circle-plus text-emerald-600"></i>
+                                <span>Hafalan baru (menentukan batas juz tertinggi)</span>
+                            </span>
+                            <span id="tahfidz-catat-tipe-pos" class="font-extrabold text-emerald-700 dark:text-emerald-300 text-[10px]">
+                                -
+                            </span>
                         </div>
                     </div>
 
@@ -11887,6 +11910,36 @@
                         </div>
                     </div>
 
+                    <!-- Status Trek & Perputaran Muroja'ah (Sabqi & Manzil) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-3 rounded-2xl bg-slate-50 dark:bg-[#1c2836] border border-slate-200/80 dark:border-[#253447]">
+                        <!-- Trek Sabqi -->
+                        <div class="flex items-start gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 flex items-center justify-center text-xs shrink-0 mt-0.5 border border-amber-200/60 dark:border-amber-800/40">
+                                <i class="fa-solid fa-rotate-left"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <span class="text-[9px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 block">Muroja'ah Sabqi (Hafalan Dekat)</span>
+                                <div id="tahfidz-detail-sabqi-pos" class="font-extrabold text-xs text-slate-800 dark:text-slate-100 mt-0.5">
+                                    -
+                                </div>
+                                <p class="text-[10px] text-slate-400">Pengulangan hafalan dekat pada juz berjalan</p>
+                            </div>
+                        </div>
+                        <!-- Trek Manzil -->
+                        <div class="flex items-start gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 flex items-center justify-center text-xs shrink-0 mt-0.5 border border-sky-200/60 dark:border-sky-800/40">
+                                <i class="fa-solid fa-repeat"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <span class="text-[9px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 block">Muroja'ah Manzil (Putaran Seluruh Juz)</span>
+                                <div id="tahfidz-detail-manzil-pos" class="font-extrabold text-xs text-slate-800 dark:text-slate-100 mt-0.5">
+                                    -
+                                </div>
+                                <p class="text-[10px] text-slate-400">Rotasi berkala seluruh juz lama dari Juz 1</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Tabs Navigation & Analisis Pill -->
                     <div
                         class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-[#253447] pb-2 pt-1">
@@ -12116,6 +12169,30 @@
                                     <i class="fa-solid fa-table-list mr-1"></i>Tabel
                                 </button>
                             </div>
+                        </div>
+
+                        <!-- Filter Tipe Riwayat Setoran (Ziyadah, Sabqi, Manzil, Tasmi') -->
+                        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-[10px]">
+                            <button type="button" id="btn-filter-detail-all" onclick="setTahfidzDetailTipeFilter('ALL')"
+                                class="px-2.5 py-1 rounded-lg font-bold bg-emerald-700 text-white transition shrink-0">
+                                Semua
+                            </button>
+                            <button type="button" id="btn-filter-detail-ziyadah" onclick="setTahfidzDetailTipeFilter('ZIYADAH')"
+                                class="px-2.5 py-1 rounded-lg font-bold bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition shrink-0">
+                                <i class="fa-solid fa-circle-plus text-emerald-600 mr-1"></i>Ziyadah
+                            </button>
+                            <button type="button" id="btn-filter-detail-sabqi" onclick="setTahfidzDetailTipeFilter('MURAJAAH_SABQI')"
+                                class="px-2.5 py-1 rounded-lg font-bold bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition shrink-0">
+                                <i class="fa-solid fa-rotate-left text-amber-500 mr-1"></i>Sabqi
+                            </button>
+                            <button type="button" id="btn-filter-detail-manzil" onclick="setTahfidzDetailTipeFilter('MURAJAAH_MANZIL')"
+                                class="px-2.5 py-1 rounded-lg font-bold bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition shrink-0">
+                                <i class="fa-solid fa-repeat text-sky-500 mr-1"></i>Manzil
+                            </button>
+                            <button type="button" id="btn-filter-detail-tasmi" onclick="setTahfidzDetailTipeFilter('TASMI')"
+                                class="px-2.5 py-1 rounded-lg font-bold bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition shrink-0">
+                                <i class="fa-solid fa-award text-purple-500 mr-1"></i>Tasmi'
+                            </button>
                         </div>
 
                         <!-- 1. TAMPILAN KARTU (OPTIMAL DI HP - 100% UTUH TANPA SCROLL KE KANAN) -->

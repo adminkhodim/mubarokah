@@ -11122,7 +11122,8 @@ function initTahfidzSheets(token) {
 
     // 2. Tab: Tahfidz_Capaian (Snapshot posisi hafalan terakhir per santri)
     const headersCapaian = [
-      "student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_tuntas", "status_terakhir", "halaqah_id", "nama_halaqah", "muhafiz_pembina", "updated_at"
+      "student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_tuntas", "status_terakhir", "halaqah_id", "nama_halaqah", "muhafiz_pembina", "updated_at",
+      "sabqi_halaman", "manzil_juz", "manzil_halaman", "manzil_putaran", "total_halaman_murojaah"
     ];
     let sheetCapaian = ss.getSheetByName(SHEET_TAHFIDZ_CAPAIAN);
     if (!sheetCapaian) {
@@ -11251,7 +11252,8 @@ function getTahfidzDashboard(token) {
     migrateTahfidzHalaqahSheet_(ss);
     const logsSheet = ss.getSheetByName(SHEET_TAHFIDZ_LOGS);
     const headersCapaian = [
-      "student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_tuntas", "status_terakhir", "halaqah_id", "nama_halaqah", "muhafiz_pembina", "updated_at"
+      "student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_tuntas", "status_terakhir", "halaqah_id", "nama_halaqah", "muhafiz_pembina", "updated_at",
+      "sabqi_halaman", "manzil_juz", "manzil_halaman", "manzil_putaran", "total_halaman_murojaah"
     ];
     const capaianSheet = getOrCreateTahfidzSheet(ss, SHEET_TAHFIDZ_CAPAIAN, headersCapaian, "#059669");
     const targetSheet = ss.getSheetByName(SHEET_TAHFIDZ_TARGET);
@@ -11327,31 +11329,54 @@ function getTahfidzDashboard(token) {
         for (let i = 1; i < targetData.length; i++) {
           const sId = sIdIdx !== -1 ? String(targetData[i][sIdIdx] || "").trim() : "";
           if (!sId) continue;
+
+          let zSesi = zSesiIdx !== -1 ? (Number(targetData[i][zSesiIdx]) || 1) : 1;
+          let zPekan = zPekanIdx !== -1 ? (Number(targetData[i][zPekanIdx]) || 10) : 10;
+          let mSesi = mSesiIdx !== -1 ? (Number(targetData[i][mSesiIdx]) || 2) : 2;
+          let mPekan = mPekanIdx !== -1 ? (Number(targetData[i][mPekanIdx]) || 10) : 10;
+
+          // Deteksi baris legacy yang bergeser ke kiri (misal: kolom target_murajaah_pekan terisi timestamp ISO)
+          const rawMPekan = mPekanIdx !== -1 ? String(targetData[i][mPekanIdx] || "").trim() : "";
+          if (rawMPekan.includes("T") && (rawMPekan.includes("Z") || rawMPekan.includes("+"))) {
+            // Kolom bergeser 1 kolom ke kiri: Col B=zSesi, Col C=zPekan, Col D=mSesi, Col E=mPekan
+            zSesi = Number(targetData[i][1]) || 1;
+            zPekan = Number(targetData[i][2]) || 10;
+            mSesi = Number(targetData[i][3]) || 2;
+            mPekan = Number(targetData[i][4]) || 10;
+          }
+
           targetMap[sId] = {
-            targetZiyadahSesi: zSesiIdx !== -1 ? (Number(targetData[i][zSesiIdx]) || 1) : 1,
-            targetZiyadahPekan: zPekanIdx !== -1 ? (Number(targetData[i][zPekanIdx]) || 10) : 10,
-            targetMurajaahSesi: mSesiIdx !== -1 ? (Number(targetData[i][mSesiIdx]) || 2) : 2,
-            targetMurajaahPekan: mPekanIdx !== -1 ? (Number(targetData[i][mPekanIdx]) || 10) : 10
+            targetZiyadahSesi: zSesi,
+            targetZiyadahPekan: zPekan,
+            targetMurajaahSesi: mSesi,
+            targetMurajaahPekan: mPekan
           };
         }
       }
     }
 
-    // 3b. Baca Data Capaian Santri dari Tahfidz_Capaian
+    // 3b. Baca Data Capaian Santri dari Tahfidz_Capaian (Ziyadah & Muroja'ah Terpisah)
     const capaianMap = {};
     if (capaianSheet) {
       const cData = capaianSheet.getDataRange().getValues();
       if (cData && cData.length > 1) {
-        const hCap = cData[0].map(h => String(h || "").trim().toLowerCase());
-        const sIdIdx = hCap.indexOf("student_id");
-        const juzIdx = hCap.indexOf("juz_aktif");
-        const halIdx = hCap.indexOf("halaman_terakhir");
-        const totIdx = hCap.indexOf("total_halaman_tuntas");
-        const stIdx = hCap.indexOf("status_terakhir");
-        const hlqIdIdx = hCap.indexOf("halaqah_id");
-        const hlqNmIdx = hCap.indexOf("nama_halaqah");
-        const muhIdx = hCap.indexOf("muhafiz_pembina");
-        const updIdx = hCap.indexOf("updated_at");
+        const hCap = cData[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s\-_]+/g, ""));
+        const sIdIdx = hCap.findIndex(h => h === "studentid" || h === "id");
+        const juzIdx = hCap.findIndex(h => h === "juzaktif" || h === "juz");
+        const halIdx = hCap.findIndex(h => h === "halamanterakhir" || h === "halaman");
+        const totIdx = hCap.findIndex(h => h === "totalhalamantuntas" || h.includes("totaltuntas"));
+        const stIdx = hCap.findIndex(h => h === "statusterakhir" || h.includes("status"));
+        const hlqIdIdx = hCap.findIndex(h => h.includes("halaqahid") || h === "halaqah");
+        const hlqNmIdx = hCap.findIndex(h => h.includes("namahalaqah"));
+        const muhIdx = hCap.findIndex(h => h.includes("muhafiz"));
+        const updIdx = hCap.findIndex(h => h.includes("updated"));
+
+        // Kolom Muroja'ah Sabqi & Manzil
+        const sabqiIdx = hCap.findIndex(h => h.includes("sabqi"));
+        const manzilJuzIdx = hCap.findIndex(h => h.includes("manzil") && h.includes("juz"));
+        const manzilHalIdx = hCap.findIndex(h => h.includes("manzil") && (h.includes("halaman") || h.includes("hal")));
+        const manzilPutaranIdx = hCap.findIndex(h => h.includes("manzil") && h.includes("putaran"));
+        const totMurojaahIdx = hCap.findIndex(h => h.includes("total") && h.includes("murojaah"));
 
         for (let i = 1; i < cData.length; i++) {
           const sId = sIdIdx !== -1 ? String(cData[i][sIdIdx] || "").trim() : "";
@@ -11364,7 +11389,14 @@ function getTahfidzDashboard(token) {
             halaqahId: hlqIdIdx !== -1 ? String(cData[i][hlqIdIdx] || "").trim() : "",
             namaHalaqah: hlqNmIdx !== -1 ? String(cData[i][hlqNmIdx] || "").trim() : "",
             muhafiz: muhIdx !== -1 ? String(cData[i][muhIdx] || "").trim() : "",
-            updatedAt: updIdx !== -1 ? String(cData[i][updIdx] || "").trim() : ""
+            updatedAt: updIdx !== -1 ? String(cData[i][updIdx] || "").trim() : "",
+            
+            // Sabqi & Manzil
+            sabqiHalaman: sabqiIdx !== -1 ? String(cData[i][sabqiIdx] || "").trim() : "",
+            manzilJuz: manzilJuzIdx !== -1 ? (Number(cData[i][manzilJuzIdx]) || 1) : 1,
+            manzilHalaman: manzilHalIdx !== -1 ? (Number(cData[i][manzilHalIdx]) || 1) : 1,
+            manzilPutaran: manzilPutaranIdx !== -1 ? (Number(cData[i][manzilPutaranIdx]) || 1) : 1,
+            totalHalamanMurojaah: totMurojaahIdx !== -1 ? (Number(cData[i][totMurojaahIdx]) || 0) : 0
           };
         }
       }
@@ -11478,6 +11510,13 @@ function getTahfidzDashboard(token) {
     const setoranPekanIniMap = {};
     let weeklyZiyadahCount = 0;
     let weeklyMurajaahCount = 0;
+    let weeklyZiyadahPages = 0;
+    let weeklyMurajaahPages = 0;
+
+    const weeklyZiyadahPagesMap = {};
+    const weeklyMurajaahPagesMap = {};
+    const weeklySabqiPagesMap = {};
+    const weeklyManzilPagesMap = {};
     const oneWeekAgoMs = Date.now() - (7 * 24 * 60 * 60 * 1000);
 
     if (logsSheet) {
@@ -11537,12 +11576,31 @@ function getTahfidzDashboard(token) {
           const isRecent = !isNaN(d.getTime()) && d.getTime() >= oneWeekAgoMs;
           const tipe = tipeIdx !== -1 ? String(r[tipeIdx] || "ZIYADAH").trim().toUpperCase() : "ZIYADAH";
 
+          const totalHal = totHalIdx !== -1 ? (Number(r[totHalIdx]) || 1) : 1;
+
           if (isRecent) {
-            if (tipe === "ZIYADAH") weeklyZiyadahCount++;
-            else if (tipe === "MURAJAAH" || tipe === "TASMI") weeklyMurajaahCount++;
+            if (tipe === "ZIYADAH") {
+              weeklyZiyadahCount++;
+              weeklyZiyadahPages += totalHal;
+            } else if (tipe.includes("MURAJA") || tipe.includes("SABQI") || tipe.includes("MANZIL") || tipe === "TASMI") {
+              weeklyMurajaahCount++;
+              weeklyMurajaahPages += totalHal;
+            }
           }
 
           sKeys.forEach(k => {
+            if (isRecent) {
+              if (tipe === "ZIYADAH") {
+                weeklyZiyadahPagesMap[k] = (weeklyZiyadahPagesMap[k] || 0) + totalHal;
+              } else if (tipe.includes("MURAJA") || tipe.includes("SABQI") || tipe.includes("MANZIL") || tipe === "TASMI") {
+                weeklyMurajaahPagesMap[k] = (weeklyMurajaahPagesMap[k] || 0) + totalHal;
+                if (tipe === "MURAJAAH_SABQI") {
+                  weeklySabqiPagesMap[k] = (weeklySabqiPagesMap[k] || 0) + totalHal;
+                } else if (tipe === "MURAJAAH_MANZIL") {
+                  weeklyManzilPagesMap[k] = (weeklyManzilPagesMap[k] || 0) + totalHal;
+                }
+              }
+            }
             // Setoran terakhir (pertama kali ditemukan saat reverse loop)
             if (!latestLogMap[k]) {
               latestLogMap[k] = {
@@ -11559,8 +11617,8 @@ function getTahfidzDashboard(token) {
               };
             }
 
-            // Capaian Juz tertinggi
-            if (statusSetoran !== "ULANG" && juz > (maxJuzMap[k] || 0)) {
+            // Capaian Juz tertinggi (Khusus Ziyadah agar tidak tergeser oleh Muroja'ah)
+            if (tipe === "ZIYADAH" && statusSetoran !== "ULANG" && juz > (maxJuzMap[k] || 0)) {
               maxJuzMap[k] = juz;
             }
 
@@ -11579,6 +11637,7 @@ function getTahfidzDashboard(token) {
     // 6. Kalkulasi Data Santri Terintegrasi
     let totalJuzAllStudents = 0;
     let khatam30Count = 0;
+    let santriTuntasMurojaahCount = 0;
 
     const enrichedStudents = filteredStudents.map(st => {
       const sId = String(st.studentId || st.student_id || "").trim();
@@ -11632,6 +11691,13 @@ function getTahfidzDashboard(token) {
         halaqah: halaqah,
         isInHalaqah: isInHalaqah,
         capaian: cap,
+        murojaah: {
+          sabqiHalaman: cap ? (cap.sabqiHalaman || "") : "",
+          manzilJuz: cap ? (cap.manzilJuz || 1) : 1,
+          manzilHalaman: cap ? (cap.manzilHalaman || 1) : 1,
+          manzilPutaran: cap ? (cap.manzilPutaran || 1) : 1,
+          totalHalamanMurojaah: cap ? (cap.totalHalamanMurojaah || 0) : 0
+        },
         target: {
           ziyadahSesi: target.targetZiyadahSesi,
           ziyadahPekan: target.targetZiyadahPekan,
@@ -11640,6 +11706,33 @@ function getTahfidzDashboard(token) {
           murajaahPekan: target.targetMurajaahPekan,
           murajaahBulan: target.targetMurajaahPekan * 4
         },
+        rekapPekan: (function() {
+          const tZ = Number(target.targetZiyadahPekan) || 10;
+          const tM = Number(target.targetMurajaahPekan) || 10;
+          const rZ = weeklyZiyadahPagesMap[sId] || weeklyZiyadahPagesMap[sNis] || 0;
+          const rM = weeklyMurajaahPagesMap[sId] || weeklyMurajaahPagesMap[sNis] || 0;
+          const rSabqi = weeklySabqiPagesMap[sId] || weeklySabqiPagesMap[sNis] || 0;
+          const rManzil = weeklyManzilPagesMap[sId] || weeklyManzilPagesMap[sNis] || 0;
+          const isTuntasM = rM >= tM;
+          if (isTuntasM) santriTuntasMurojaahCount++;
+          return {
+            ziyadah: {
+              target: tZ,
+              realita: rZ,
+              isTuntas: rZ >= tZ
+            },
+            murojaah: {
+              target: tM,
+              realita: rM,
+              sabqi: rSabqi,
+              manzil: rManzil,
+              persen: tM > 0 ? Math.round((rM / tM) * 100) : 0,
+              isTuntas: isTuntasM,
+              sisaHalaman: Math.max(0, tM - rM),
+              statusText: isTuntasM ? "Tuntas Target Muroja'ah" : (rM > 0 ? ("Kurang " + (tM - rM) + " Hlm") : "Belum Muroja'ah")
+            }
+          };
+        })(),
         setoranTerakhir: latestLog ? {
           ...latestLog,
           muhafiz: latestLog.muhafiz || halaqah.muhafiz || "Ustadz Pembina"
@@ -11648,6 +11741,7 @@ function getTahfidzDashboard(token) {
           currentJuz: currentJuz,
           currentHalaman: cap ? cap.halamanTerakhir : (latestLog ? Number(String(latestLog.halaman || "1").replace(/\D/g, "")) || 1 : 1),
           totalJuz: 30,
+          totalHalamanTuntas: cap ? cap.totalHalamanTuntas : 0,
           percent: Math.min(100, Math.round((currentJuz / 30) * 100)),
           onTrackStatus: onTrack
         },
@@ -11721,7 +11815,14 @@ function getTahfidzDashboard(token) {
         aktivitasPekanIni: {
           ziyadahPercent: ziyadahPercent,
           murajaahPercent: murajaahPercent,
-          totalSetoranPekanIni: totalWeeklyActivity
+          totalSetoranPekanIni: totalWeeklyActivity,
+          weeklyZiyadahPages: weeklyZiyadahPages,
+          weeklyMurajaahPages: weeklyMurajaahPages,
+          santriTuntasMurojaahCount: santriTuntasMurojaahCount,
+          totalSantriAktif: halaqahMembers.length || enrichedStudents.length,
+          persenTuntasMurojaah: (halaqahMembers.length || enrichedStudents.length) > 0 
+            ? Math.round((santriTuntasMurojaahCount / (halaqahMembers.length || enrichedStudents.length)) * 100) 
+            : 0
         }
       },
       students: enrichedStudents,
@@ -11925,74 +12026,177 @@ function saveTahfidzLog(payload, token) {
       console.warn("[AUTO-HEAL LOG ROW WARN]", healLogErr);
     }
 
-    // Auto-update / Sync ke Sheet Tahfidz_Capaian
+    // Auto-update / Sync ke Sheet Tahfidz_Capaian (Pemisahan Ziyadah vs Sabqi vs Manzil)
     try {
       const headersCapaian = [
-        "student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_tuntas", "status_terakhir", "halaqah_id", "nama_halaqah", "muhafiz_pembina", "updated_at"
+        "student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_tuntas", "status_terakhir", "halaqah_id", "nama_halaqah", "muhafiz_pembina", "updated_at",
+        "sabqi_halaman", "manzil_juz", "manzil_halaman", "manzil_putaran", "total_halaman_murojaah"
       ];
       const capaianSheet = getOrCreateTahfidzSheet(ss, SHEET_TAHFIDZ_CAPAIAN, headersCapaian, "#059669");
       const cData = capaianSheet.getDataRange().getValues();
       let capaianRowIdx = -1;
-      let prevTotalHalaman = 0;
+      let currRow = null;
+
+      const cHeaders = cData[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s\-_]+/g, ""));
+      const sIdIdx = cHeaders.findIndex(h => h === "studentid" || h === "id");
+      const nameIdx = cHeaders.findIndex(h => h.includes("name") || h.includes("nama"));
+      const juzIdx = cHeaders.findIndex(h => h === "juzaktif" || h === "juz");
+      const halIdx = cHeaders.findIndex(h => h === "halamanterakhir" || h === "halaman");
+      const totIdx = cHeaders.findIndex(h => h === "totalhalamantuntas" || h.includes("totaltuntas"));
+      const stIdx = cHeaders.findIndex(h => h === "statusterakhir" || h.includes("status"));
+      const hlqIdIdx = cHeaders.findIndex(h => h.includes("halaqahid") || h === "halaqah");
+      const hlqNmIdx = cHeaders.findIndex(h => h.includes("namahalaqah"));
+      const muhIdx = cHeaders.findIndex(h => h.includes("muhafiz"));
+      const updIdx = cHeaders.findIndex(h => h.includes("updated"));
+
+      // Kolom Muroja'ah Sabqi & Manzil
+      const sabqiIdx = cHeaders.findIndex(h => h.includes("sabqi"));
+      const manzilJuzIdx = cHeaders.findIndex(h => h.includes("manzil") && h.includes("juz"));
+      const manzilHalIdx = cHeaders.findIndex(h => h.includes("manzil") && (h.includes("halaman") || h.includes("hal")));
+      const manzilPutaranIdx = cHeaders.findIndex(h => h.includes("manzil") && h.includes("putaran"));
+      const totMurojaahIdx = cHeaders.findIndex(h => h.includes("total") && h.includes("murojaah"));
 
       if (cData && cData.length > 1) {
-        const cHeaders = cData[0].map(h => String(h || "").trim().toLowerCase());
-        const sIdIdx = cHeaders.indexOf("student_id");
-        const totIdx = cHeaders.indexOf("total_halaman_tuntas");
         for (let i = 1; i < cData.length; i++) {
           const rowId = sIdIdx !== -1 ? String(cData[i][sIdIdx] || "").trim() : "";
           if (rowId.toLowerCase() === studentId.toLowerCase() || (nis && rowId.toLowerCase() === nis.toLowerCase())) {
             capaianRowIdx = i + 1;
-            prevTotalHalaman = totIdx !== -1 ? (Number(cData[i][totIdx]) || 0) : 0;
+            currRow = cData[i];
             break;
           }
         }
       }
 
-      // Hitung posisi capaian lanjutan
-      let nextJuz = juz;
-      let nextHalaman = 1;
+      // Existing values
+      let currZiyadahJuz = (currRow && juzIdx !== -1 && Number(currRow[juzIdx])) || 1;
+      let currZiyadahHalaman = (currRow && halIdx !== -1 && Number(currRow[halIdx])) || 1;
+      let currZiyadahTotal = (currRow && totIdx !== -1 && Number(currRow[totIdx])) || 0;
+      let currStatus = (currRow && stIdx !== -1 && String(currRow[stIdx])) || "LANJUT";
+      let currSabqiHalaman = (currRow && sabqiIdx !== -1 && String(currRow[sabqiIdx])) || "";
+      let currManzilJuz = (currRow && manzilJuzIdx !== -1 && Number(currRow[manzilJuzIdx])) || 1;
+      let currManzilHalaman = (currRow && manzilHalIdx !== -1 && Number(currRow[manzilHalIdx])) || 1;
+      let currManzilPutaran = (currRow && manzilPutaranIdx !== -1 && Number(currRow[manzilPutaranIdx])) || 1;
+      let currMurojaahTotal = (currRow && totMurojaahIdx !== -1 && Number(currRow[totMurojaahIdx])) || 0;
+
+      // Parse input halaman
       const pagesArr = halamanList.split(",").map(p => Number(p.trim())).filter(p => !isNaN(p) && p > 0);
       const lastPage = pagesArr.length > 0 ? Math.max(...pagesArr) : 1;
+      const minPage = pagesArr.length > 0 ? Math.min(...pagesArr) : 1;
 
-      if (statusSetoran === "LANJUT") {
-        if (lastPage >= 20) {
-          nextJuz = Math.min(30, juz + 1);
-          nextHalaman = 1;
+      // Klasifikasi Tipe Setoran
+      const cleanTipe = String(tipe).toUpperCase();
+      const isZiyadah = cleanTipe === "ZIYADAH";
+      const isSabqi = cleanTipe.includes("SABQI");
+      const isManzil = cleanTipe.includes("MANZIL") || (!isZiyadah && !isSabqi && cleanTipe !== "TASMI");
+      const isTasmi = cleanTipe === "TASMI";
+
+      let nextZiyadahJuz = currZiyadahJuz;
+      let nextZiyadahHalaman = currZiyadahHalaman;
+      let nextZiyadahTotal = currZiyadahTotal;
+      let nextStatus = currStatus;
+
+      let nextSabqiHalaman = currSabqiHalaman;
+      let nextManzilJuz = currManzilJuz;
+      let nextManzilHalaman = currManzilHalaman;
+      let nextManzilPutaran = currManzilPutaran;
+      let nextMurojaahTotal = currMurojaahTotal;
+
+      if (isZiyadah) {
+        // === 1. TREK ZIYADAH (HAFALAN BARU) ===
+        nextStatus = statusSetoran;
+        if (statusSetoran === "LANJUT") {
+          if (lastPage >= 20) {
+            nextZiyadahJuz = Math.min(30, juz + 1);
+            nextZiyadahHalaman = 1;
+          } else {
+            nextZiyadahJuz = juz;
+            nextZiyadahHalaman = lastPage + 1;
+          }
+          nextZiyadahTotal = currZiyadahTotal + totalHalaman;
         } else {
-          nextHalaman = lastPage + 1;
+          // Mengulang di halaman yang sama
+          nextZiyadahJuz = juz;
+          nextZiyadahHalaman = lastPage;
         }
-      } else {
-        // Santri Mengulang: tetap pada halaman berjalan
-        nextJuz = juz;
-        nextHalaman = lastPage;
+      } else if (isSabqi) {
+        // === 2. TREK MUROJA'AH SABQI (DEKAT) ===
+        // Posisi Ziyadah 100% AMAN tidak berubah
+        if (statusSetoran === "LANJUT") {
+          nextSabqiHalaman = pagesArr.length > 1 ? `${minPage}-${lastPage}` : String(lastPage);
+          nextMurojaahTotal = currMurojaahTotal + totalHalaman;
+        }
+      } else if (isManzil) {
+        // === 3. TREK MUROJA'AH MANZIL (JAUH / PERPUTARAN) ===
+        // Posisi Ziyadah 100% AMAN tidak berubah
+        if (statusSetoran === "LANJUT") {
+          nextMurojaahTotal = currMurojaahTotal + totalHalaman;
+          const limitJuz = currZiyadahJuz || 1;
+
+          if (lastPage >= 20) {
+            // Selesai 1 juz manzil
+            if (juz >= limitJuz) {
+              // Sudah menyelesaikan seluruh juz yang sudah dihafal santri -> Putaran Baru kembali ke Juz 1!
+              nextManzilJuz = 1;
+              nextManzilHalaman = 1;
+              nextManzilPutaran = currManzilPutaran + 1;
+            } else {
+              // Lanjut ke juz manzil berikutnya
+              nextManzilJuz = Math.min(30, juz + 1);
+              nextManzilHalaman = 1;
+            }
+          } else {
+            nextManzilJuz = juz;
+            nextManzilHalaman = lastPage + 1;
+          }
+        } else {
+          // Ulang manzil di posisi berjalan
+          nextManzilJuz = juz;
+          nextManzilHalaman = lastPage;
+        }
+      } else if (isTasmi) {
+        // Tasmi': Tambah akumulasi total halaman muroja'ah
+        if (statusSetoran === "LANJUT") {
+          nextMurojaahTotal = currMurojaahTotal + totalHalaman;
+        }
       }
 
-      const updatedTotalHalaman = statusSetoran === "LANJUT" ? (prevTotalHalaman + totalHalaman) : prevTotalHalaman;
-
+      // Tulis atau Perbarui ke Sheet Tahfidz_Capaian
       if (capaianRowIdx > 0) {
-        capaianSheet.getRange(capaianRowIdx, 2).setValue(studentName);
-        capaianSheet.getRange(capaianRowIdx, 3).setValue(nextJuz);
-        capaianSheet.getRange(capaianRowIdx, 4).setValue(nextHalaman);
-        capaianSheet.getRange(capaianRowIdx, 5).setValue(updatedTotalHalaman);
-        capaianSheet.getRange(capaianRowIdx, 6).setValue(statusSetoran);
-        if (halaqahId) capaianSheet.getRange(capaianRowIdx, 7).setValue(halaqahId);
-        if (namaHalaqah) capaianSheet.getRange(capaianRowIdx, 8).setValue(namaHalaqah);
-        if (muhafiz && muhafiz !== "-") capaianSheet.getRange(capaianRowIdx, 9).setValue(muhafiz);
-        capaianSheet.getRange(capaianRowIdx, 10).setValue(createdAt);
+        if (nameIdx !== -1) capaianSheet.getRange(capaianRowIdx, nameIdx + 1).setValue(studentName);
+        if (juzIdx !== -1) capaianSheet.getRange(capaianRowIdx, juzIdx + 1).setValue(nextZiyadahJuz);
+        if (halIdx !== -1) capaianSheet.getRange(capaianRowIdx, halIdx + 1).setValue(nextZiyadahHalaman);
+        if (totIdx !== -1) capaianSheet.getRange(capaianRowIdx, totIdx + 1).setValue(nextZiyadahTotal);
+        if (stIdx !== -1) capaianSheet.getRange(capaianRowIdx, stIdx + 1).setValue(nextStatus);
+        if (hlqIdIdx !== -1 && halaqahId) capaianSheet.getRange(capaianRowIdx, hlqIdIdx + 1).setValue(halaqahId);
+        if (hlqNmIdx !== -1 && namaHalaqah) capaianSheet.getRange(capaianRowIdx, hlqNmIdx + 1).setValue(namaHalaqah);
+        if (muhIdx !== -1 && muhafiz && muhafiz !== "-") capaianSheet.getRange(capaianRowIdx, muhIdx + 1).setValue(muhafiz);
+        if (updIdx !== -1) capaianSheet.getRange(capaianRowIdx, updIdx + 1).setValue(createdAt);
+
+        // Muroja'ah columns
+        if (sabqiIdx !== -1) capaianSheet.getRange(capaianRowIdx, sabqiIdx + 1).setValue(nextSabqiHalaman);
+        if (manzilJuzIdx !== -1) capaianSheet.getRange(capaianRowIdx, manzilJuzIdx + 1).setValue(nextManzilJuz);
+        if (manzilHalIdx !== -1) capaianSheet.getRange(capaianRowIdx, manzilHalIdx + 1).setValue(nextManzilHalaman);
+        if (manzilPutaranIdx !== -1) capaianSheet.getRange(capaianRowIdx, manzilPutaranIdx + 1).setValue(nextManzilPutaran);
+        if (totMurojaahIdx !== -1) capaianSheet.getRange(capaianRowIdx, totMurojaahIdx + 1).setValue(nextMurojaahTotal);
       } else {
-        capaianSheet.appendRow([
-          studentId,
-          studentName,
-          nextJuz,
-          nextHalaman,
-          updatedTotalHalaman,
-          statusSetoran,
-          halaqahId,
-          namaHalaqah,
-          muhafiz,
-          createdAt
-        ]);
+        const newRow = new Array(headersCapaian.length).fill("");
+        if (sIdIdx !== -1) newRow[sIdIdx] = studentId;
+        if (nameIdx !== -1) newRow[nameIdx] = studentName;
+        if (juzIdx !== -1) newRow[juzIdx] = nextZiyadahJuz;
+        if (halIdx !== -1) newRow[halIdx] = nextZiyadahHalaman;
+        if (totIdx !== -1) newRow[totIdx] = nextZiyadahTotal;
+        if (stIdx !== -1) newRow[stIdx] = nextStatus;
+        if (hlqIdIdx !== -1) newRow[hlqIdIdx] = halaqahId;
+        if (hlqNmIdx !== -1) newRow[hlqNmIdx] = namaHalaqah;
+        if (muhIdx !== -1) newRow[muhIdx] = muhafiz;
+        if (updIdx !== -1) newRow[updIdx] = createdAt;
+        if (sabqiIdx !== -1) newRow[sabqiIdx] = nextSabqiHalaman;
+        if (manzilJuzIdx !== -1) newRow[manzilJuzIdx] = nextManzilJuz;
+        if (manzilHalIdx !== -1) newRow[manzilHalIdx] = nextManzilHalaman;
+        if (manzilPutaranIdx !== -1) newRow[manzilPutaranIdx] = nextManzilPutaran;
+        if (totMurojaahIdx !== -1) newRow[totMurojaahIdx] = nextMurojaahTotal;
+
+        capaianSheet.appendRow(newRow);
       }
     } catch (capaianErr) {
       console.warn("[SYNC TAHFIDZ CAPAIAN ERROR]", capaianErr);
@@ -12076,18 +12280,29 @@ function saveTahfidzCapaian(data, token) {
       : halaqahInfo.muhafiz;
 
     const headersCapaian = [
-      "student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_tuntas", "status_terakhir", "halaqah_id", "nama_halaqah", "muhafiz_pembina", "updated_at"
+      "student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_tuntas", "status_terakhir", "halaqah_id", "nama_halaqah", "muhafiz_pembina", "updated_at",
+      "sabqi_halaman", "manzil_juz", "manzil_halaman", "manzil_putaran", "total_halaman_murojaah"
     ];
     const sheet = getOrCreateTahfidzSheet(ss, SHEET_TAHFIDZ_CAPAIAN, headersCapaian, "#059669");
 
     const cData = sheet.getDataRange().getValues();
+    const cHeaders = cData[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s\-_]+/g, ""));
+    const idIdx = cHeaders.findIndex(h => h === "studentid" || h === "id");
+    const nameIdx = cHeaders.findIndex(h => h.includes("name") || h.includes("nama"));
+    const juzIdx = cHeaders.findIndex(h => h === "juzaktif" || h === "juz");
+    const halIdx = cHeaders.findIndex(h => h === "halamanterakhir" || h === "halaman");
+    const totIdx = cHeaders.findIndex(h => h === "totalhalamantuntas" || h.includes("totaltuntas"));
+    const stIdx = cHeaders.findIndex(h => h === "statusterakhir" || h.includes("status"));
+    const hlqIdIdx = cHeaders.findIndex(h => h.includes("halaqahid") || h === "halaqah");
+    const hlqNmIdx = cHeaders.findIndex(h => h.includes("namahalaqah"));
+    const muhIdx = cHeaders.findIndex(h => h.includes("muhafiz"));
+    const updIdx = cHeaders.findIndex(h => h.includes("updated"));
+
     let rowIndex = -1;
     let prevTotal = 0;
     if (cData && cData.length >= 2) {
-      const idIdx = cData[0].map(h => String(h).toLowerCase()).indexOf("student_id");
-      const totIdx = cData[0].map(h => String(h).toLowerCase()).indexOf("total_halaman_tuntas");
       for (let i = 1; i < cData.length; i++) {
-        const rowId = String(cData[i][idIdx] || "").trim();
+        const rowId = String(cData[i][idIdx !== -1 ? idIdx : 0] || "").trim();
         if (rowId.toLowerCase() === studentId.toLowerCase() || (nis && rowId.toLowerCase() === nis.toLowerCase())) {
           rowIndex = i + 1;
           prevTotal = totIdx !== -1 ? (Number(cData[i][totIdx]) || 0) : 0;
@@ -12099,19 +12314,28 @@ function saveTahfidzCapaian(data, token) {
     const totalHalaman = Number(data.totalHalamanTuntas || data.total_halaman_tuntas) || prevTotal || ((juz - 1) * 20 + halaman);
 
     if (rowIndex !== -1) {
-      sheet.getRange(rowIndex, 2).setValue(studentName);
-      sheet.getRange(rowIndex, 3).setValue(juz);
-      sheet.getRange(rowIndex, 4).setValue(halaman);
-      sheet.getRange(rowIndex, 5).setValue(totalHalaman);
-      sheet.getRange(rowIndex, 6).setValue(status);
-      if (halaqahId) sheet.getRange(rowIndex, 7).setValue(halaqahId);
-      if (namaHalaqah) sheet.getRange(rowIndex, 8).setValue(namaHalaqah);
-      if (muhafiz) sheet.getRange(rowIndex, 9).setValue(muhafiz);
-      sheet.getRange(rowIndex, 10).setValue(nowIso);
+      if (nameIdx !== -1) sheet.getRange(rowIndex, nameIdx + 1).setValue(studentName);
+      if (juzIdx !== -1) sheet.getRange(rowIndex, juzIdx + 1).setValue(juz);
+      if (halIdx !== -1) sheet.getRange(rowIndex, halIdx + 1).setValue(halaman);
+      if (totIdx !== -1) sheet.getRange(rowIndex, totIdx + 1).setValue(totalHalaman);
+      if (stIdx !== -1) sheet.getRange(rowIndex, stIdx + 1).setValue(status);
+      if (hlqIdIdx !== -1 && halaqahId) sheet.getRange(rowIndex, hlqIdIdx + 1).setValue(halaqahId);
+      if (hlqNmIdx !== -1 && namaHalaqah) sheet.getRange(rowIndex, hlqNmIdx + 1).setValue(namaHalaqah);
+      if (muhIdx !== -1 && muhafiz) sheet.getRange(rowIndex, muhIdx + 1).setValue(muhafiz);
+      if (updIdx !== -1) sheet.getRange(rowIndex, updIdx + 1).setValue(nowIso);
     } else {
-      sheet.appendRow([
-        studentId, studentName, juz, halaman, totalHalaman, status, halaqahId, namaHalaqah, muhafiz, nowIso
-      ]);
+      const newRow = new Array(headersCapaian.length).fill("");
+      if (idIdx !== -1) newRow[idIdx] = studentId;
+      if (nameIdx !== -1) newRow[nameIdx] = studentName;
+      if (juzIdx !== -1) newRow[juzIdx] = juz;
+      if (halIdx !== -1) newRow[halIdx] = halaman;
+      if (totIdx !== -1) newRow[totIdx] = totalHalaman;
+      if (stIdx !== -1) newRow[stIdx] = status;
+      if (hlqIdIdx !== -1) newRow[hlqIdIdx] = halaqahId;
+      if (hlqNmIdx !== -1) newRow[hlqNmIdx] = namaHalaqah;
+      if (muhIdx !== -1) newRow[muhIdx] = muhafiz;
+      if (updIdx !== -1) newRow[updIdx] = nowIso;
+      sheet.appendRow(newRow);
     }
     SpreadsheetApp.flush();
 
@@ -12239,6 +12463,49 @@ function getTahfidzStudentDetail(studentId, token) {
       }
     }
 
+    // 2b. Ambil Capaian & Muroja'ah Santri
+    const capaianSheet = getOrCreateTahfidzSheet(ss, SHEET_TAHFIDZ_CAPAIAN, [
+      "student_id", "nama_santri", "nis", "halaqah", "program",
+      "juz_aktif", "halaman_terakhir", "persentase", "total_halaman_ziyadah",
+      "sabqi_halaman", "manzil_juz", "manzil_halaman", "manzil_putaran", "total_halaman_murojaah",
+      "updated_at"
+    ]);
+    const capaianData = capaianSheet.getDataRange().getValues();
+    let studentCapaian = {
+      juzAktif: 1,
+      halamanTerakhir: 1,
+      persentase: 3,
+      totalHalamanZiyadah: 0,
+      sabqiHalaman: "",
+      manzilJuz: 1,
+      manzilHalaman: 1,
+      manzilPutaran: 1,
+      totalHalamanMurojaah: 0
+    };
+    if (capaianData && capaianData.length > 1) {
+      const hCap = capaianData[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s\-_]+/g, ""));
+      const sIdIdx = hCap.indexOf("studentid");
+      const nisIdx = hCap.indexOf("nis");
+      for (let i = 1; i < capaianData.length; i++) {
+        const rowId = sIdIdx !== -1 ? String(capaianData[i][sIdIdx] || "").trim() : "";
+        const rowNis = nisIdx !== -1 ? String(capaianData[i][nisIdx] || "").trim() : "";
+        if (rowId === cleanId || (student.nis && rowNis === student.nis) || (student.studentId && rowId === student.studentId)) {
+          studentCapaian = {
+            juzAktif: Number(capaianData[i][hCap.indexOf("juzaktif")] || 1),
+            halamanTerakhir: Number(capaianData[i][hCap.indexOf("halamanterakhir")] || 1),
+            persentase: Number(capaianData[i][hCap.indexOf("persentase")] || 3),
+            totalHalamanZiyadah: Number(capaianData[i][hCap.indexOf("totalhalamanziyadah")] || 0),
+            sabqiHalaman: String(capaianData[i][hCap.indexOf("sabqihalaman")] || ""),
+            manzilJuz: Number(capaianData[i][hCap.indexOf("manziljuz")] || 1),
+            manzilHalaman: Number(capaianData[i][hCap.indexOf("manzilhalaman")] || 1),
+            manzilPutaran: Number(capaianData[i][hCap.indexOf("manzilputaran")] || 1),
+            totalHalamanMurojaah: Number(capaianData[i][hCap.indexOf("totalhalamanmurojaah")] || 0)
+          };
+          break;
+        }
+      }
+    }
+
     // 3. Ambil Riwayat Logs Santri
     const logsSheet = getOrCreateTahfidzSheet(ss, SHEET_TAHFIDZ_LOGS, [
       "log_id", "student_id", "nis", "student_name", "gender",
@@ -12314,7 +12581,7 @@ function getTahfidzStudentDetail(studentId, token) {
     const startOfMonth = new Date(todayDate.getFullYear(), todayDate.getMonth(), 1);
 
     let harianZReal = 0, harianMReal = 0, harianCount = 0;
-    let pekanZReal = 0, pekanMReal = 0, pekanCount = 0;
+    let pekanZReal = 0, pekanMReal = 0, pekanCount = 0, pekanSabqiReal = 0, pekanManzilReal = 0;
     let bulanZReal = 0, bulanMReal = 0, bulanCount = 0;
 
     riwayat.forEach(r => {
@@ -12331,8 +12598,13 @@ function getTahfidzStudentDetail(studentId, token) {
       // Pekanan
       if (d >= startOfWeek) {
         pekanCount++;
-        if (r.tipe === "ZIYADAH") pekanZReal += hal;
-        else pekanMReal += hal;
+        if (r.tipe === "ZIYADAH") {
+          pekanZReal += hal;
+        } else {
+          pekanMReal += hal;
+          if (r.tipe === "MURAJAAH_SABQI") pekanSabqiReal = (pekanSabqiReal || 0) + hal;
+          else if (r.tipe === "MURAJAAH_MANZIL") pekanManzilReal = (pekanManzilReal || 0) + hal;
+        }
       }
 
       // Bulanan
@@ -12426,14 +12698,32 @@ function getTahfidzStudentDetail(studentId, token) {
       },
       halaqah: studentHalaqah,
       muhafiz: studentMuhafiz,
+      capaian: {
+        juzAktif: studentCapaian.juzAktif || currentJuz,
+        halamanTerakhir: studentCapaian.halamanTerakhir || 1,
+        persentase: studentCapaian.persentase || percent,
+        totalHalamanZiyadah: studentCapaian.totalHalamanZiyadah || 0,
+        sabqiHalaman: studentCapaian.sabqiHalaman || "",
+        manzilJuz: studentCapaian.manzilJuz || 1,
+        manzilHalaman: studentCapaian.manzilHalaman || 1,
+        manzilPutaran: studentCapaian.manzilPutaran || 1,
+        totalHalamanMurojaah: studentCapaian.totalHalamanMurojaah || 0
+      },
+      murojaah: {
+        sabqiHalaman: studentCapaian.sabqiHalaman || "",
+        manzilJuz: studentCapaian.manzilJuz || 1,
+        manzilHalaman: studentCapaian.manzilHalaman || 1,
+        manzilPutaran: studentCapaian.manzilPutaran || 1,
+        totalHalamanMurojaah: studentCapaian.totalHalamanMurojaah || 0
+      },
       stats: {
-        capaianSaatIni: `Juz ${currentJuz} (${percent}%)`,
+        capaianSaatIni: `Juz ${studentCapaian.juzAktif || currentJuz} (${studentCapaian.persentase || percent}%)`,
         targetCapaian: "30 Juz Mutqin",
         totalSetoran: `${riwayat.length} Kali`,
         rataRataNilai: avgNilaiText,
-        progressJuz: currentJuz,
+        progressJuz: studentCapaian.juzAktif || currentJuz,
         progressMax: 30,
-        progressPercent: percent
+        progressPercent: studentCapaian.persentase || percent
       },
       target: target,
       indikator: {
@@ -12447,8 +12737,15 @@ function getTahfidzStudentDetail(studentId, token) {
         pekanan: {
           targetText: `${target.ziyadahPekan} Halaman (Z) + ${target.murajaahPekan} Halaman (M)`,
           realitaText: `${realPekanTotal} Halaman (${pekanCount}x Setor)`,
+          ziyadahTarget: target.ziyadahPekan,
+          ziyadahReal: pekanZReal,
+          murajaahTarget: target.murajaahPekan,
+          murajaahReal: pekanMReal,
+          sabqiReal: pekanSabqiReal,
+          manzilReal: pekanManzilReal,
+          isMurojaahTuntas: pekanMReal >= target.murajaahPekan,
           percent: pekanPercent,
-          status: pekanPercent >= 100 ? "Target Pekan Tercapai" : (pekanPercent > 0 ? `${pekanPercent}% Capaian` : "0% Capaian")
+          status: pekanMReal >= target.murajaahPekan ? "Target Muroja'ah Tuntas ✅" : (pekanMReal > 0 ? `Muroja'ah Kurang ${target.murajaahPekan - pekanMReal} Hlm` : "Belum Muroja'ah Pekan Ini")
         },
         bulanan: {
           targetText: `${target.ziyadahPekan * 4} Halaman (Z) + ${target.murajaahPekan * 4} Halaman (M)`,
@@ -12499,23 +12796,42 @@ function saveTahfidzTarget(payload, token) {
     const updatedAt = new Date().toISOString();
 
     const data = sheet.getDataRange().getValues();
-    const headers = data[0].map(h => String(h || "").trim().toLowerCase());
-    const idIdx = headers.indexOf("student_id");
-    let foundRow = -1;
+    const headers = data[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s\-_]+/g, ""));
+    const idIdx = headers.findIndex(h => h === "studentid" || h === "id");
+    const nameIdx = headers.findIndex(h => h.includes("name") || h.includes("nama"));
+    const zSesiIdx = headers.findIndex(h => h.includes("ziyadah") && h.includes("sesi"));
+    const zPekanIdx = headers.findIndex(h => h.includes("ziyadah") && h.includes("pekan"));
+    const mSesiIdx = headers.findIndex(h => h.includes("murajaah") && h.includes("sesi"));
+    const mPekanIdx = headers.findIndex(h => h.includes("murajaah") && h.includes("pekan"));
+    const updatedIdx = headers.findIndex(h => h.includes("updated") || h.includes("tanggal"));
 
+    let foundRow = -1;
     for (let i = 1; i < data.length; i++) {
-      if (String(data[i][idIdx] || "").trim() === studentId) {
+      if (String(data[i][idIdx !== -1 ? idIdx : 0] || "").trim() === studentId) {
         foundRow = i + 1;
         break;
       }
     }
 
-    const rowValues = [studentId, zSesi, zPekan, mSesi, mPekan, updatedAt];
-
     if (foundRow > 0) {
-      sheet.getRange(foundRow, 1, 1, rowValues.length).setValues([rowValues]);
+      if (nameIdx !== -1 && payload.studentName && (!data[foundRow - 1][nameIdx] || String(data[foundRow - 1][nameIdx]) === "1")) {
+        sheet.getRange(foundRow, nameIdx + 1).setValue(payload.studentName);
+      }
+      if (zSesiIdx !== -1) sheet.getRange(foundRow, zSesiIdx + 1).setValue(zSesi);
+      if (zPekanIdx !== -1) sheet.getRange(foundRow, zPekanIdx + 1).setValue(zPekan);
+      if (mSesiIdx !== -1) sheet.getRange(foundRow, mSesiIdx + 1).setValue(mSesi);
+      if (mPekanIdx !== -1) sheet.getRange(foundRow, mPekanIdx + 1).setValue(mPekan);
+      if (updatedIdx !== -1) sheet.getRange(foundRow, updatedIdx + 1).setValue(updatedAt);
     } else {
-      sheet.appendRow(rowValues);
+      const newRow = new Array(headers.length).fill("");
+      if (idIdx !== -1) newRow[idIdx] = studentId;
+      if (nameIdx !== -1) newRow[nameIdx] = payload.studentName || "";
+      if (zSesiIdx !== -1) newRow[zSesiIdx] = zSesi;
+      if (zPekanIdx !== -1) newRow[zPekanIdx] = zPekan;
+      if (mSesiIdx !== -1) newRow[mSesiIdx] = mSesi;
+      if (mPekanIdx !== -1) newRow[mPekanIdx] = mPekan;
+      if (updatedIdx !== -1) newRow[updatedIdx] = updatedAt;
+      sheet.appendRow(newRow);
     }
 
     return {
@@ -12599,7 +12915,14 @@ function saveBulkTahfidzTarget(payload, token) {
         if (updatedIdx !== -1) data[rowIdx][updatedIdx] = updatedAt;
         updatedStudentIds.add(stId);
       } else {
-        newRowsToAppend.push([stId, zSesi, zPekan, mSesi, mPekan, updatedAt]);
+        const newRow = new Array(headers.length).fill("");
+        if (idIdx !== -1) newRow[idIdx] = stId;
+        if (zSesiIdx !== -1) newRow[zSesiIdx] = zSesi;
+        if (zPekanIdx !== -1) newRow[zPekanIdx] = zPekan;
+        if (mSesiIdx !== -1) newRow[mSesiIdx] = mSesi;
+        if (mPekanIdx !== -1) newRow[mPekanIdx] = mPekan;
+        if (updatedIdx !== -1) newRow[updatedIdx] = updatedAt;
+        newRowsToAppend.push(newRow);
         updatedStudentIds.add(stId);
       }
     });

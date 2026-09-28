@@ -56,7 +56,7 @@ var AUTHORITATIVE_SCHEMAS_ = {
   "Auth_Sessions": ["session_id", "identity_id", "role", "issued_at", "expires_at", "status", "revoked_at", "created_at", "token_version"],
   "Auth_Audit_Log": ["event_id", "timestamp", "event_type", "identity_id", "session_id", "channel", "success", "request_id", "metadata"],
   "Tahfidz_Logs": ["log_id", "student_id", "nis", "student_name", "gender", "tanggal", "sesi", "tipe", "juz", "surah", "halaman_list", "total_halaman", "nilai", "muhafiz", "catatan", "status_setoran", "created_at"],
-  "Tahfidz_Capaian": ["student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_tuntas", "status_terakhir", "halaqah_id", "nama_halaqah", "muhafiz_pembina", "updated_at"],
+  "Tahfidz_Capaian": ["student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_tuntas", "status_terakhir", "halaqah_id", "nama_halaqah", "muhafiz_pembina", "updated_at", "sabqi_halaman", "manzil_juz", "manzil_halaman", "manzil_putaran", "total_halaman_murojaah"],
   "Tahfidz_Target": ["student_id", "student_name", "target_ziyadah_sesi", "target_ziyadah_pekan", "target_murajaah_sesi", "target_murajaah_pekan", "target_juz", "updated_at"],
   "Tahfidz_Halaqah": ["halaqah_id", "muhafiz", "target_kurikulum", "student_ids", "created_at"],
   "Tahfidz_Jadwal_Sesi": ["sesi_id", "nama_sesi", "jenis_sesi", "status", "jam_mulai", "jam_selesai", "hari_list", "created_at"],

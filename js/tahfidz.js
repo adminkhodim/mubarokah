@@ -476,9 +476,13 @@ function filterTahfidzList() {
             (st.halaqah && st.halaqah.muhafiz && st.halaqah.muhafiz.includes(muh)) ||
             (st.setoranTerakhir && st.setoranTerakhir.muhafiz && st.setoranTerakhir.muhafiz.includes(muh));
 
-        // Status On-Track / Mengulang
+        // Status On-Track / Mengulang / Target Muroja'ah Mingguan
         let matchStatus = true;
-        if (status === 'ON_TRACK') {
+        if (status === 'MUROJAAH_TUNTAS') {
+            matchStatus = Boolean(st.rekapPekan && st.rekapPekan.murojaah && st.rekapPekan.murojaah.isTuntas);
+        } else if (status === 'MUROJAAH_BELUM') {
+            matchStatus = Boolean(!st.rekapPekan || !st.rekapPekan.murojaah || !st.rekapPekan.murojaah.isTuntas);
+        } else if (status === 'ON_TRACK') {
             matchStatus = st.progress && st.progress.onTrackStatus && st.progress.onTrackStatus.startsWith('On-Track');
         } else if (status === 'BELUM_SETOR') {
             matchStatus = st.progress && st.progress.onTrackStatus && st.progress.onTrackStatus.includes('Belum Setor');
@@ -531,10 +535,21 @@ function renderTahfidzStudentTable() {
 
             const last = st.setoranTerakhir;
             const isUlang = last && (last.statusSetoran === 'ULANG' || last.nilai === 'DHAIF');
-            const currentJuz = st.progress?.currentJuz || 1;
-            const percent = st.progress?.percent || 3;
+
+            const cap = st.capaian || {};
+            const mur = st.murojaah || {};
+
+            const currentJuz = Number(cap.juzAktif) || Number(st.progress?.currentJuz) || 1;
+            const percent = Number(cap.persentase) || Number(st.progress?.percent) || 3;
             const onTrackStatus = st.progress?.onTrackStatus || 'Belum Setor';
             const isOnTrack = onTrackStatus.includes('On-Track');
+
+            const sabqiHalaman = mur.sabqiHalaman || cap.sabqiHalaman || '';
+            const sabqiDisp = sabqiHalaman ? `Hlm ${sabqiHalaman}` : `Juz ${currentJuz}`;
+            const manzilJuz = Number(mur.manzilJuz || cap.manzilJuz) || 1;
+            const manzilHalaman = Number(mur.manzilHalaman || cap.manzilHalaman) || 1;
+            const manzilPutaran = Number(mur.manzilPutaran || cap.manzilPutaran) || 1;
+            const rekapM = st.rekapPekan?.murojaah || { realita: 0, isTuntas: false, sisaHalaman: targetMPekan };
 
             const isSelected = ASNTahfidz.selectedStudentIds && ASNTahfidz.selectedStudentIds.has(st.studentId);
 
@@ -569,13 +584,21 @@ function renderTahfidzStudentTable() {
                             <span class="text-emerald-700/70 dark:text-emerald-400/70 font-semibold text-[9px]">(${targetZPekan}P / ${targetZBulan}B)</span>
                             <i class="fa-solid fa-pencil text-[8px] text-slate-400 group-hover:text-emerald-600 ml-1 opacity-0 group-hover:opacity-100 transition"></i>
                         </div>
-                        <!-- Muroja'ah Pill -->
-                        <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50/90 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40 text-[10px] transition hover:bg-amber-100/90">
-                            <i class="fa-solid fa-rotate text-[8px] text-amber-600 shrink-0"></i>
-                            <span class="font-bold">Muroja'ah:</span>
-                            <span>${targetM} Hlm/Setor</span>
-                            <span class="text-amber-700/70 dark:text-amber-400/70 font-semibold text-[9px]">(${targetMPekan}P / ${targetMBulan}B)</span>
-                            <i class="fa-solid fa-pencil text-[8px] text-slate-400 group-hover:text-amber-600 ml-1 opacity-0 group-hover:opacity-100 transition"></i>
+                        <!-- Muroja'ah Pill with Weekly Reality -->
+                        <div class="flex flex-col gap-0.5">
+                            <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50/90 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40 text-[10px] transition hover:bg-amber-100/90">
+                                <i class="fa-solid fa-rotate text-[8px] text-amber-600 shrink-0"></i>
+                                <span class="font-bold">Muroja'ah:</span>
+                                <span>${targetM} Hlm/Setor</span>
+                                <span class="text-amber-700/70 dark:text-amber-400/70 font-semibold text-[9px]">(${targetMPekan}P)</span>
+                                <i class="fa-solid fa-pencil text-[8px] text-slate-400 group-hover:text-amber-600 ml-1 opacity-0 group-hover:opacity-100 transition"></i>
+                            </div>
+                            <div class="flex items-center justify-between px-1 text-[8px] font-bold">
+                                <span class="text-slate-500 dark:text-slate-400">Pekan: <b>${rekapM.realita || 0}/${targetMPekan} Hlm</b></span>
+                                <span class="px-1 py-0.2 rounded text-[7px] ${rekapM.isTuntas ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300' : ((rekapM.realita || 0) > 0 ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300' : 'bg-slate-100 dark:bg-[#1c2836] text-slate-400')}">
+                                    ${rekapM.isTuntas ? '✅ Tuntas' : ((rekapM.realita || 0) > 0 ? `Kurang ${rekapM.sisaHalaman}` : 'Belum')}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </td>
@@ -606,8 +629,8 @@ function renderTahfidzStudentTable() {
                     ${last ? `
                     <div class="space-y-1">
                         <div class="flex items-center gap-1 flex-wrap">
-                            <span class="inline-block px-2 py-0.5 rounded-full text-[9px] font-extrabold ${last.tipe === 'ZIYADAH' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300' : (last.tipe === 'TASMI' ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300')}">
-                                ${escapeHtml(last.tipe)}
+                            <span class="inline-block px-2 py-0.5 rounded-full text-[9px] font-extrabold ${last.tipe === 'ZIYADAH' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300' : (last.tipe === 'MURAJAAH_SABQI' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300' : (last.tipe === 'MURAJAAH_MANZIL' ? 'bg-sky-100 text-sky-800 dark:bg-sky-950/80 dark:text-sky-300' : (last.tipe === 'TASMI' ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300')))}">
+                                ${last.tipe === 'MURAJAAH_SABQI' ? 'Sabqi' : (last.tipe === 'MURAJAAH_MANZIL' ? 'Manzil' : (last.tipe === 'ZIYADAH' ? 'Ziyadah' : (last.tipe === 'TASMI' ? "Tasmi'" : escapeHtml(last.tipe))))}
                             </span>
                             ${isUlang ? `
                             <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-900">
@@ -626,8 +649,8 @@ function renderTahfidzStudentTable() {
                     ` : `<span class="text-[10px] text-slate-400">-</span>`}
                 </td>
 
-                <!-- 5. PROGRESS (0 - 30 JUZ) -->
-                <td class="px-3.5 py-2.5 w-44">
+                <!-- 5. PROGRESS (0 - 30 JUZ) & ROTASI MUROJA'AH -->
+                <td class="px-3.5 py-2.5 w-48">
                     <div class="space-y-1">
                         <div class="flex justify-between items-center text-xs">
                             <span class="font-black text-slate-800 dark:text-slate-100">Juz ${currentJuz} <span class="text-slate-400 font-normal text-[10px]">/ 30</span></span>
@@ -636,9 +659,22 @@ function renderTahfidzStudentTable() {
                         <div class="w-full bg-slate-100 dark:bg-[#1c2836] h-1.5 rounded-full overflow-hidden">
                             <div class="bg-gradient-to-r from-emerald-500 to-teal-500 h-full rounded-full transition-all duration-500" style="width: ${percent}%;"></div>
                         </div>
-                        <span class="inline-block px-1.5 py-0.2 text-[8px] font-extrabold rounded ${isOnTrack ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-[#1c2836] dark:text-slate-400'}">
-                            ${escapeHtml(onTrackStatus)}
-                        </span>
+                        <div class="flex items-center justify-between gap-1">
+                            <span class="inline-block px-1.5 py-0.2 text-[8px] font-extrabold rounded ${isOnTrack ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-[#1c2836] dark:text-slate-400'}">
+                                ${escapeHtml(onTrackStatus)}
+                            </span>
+                        </div>
+                        <!-- Mini Badge Rotasi Muroja'ah (Sabqi & Manzil) -->
+                        <div class="flex items-center gap-1 pt-0.5">
+                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40" title="Muroja'ah Sabqi: Juz ${currentJuz} (${sabqiDisp})">
+                                <i class="fa-solid fa-rotate-left text-[7px] text-amber-600"></i>
+                                <span>Sabqi: ${sabqiDisp}</span>
+                            </span>
+                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-bold bg-sky-50 dark:bg-sky-950/50 text-sky-800 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/40" title="Muroja'ah Manzil: Juz ${manzilJuz} Hlm ${manzilHalaman} (Putaran Ke-${manzilPutaran})">
+                                <i class="fa-solid fa-repeat text-[7px] text-sky-600"></i>
+                                <span>Manzil: J${manzilJuz} (P${manzilPutaran})</span>
+                            </span>
+                        </div>
                     </div>
                 </td>
 
@@ -670,11 +706,20 @@ function renderTahfidzStudentTable() {
             const halaqahName = inHal ? (st.halaqah?.namaHalaqah || 'Halaqah Aktif') : 'Belum Masuk Halaqah';
             const last = st.setoranTerakhir;
             const isUlang = last && (last.statusSetoran === 'ULANG' || last.nilai === 'DHAIF');
-            const currentJuz = st.progress?.currentJuz || 1;
-            const percent = st.progress?.percent || 3;
+            const cap = st.capaian || {};
+            const mur = st.murojaah || {};
+
+            const currentJuz = Number(cap.juzAktif) || Number(st.progress?.currentJuz) || 1;
+            const percent = Number(cap.persentase) || Number(st.progress?.percent) || 3;
             const targetZ = st.target?.ziyadahSesi || 1;
             const targetM = st.target?.murajaahSesi || 2;
             const isSelected = ASNTahfidz.selectedStudentIds && ASNTahfidz.selectedStudentIds.has(st.studentId);
+
+            const sabqiHalaman = mur.sabqiHalaman || cap.sabqiHalaman || '';
+            const sabqiDisp = sabqiHalaman ? `Hlm ${sabqiHalaman}` : `Juz ${currentJuz}`;
+            const manzilJuz = Number(mur.manzilJuz || cap.manzilJuz) || 1;
+            const manzilHalaman = Number(mur.manzilHalaman || cap.manzilHalaman) || 1;
+            const manzilPutaran = Number(mur.manzilPutaran || cap.manzilPutaran) || 1;
 
             return `
             <div class="p-3 bg-white dark:bg-[#15202d] rounded-2xl border ${isSelected ? 'border-amber-400 dark:border-amber-600 bg-amber-50/20' : 'border-slate-100 dark:border-[#253447]'} shadow-sm space-y-2.5">
@@ -693,14 +738,22 @@ function renderTahfidzStudentTable() {
                     </button>
                 </div>
 
-                <!-- Mini Target Pills -->
-                <div class="flex items-center gap-1.5 text-[9px] font-bold">
-                    <span onclick="openTahfidzTargetModal('${st.studentId}')" class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 cursor-pointer">
-                        Ziyadah: ${targetZ} Hlm/Setor
-                    </span>
-                    <span onclick="openTahfidzTargetModal('${st.studentId}')" class="px-2 py-0.5 rounded bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 cursor-pointer">
-                        Muroja'ah: ${targetM} Hlm/Setor
-                    </span>
+                <!-- Mini Target Pills with Weekly Reality -->
+                <div class="space-y-1">
+                    <div class="flex items-center gap-1.5 text-[9px] font-bold">
+                        <span onclick="openTahfidzTargetModal('${st.studentId}')" class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 cursor-pointer">
+                            Ziyadah: ${targetZ} Hlm/Setor
+                        </span>
+                        <span onclick="openTahfidzTargetModal('${st.studentId}')" class="px-2 py-0.5 rounded bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 cursor-pointer">
+                            Muroja'ah: ${targetM} Hlm/Setor
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between text-[9px] font-bold px-1 text-slate-500 dark:text-slate-400">
+                        <span>Muroja'ah Pekan Ini: <b>${rekapM.realita || 0}/${targetM * 5} Hlm</b></span>
+                        <span class="px-1.5 py-0.2 rounded ${rekapM.isTuntas ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300' : 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300'}">
+                            ${rekapM.isTuntas ? '✅ Tuntas Target' : ((rekapM.realita || 0) > 0 ? `⚠️ Kurang ${rekapM.sisaHalaman} Hlm` : 'Belum')}
+                        </span>
+                    </div>
                 </div>
 
                 <!-- Progress Bar -->
@@ -714,8 +767,20 @@ function renderTahfidzStudentTable() {
                     </div>
                 </div>
 
+                <!-- Info Rotasi Muroja'ah (Sabqi & Manzil) -->
+                <div class="flex items-center justify-between text-[10px] font-bold bg-slate-50 dark:bg-[#1c2836] px-2.5 py-1.5 rounded-xl border border-slate-200/70 dark:border-[#253447]">
+                    <span class="flex items-center gap-1 text-amber-700 dark:text-amber-300">
+                        <i class="fa-solid fa-rotate-left text-[9px] text-amber-500"></i>
+                        <span>Sabqi: <b>${sabqiDisp}</b></span>
+                    </span>
+                    <span class="flex items-center gap-1 text-sky-700 dark:text-sky-300">
+                        <i class="fa-solid fa-repeat text-[9px] text-sky-500"></i>
+                        <span>Manzil: <b>Juz ${manzilJuz} (P${manzilPutaran})</b></span>
+                    </span>
+                </div>
+
                 <div class="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-[#253447] text-[10px] text-slate-400">
-                    <span>${last ? `Terakhir: Juz ${last.juz} (${last.tipe}) ${isUlang ? '• <span class="text-rose-600 font-extrabold">Wajib Ulang</span>' : ''}` : 'Belum setor'}</span>
+                    <span>${last ? `Terakhir: Juz ${last.juz} (${last.tipe === 'MURAJAAH_SABQI' ? 'Sabqi' : (last.tipe === 'MURAJAAH_MANZIL' ? 'Manzil' : (last.tipe === 'ZIYADAH' ? 'Ziyadah' : last.tipe))}) ${isUlang ? '• <span class="text-rose-600 font-extrabold">Wajib Ulang</span>' : ''}` : 'Belum setor'}</span>
                     <button type="button" onclick="openTahfidzStudentDetail('${st.studentId}')" class="text-emerald-600 font-bold hover:underline">
                         Lihat Mutaba'ah &gt;
                     </button>
@@ -1010,6 +1075,7 @@ function openTahfidzCatatModal(studentId = null) {
         selSantri.onchange = function() {
             checkAndApplyStudentRepeatState(this.value);
             populateTahfidzMuhafizSelector(this.value);
+            applyTahfidzRecommendation(this.value, ASNTahfidz.catatState.tipe);
         };
     }
 
@@ -1056,9 +1122,10 @@ function openTahfidzCatatModal(studentId = null) {
     // Populate dan deteksi otomatis Muhafiz sesuai santri terpilih
     populateTahfidzMuhafizSelector(studentId);
 
-    // Jika studentId diberikan, cek apakah santri sedang mengulang
+    // Jika studentId diberikan, cek apakah santri sedang mengulang & terapkan rekomendasi cerdas
     if (studentId) {
         checkAndApplyStudentRepeatState(studentId);
+        applyTahfidzRecommendation(studentId, ASNTahfidz.catatState.tipe);
     } else {
         const banner = document.getElementById('tahfidz-catat-ulang-banner');
         if (banner) banner.classList.add('hidden');
@@ -1076,33 +1143,135 @@ function closeTahfidzCatatModal() {
 }
 
 /**
- * Toggle Tipe Setoran (Ziyadah, Muraja'ah, Tasmi')
+ * Terapkan Rekomendasi Pintar Posisi Juz & Halaman berdasarkan Tipe Setoran (Ziyadah, Sabqi, Manzil, Tasmi')
+ */
+function applyTahfidzRecommendation(studentId, tipe) {
+    if (!studentId) {
+        studentId = document.getElementById('tahfidz-catat-santri')?.value || ASNTahfidz.catatState.studentId;
+    }
+    if (!tipe) {
+        tipe = ASNTahfidz.catatState.tipe || 'ZIYADAH';
+    }
+
+    const st = (ASNTahfidz.data.students || []).find(s => 
+        (s.studentId && s.studentId === studentId) ||
+        (s.student_id && s.student_id === studentId) ||
+        (s.id && s.id === studentId) ||
+        (s.nis && s.nis === studentId)
+    );
+
+    const selJuz = document.getElementById('tahfidz-catat-juz');
+    const badgeEl = document.getElementById('tahfidz-catat-tipe-badge');
+    const descEl = document.getElementById('tahfidz-catat-tipe-desc');
+    const posEl = document.getElementById('tahfidz-catat-tipe-pos');
+
+    if (!st) {
+        if (posEl) posEl.innerText = '-';
+        return;
+    }
+
+    const cap = st.capaian || {};
+    const mur = st.murojaah || {};
+
+    const ziyadahJuz = Number(cap.juzAktif) || Number(st.progress?.currentJuz) || 1;
+    const ziyadahHalaman = Number(cap.halamanTerakhir) || Number(st.progress?.currentHalaman) || 1;
+
+    const manzilJuz = Number(mur.manzilJuz || cap.manzilJuz) || 1;
+    const manzilHalaman = Number(mur.manzilHalaman || cap.manzilHalaman) || 1;
+    const manzilPutaran = Number(mur.manzilPutaran || cap.manzilPutaran) || 1;
+
+    const sabqiHalaman = String(mur.sabqiHalaman || cap.sabqiHalaman || '');
+
+    if (tipe === 'ZIYADAH') {
+        if (badgeEl) {
+            badgeEl.innerText = 'Ziyadah (Hafalan Baru)';
+            badgeEl.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300';
+        }
+        if (descEl) descEl.innerHTML = '<i class="fa-solid fa-circle-plus text-emerald-600"></i> <span>Hafalan baru (menentukan batas juz tertinggi)</span>';
+        if (posEl) posEl.innerText = `Juz ${ziyadahJuz} Hlm ${ziyadahHalaman}`;
+
+        if (selJuz) selJuz.value = String(ziyadahJuz);
+        ASNTahfidz.catatState.selectedPages = [Math.min(20, Math.max(1, ziyadahHalaman))];
+        renderTahfidzPageSelector();
+    } else if (tipe === 'MURAJAAH_SABQI') {
+        if (badgeEl) {
+            badgeEl.innerText = "Muroja'ah Sabqi (Dekat)";
+            badgeEl.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300';
+        }
+        if (descEl) descEl.innerHTML = '<i class="fa-solid fa-rotate-left text-amber-600"></i> <span>Mengulang hafalan dekat di juz berjalan</span>';
+        
+        const sabqiDisp = sabqiHalaman ? `Hlm ${sabqiHalaman}` : `Hlm 1 - ${Math.max(1, ziyadahHalaman - 1)}`;
+        if (posEl) posEl.innerText = `Juz ${ziyadahJuz} • ${sabqiDisp}`;
+
+        if (selJuz) selJuz.value = String(ziyadahJuz);
+        // Default rentang halaman sabqi: halaman-halaman sebelum posisi ziyadah saat ini
+        const sabqiEnd = Math.max(1, ziyadahHalaman > 1 ? ziyadahHalaman - 1 : 1);
+        const sabqiStart = Math.max(1, sabqiEnd - 1);
+        const sabqiPages = [];
+        for (let p = sabqiStart; p <= sabqiEnd; p++) {
+            sabqiPages.push(p);
+        }
+        ASNTahfidz.catatState.selectedPages = sabqiPages.length > 0 ? sabqiPages : [1];
+        renderTahfidzPageSelector();
+    } else if (tipe === 'MURAJAAH_MANZIL') {
+        if (badgeEl) {
+            badgeEl.innerText = `Muroja'ah Manzil (Putaran ${manzilPutaran})`;
+            badgeEl.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300';
+        }
+        if (descEl) descEl.innerHTML = `<i class="fa-solid fa-repeat text-sky-600"></i> <span>Perputaran seluruh juz lama (Siklus Ke-${manzilPutaran})</span>`;
+        if (posEl) posEl.innerText = `Juz ${manzilJuz} Hlm ${manzilHalaman} (Putaran ${manzilPutaran})`;
+
+        if (selJuz) selJuz.value = String(manzilJuz);
+        const targetPage = Math.min(20, Math.max(1, manzilHalaman));
+        ASNTahfidz.catatState.selectedPages = [targetPage];
+        renderTahfidzPageSelector();
+    } else if (tipe === 'TASMI') {
+        if (badgeEl) {
+            badgeEl.innerText = "Tasmi' Ujian Sekali Duduk";
+            badgeEl.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300';
+        }
+        if (descEl) descEl.innerHTML = '<i class="fa-solid fa-award text-purple-600"></i> <span>Ujian tasmi\' bil ghoib 1 juz penuh</span>';
+        if (posEl) posEl.innerText = `Juz ${ziyadahJuz} (1 Juz Penuh)`;
+
+        if (selJuz) selJuz.value = String(ziyadahJuz);
+        const fullPages = [];
+        for (let p = 1; p <= 20; p++) fullPages.push(p);
+        ASNTahfidz.catatState.selectedPages = fullPages;
+        renderTahfidzPageSelector();
+    }
+}
+
+/**
+ * Toggle Tipe Setoran (Ziyadah, Muroja'ah Sabqi, Muroja'ah Manzil, Tasmi')
  */
 function setTahfidzCatatTipe(tipe) {
     ASNTahfidz.catatState.tipe = tipe;
 
     const btnZ = document.getElementById('btn-tipe-ziyadah');
-    const btnM = document.getElementById('btn-tipe-murajaah');
+    const btnSabqi = document.getElementById('btn-tipe-sabqi');
+    const btnManzil = document.getElementById('btn-tipe-manzil');
     const btnT = document.getElementById('btn-tipe-tasmi');
 
-    const activeClasses = ['bg-emerald-600', 'text-white', 'border-emerald-600', 'shadow-sm'];
-    const inactiveClasses = ['bg-slate-50', 'dark:bg-[#1c2836]', 'text-slate-700', 'dark:text-slate-300', 'border-slate-200', 'dark:border-[#283a4e]'];
+    const defaultBtnClass = 'py-2.5 px-2 rounded-xl border font-bold text-xs flex flex-col items-center justify-center gap-1 transition active:scale-95 bg-slate-50 dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#283a4e]';
 
-    [btnZ, btnM, btnT].forEach(b => {
+    [btnZ, btnSabqi, btnManzil, btnT].forEach(b => {
         if (!b) return;
-        b.classList.remove(...activeClasses);
-        b.classList.add(...inactiveClasses);
+        b.className = defaultBtnClass;
     });
 
     if (tipe === 'ZIYADAH' && btnZ) {
-        btnZ.classList.add(...activeClasses);
-        btnZ.classList.remove(...inactiveClasses);
-    } else if (tipe === 'MURAJAAH' && btnM) {
-        btnM.classList.add(...activeClasses);
-        btnM.classList.remove(...inactiveClasses);
+        btnZ.className = 'py-2.5 px-2 rounded-xl border font-bold text-xs flex flex-col items-center justify-center gap-1 transition active:scale-95 bg-emerald-600 text-white border-emerald-600 shadow-sm ring-2 ring-emerald-500/20';
+    } else if (tipe === 'MURAJAAH_SABQI' && btnSabqi) {
+        btnSabqi.className = 'py-2.5 px-2 rounded-xl border font-bold text-xs flex flex-col items-center justify-center gap-1 transition active:scale-95 bg-amber-600 text-white border-amber-600 shadow-sm ring-2 ring-amber-500/20';
+    } else if (tipe === 'MURAJAAH_MANZIL' && btnManzil) {
+        btnManzil.className = 'py-2.5 px-2 rounded-xl border font-bold text-xs flex flex-col items-center justify-center gap-1 transition active:scale-95 bg-sky-600 text-white border-sky-600 shadow-sm ring-2 ring-sky-500/20';
     } else if (tipe === 'TASMI' && btnT) {
-        btnT.classList.add(...activeClasses);
-        btnT.classList.remove(...inactiveClasses);
+        btnT.className = 'py-2.5 px-2 rounded-xl border font-bold text-xs flex flex-col items-center justify-center gap-1 transition active:scale-95 bg-purple-600 text-white border-purple-600 shadow-sm ring-2 ring-purple-500/20';
+    }
+
+    const currentStudentId = document.getElementById('tahfidz-catat-santri')?.value || ASNTahfidz.catatState.studentId;
+    if (currentStudentId) {
+        applyTahfidzRecommendation(currentStudentId, tipe);
     }
 }
 
@@ -1295,15 +1464,52 @@ async function submitTahfidzCatat(e) {
                     muhafiz: muhafiz || (st.halaqah?.muhafiz || "Ustadz Pembina")
                 };
                 if (!st.progress) st.progress = {};
-                if (statusSetoran === 'LANJUT') {
-                    if (juz > (st.progress.currentJuz || 0)) {
-                        st.progress.currentJuz = juz;
-                        st.progress.percent = Math.min(100, Math.round((juz / 30) * 100));
+                if (!st.murojaah) st.murojaah = {};
+
+                const tipeAktif = ASNTahfidz.catatState.tipe || 'ZIYADAH';
+
+                if (tipeAktif === 'ZIYADAH') {
+                    if (statusSetoran === 'LANJUT') {
+                        if (juz >= (st.progress.currentJuz || 0)) {
+                            st.progress.currentJuz = juz;
+                            const maxP = Math.max(...(selectedPages || [1]));
+                            st.progress.currentHalaman = maxP >= 20 ? 1 : maxP + 1;
+                            st.progress.percent = Math.min(100, Math.round((juz / 30) * 100));
+                        }
+                        st.progress.onTrackStatus = "On-Track (Lulus Ziyadah)";
+                    } else {
+                        st.progress.onTrackStatus = `Wajib Ulang Ziyadah (Hlm ${halamanList})`;
                     }
-                    st.progress.onTrackStatus = "On-Track (Lulus Setor)";
-                } else {
-                    // Santri Mengulang: Progres hafalan tidak dinaikkan
-                    st.progress.onTrackStatus = `Wajib Mengulang (Hlm ${halamanList})`;
+                } else if (tipeAktif === 'MURAJAAH_SABQI') {
+                    if (statusSetoran === 'LANJUT') {
+                        st.murojaah.sabqiHalaman = halamanList;
+                        st.progress.onTrackStatus = "On-Track (Lulus Sabqi)";
+                    } else {
+                        st.progress.onTrackStatus = `Wajib Ulang Sabqi (Hlm ${halamanList})`;
+                    }
+                } else if (tipeAktif === 'MURAJAAH_MANZIL') {
+                    if (statusSetoran === 'LANJUT') {
+                        const lastP = Math.max(...(selectedPages || [1]));
+                        const limitJ = st.progress.currentJuz || 1;
+                        if (lastP >= 20) {
+                            if (juz >= limitJ) {
+                                st.murojaah.manzilJuz = 1;
+                                st.murojaah.manzilHalaman = 1;
+                                st.murojaah.manzilPutaran = (st.murojaah.manzilPutaran || 1) + 1;
+                            } else {
+                                st.murojaah.manzilJuz = Math.min(30, juz + 1);
+                                st.murojaah.manzilHalaman = 1;
+                            }
+                        } else {
+                            st.murojaah.manzilJuz = juz;
+                            st.murojaah.manzilHalaman = lastP + 1;
+                        }
+                        st.progress.onTrackStatus = "On-Track (Lulus Manzil)";
+                    } else {
+                        st.progress.onTrackStatus = `Wajib Ulang Manzil (Hlm ${halamanList})`;
+                    }
+                } else if (tipeAktif === 'TASMI') {
+                    st.progress.onTrackStatus = statusSetoran === 'LANJUT' ? "Lulus Tasmi'" : "Ulang Tasmi'";
                 }
                 st.totalSetoran = (st.totalSetoran || 0) + 1;
             };
@@ -1625,31 +1831,38 @@ ASNTahfidz.detailFilterTipe = "ALL"; // ALL, ZIYADAH, MURAJAAH
 ASNTahfidz.detailSelectedDate = new Date().toISOString().split('T')[0];
 
 /**
- * Filter Tipe Setoran di Modal Detail Santri (Semua / Ziyadah / Muroja'ah)
+ * Filter Tipe Setoran di Modal Detail Santri (Semua / Ziyadah / Sabqi / Manzil / Tasmi')
  */
 function setTahfidzDetailTipeFilter(tipe) {
     ASNTahfidz.detailFilterTipe = tipe || "ALL";
 
-    const btnAll = document.getElementById('btn-filter-detail-all');
-    const chkZ = document.getElementById('chk-detail-ziyadah');
-    const chkM = document.getElementById('chk-detail-murajaah');
+    const filterBtns = {
+        'ALL': document.getElementById('btn-filter-detail-all'),
+        'ZIYADAH': document.getElementById('btn-filter-detail-ziyadah'),
+        'MURAJAAH_SABQI': document.getElementById('btn-filter-detail-sabqi'),
+        'MURAJAAH_MANZIL': document.getElementById('btn-filter-detail-manzil'),
+        'TASMI': document.getElementById('btn-filter-detail-tasmi')
+    };
 
-    if (btnAll) {
-        if (tipe === 'ALL') {
-            btnAll.className = "px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-700 text-white transition";
-            if (chkZ) chkZ.checked = true;
-            if (chkM) chkM.checked = true;
+    const activeClasses = {
+        'ALL': 'px-2.5 py-1 rounded-lg font-bold bg-emerald-700 text-white transition shrink-0',
+        'ZIYADAH': 'px-2.5 py-1 rounded-lg font-bold bg-emerald-600 text-white transition shrink-0 shadow-sm',
+        'MURAJAAH_SABQI': 'px-2.5 py-1 rounded-lg font-bold bg-amber-600 text-white transition shrink-0 shadow-sm',
+        'MURAJAAH_MANZIL': 'px-2.5 py-1 rounded-lg font-bold bg-sky-600 text-white transition shrink-0 shadow-sm',
+        'TASMI': 'px-2.5 py-1 rounded-lg font-bold bg-purple-600 text-white transition shrink-0 shadow-sm'
+    };
+
+    const inactiveClass = 'px-2.5 py-1 rounded-lg font-bold bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition shrink-0';
+
+    Object.keys(filterBtns).forEach(k => {
+        const btn = filterBtns[k];
+        if (!btn) return;
+        if (k === tipe) {
+            btn.className = activeClasses[k] || activeClasses['ALL'];
         } else {
-            btnAll.className = "px-2.5 py-0.5 rounded-md text-[10px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition";
-            if (tipe === 'ZIYADAH') {
-                if (chkZ) chkZ.checked = true;
-                if (chkM) chkM.checked = false;
-            } else if (tipe === 'MURAJAAH') {
-                if (chkZ) chkZ.checked = false;
-                if (chkM) chkM.checked = true;
-            }
+            btn.className = inactiveClass;
         }
-    }
+    });
 
     renderTahfidzStudentDetailView();
 }
@@ -1711,8 +1924,12 @@ function renderTahfidzStudentDetailView() {
     // Filter riwayat berdasarkan tipe jika dipilih
     if (ASNTahfidz.detailFilterTipe === 'ZIYADAH') {
         riwayat = riwayat.filter(r => (r.tipe || '').toUpperCase() === 'ZIYADAH');
-    } else if (ASNTahfidz.detailFilterTipe === 'MURAJAAH') {
-        riwayat = riwayat.filter(r => (r.tipe || '').toUpperCase().includes('MURAJA'));
+    } else if (ASNTahfidz.detailFilterTipe === 'MURAJAAH_SABQI') {
+        riwayat = riwayat.filter(r => (r.tipe || '').toUpperCase() === 'MURAJAAH_SABQI');
+    } else if (ASNTahfidz.detailFilterTipe === 'MURAJAAH_MANZIL') {
+        riwayat = riwayat.filter(r => (r.tipe || '').toUpperCase() === 'MURAJAAH_MANZIL');
+    } else if (ASNTahfidz.detailFilterTipe === 'TASMI') {
+        riwayat = riwayat.filter(r => (r.tipe || '').toUpperCase() === 'TASMI');
     }
 
     // Header Info (Screenshot 5: Inisial, Nama, Badge, NIS • Bil Hifdhi • Halaqah)
@@ -1744,6 +1961,27 @@ function renderTahfidzStudentDetailView() {
     const elProgressBar = document.getElementById('tahfidz-detail-progress-bar');
     if (elProgressText) elProgressText.innerText = `${stats.progressJuz || 1} / 30 Juz`;
     if (elProgressBar) elProgressBar.style.width = `${Math.min(100, Math.max(2, stats.progressPercent || 3))}%`;
+
+    // Posisi Muroja'ah Sabqi & Manzil
+    const cap = res.capaian || st.capaian || {};
+    const mur = res.murojaah || st.murojaah || {};
+
+    const ziyadahJuz = Number(cap.juzAktif) || Number(stats.progressJuz) || 1;
+    const ziyadahHlm = Number(cap.halamanTerakhir) || 1;
+    const sabqiHalaman = mur.sabqiHalaman || cap.sabqiHalaman || '';
+    const manzilJuz = Number(mur.manzilJuz || cap.manzilJuz) || 1;
+    const manzilHalaman = Number(mur.manzilHalaman || cap.manzilHalaman) || 1;
+    const manzilPutaran = Number(mur.manzilPutaran || cap.manzilPutaran) || 1;
+
+    const elSabqiPos = document.getElementById('tahfidz-detail-sabqi-pos');
+    const elManzilPos = document.getElementById('tahfidz-detail-manzil-pos');
+
+    if (elSabqiPos) {
+        elSabqiPos.innerHTML = `<span class="text-amber-700 dark:text-amber-300">Juz ${ziyadahJuz}</span> • <span>${sabqiHalaman ? `Halaman ${sabqiHalaman}` : `Halaman 1 - ${Math.max(1, ziyadahHlm - 1)}`}</span>`;
+    }
+    if (elManzilPos) {
+        elManzilPos.innerHTML = `<span class="text-sky-700 dark:text-sky-300">Juz ${manzilJuz} Hlm ${manzilHalaman}</span> <span class="text-slate-400 font-semibold text-[10px]">(Putaran Ke-${manzilPutaran})</span>`;
+    }
 
     // Sinkronisasi Date Inputs & Labels
     const dateHarian = document.getElementById('tahfidz-date-harian');
@@ -1782,8 +2020,30 @@ function renderTahfidzStudentDetailView() {
     const elPekanStatus = document.getElementById('tahfidz-ind-pekan-status');
 
     if (elPekanTarget) elPekanTarget.innerText = ind.pekanan?.targetText || "10 Halaman (Z) + 10 Halaman (M)";
-    if (elPekanRealita) elPekanRealita.innerText = ind.pekanan?.realitaText || "1 Hal (2x Setor)";
-    if (elPekanStatus) elPekanStatus.innerText = ind.pekanan?.status || "0% Capaian";
+    if (elPekanRealita) elPekanRealita.innerText = ind.pekanan?.realitaText || "0 Hal (0x Setor)";
+    if (elPekanStatus) {
+        const isTuntas = ind.pekanan?.isMurojaahTuntas;
+        elPekanStatus.innerText = ind.pekanan?.status || "0% Capaian";
+        elPekanStatus.className = isTuntas 
+            ? "text-[9px] font-extrabold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+            : "text-[9px] font-extrabold px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300";
+    }
+
+    const elPekanZReal = document.getElementById('tahfidz-ind-pekan-ziyadah-real');
+    const elPekanMReal = document.getElementById('tahfidz-ind-pekan-murojaah-real');
+
+    if (elPekanZReal) {
+        const zR = ind.pekanan?.ziyadahReal || 0;
+        const zT = ind.pekanan?.ziyadahTarget || 10;
+        elPekanZReal.innerText = `${zR} / ${zT} Halaman ${zR >= zT ? '✅' : ''}`;
+    }
+    if (elPekanMReal) {
+        const mR = ind.pekanan?.murajaahReal || 0;
+        const mT = ind.pekanan?.murajaahTarget || 10;
+        const sR = ind.pekanan?.sabqiReal || 0;
+        const mManzil = ind.pekanan?.manzilReal || 0;
+        elPekanMReal.innerText = `${mR} / ${mT} Halaman (Sabqi: ${sR}, Manzil: ${mManzil}) ${mR >= mT ? '✅' : ''}`;
+    }
 
     const elBulanTarget = document.getElementById('tahfidz-ind-bulan-target');
     const elBulanRealita = document.getElementById('tahfidz-ind-bulan-realita');
@@ -1816,7 +2076,13 @@ function renderTahfidzStudentDetailView() {
                 const isUlang = r.statusSetoran === 'ULANG';
                 const badgeColor = r.tipe === 'ZIYADAH' 
                     ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' 
-                    : (r.tipe === 'TASMI' ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300');
+                    : (r.tipe === 'MURAJAAH_SABQI' 
+                        ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' 
+                        : (r.tipe === 'MURAJAAH_MANZIL' 
+                            ? 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300' 
+                            : (r.tipe === 'TASMI' ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300')));
+
+                const tipeLabel = r.tipe === 'MURAJAAH_SABQI' ? "Muroja'ah Sabqi" : (r.tipe === 'MURAJAAH_MANZIL' ? "Muroja'ah Manzil" : (r.tipe === 'ZIYADAH' ? "Ziyadah" : (r.tipe === 'TASMI' ? "Tasmi'" : escapeHtml(r.tipe))));
                 
                 const statusBadge = isUlang
                     ? '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60"><i class="fa-solid fa-rotate-left text-[8px]"></i> Ulang</span>'
@@ -1832,7 +2098,7 @@ function renderTahfidzStudentDetailView() {
                     <div class="flex items-center justify-between gap-2">
                         <div class="flex items-center gap-1.5 flex-wrap min-w-0">
                             <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider shrink-0 ${badgeColor}">
-                                ${escapeHtml(r.tipe)}
+                                ${tipeLabel}
                             </span>
                             <span class="text-[11px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1">
                                 <i class="fa-regular fa-calendar text-[10px] text-slate-400"></i>
@@ -1873,8 +2139,8 @@ function renderTahfidzStudentDetailView() {
             <tr class="hover:bg-slate-50 dark:hover:bg-[#1c2836]/50 border-b border-slate-100 dark:border-[#253447] text-xs">
                 <td class="px-3 py-2.5 font-bold text-slate-700 dark:text-slate-200">${escapeHtml(r.tanggal)}</td>
                 <td class="px-3 py-2.5">
-                    <span class="px-2 py-0.5 rounded text-[9px] font-extrabold ${r.tipe === 'ZIYADAH' ? 'bg-emerald-100 text-emerald-800' : (r.tipe === 'TASMI' ? 'bg-purple-100 text-purple-800' : 'bg-amber-100 text-amber-800')}">
-                        ${escapeHtml(r.tipe)}
+                    <span class="px-2 py-0.5 rounded text-[9px] font-extrabold ${r.tipe === 'ZIYADAH' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : (r.tipe === 'MURAJAAH_SABQI' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' : (r.tipe === 'MURAJAAH_MANZIL' ? 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300' : (r.tipe === 'TASMI' ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300' : 'bg-amber-100 text-amber-800')))}">
+                        ${r.tipe === 'MURAJAAH_SABQI' ? 'Sabqi' : (r.tipe === 'MURAJAAH_MANZIL' ? 'Manzil' : (r.tipe === 'ZIYADAH' ? 'Ziyadah' : (r.tipe === 'TASMI' ? "Tasmi'" : escapeHtml(r.tipe))))}
                     </span>
                 </td>
                 <td class="px-3 py-2.5">
@@ -3819,6 +4085,7 @@ window.openTahfidzCatatModal = openTahfidzCatatModal;
 window.closeTahfidzCatatModal = closeTahfidzCatatModal;
 window.populateTahfidzCatatSesiDropdown = populateTahfidzCatatSesiDropdown;
 window.setTahfidzCatatTipe = setTahfidzCatatTipe;
+window.applyTahfidzRecommendation = applyTahfidzRecommendation;
 window.toggleTahfidzPage = toggleTahfidzPage;
 window.applyTahfidzQuickChip = applyTahfidzQuickChip;
 window.submitTahfidzCatat = submitTahfidzCatat;
