@@ -7755,35 +7755,12 @@
                                             Santri</span>
                                     </div>
 
-                                    <!-- FLOATING BULK SELECTION ACTION BAR -->
-                                    <div id="tahfidz-bulk-selection-bar"
-                                        class="hidden p-2.5 bg-amber-50/90 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-800/60 flex items-center justify-between text-xs transition">
-                                        <div class="flex items-center gap-2 text-amber-900 dark:text-amber-200 font-bold">
-                                            <i class="fa-solid fa-square-check text-amber-600"></i>
-                                            <span id="tahfidz-selected-count-text">0 santri dipilih</span>
-                                        </div>
-                                        <div class="flex items-center gap-2">
-                                            <button type="button" onclick="openTahfidzBulkTargetModal('SELECTED')"
-                                                class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center gap-1.5 transition active:scale-95">
-                                                <i class="fa-solid fa-bullseye"></i> Atur Target Santri Ini
-                                            </button>
-                                            <button type="button" onclick="clearTahfidzSelectedStudents()"
-                                                class="px-2 py-1 text-slate-500 hover:text-slate-700 dark:text-slate-400 text-xs font-semibold">
-                                                Batal
-                                            </button>
-                                        </div>
-                                    </div>
-
                                     <!-- DESKTOP TABLE -->
                                     <div class="hidden md:block overflow-x-auto">
                                         <table class="w-full text-left border-collapse text-xs">
                                             <thead>
                                                 <tr
                                                     class="bg-slate-50 dark:bg-[#1c2836] text-slate-500 dark:text-slate-400 uppercase text-[10px] font-bold border-b border-slate-100 dark:border-[#253447]">
-                                                    <th class="py-2.5 px-3 w-10 text-center">
-                                                        <input type="checkbox" id="tahfidz-check-all" onchange="toggleSelectAllTahfidzStudents(this.checked)"
-                                                            class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer" title="Pilih Semua Santri">
-                                                    </th>
                                                     <th class="py-2.5 px-3.5">Santri & Halaqah</th>
                                                     <th class="py-2.5 px-3.5">Target Capaian</th>
                                                     <th class="py-2.5 px-3.5">Setoran Terakhir</th>
@@ -12539,27 +12516,17 @@
                         </span>
                     </div>
 
-                    <!-- Scope Selector Chips/Buttons -->
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <!-- Scope Selector Chips/Buttons (Hanya Semua Santri & Per Halaqah) -->
+                    <div class="grid grid-cols-2 gap-2.5">
                         <button type="button" onclick="setBulkTargetScope('ALL')" id="btn-scope-all"
-                            class="px-3 py-2 rounded-xl font-bold text-xs border text-center transition flex flex-col items-center gap-1 bg-white dark:bg-[#15202d] border-emerald-500 text-emerald-700 dark:text-emerald-300 shadow-sm ring-2 ring-emerald-500/20">
+                            class="px-3 py-2.5 rounded-xl font-bold text-xs border text-center transition flex flex-col items-center gap-1.5 bg-white dark:bg-[#15202d] border-emerald-500 text-emerald-700 dark:text-emerald-300 shadow-sm ring-2 ring-emerald-500/20 active:scale-95">
                             <i class="fa-solid fa-user-group text-sm"></i>
                             <span>Semua Santri</span>
                         </button>
                         <button type="button" onclick="setBulkTargetScope('HALAQAH')" id="btn-scope-halaqah"
-                            class="px-3 py-2 rounded-xl font-bold text-xs border text-center transition flex flex-col items-center gap-1 bg-white dark:bg-[#15202d] border-slate-200 dark:border-[#283a4e] text-slate-600 dark:text-slate-300 hover:border-amber-400">
+                            class="px-3 py-2.5 rounded-xl font-bold text-xs border text-center transition flex flex-col items-center gap-1.5 bg-white dark:bg-[#15202d] border-slate-200 dark:border-[#283a4e] text-slate-600 dark:text-slate-300 hover:border-amber-400 active:scale-95">
                             <i class="fa-solid fa-layer-group text-sm"></i>
                             <span>Per Halaqah</span>
-                        </button>
-                        <button type="button" onclick="setBulkTargetScope('KATEGORI')" id="btn-scope-kategori"
-                            class="px-3 py-2 rounded-xl font-bold text-xs border text-center transition flex flex-col items-center gap-1 bg-white dark:bg-[#15202d] border-slate-200 dark:border-[#283a4e] text-slate-600 dark:text-slate-300 hover:border-amber-400">
-                            <i class="fa-solid fa-graduation-cap text-sm"></i>
-                            <span>Per Program</span>
-                        </button>
-                        <button type="button" onclick="setBulkTargetScope('SELECTED')" id="btn-scope-selected"
-                            class="px-3 py-2 rounded-xl font-bold text-xs border text-center transition flex flex-col items-center gap-1 bg-white dark:bg-[#15202d] border-slate-200 dark:border-[#283a4e] text-slate-600 dark:text-slate-300 hover:border-amber-400">
-                            <i class="fa-solid fa-square-check text-sm"></i>
-                            <span>Santri Dicentang</span>
                         </button>
                     </div>
 
@@ -12569,13 +12536,6 @@
                         <div id="bulk-target-halaqah-wrapper" class="hidden">
                             <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Pilih Kelompok Halaqah:</label>
                             <select id="bulk-target-select-halaqah" onchange="onBulkTargetScopeChange()"
-                                class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-semibold bg-white dark:bg-[#15202d] text-slate-800 dark:text-slate-100">
-                            </select>
-                        </div>
-                        <!-- Kategori Dropdown -->
-                        <div id="bulk-target-kategori-wrapper" class="hidden">
-                            <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Pilih Program / Kategori:</label>
-                            <select id="bulk-target-select-kategori" onchange="onBulkTargetScopeChange()"
                                 class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-semibold bg-white dark:bg-[#15202d] text-slate-800 dark:text-slate-100">
                             </select>
                         </div>

@@ -540,10 +540,6 @@ function renderTahfidzStudentTable() {
 
             return `
             <tr class="hover:bg-slate-50/80 dark:hover:bg-[#1c2836]/60 transition border-b border-slate-100 dark:border-[#253447] ${isSelected ? 'bg-amber-50/40 dark:bg-amber-950/20' : ''}">
-                <!-- 0. CHECKBOX SELECTION -->
-                <td class="py-2.5 px-3 w-10 text-center">
-                    <input type="checkbox" onchange="toggleSelectTahfidzStudent('${st.studentId}', this.checked)" ${isSelected ? 'checked' : ''} class="tahfidz-row-checkbox rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer" title="Pilih ${escapeHtml(st.name || '')}">
-                </td>
 
                 <!-- 1. SANTRI & HALAQAH -->
                 <td class="px-3.5 py-2.5">
@@ -684,7 +680,6 @@ function renderTahfidzStudentTable() {
             <div class="p-3 bg-white dark:bg-[#15202d] rounded-2xl border ${isSelected ? 'border-amber-400 dark:border-amber-600 bg-amber-50/20' : 'border-slate-100 dark:border-[#253447]'} shadow-sm space-y-2.5">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-2.5 min-w-0">
-                        <input type="checkbox" onchange="toggleSelectTahfidzStudent('${st.studentId}', this.checked)" ${isSelected ? 'checked' : ''} class="tahfidz-row-checkbox rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer shrink-0" title="Pilih ${escapeHtml(st.name || '')}">
                         <div class="w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-extrabold flex items-center justify-center text-xs shrink-0">
                             ${st.photoUrl ? `<img src="${escapeHtml(st.photoUrl)}" class="w-full h-full object-cover rounded-full">` : initials}
                         </div>
@@ -2375,15 +2370,6 @@ function openTahfidzBulkTargetModal(initialScope = 'ALL') {
             : '<option value="">(Belum ada halaqah)</option>';
     }
 
-    // Populate Kategori Dropdown
-    const selKategori = document.getElementById('bulk-target-select-kategori');
-    if (selKategori) {
-        const categories = (ASNTahfidz.data.categories || []).filter(c => c && c !== 'Semua Kategori');
-        selKategori.innerHTML = categories.length > 0
-            ? categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')
-            : '<option value="">(Belum ada program)</option>';
-    }
-
     // Update Session Badges
     const counts = getTahfidzActiveWeeklySessionCounts();
     const badgeZ = document.getElementById('bulk-target-badge-ziyadah');
@@ -2391,9 +2377,8 @@ function openTahfidzBulkTargetModal(initialScope = 'ALL') {
     if (badgeZ) badgeZ.innerText = `${counts.ziyadahWeeklySessions} Sesi Ziyadah/Pekan`;
     if (badgeM) badgeM.innerText = `${counts.murajaahWeeklySessions} Sesi Muroja'ah/Pekan`;
 
-    // Tentukan scope awal
-    const selCount = ASNTahfidz.selectedStudentIds ? ASNTahfidz.selectedStudentIds.size : 0;
-    const scopeToUse = (initialScope === 'SELECTED' && selCount === 0) ? 'ALL' : initialScope;
+    // Tentukan scope awal: cukup Semua Santri (ALL) atau Per Halaqah (HALAQAH)
+    const scopeToUse = (initialScope === 'HALAQAH') ? 'HALAQAH' : 'ALL';
     setBulkTargetScope(scopeToUse);
 
     // Hitung target otomatis
@@ -2414,19 +2399,20 @@ function closeTahfidzBulkTargetModal() {
  * Set target scope (ALL, HALAQAH, KATEGORI, SELECTED)
  */
 function setBulkTargetScope(scope) {
+    if (scope !== 'HALAQAH') scope = 'ALL';
     if (!ASNTahfidz.bulkTargetState) {
         ASNTahfidz.bulkTargetState = { scope: 'ALL', halaqahId: '', kategori: '', studentIds: [] };
     }
     ASNTahfidz.bulkTargetState.scope = scope;
 
-    const scopes = ['ALL', 'HALAQAH', 'KATEGORI', 'SELECTED'];
+    const scopes = ['ALL', 'HALAQAH'];
     scopes.forEach(s => {
         const btn = document.getElementById(`btn-scope-${s.toLowerCase()}`);
         if (!btn) return;
         if (s === scope) {
-            btn.className = 'px-3 py-2 rounded-xl font-bold text-xs border text-center transition flex flex-col items-center gap-1 bg-white dark:bg-[#15202d] border-emerald-500 text-emerald-700 dark:text-emerald-300 shadow-sm ring-2 ring-emerald-500/20';
+            btn.className = 'px-3 py-2.5 rounded-xl font-bold text-xs border text-center transition flex flex-col items-center gap-1.5 bg-white dark:bg-[#15202d] border-emerald-500 text-emerald-700 dark:text-emerald-300 shadow-sm ring-2 ring-emerald-500/20 active:scale-95';
         } else {
-            btn.className = 'px-3 py-2 rounded-xl font-bold text-xs border text-center transition flex flex-col items-center gap-1 bg-white dark:bg-[#15202d] border-slate-200 dark:border-[#283a4e] text-slate-600 dark:text-slate-300 hover:border-amber-400';
+            btn.className = 'px-3 py-2.5 rounded-xl font-bold text-xs border text-center transition flex flex-col items-center gap-1.5 bg-white dark:bg-[#15202d] border-slate-200 dark:border-[#283a4e] text-slate-600 dark:text-slate-300 hover:border-amber-400 active:scale-95';
         }
     });
 
@@ -2435,7 +2421,7 @@ function setBulkTargetScope(scope) {
     const kategoriWrap = document.getElementById('bulk-target-kategori-wrapper');
 
     if (subContainer) {
-        if (scope === 'HALAQAH' || scope === 'KATEGORI') {
+        if (scope === 'HALAQAH') {
             subContainer.classList.remove('hidden');
         } else {
             subContainer.classList.add('hidden');
@@ -2448,8 +2434,7 @@ function setBulkTargetScope(scope) {
     }
 
     if (kategoriWrap) {
-        if (scope === 'KATEGORI') kategoriWrap.classList.remove('hidden');
-        else kategoriWrap.classList.add('hidden');
+        kategoriWrap.classList.add('hidden');
     }
 
     onBulkTargetScopeChange();
@@ -2468,10 +2453,7 @@ function onBulkTargetScopeChange() {
     let targetStudents = [];
     let summaryText = "";
 
-    if (scope === 'ALL') {
-        targetStudents = allStudents.filter(st => isStudentInHalaqah(st));
-        summaryText = `Target akan diterapkan ke seluruh santri halaqah aktif (${targetStudents.length} santri)`;
-    } else if (scope === 'HALAQAH') {
+    if (scope === 'HALAQAH') {
         const selHalaqah = document.getElementById('bulk-target-select-halaqah');
         const halaqahVal = selHalaqah ? selHalaqah.value : "";
         const halaqahObj = (ASNTahfidz.data.halaqahs || []).find(h => (h.id || h.halaqahId || h.namaHalaqah) === halaqahVal);
@@ -2483,18 +2465,10 @@ function onBulkTargetScopeChange() {
             return (hid && hid === halaqahVal) || (hname && hname === halaqahName);
         });
         summaryText = `Target diterapkan ke santri kelompok: ${halaqahName || 'Halaqah terpilih'} (${targetStudents.length} santri)`;
-    } else if (scope === 'KATEGORI') {
-        const selKategori = document.getElementById('bulk-target-select-kategori');
-        const kategoriVal = selKategori ? selKategori.value : "";
-
-        targetStudents = allStudents.filter(st => {
-            return (st.kategori && st.kategori === kategoriVal) || (st.program && st.program === kategoriVal);
-        });
-        summaryText = `Target diterapkan ke program: ${kategoriVal || 'Program terpilih'} (${targetStudents.length} santri)`;
-    } else if (scope === 'SELECTED') {
-        const selSet = ASNTahfidz.selectedStudentIds || new Set();
-        targetStudents = allStudents.filter(st => selSet.has(st.studentId));
-        summaryText = `Target diterapkan ke santri yang dicentang (${targetStudents.length} santri)`;
+    } else {
+        // Default ALL: semua santri aktif yang sudah masuk halaqah
+        targetStudents = allStudents.filter(st => isStudentInHalaqah(st));
+        summaryText = `Target akan diterapkan ke seluruh santri halaqah aktif (${targetStudents.length} santri)`;
     }
 
     const targetIds = targetStudents.map(st => st.studentId).filter(Boolean);
