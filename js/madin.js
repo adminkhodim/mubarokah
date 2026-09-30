@@ -90,6 +90,7 @@ const ASNMadin = {
         this.renderMasterClasses();
         this.renderMasterSubjects();
         this.renderRecentSessions();
+        this.ensureEmployeeDataLoaded();
     },
 
     loadStorage: function () {
@@ -322,9 +323,78 @@ const ASNMadin = {
         this.data.selectedSubjectId = selectKitab.value;
 
         const sub = this.data.subjects.find(s => s.subjectId === this.data.selectedSubjectId);
-        const ustadzInput = document.getElementById('madin-jurnal-ustadz');
-        if (ustadzInput && sub) {
-            ustadzInput.value = sub.ustadzPengampu || '';
+        const ustadzSelect = document.getElementById('madin-jurnal-ustadz');
+        if (ustadzSelect) {
+            this.populateTeacherDropdown('madin-jurnal-ustadz', sub ? sub.ustadzPengampu : '');
+        }
+    },
+
+    // ==================== INTEGRASI DATA PEGAWAI ====================
+    getTeacherList: function () {
+        // 1. Ambil dari ASNPegawai.list jika ada data terisi
+        if (window.ASNPegawai && Array.isArray(window.ASNPegawai.list) && window.ASNPegawai.list.length > 0) {
+            return window.ASNPegawai.list.map(p => ({
+                nama: String(p.nama || '').trim(),
+                jabatan: String(p.jabatan || 'Pegawai / Asatidz').trim(),
+                nip: p.nip || ''
+            })).filter(t => t.nama);
+        }
+
+        // 2. Fallback Asatidz Pesantren standar jika database pegawai belum di-load
+        return [
+            { nama: "Ust. M. Ridwan, S.Pd.I", jabatan: "Pengajar Diniyah" },
+            { nama: "Usth. Siti Maryam, S.Ag", jabatan: "Pengajar Diniyah" },
+            { nama: "Ust. Ahmad Fauzan", jabatan: "Pengajar Diniyah" },
+            { nama: "Usth. Fatimah Az-Zahra", jabatan: "Pengajar Diniyah" },
+            { nama: "K.H. Masrur", jabatan: "Pengasuh / Kepala Madin" },
+            { nama: "Ust. Zaidan Al-Hafidz", jabatan: "Muhafiz / Asatidz" },
+            { nama: "Ust. Fauzi Rohman", jabatan: "Pengajar Diniyah" },
+            { nama: "Ust. Hasan Basri", jabatan: "Pengajar Diniyah" },
+            { nama: "Ust. Luqman Hakim", jabatan: "Pengajar Diniyah" }
+        ];
+    },
+
+    populateTeacherDropdown: function (elementId, selectedValue = '') {
+        const selectEl = document.getElementById(elementId);
+        if (!selectEl) return;
+
+        const teachers = this.getTeacherList();
+        let opts = '<option value="">-- Pilih dari Data Pegawai --</option>';
+
+        let valueFound = false;
+        teachers.forEach(t => {
+            const isSel = selectedValue && t.nama.toLowerCase() === selectedValue.toLowerCase();
+            if (isSel) valueFound = true;
+            opts += `<option value="${t.nama}" ${isSel ? 'selected' : ''}>${t.nama} (${t.jabatan})</option>`;
+        });
+
+        // Jika nilai lama ada namun belum terdaftar di pegawai, pertahankan agar tidak hilang
+        if (selectedValue && !valueFound) {
+            opts += `<option value="${selectedValue}" selected>${selectedValue} (Data Tersimpan)</option>`;
+        }
+
+        selectEl.innerHTML = opts;
+        if (selectedValue) {
+            selectEl.value = selectedValue;
+        }
+    },
+
+    ensureEmployeeDataLoaded: function () {
+        if ((!window.ASNPegawai || !window.ASNPegawai.list || window.ASNPegawai.list.length === 0) && typeof loadAdminEmployeesData === 'function') {
+            loadAdminEmployeesData().then(() => {
+                // Refresh dropdown jika sedang terbuka
+                const waliEl = document.getElementById('modal-kelas-wali');
+                if (waliEl) this.populateTeacherDropdown('modal-kelas-wali', waliEl.value);
+                const subUstadzEl = document.getElementById('modal-kitab-ustadz');
+                if (subUstadzEl) this.populateTeacherDropdown('modal-kitab-ustadz', subUstadzEl.value);
+                const sesUstadzEl = document.getElementById('modal-sesi-ustadz');
+                if (sesUstadzEl) this.populateTeacherDropdown('modal-sesi-ustadz', sesUstadzEl.value);
+                const jrnUstadzEl = document.getElementById('madin-jurnal-ustadz');
+                if (jrnUstadzEl) this.populateTeacherDropdown('madin-jurnal-ustadz', jrnUstadzEl.value);
+            }).catch(e => console.log('Load employees for madin:', e));
+        } else {
+            const jrnUstadzEl = document.getElementById('madin-jurnal-ustadz');
+            if (jrnUstadzEl && !jrnUstadzEl.value) this.populateTeacherDropdown('madin-jurnal-ustadz', '');
         }
     },
 
@@ -681,6 +751,7 @@ const ASNMadin = {
     // Modal Mulai Sesi KBM
     openStartSessionModal: function () {
         this.populateClassDropdowns();
+        this.populateTeacherDropdown('modal-sesi-ustadz', '');
         const modal = document.getElementById('modal-madin-sesi');
         if (modal) modal.classList.remove('hidden');
     },
@@ -725,8 +796,7 @@ const ASNMadin = {
         }
 
         if (ustadz) {
-            const ustadzInput = document.getElementById('madin-jurnal-ustadz');
-            if (ustadzInput) ustadzInput.value = ustadz;
+            this.populateTeacherDropdown('madin-jurnal-ustadz', ustadz);
         }
 
         if (bab) {
@@ -746,7 +816,6 @@ const ASNMadin = {
         const namaInput = document.getElementById('modal-kelas-nama');
         const tingkatInput = document.getElementById('modal-kelas-tingkat');
         const genderInput = document.getElementById('modal-kelas-gender');
-        const waliInput = document.getElementById('modal-kelas-wali');
         const titleEl = document.getElementById('modal-madin-kelas-title');
 
         if (classId) {
@@ -756,7 +825,7 @@ const ASNMadin = {
                 if (namaInput) namaInput.value = item.namaKelas;
                 if (tingkatInput) tingkatInput.value = item.tingkat;
                 if (genderInput) genderInput.value = item.gender || 'all';
-                if (waliInput) waliInput.value = item.waliKelas || '';
+                this.populateTeacherDropdown('modal-kelas-wali', item.waliKelas || '');
                 if (titleEl) titleEl.textContent = 'Edit Kelas Madin';
             }
         } else {
@@ -764,7 +833,7 @@ const ASNMadin = {
             if (namaInput) namaInput.value = '';
             if (tingkatInput) tingkatInput.value = 'Awaliyah';
             if (genderInput) genderInput.value = 'all';
-            if (waliInput) waliInput.value = '';
+            this.populateTeacherDropdown('modal-kelas-wali', '');
             if (titleEl) titleEl.textContent = 'Tambah Kelas Madin';
         }
 
@@ -835,7 +904,6 @@ const ASNMadin = {
         const namaInput = document.getElementById('modal-kitab-nama');
         const bidangInput = document.getElementById('modal-kitab-bidang');
         const kelasInput = document.getElementById('modal-kitab-kelas');
-        const ustadzInput = document.getElementById('modal-kitab-ustadz');
         const kkmInput = document.getElementById('modal-kitab-kkm');
         const titleEl = document.getElementById('modal-madin-kitab-title');
 
@@ -846,7 +914,7 @@ const ASNMadin = {
                 if (namaInput) namaInput.value = item.namaKitab;
                 if (bidangInput) bidangInput.value = item.bidang;
                 if (kelasInput) kelasInput.value = item.classId;
-                if (ustadzInput) ustadzInput.value = item.ustadzPengampu || '';
+                this.populateTeacherDropdown('modal-kitab-ustadz', item.ustadzPengampu || '');
                 if (kkmInput) kkmInput.value = item.kkm || 70;
                 if (titleEl) titleEl.textContent = 'Edit Kitab / Mapel';
             }
@@ -855,7 +923,7 @@ const ASNMadin = {
             if (namaInput) namaInput.value = '';
             if (bidangInput) bidangInput.value = 'Fiqih';
             if (kelasInput && this.data.selectedClassId) kelasInput.value = this.data.selectedClassId;
-            if (ustadzInput) ustadzInput.value = '';
+            this.populateTeacherDropdown('modal-kitab-ustadz', '');
             if (kkmInput) kkmInput.value = 70;
             if (titleEl) titleEl.textContent = 'Tambah Kitab / Mapel';
         }
