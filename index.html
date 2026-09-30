@@ -4650,35 +4650,115 @@
             </div>
         </div>
 
-        <!-- ==================== TABS: AL-QUR'AN POJOK (BACA PER HALAMAN 1 JUZ = 20 HALAMAN) ==================== -->
-        <div id="page-quran-page" class="tab-content hidden space-y-4 px-4 md:px-8 py-4 md:py-6 max-w-7xl mx-auto">
+        <!-- ==================== TABS: AL-QUR'AN POJOK (MUSHAF KEMENAG RI & TEKS DIGITAL) ==================== -->
+        <div id="page-quran-page" class="tab-content hidden space-y-3 sm:space-y-4 px-3 sm:px-4 md:px-8 py-3 sm:py-4 md:py-6 max-w-7xl mx-auto">
             <!-- Header Navigasi Halaman -->
-            <div
-                class="flex flex-col md:flex-row md:items-center justify-between bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] gap-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-white dark:bg-[#15202d] p-3 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] gap-3">
                 <div class="flex items-center space-x-2.5">
                     <button type="button" onclick="openQuranPojokIndexTab()"
-                        class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-lg flex items-center justify-center transition active:scale-95 shrink-0"
-                        title="Kembali ke Daftar Halaman">
+                        class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-lg flex items-center justify-center transition active:scale-95 shrink-0" title="Kembali ke Daftar Halaman">
                         <i class="fa-solid fa-arrow-left text-xs"></i>
                     </button>
                     <div>
                         <div class="flex items-center space-x-2">
-                            <span id="quran-page-badge"
-                                class="text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                                Mushaf Pojok
+                            <span id="quran-page-badge" class="text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                Mushaf Kemenag RI
                             </span>
-                            <span id="quran-page-juz-info"
-                                class="text-xs font-semibold text-slate-500 dark:text-slate-400">Juz 1</span>
+                            <span id="quran-page-juz-info" class="text-xs font-semibold text-slate-500 dark:text-slate-400">Juz 1</span>
                         </div>
-                        <h2 id="quran-page-title"
-                            class="text-sm md:text-base font-bold text-slate-800 dark:text-slate-100 mt-0.5">
+                        <h2 id="quran-page-title" class="text-sm md:text-base font-bold text-slate-800 dark:text-slate-100 mt-0.5">
                             Halaman 1 dari 604
                         </h2>
                     </div>
                 </div>
 
-                <!-- Bilah Kontrol -->
-                <div class="flex flex-wrap items-center justify-between md:justify-end gap-2 w-full md:w-auto">
+                <!-- Mode Switcher: Mushaf Gambar (Default) vs Teks Digital -->
+                <div class="flex items-center bg-slate-100 dark:bg-[#1c2836] p-1 rounded-xl w-full sm:w-auto shadow-inner">
+                    <button type="button" id="btn-mode-mushaf" onclick="switchQuranPageViewMode('mushaf')"
+                        class="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg font-bold text-xs bg-emerald-600 text-white shadow-sm transition active:scale-95 flex items-center justify-center space-x-1.5">
+                        <i class="fa-solid fa-book-open text-xs"></i>
+                        <span>Mushaf Kemenag</span>
+                    </button>
+                    <button type="button" id="btn-mode-text" onclick="switchQuranPageViewMode('text')"
+                        class="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg font-bold text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition active:scale-95 flex items-center justify-center space-x-1.5">
+                        <i class="fa-solid fa-align-right text-xs"></i>
+                        <span>Teks & Audio</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3-Pill Header Mushaf Kemenag (Nama Surah - No Halaman - Juz) Sesuai Layout Kemenag RI -->
+            <div class="flex items-center justify-between gap-2 max-w-xl mx-auto w-full px-1 text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                <div id="mushaf-pill-surah" class="bg-white dark:bg-[#15202d] border border-slate-200/90 dark:border-[#253447] px-3 py-1 rounded-full shadow-2xs truncate text-center min-w-[90px] font-bold">1. Al-Fatihah</div>
+                <div id="mushaf-pill-page" class="bg-white dark:bg-[#15202d] border border-slate-200/90 dark:border-[#253447] px-3.5 py-1 rounded-full shadow-2xs font-bold text-center min-w-[36px]">1</div>
+                <div id="mushaf-pill-juz" class="bg-white dark:bg-[#15202d] border border-slate-200/90 dark:border-[#253447] px-3 py-1 rounded-full shadow-2xs font-bold text-center min-w-[55px]">JUZ 1</div>
+            </div>
+
+            <!-- ==================== 1. TAMPILAN MODE MUSHAF GAMBAR KEMENAG (DEFAULT) ==================== -->
+            <div id="quran-mushaf-view-container" class="space-y-2.5 sm:space-y-3">
+                <!-- Kontainer Lembar Gambar Mushaf Kemenag RI (Adaptif & Nyaman Dibaca di Mode Terang maupun Gelap) -->
+                <div class="max-w-xl mx-auto w-full bg-white dark:bg-[#15202d] rounded-2xl shadow-lg border border-slate-200/80 dark:border-[#253447] overflow-hidden flex flex-col items-center">
+                    <!-- Area Gambar Lembaran Mushaf (Latar Mushaf Gelap & Kaligrafi Putih Terang saat Mode Gelap) -->
+                    <div id="quran-mushaf-image-wrapper"
+                        class="relative w-full p-2 sm:p-3 overflow-hidden flex flex-col items-center select-none touch-pan-y bg-white dark:bg-[#070d14] rounded-t-xl transition-colors duration-200">
+                        <!-- Skeleton Loader saat gambar memuat -->
+                        <div id="mushaf-img-loading" class="w-full aspect-[2/3] max-h-[66vh] sm:max-h-[80vh] bg-slate-100 dark:bg-[#1c2836] animate-pulse rounded-xl flex flex-col items-center justify-center text-slate-400 space-y-2">
+                            <i class="fa-solid fa-spinner fa-spin text-3xl text-emerald-500"></i>
+                            <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Memuat Lembar Mushaf Kemenag...</span>
+                        </div>
+
+                        <!-- Lembar Gambar Mushaf Kemenag RI (WebP) -->
+                        <img id="quran-mushaf-img" src="" alt="Mushaf Standar Kemenag RI"
+                            class="hidden w-auto max-w-full max-h-[68vh] sm:max-h-[82vh] object-contain rounded-xl bg-transparent shadow-xs transition-transform duration-200 ease-out origin-center cursor-zoom-in"
+                            onload="onMushafImageLoaded()"
+                            onerror="onMushafImageError()"
+                            onclick="toggleMushafZoomClick()" />
+                    </div>
+
+                    <!-- Sisi Tepi Bawah Mushaf: Pilihan Kertas Mushaf & Kontrol Zoom -->
+                    <div class="w-full bg-slate-50 dark:bg-[#111a24] border-t border-slate-100 dark:border-[#1e2d3d] px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <!-- Pilihan Tema Kertas Mushaf (Malam / Gelap Teks Putih, Putih Asli, Krem Sepia) -->
+                        <div class="flex items-center space-x-1 bg-white dark:bg-[#1c2836] border border-slate-200/80 dark:border-[#253447] p-0.5 rounded-lg shadow-2xs">
+                            <button type="button" id="btn-mushaf-theme-dark" onclick="setMushafTheme('dark')"
+                                class="px-2 py-0.5 rounded-md font-bold text-[10px] bg-emerald-600 text-white shadow-xs transition active:scale-95 flex items-center gap-1 cursor-pointer"
+                                title="Mode Malam Lembut (Latar Gelap, Tulisan Arab Putih)">
+                                <i class="fa-solid fa-moon text-[10px]"></i>
+                                <span class="hidden xs:inline">Malam (Putih)</span>
+                            </button>
+                            <button type="button" id="btn-mushaf-theme-white" onclick="setMushafTheme('white')"
+                                class="px-2 py-0.5 rounded-md font-medium text-[10px] text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition active:scale-95 flex items-center gap-1 cursor-pointer"
+                                title="Kertas Putih Alami (Tulisan Arab Hitam)">
+                                <i class="fa-solid fa-sun text-[10px]"></i>
+                                <span class="hidden xs:inline">Putih</span>
+                            </button>
+                            <button type="button" id="btn-mushaf-theme-sepia" onclick="setMushafTheme('sepia')"
+                                class="px-2 py-0.5 rounded-md font-medium text-[10px] text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition active:scale-95 flex items-center gap-1 cursor-pointer"
+                                title="Kertas Krem Sepia (Teduh di Mata)">
+                                <i class="fa-solid fa-book-bookmark text-[10px]"></i>
+                                <span class="hidden xs:inline">Sepia</span>
+                            </button>
+                        </div>
+
+                        <!-- Zoom Controls Button Group -->
+                        <div class="flex items-center space-x-1.5 bg-white dark:bg-[#1c2836] border border-slate-200/80 dark:border-[#253447] px-2 py-0.5 rounded-full text-slate-700 dark:text-slate-200 shadow-2xs">
+                            <button type="button" onclick="zoomMushaf(-0.15)" class="hover:text-emerald-600 dark:hover:text-emerald-400 active:scale-90 transition p-1 cursor-pointer" title="Perkecil Ukuran">
+                                <i class="fa-solid fa-magnifying-glass-minus text-[11px]"></i>
+                            </button>
+                            <span id="mushaf-zoom-level" class="text-[11px] font-bold min-w-[32px] text-center text-slate-800 dark:text-slate-100 select-none">100%</span>
+                            <button type="button" onclick="zoomMushaf(0.15)" class="hover:text-emerald-600 dark:hover:text-emerald-400 active:scale-90 transition p-1 cursor-pointer" title="Perbesar Ukuran">
+                                <i class="fa-solid fa-magnifying-glass-plus text-[11px]"></i>
+                            </button>
+                            <button type="button" onclick="resetMushafZoom()" class="hover:text-amber-500 active:scale-90 transition p-1 ml-0.5 border-l border-slate-200 dark:border-[#253447] pl-1.5 cursor-pointer" title="Kembalikan Ukuran Asli (100%)">
+                                <i class="fa-solid fa-rotate-right text-[10px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== 2. BILAH KONTROL TEKS & AUDIO (HANYA AKTIF DI MODE TEKS) ==================== -->
+            <div id="quran-text-controls-bar" class="hidden flex-wrap items-center justify-between gap-2.5 bg-white dark:bg-[#15202d] p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm">
+                <div class="flex items-center space-x-2">
                     <button type="button" id="btn-toggle-page-latin" onclick="toggleLatin()"
                         class="flex items-center space-x-1.5 bg-slate-100 dark:bg-[#1c2836] hover:bg-slate-200 dark:hover:bg-[#253447] text-slate-700 dark:text-slate-300 px-3 py-1.5 rounded-xl text-xs font-bold transition active:scale-95">
                         <i class="fa-solid fa-language text-xs"></i>
@@ -4690,7 +4770,9 @@
                         <i class="fa-solid fa-align-left text-xs"></i>
                         <span id="text-toggle-page-trans">Tampilkan Terjemah</span>
                     </button>
+                </div>
 
+                <div class="flex items-center space-x-2">
                     <button type="button" id="btn-play-page-audio" onclick="toggleQuranPageAudio()"
                         class="flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm active:scale-95">
                         <i class="fa-solid fa-play text-xs" id="icon-play-page-audio"></i>
@@ -4700,46 +4782,59 @@
                 </div>
             </div>
 
-            <!-- Lompat Halaman Cepat Bar -->
-            <div
-                class="flex items-center justify-between bg-emerald-50/70 dark:bg-[#1a2b3c] px-4 py-2.5 rounded-2xl border border-emerald-500/20 text-xs">
-                <span class="text-slate-600 dark:text-slate-300 font-medium flex items-center gap-1.5">
-                    <i class="fa-solid fa-book-bookmark text-emerald-600"></i>
-                    <span id="quran-page-surah-info">Memuat info surah...</span>
-                </span>
-                <div class="flex items-center space-x-2">
-                    <span class="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:inline">Lompat:</span>
-                    <select id="select-jump-page" onchange="jumpToQuranPage(this.value)"
-                        class="bg-white dark:bg-[#15202d] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-[#253447] text-xs rounded-lg px-2 py-1 font-semibold focus:outline-none focus:border-emerald-500">
-                        <!-- Options 1 to 604 generated by JS -->
-                    </select>
+            <!-- Kontainer Ayat-Ayat Teks Digital (Hanya tampil di mode Teks) -->
+            <div id="quran-page-ayah-container" class="hidden space-y-3">
+                <!-- Loaded via JS openQuranPage() jika mode teks aktif -->
+            </div>
+
+            <!-- Footer Navigasi Bolak-Balik Lembaran Halaman (RTL Mushaf: Grid Anti-Overload) -->
+            <div class="max-w-xl mx-auto w-full p-2 sm:p-3 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm mt-3">
+                <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-1.5 sm:gap-3">
+                    <!-- KIRI: Halaman Selanjutnya (Membuka ke kiri sesuai arah mushaf RTL) -->
+                    <button type="button" id="btn-page-next" onclick="navigateQuranPage(1)"
+                        class="w-full flex items-center justify-center space-x-1 sm:space-x-1.5 px-2 py-2 sm:py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition active:scale-95 disabled:opacity-30 disabled:pointer-events-none shadow-sm min-w-0" title="Halaman Selanjutnya">
+                        <i class="fa-solid fa-arrow-left text-[11px] shrink-0"></i>
+                        <span class="truncate">Selanjutnya</span>
+                    </button>
+
+                    <!-- TENGAH: Nomor Halaman & Status -->
+                    <div class="text-center px-1 shrink-0 min-w-[75px]">
+                        <span id="footer-current-page-num" class="text-xs sm:text-sm font-extrabold text-emerald-700 dark:text-emerald-400 block leading-tight">
+                            Hal. 1
+                        </span>
+                        <span class="text-[9px] text-slate-400 block whitespace-nowrap mt-0.5">Mushaf Kemenag</span>
+                    </div>
+
+                    <!-- KANAN: Halaman Sebelumnya (Kembali ke kanan sesuai arah mushaf RTL) -->
+                    <button type="button" id="btn-page-prev" onclick="navigateQuranPage(-1)"
+                        class="w-full flex items-center justify-center space-x-1 sm:space-x-1.5 px-2 py-2 sm:py-2.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-[#1c2836] hover:bg-slate-200 dark:hover:bg-[#253447] text-slate-700 dark:text-slate-200 transition active:scale-95 disabled:opacity-30 disabled:pointer-events-none min-w-0" title="Halaman Sebelumnya">
+                        <span class="truncate">Sebelumnya</span>
+                        <i class="fa-solid fa-arrow-right text-[11px] shrink-0"></i>
+                    </button>
                 </div>
             </div>
 
-            <!-- Kontainer Ayat-Ayat Halaman Pojok -->
-            <div id="quran-page-ayah-container" class="space-y-3">
-                <!-- Loaded via JS openQuranPage() -->
-            </div>
-
-            <!-- Footer Navigasi Bolak-Balik Lembaran Halaman -->
-            <div
-                class="flex items-center justify-between p-4 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm mt-6">
-                <button type="button" id="btn-page-prev" onclick="navigateQuranPage(-1)"
-                    class="flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-[#1c2836] hover:bg-emerald-600 hover:text-white text-slate-700 dark:text-slate-200 transition active:scale-95 disabled:opacity-40 disabled:pointer-events-none">
-                    <i class="fa-solid fa-arrow-left text-xs"></i>
-                    <span>Hal. Sebelumnya</span>
-                </button>
-                <div class="text-center">
-                    <span id="footer-current-page-num" class="text-xs font-bold text-emerald-700 dark:text-emerald-400">
-                        Hal. 1
-                    </span>
-                    <span class="text-[10px] text-slate-400 block">Mushaf Pojok</span>
+            <!-- Bar Pilihan Halaman & Surah (Di Bawah Tombol Navigasi) -->
+            <div class="max-w-xl mx-auto w-full bg-white dark:bg-[#15202d] p-3 rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm mt-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 text-xs shadow-xs">
+                        <i class="fa-solid fa-book-bookmark"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between gap-1 mb-0.5">
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-400">
+                                Pilihan Surah & Halaman
+                            </span>
+                            <span id="quran-page-surah-info" class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 truncate max-w-[130px] sm:max-w-[200px] text-right">
+                                Memuat...
+                            </span>
+                        </div>
+                        <select id="select-jump-page" onchange="jumpToQuranPage(this.value)"
+                            class="w-full bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-[#253447] text-xs font-semibold rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-emerald-500 cursor-pointer truncate">
+                            <!-- Options 1 to 604 generated by JS -->
+                        </select>
+                    </div>
                 </div>
-                <button type="button" id="btn-page-next" onclick="navigateQuranPage(1)"
-                    class="flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition active:scale-95 disabled:opacity-40 disabled:pointer-events-none">
-                    <span>Hal. Selanjutnya</span>
-                    <i class="fa-solid fa-arrow-right text-xs"></i>
-                </button>
             </div>
         </div>
 

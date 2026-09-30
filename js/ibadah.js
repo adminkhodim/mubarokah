@@ -101,6 +101,126 @@
         let quranPojokInitialized = false;
         let pageAudioPlaying = false;
         let currentQuranSubTab = 'surah';
+        let quranPageViewMode = 'mushaf'; // 'mushaf' (gambar Kemenag RI) atau 'text' (teks & audio digital)
+        let mushafZoom = 1.0;
+        let mushafTheme = localStorage.getItem('mubarokah_mushaf_theme') || 'auto';
+
+        const QURAN_CHAPTER_PAGES = [
+            { id: 1, name: "Al-Fatihah", startPage: 1, endPage: 1 },
+            { id: 2, name: "Al-Baqarah", startPage: 2, endPage: 49 },
+            { id: 3, name: "Ali 'Imran", startPage: 50, endPage: 76 },
+            { id: 4, name: "An-Nisa'", startPage: 77, endPage: 106 },
+            { id: 5, name: "Al-Ma'idah", startPage: 106, endPage: 127 },
+            { id: 6, name: "Al-An'am", startPage: 128, endPage: 150 },
+            { id: 7, name: "Al-A'raf", startPage: 151, endPage: 176 },
+            { id: 8, name: "Al-Anfal", startPage: 177, endPage: 186 },
+            { id: 9, name: "At-Taubah", startPage: 187, endPage: 207 },
+            { id: 10, name: "Yunus", startPage: 208, endPage: 221 },
+            { id: 11, name: "Hud", startPage: 221, endPage: 235 },
+            { id: 12, name: "Yusuf", startPage: 235, endPage: 248 },
+            { id: 13, name: "Ar-Ra'd", startPage: 249, endPage: 255 },
+            { id: 14, name: "Ibrahim", startPage: 255, endPage: 261 },
+            { id: 15, name: "Al-Hijr", startPage: 262, endPage: 267 },
+            { id: 16, name: "An-Nahl", startPage: 267, endPage: 281 },
+            { id: 17, name: "Al-Isra'", startPage: 282, endPage: 293 },
+            { id: 18, name: "Al-Kahf", startPage: 293, endPage: 304 },
+            { id: 19, name: "Maryam", startPage: 305, endPage: 312 },
+            { id: 20, name: "Ta-Ha", startPage: 312, endPage: 321 },
+            { id: 21, name: "Al-Anbiya'", startPage: 322, endPage: 331 },
+            { id: 22, name: "Al-Hajj", startPage: 332, endPage: 341 },
+            { id: 23, name: "Al-Mu'minun", startPage: 342, endPage: 349 },
+            { id: 24, name: "An-Nur", startPage: 350, endPage: 359 },
+            { id: 25, name: "Al-Furqan", startPage: 359, endPage: 366 },
+            { id: 26, name: "Asy-Syu'ara'", startPage: 367, endPage: 376 },
+            { id: 27, name: "An-Naml", startPage: 377, endPage: 385 },
+            { id: 28, name: "Al-Qashash", startPage: 385, endPage: 396 },
+            { id: 29, name: "Al-'Ankabut", startPage: 396, endPage: 404 },
+            { id: 30, name: "Ar-Rum", startPage: 404, endPage: 410 },
+            { id: 31, name: "Luqman", startPage: 411, endPage: 414 },
+            { id: 32, name: "As-Sajdah", startPage: 415, endPage: 417 },
+            { id: 33, name: "Al-Ahzab", startPage: 418, endPage: 427 },
+            { id: 34, name: "Saba'", startPage: 428, endPage: 434 },
+            { id: 35, name: "Fathir", startPage: 434, endPage: 440 },
+            { id: 36, name: "Ya-Sin", startPage: 440, endPage: 445 },
+            { id: 37, name: "Ash-Shaffat", startPage: 446, endPage: 452 },
+            { id: 38, name: "Shad", startPage: 453, endPage: 458 },
+            { id: 39, name: "Az-Zumar", startPage: 458, endPage: 467 },
+            { id: 40, name: "Ghafir", startPage: 467, endPage: 476 },
+            { id: 41, name: "Fushshilat", startPage: 477, endPage: 482 },
+            { id: 42, name: "Asy-Syura", startPage: 483, endPage: 489 },
+            { id: 43, name: "Az-Zukhruf", startPage: 489, endPage: 495 },
+            { id: 44, name: "Ad-Dukhan", startPage: 496, endPage: 498 },
+            { id: 45, name: "Al-Jatsiyah", startPage: 499, endPage: 502 },
+            { id: 46, name: "Al-Ahqaf", startPage: 502, endPage: 506 },
+            { id: 47, name: "Muhammad", startPage: 507, endPage: 510 },
+            { id: 48, name: "Al-Fath", startPage: 511, endPage: 515 },
+            { id: 49, name: "Al-Hujurat", startPage: 515, endPage: 517 },
+            { id: 50, name: "Qaf", startPage: 518, endPage: 520 },
+            { id: 51, name: "Adz-Dzariyat", startPage: 520, endPage: 523 },
+            { id: 52, name: "Ath-Thur", startPage: 523, endPage: 525 },
+            { id: 53, name: "An-Najm", startPage: 526, endPage: 528 },
+            { id: 54, name: "Al-Qamar", startPage: 528, endPage: 531 },
+            { id: 55, name: "Ar-Rahman", startPage: 531, endPage: 534 },
+            { id: 56, name: "Al-Waqi'ah", startPage: 534, endPage: 537 },
+            { id: 57, name: "Al-Hadid", startPage: 537, endPage: 541 },
+            { id: 58, name: "Al-Mujadilah", startPage: 542, endPage: 545 },
+            { id: 59, name: "Al-Hasyr", startPage: 545, endPage: 548 },
+            { id: 60, name: "Al-Mumtahanah", startPage: 549, endPage: 551 },
+            { id: 61, name: "Ash-Shaff", startPage: 551, endPage: 552 },
+            { id: 62, name: "Al-Jumu'ah", startPage: 553, endPage: 554 },
+            { id: 63, name: "Al-Munafiqun", startPage: 554, endPage: 555 },
+            { id: 64, name: "At-Taghabun", startPage: 556, endPage: 557 },
+            { id: 65, name: "Ath-Thalaq", startPage: 558, endPage: 559 },
+            { id: 66, name: "At-Tahrim", startPage: 560, endPage: 561 },
+            { id: 67, name: "Al-Mulk", startPage: 562, endPage: 564 },
+            { id: 68, name: "Al-Qalam", startPage: 564, endPage: 566 },
+            { id: 69, name: "Al-Haqqah", startPage: 566, endPage: 568 },
+            { id: 70, name: "Al-Ma'arij", startPage: 568, endPage: 570 },
+            { id: 71, name: "Nuh", startPage: 570, endPage: 571 },
+            { id: 72, name: "Al-Jinn", startPage: 572, endPage: 573 },
+            { id: 73, name: "Al-Muzzammil", startPage: 574, endPage: 575 },
+            { id: 74, name: "Al-Muddatstsir", startPage: 575, endPage: 577 },
+            { id: 75, name: "Al-Qiyamah", startPage: 577, endPage: 578 },
+            { id: 76, name: "Al-Insan", startPage: 578, endPage: 580 },
+            { id: 77, name: "Al-Mursalat", startPage: 580, endPage: 581 },
+            { id: 78, name: "An-Naba'", startPage: 582, endPage: 583 },
+            { id: 79, name: "An-Nazi'at", startPage: 583, endPage: 584 },
+            { id: 80, name: "'Abasa", startPage: 585, endPage: 586 },
+            { id: 81, name: "At-Takwir", startPage: 586, endPage: 586 },
+            { id: 82, name: "Al-Infithar", startPage: 587, endPage: 587 },
+            { id: 83, name: "Al-Muthaffifin", startPage: 587, endPage: 589 },
+            { id: 84, name: "Al-Insyiqaq", startPage: 589, endPage: 590 },
+            { id: 85, name: "Al-Buruj", startPage: 590, endPage: 590 },
+            { id: 86, name: "Ath-Thariq", startPage: 591, endPage: 591 },
+            { id: 87, name: "Al-A'la", startPage: 591, endPage: 592 },
+            { id: 88, name: "Al-Ghasyiyah", startPage: 592, endPage: 593 },
+            { id: 89, name: "Al-Fajr", startPage: 593, endPage: 594 },
+            { id: 90, name: "Al-Balad", startPage: 594, endPage: 595 },
+            { id: 91, name: "Asy-Syams", startPage: 595, endPage: 595 },
+            { id: 92, name: "Al-Lail", startPage: 595, endPage: 596 },
+            { id: 93, name: "Adh-Dhuha", startPage: 596, endPage: 596 },
+            { id: 94, name: "Asy-Syarh", startPage: 596, endPage: 597 },
+            { id: 95, name: "At-Tin", startPage: 597, endPage: 597 },
+            { id: 96, name: "Al-'Alaq", startPage: 597, endPage: 598 },
+            { id: 97, name: "Al-Qadr", startPage: 598, endPage: 598 },
+            { id: 98, name: "Al-Bayyinah", startPage: 598, endPage: 599 },
+            { id: 99, name: "Az-Zalzalah", startPage: 599, endPage: 599 },
+            { id: 100, name: "Al-'Adiyat", startPage: 599, endPage: 600 },
+            { id: 101, name: "Al-Qari'ah", startPage: 600, endPage: 600 },
+            { id: 102, name: "At-Takatsur", startPage: 600, endPage: 600 },
+            { id: 103, name: "Al-'Ashr", startPage: 601, endPage: 601 },
+            { id: 104, name: "Al-Humazah", startPage: 601, endPage: 601 },
+            { id: 105, name: "Al-Fil", startPage: 601, endPage: 601 },
+            { id: 106, name: "Quraisy", startPage: 602, endPage: 602 },
+            { id: 107, name: "Al-Ma'un", startPage: 602, endPage: 602 },
+            { id: 108, name: "Al-Kautsar", startPage: 602, endPage: 602 },
+            { id: 109, name: "Al-Kafirun", startPage: 603, endPage: 603 },
+            { id: 110, name: "An-Nashr", startPage: 603, endPage: 603 },
+            { id: 111, name: "Al-Lahab", startPage: 603, endPage: 603 },
+            { id: 112, name: "Al-Ikhlas", startPage: 604, endPage: 604 },
+            { id: 113, name: "Al-Falaq", startPage: 604, endPage: 604 },
+            { id: 114, name: "An-Nas", startPage: 604, endPage: 604 }
+        ];
 
         const quranSurahNames = [
             "Al-Fatihah", "Al-Baqarah", "Ali 'Imran", "An-Nisa'", "Al-Ma'idah", "Al-An'am", "Al-A'raf", "Al-Anfal", "At-Taubah", "Yunus",
@@ -350,6 +470,23 @@
             return Math.floor((p - 2) / 20) + 1;
         }
 
+        function getKemenagPageImageUrl(pageNo) {
+            const p = parseInt(pageNo, 10);
+            if (isNaN(p) || p < 1 || p > 604) return '';
+            const padded = String(p).padStart(3, '0');
+            return `https://media.qurankemenag.net/khat2/QK_${padded}.webp`;
+        }
+
+        function getSurahInfoFromPage(pageNo) {
+            const p = parseInt(pageNo, 10);
+            if (isNaN(p) || p < 1 || p > 604) return '';
+            const surahs = QURAN_CHAPTER_PAGES.filter(s => p >= s.startPage && p <= s.endPage);
+            if (surahs.length === 0) return '';
+            if (surahs.length === 1) return `${surahs[0].id}. ${surahs[0].name}`;
+            if (surahs.length === 2) return `${surahs[0].id}. ${surahs[0].name} & ${surahs[1].id}. ${surahs[1].name}`;
+            return `${surahs[0].id}. ${surahs[0].name} - ${surahs[surahs.length - 1].name} (${surahs.length} Surah)`;
+        }
+
         function switchQuranIndexSubTab(tabName) {
             currentQuranSubTab = tabName;
             const btnSurah = document.getElementById('tab-btn-quran-surah');
@@ -400,19 +537,22 @@
                 }
             }
 
-            // Populate Jump Page Select (1 to 604)
+            populateJumpPageSelect();
+            selectQuranPojokJuz(currentQuranJuz || 1);
+        }
+
+        function populateJumpPageSelect() {
             const selectJump = document.getElementById('select-jump-page');
             if (selectJump && selectJump.options.length <= 1) {
                 selectJump.innerHTML = '';
                 for (let p = 1; p <= 604; p++) {
                     const opt = document.createElement('option');
                     opt.value = p;
-                    opt.innerText = `Hal ${p}`;
+                    const sInfo = getSurahInfoFromPage(p);
+                    opt.innerText = `Hal. ${p} — ${sInfo}`;
                     selectJump.appendChild(opt);
                 }
             }
-
-            selectQuranPojokJuz(currentQuranJuz || 1);
         }
 
         function selectQuranPojokJuz(juzNo) {
@@ -494,6 +634,191 @@
             }
         }
 
+        // ==================== KEMENAG MUSHAF THEME & CONTROLS ====================
+        function setMushafTheme(theme) {
+            mushafTheme = theme;
+            localStorage.setItem('mubarokah_mushaf_theme', theme);
+            applyMushafTheme();
+        }
+
+        function applyMushafTheme() {
+            const wrapper = document.getElementById('quran-mushaf-image-wrapper');
+            const img = document.getElementById('quran-mushaf-img');
+            const btnWhite = document.getElementById('btn-mushaf-theme-white');
+            const btnSepia = document.getElementById('btn-mushaf-theme-sepia');
+            const btnDark = document.getElementById('btn-mushaf-theme-dark');
+
+            if (!wrapper || !img) return;
+
+            const isAppDark = document.documentElement.classList.contains('dark') || document.body.classList.contains('dark');
+            const effectiveTheme = (mushafTheme === 'auto') ? (isAppDark ? 'dark' : 'white') : mushafTheme;
+
+            // Reset inline styles
+            wrapper.style.backgroundColor = '';
+            img.style.backgroundColor = 'transparent';
+            img.style.filter = '';
+            img.style.transition = 'filter 0.3s ease, transform 0.2s ease-out';
+
+            if (effectiveTheme === 'dark') {
+                // Area lembar mushaf tetap mode gelap pekat, tulisan arab otomatis menjadi putih terang
+                wrapper.style.backgroundColor = '#070d14';
+                img.style.filter = 'invert(1) hue-rotate(180deg) brightness(0.96) contrast(1.12)';
+            } else if (effectiveTheme === 'sepia') {
+                // Kertas krem klasik teduh
+                wrapper.style.backgroundColor = '#fbf7ee';
+                img.style.filter = 'sepia(0.28) contrast(1.02)';
+            } else {
+                // Kertas putih alami (khat hitam pekat)
+                wrapper.style.backgroundColor = '#ffffff';
+                img.style.filter = 'none';
+            }
+
+            // Update Theme Switcher Button UI
+            const activeClass = "bg-emerald-600 text-white shadow-xs font-bold";
+            const inactiveClass = "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-medium";
+
+            [
+                { el: btnDark, active: effectiveTheme === 'dark' },
+                { el: btnWhite, active: effectiveTheme === 'white' },
+                { el: btnSepia, active: effectiveTheme === 'sepia' }
+            ].forEach(({ el, active }) => {
+                if (el) {
+                    if (active) {
+                        el.className = `px-2 py-0.5 rounded-md text-[10px] transition active:scale-95 flex items-center gap-1 cursor-pointer ${activeClass}`;
+                    } else {
+                        el.className = `px-2 py-0.5 rounded-md text-[10px] transition active:scale-95 flex items-center gap-1 cursor-pointer ${inactiveClass}`;
+                    }
+                }
+            });
+        }
+
+        function zoomMushaf(delta) {
+            mushafZoom = Math.min(Math.max(0.6, Math.round((mushafZoom + delta) * 100) / 100), 2.5);
+            applyMushafZoom();
+        }
+
+        function resetMushafZoom() {
+            mushafZoom = 1.0;
+            applyMushafZoom();
+        }
+
+        function toggleMushafZoomClick() {
+            if (mushafZoom > 1.05) {
+                resetMushafZoom();
+            } else {
+                zoomMushaf(0.4);
+            }
+        }
+
+        function applyMushafZoom() {
+            const img = document.getElementById('quran-mushaf-img');
+            const label = document.getElementById('mushaf-zoom-level');
+            if (img) {
+                img.style.transform = `scale(${mushafZoom})`;
+                img.classList.remove('cursor-zoom-in', 'cursor-zoom-out');
+                img.classList.add(mushafZoom > 1.05 ? 'cursor-zoom-out' : 'cursor-zoom-in');
+            }
+            if (label) {
+                label.innerText = `${Math.round(mushafZoom * 100)}%`;
+            }
+        }
+
+        function loadMushafPageImage(pageNo) {
+            resetMushafZoom();
+            applyMushafTheme();
+            const img = document.getElementById('quran-mushaf-img');
+            const skeleton = document.getElementById('mushaf-img-loading');
+            if (!img) return;
+
+            if (skeleton) {
+                skeleton.innerHTML = `
+                    <i class="fa-solid fa-spinner fa-spin text-3xl text-emerald-500"></i>
+                    <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Memuat Lembar Mushaf Kemenag...</span>
+                `;
+                skeleton.classList.remove('hidden');
+            }
+            img.classList.add('hidden');
+
+            const url = getKemenagPageImageUrl(pageNo);
+            img.src = url;
+
+            preloadAdjacentPages(pageNo);
+        }
+
+        function onMushafImageLoaded() {
+            const img = document.getElementById('quran-mushaf-img');
+            const skeleton = document.getElementById('mushaf-img-loading');
+            if (skeleton) skeleton.classList.add('hidden');
+            if (img) img.classList.remove('hidden');
+            applyMushafTheme();
+        }
+
+        function onMushafImageError() {
+            const img = document.getElementById('quran-mushaf-img');
+            const skeleton = document.getElementById('mushaf-img-loading');
+            if (skeleton) {
+                skeleton.classList.remove('hidden');
+                skeleton.innerHTML = `
+                    <div class="text-center p-4 space-y-2">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-500 text-2xl"></i>
+                        <p class="text-xs text-slate-600 dark:text-slate-300">Gagal memuat gambar Mushaf halaman ${currentQuranPage}.</p>
+                        <button type="button" onclick="loadMushafPageImage(${currentQuranPage})" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm active:scale-95">Coba Lagi</button>
+                    </div>
+                `;
+            }
+            if (img) img.classList.add('hidden');
+        }
+
+        function preloadAdjacentPages(pageNo) {
+            const p = parseInt(pageNo, 10);
+            if (p < 604) {
+                const nextImg = new Image();
+                nextImg.src = getKemenagPageImageUrl(p + 1);
+            }
+            if (p > 1) {
+                const prevImg = new Image();
+                prevImg.src = getKemenagPageImageUrl(p - 1);
+            }
+        }
+
+        function switchQuranPageViewMode(mode) {
+            quranPageViewMode = mode;
+            const btnMushaf = document.getElementById('btn-mode-mushaf');
+            const btnText = document.getElementById('btn-mode-text');
+            const mushafContainer = document.getElementById('quran-mushaf-view-container');
+            const textControls = document.getElementById('quran-text-controls-bar');
+            const textContainer = document.getElementById('quran-page-ayah-container');
+            const badge = document.getElementById('quran-page-badge');
+
+            if (mode === 'mushaf') {
+                if (btnMushaf) {
+                    btnMushaf.className = "flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg font-bold text-xs bg-emerald-600 text-white shadow-sm transition active:scale-95 flex items-center justify-center space-x-1.5";
+                }
+                if (btnText) {
+                    btnText.className = "flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg font-bold text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition active:scale-95 flex items-center justify-center space-x-1.5";
+                }
+                if (mushafContainer) mushafContainer.classList.remove('hidden');
+                if (textControls) textControls.classList.add('hidden');
+                if (textContainer) textContainer.classList.add('hidden');
+                if (badge) badge.innerText = "Mushaf Kemenag RI";
+            } else {
+                if (btnText) {
+                    btnText.className = "flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg font-bold text-xs bg-emerald-600 text-white shadow-sm transition active:scale-95 flex items-center justify-center space-x-1.5";
+                }
+                if (btnMushaf) {
+                    btnMushaf.className = "flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg font-bold text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition active:scale-95 flex items-center justify-center space-x-1.5";
+                }
+                if (mushafContainer) mushafContainer.classList.add('hidden');
+                if (textControls) textControls.classList.remove('hidden');
+                if (textControls) textControls.classList.add('flex');
+                if (textContainer) textContainer.classList.remove('hidden');
+                if (badge) badge.innerText = "Teks & Audio Digital";
+
+                // Muat teks ayat jika belum dimuat
+                loadQuranPageText(currentQuranPage);
+            }
+        }
+
         async function openQuranPage(pageNo) {
             let p = parseInt(pageNo, 10);
             if (isNaN(p) || p < 1) p = 1;
@@ -514,6 +839,7 @@
             const footerNumEl = document.getElementById('footer-current-page-num');
             if (footerNumEl) footerNumEl.innerText = `Hal. ${p}`;
 
+            populateJumpPageSelect();
             const selectJump = document.getElementById('select-jump-page');
             if (selectJump) selectJump.value = p;
 
@@ -522,9 +848,39 @@
             if (btnPrev) btnPrev.disabled = (p <= 1);
             if (btnNext) btnNext.disabled = (p >= 604);
 
+            // Update 3-Pill Header Kemenag
+            const pillJuz = document.getElementById('mushaf-pill-juz');
+            if (pillJuz) pillJuz.innerText = `JUZ ${currentQuranJuz}`;
+
+            const pillPage = document.getElementById('mushaf-pill-page');
+            if (pillPage) pillPage.innerText = `${p}`;
+
+            const surahInfoText = getSurahInfoFromPage(p);
+            const pillSurah = document.getElementById('mushaf-pill-surah');
+            if (pillSurah) pillSurah.innerText = surahInfoText || `Halaman ${p}`;
+
+            const surahInfoEl = document.getElementById('quran-page-surah-info');
+            if (surahInfoEl) surahInfoEl.innerText = surahInfoText || `Halaman ${p}`;
+
             // Reset page audio button
             resetQuranPageAudio();
 
+            // Muat gambar mushaf Kemenag RI
+            loadMushafPageImage(p);
+
+            // Sinkronkan tombol toggle latin & terjemah di halaman Quran Pojok
+            const textPageLatin = document.getElementById('text-toggle-page-latin');
+            if (textPageLatin) textPageLatin.innerText = isLatinVisible ? "Sembunyikan Latin" : "Tampilkan Latin";
+            const textPageTrans = document.getElementById('text-toggle-page-trans');
+            if (textPageTrans) textPageTrans.innerText = isTranslationVisible ? "Sembunyikan Terjemah" : "Tampilkan Terjemah";
+
+            // Jika sedang di mode teks, muat teks ayat
+            if (quranPageViewMode === 'text') {
+                loadQuranPageText(p);
+            }
+        }
+
+        async function loadQuranPageText(p) {
             const container = document.getElementById('quran-page-ayah-container');
             if (!container) return;
 
@@ -537,8 +893,8 @@
             container.innerHTML = `
                 <div class="bg-white dark:bg-[#15202d] p-8 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] text-center space-y-2">
                     <i class="fa-solid fa-spinner fa-spin text-3xl text-emerald-500 mb-2"></i>
-                    <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">Memuat Halaman ${p}...</p>
-                    <p class="text-xs text-slate-400">Mushaf Pojok Rasm Utsmani</p>
+                    <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">Memuat Teks Halaman ${p}...</p>
+                    <p class="text-xs text-slate-400">Rasm Utsmani & Terjemah Kemenag RI</p>
                 </div>
             `;
 
@@ -557,7 +913,7 @@
                     <div class="bg-white dark:bg-[#15202d] p-8 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] text-center space-y-3">
                         <i class="fa-solid fa-triangle-exclamation text-amber-500 text-3xl"></i>
                         <p class="text-sm text-slate-700 dark:text-slate-300">Gagal memuat ayat halaman ${p}. Periksa koneksi internet Anda.</p>
-                        <button type="button" onclick="openQuranPage(${p})" class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold">Coba Lagi</button>
+                        <button type="button" onclick="loadQuranPageText(${p})" class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-sm active:scale-95">Coba Lagi</button>
                     </div>
                 `;
             }
@@ -1319,4 +1675,93 @@
             if (playBtn) {
                 playBtn.className = "flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition active:scale-95";
             }
+        }
+
+        // ==================== KEYBOARD NAVIGATION & TOUCH SWIPE UNTUK MUSHAF ====================
+        document.addEventListener('keydown', (e) => {
+            const pageQuran = document.getElementById('page-quran-page');
+            if (!pageQuran || pageQuran.classList.contains('hidden')) return;
+
+            // Jangan picu navigasi keyboard jika user sedang mengetik di input atau dropdown
+            if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+
+            if (e.key === 'ArrowLeft') {
+                navigateQuranPage(1); // Panah Kiri = Lembar Selanjutnya (arah RTL Mushaf)
+            } else if (e.key === 'ArrowRight') {
+                navigateQuranPage(-1); // Panah Kanan = Lembar Sebelumnya (arah RTL Mushaf)
+            }
+        });
+
+        // Touch Swipe Gesture pada lembar Mushaf Kemenag
+        document.addEventListener('DOMContentLoaded', () => {
+            const wrapper = document.getElementById('quran-mushaf-image-wrapper');
+            if (wrapper) {
+                let touchStartX = 0;
+                let touchStartY = 0;
+
+                wrapper.addEventListener('touchstart', (e) => {
+                    if (e.touches && e.touches.length === 1) {
+                        touchStartX = e.touches[0].clientX;
+                        touchStartY = e.touches[0].clientY;
+                    }
+                }, { passive: true });
+
+                wrapper.addEventListener('touchend', (e) => {
+                    if (mushafZoom > 1.05) return; // jangan ubah halaman saat sedang diperbesar/zoom
+                    if (!e.changedTouches || e.changedTouches.length === 0) return;
+                    const diffX = e.changedTouches[0].clientX - touchStartX;
+                    const diffY = e.changedTouches[0].clientY - touchStartY;
+
+                    // Swipe horizontal terdeteksi jika pergerakan horizontal dominan dan minimal 50px
+                    if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY) * 1.5) {
+                        if (diffX < 0) {
+                            navigateQuranPage(1); // Geser ke kiri -> Halaman Selanjutnya
+                        } else {
+                            navigateQuranPage(-1); // Geser ke kanan -> Halaman Sebelumnya
+                        }
+                    }
+                }, { passive: true });
+            }
+        });
+
+        // Export fungsi ke window object agar selalu aman dipanggil dari inline HTML
+        window.openQuranPage = openQuranPage;
+        window.loadQuranPageText = loadQuranPageText;
+        window.loadMushafPageImage = loadMushafPageImage;
+        window.onMushafImageLoaded = onMushafImageLoaded;
+        window.onMushafImageError = onMushafImageError;
+        window.switchQuranPageViewMode = switchQuranPageViewMode;
+        window.zoomMushaf = zoomMushaf;
+        window.resetMushafZoom = resetMushafZoom;
+        window.toggleMushafZoomClick = toggleMushafZoomClick;
+        window.navigateQuranPage = navigateQuranPage;
+        window.jumpToQuranPage = jumpToQuranPage;
+        window.jumpToQuranPageFromInput = jumpToQuranPageFromInput;
+        window.toggleQuranPageAudio = toggleQuranPageAudio;
+        window.resetQuranPageAudio = resetQuranPageAudio;
+        window.openQuranPojokIndexTab = openQuranPojokIndexTab;
+        window.switchQuranIndexSubTab = switchQuranIndexSubTab;
+        window.selectQuranPojokJuz = selectQuranPojokJuz;
+        window.getKemenagPageImageUrl = getKemenagPageImageUrl;
+        window.getSurahInfoFromPage = getSurahInfoFromPage;
+        window.populateJumpPageSelect = populateJumpPageSelect;
+        window.setMushafTheme = setMushafTheme;
+        window.applyMushafTheme = applyMushafTheme;
+
+        // Expose state properties to window for direct inspection/debugging
+        try {
+            Object.defineProperty(window, 'mushafZoom', {
+                get: () => mushafZoom,
+                set: (v) => { mushafZoom = v; applyMushafZoom(); }
+            });
+            Object.defineProperty(window, 'mushafTheme', {
+                get: () => mushafTheme,
+                set: (v) => { setMushafTheme(v); }
+            });
+            Object.defineProperty(window, 'quranPageViewMode', {
+                get: () => quranPageViewMode,
+                set: (v) => { switchQuranPageViewMode(v); }
+            });
+        } catch (e) {
+            // ignore if not supported
         }
