@@ -177,6 +177,9 @@
                 { key: 'tpq.entry', label: 'Entri Simakan TPQ Yanbu\'a', desc: 'Izin menginput setoran jilid & halaman santri' },
                 { key: 'sorogan.view', label: 'Melihat Mutaba\'ah Sorogan', desc: 'Akses melihat riwayat sorogan binnazhar & kitab kuning' },
                 { key: 'sorogan.entry', label: 'Entri Simakan Sorogan', desc: 'Izin menginput setoran sorogan Al-Qur\'an & kitab' },
+                { key: 'madin.view', label: 'Melihat Jurnal & Rapor Madin', desc: 'Akses melihat presensi kelas, kurikulum kitab & rapor santri' },
+                { key: 'madin.entry', label: 'Presensi KBM & Penilaian Madin', desc: 'Izin menginput absensi kelas, jurnal tatap muka & nilai imtihan' },
+                { key: 'madin.manage', label: 'Kelola Kelas & Kitab Diniyah', desc: 'Izin menambah atau memperbarui jenjang kelas dan mata pelajaran kitab' },
                 { key: 'presensi.view', label: 'Melihat Rekap Presensi', desc: 'Akses memantau grafik kehadiran kegiatan santri' },
                 { key: 'presensi.entry', label: 'Checklist & Scan QR Presensi', desc: 'Izin melakukan absensi live kegiatan & sholat' }
             ]
@@ -226,6 +229,7 @@
         'tahfidz': ['tahfidz.view', 'tahfidz.entry'],
         'tpq': ['tpq.view', 'tpq.entry'],
         'sorogan': ['sorogan.view', 'sorogan.entry'],
+        'madin': ['madin.view', 'madin.entry', 'madin.manage'],
         'presensi': ['presensi.view', 'presensi.entry'],
         'ppdb': ['ppdb.manage'],
         'program': ['unit.manage', 'profil.manage'],
@@ -247,14 +251,16 @@
         'SUPER_ADMIN': ['*'],
         'ADMIN': [
             'santri.view', 'santri.create', 'santri.edit', 'santri.export', 'unit.manage',
-            'tahfidz.view', 'tahfidz.entry', 'tahfidz.target', 'tpq.view', 'tpq.entry', 'sorogan.view', 'sorogan.entry', 'presensi.view', 'presensi.entry',
+            'tahfidz.view', 'tahfidz.entry', 'tahfidz.target', 'tpq.view', 'tpq.entry', 'sorogan.view', 'sorogan.entry',
+            'madin.view', 'madin.entry', 'madin.manage', 'presensi.view', 'presensi.entry',
             'keuangan.view', 'keuangan.spp', 'keuangan.verify', 'ppdb.manage',
             'berita.manage', 'banner.manage', 'galeri.manage', 'notifikasi.broadcast',
             'profil.manage', 'pegawai.manage', 'users.manage', 'roles.manage', 'system.config'
         ],
         'ASATIDZ': [
             'santri.view',
-            'tahfidz.view', 'tahfidz.entry', 'tahfidz.target', 'tpq.view', 'tpq.entry', 'sorogan.view', 'sorogan.entry', 'presensi.view', 'presensi.entry',
+            'tahfidz.view', 'tahfidz.entry', 'tahfidz.target', 'tpq.view', 'tpq.entry', 'sorogan.view', 'sorogan.entry',
+            'madin.view', 'madin.entry', 'madin.manage', 'presensi.view', 'presensi.entry',
             'pegawai.manage', 'profil.manage'
         ],
         'BENDAHARA': [
@@ -264,10 +270,10 @@
             'santri.view', 'presensi.view', 'presensi.entry', 'unit.manage', 'ppdb.manage', 'berita.manage', 'banner.manage', 'galeri.manage', 'notifikasi.broadcast', 'profil.manage'
         ],
         'PENGASUH': [
-            'santri.view', 'tahfidz.view', 'tpq.view', 'sorogan.view', 'presensi.view', 'unit.manage', 'ppdb.manage', 'keuangan.view', 'berita.manage', 'galeri.manage', 'profil.manage', 'pegawai.manage'
+            'santri.view', 'tahfidz.view', 'tpq.view', 'sorogan.view', 'madin.view', 'presensi.view', 'unit.manage', 'ppdb.manage', 'keuangan.view', 'berita.manage', 'galeri.manage', 'profil.manage', 'pegawai.manage'
         ],
         'WALI_SANTRI': [
-            'santri.view', 'tahfidz.view', 'tpq.view', 'sorogan.view', 'presensi.view', 'keuangan.view', 'berita.manage', 'galeri.manage', 'profil.manage'
+            'santri.view', 'tahfidz.view', 'tpq.view', 'sorogan.view', 'madin.view', 'presensi.view', 'keuangan.view', 'berita.manage', 'galeri.manage', 'profil.manage'
         ]
     };
 
@@ -1196,21 +1202,21 @@
     // Mapping Modul yang Boleh Diakses per Peran
     const ROLE_ALLOWED_MODULES = {
         'SUPER_ADMIN': [
-            'santri', 'tahfidz', 'tpq', 'sorogan', 'presensi', 'ppdb', 'program', 'unit-kegiatan',
+            'santri', 'tahfidz', 'tpq', 'sorogan', 'madin', 'presensi', 'ppdb', 'program', 'unit-kegiatan',
             'keuangan',
             'users', 'roles', 'pegawai',
             'berita', 'banner', 'galeri', 'notifikasi',
             'profil-lembaga', 'pengaturan'
         ],
         'ADMIN': [
-            'santri', 'tahfidz', 'tpq', 'sorogan', 'presensi', 'ppdb', 'program', 'unit-kegiatan',
+            'santri', 'tahfidz', 'tpq', 'sorogan', 'madin', 'presensi', 'ppdb', 'program', 'unit-kegiatan',
             'keuangan',
             'users', 'roles', 'pegawai',
             'berita', 'banner', 'galeri', 'notifikasi',
             'profil-lembaga', 'pengaturan'
         ],
         'ASATIDZ': [
-            'tahfidz', 'tpq', 'sorogan', 'presensi', 'santri', 'pegawai', 'profil-lembaga'
+            'tahfidz', 'tpq', 'sorogan', 'madin', 'presensi', 'santri', 'pegawai', 'profil-lembaga'
         ],
         'BENDAHARA': [
             'keuangan', 'santri', 'ppdb', 'notifikasi', 'pegawai', 'profil-lembaga'
@@ -1219,10 +1225,10 @@
             'presensi', 'unit-kegiatan', 'ppdb', 'santri', 'berita', 'banner', 'galeri', 'notifikasi', 'profil-lembaga'
         ],
         'PENGASUH': [
-            'santri', 'tahfidz', 'tpq', 'sorogan', 'presensi', 'unit-kegiatan', 'ppdb', 'pegawai', 'berita', 'galeri', 'profil-lembaga'
+            'santri', 'tahfidz', 'tpq', 'sorogan', 'madin', 'presensi', 'unit-kegiatan', 'ppdb', 'pegawai', 'berita', 'galeri', 'profil-lembaga'
         ],
         'WALI_SANTRI': [
-            'santri', 'tahfidz', 'tpq', 'sorogan', 'presensi', 'berita', 'galeri', 'profil-lembaga'
+            'santri', 'tahfidz', 'tpq', 'sorogan', 'madin', 'presensi', 'berita', 'galeri', 'profil-lembaga'
         ]
     };
 

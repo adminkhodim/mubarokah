@@ -2278,7 +2278,18 @@
                                     class="text-[11px] mt-1.5 font-semibold text-slate-600 dark:text-slate-300 truncate w-full text-center">Sorogan</span>
                             </button>
 
-                            <!-- 5d. Presensi Kegiatan -->
+                            <!-- 5d. Madrasah Diniyah -->
+                            <button type="button" data-admin-module="madin" onclick="openAdminModuleFromControlCenter('madin')"
+                                class="flex flex-col items-center group transition active:scale-95 text-center">
+                                <div
+                                    class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center text-xl shadow-sm transition-all duration-300">
+                                    <i class="fa-solid fa-graduation-cap"></i>
+                                </div>
+                                <span
+                                    class="text-[11px] mt-1.5 font-semibold text-slate-600 dark:text-slate-300 truncate w-full text-center">Madin</span>
+                            </button>
+
+                            <!-- 5e. Presensi Kegiatan -->
                             <button type="button" data-admin-module="presensi" onclick="openAdminModuleFromControlCenter('presensi')"
                                 class="flex flex-col items-center group transition active:scale-95 text-center">
                                 <div
@@ -5205,6 +5216,12 @@
                                         <i class="fa-solid fa-book-bookmark w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-sky-600"></i>
                                         <span class="sidebar-text whitespace-nowrap">Sorogan Al-Qur'an</span>
                                     </button>
+                                    <button onclick="showAdminView('madin')" data-view="madin"
+                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-indigo-700 text-xs font-medium transition group"
+                                        title="Madrasah Diniyah">
+                                        <i class="fa-solid fa-graduation-cap w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-indigo-600"></i>
+                                        <span class="sidebar-text whitespace-nowrap">Madrasah Diniyah</span>
+                                    </button>
                                     <button onclick="showAdminView('presensi')" data-view="presensi"
                                         class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-emerald-700 text-xs font-medium transition group"
                                         title="Presensi Kegiatan">
@@ -5625,6 +5642,21 @@
                                                 <div>
                                                     <h4 class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-sky-700 transition">Sorogan Qur'an</h4>
                                                     <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Simakan mushaf besar.</p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Madrasah Diniyah -->
+                                            <div data-admin-module="madin" onclick="showAdminView('madin')"
+                                                class="bg-white hover:bg-indigo-50/60 p-4 rounded-2xl border border-slate-100 hover:border-indigo-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
+                                                <div class="flex justify-between items-start">
+                                                    <div class="w-11 h-11 bg-indigo-50 text-indigo-700 group-hover:bg-indigo-700 group-hover:text-white rounded-2xl flex items-center justify-center text-lg shadow-sm transition-all duration-300">
+                                                        <i class="fa-solid fa-graduation-cap"></i>
+                                                    </div>
+                                                    <span class="text-[9px] font-extrabold bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-md uppercase">Kelas & Kitab</span>
+                                                </div>
+                                                <div>
+                                                    <h4 class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-indigo-700 transition">Madrasah Diniyah</h4>
+                                                    <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Presensi kelas, jurnal & rapor.</p>
                                                 </div>
                                             </div>
 
@@ -8683,6 +8715,436 @@
                                     <!-- Grid Master Activities -->
                                     <div id="presensi-agenda-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                         <!-- Rendered dynamically -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ================= VIEW: MODUL MADRASAH DINIYAH ================= -->
+                            <div id="admin-view-madin" class="hidden space-y-4">
+                                <!-- Header Sub-View -->
+                                <div class="bg-white dark:bg-[#15202d] px-3.5 py-2.5 md:px-4 md:py-3 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-wrap items-center justify-between gap-2.5">
+                                    <div class="flex items-center space-x-2.5 min-w-0">
+                                        <button type="button" onclick="backFromAdminModule()"
+                                            class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl flex items-center justify-center transition active:scale-95 shrink-0"
+                                            title="Kembali">
+                                            <i class="fa-solid fa-arrow-left text-xs"></i>
+                                        </button>
+                                        <div class="min-w-0">
+                                            <div class="flex items-center gap-2">
+                                                <h2 class="text-sm md:text-base font-black text-slate-800 dark:text-slate-100 truncate">
+                                                    Madrasah Diniyah (Madin)
+                                                </h2>
+                                                <span class="hidden sm:inline-flex px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/40">
+                                                    Jenjang Kelas & Kitab
+                                                </span>
+                                            </div>
+                                            <p class="text-[10px] text-slate-400 hidden md:block truncate">
+                                                Presensi KBM per kelas, jurnal pembelajaran kitab, penilaian imtihan, dan buku rapor diniyah.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center gap-1.5 flex-wrap ml-auto">
+                                        <button type="button" onclick="if(window.ASNMadin) ASNMadin.refreshData(true)"
+                                            class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl text-[11px] font-bold transition flex items-center space-x-1 border border-slate-200 dark:border-[#283a4e] active:scale-95"
+                                            title="Segarkan Data">
+                                            <i id="btn-refresh-madin-icon" class="fa-solid fa-arrows-rotate text-xs"></i>
+                                            <span class="hidden sm:inline">Refresh</span>
+                                        </button>
+                                        <button type="button" onclick="if(window.ASNMadin) ASNMadin.initDatabaseSheets()"
+                                            class="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 dark:text-indigo-300 font-bold rounded-xl text-[11px] transition flex items-center space-x-1 border border-indigo-200 dark:border-indigo-800/60 active:scale-95"
+                                            title="Inisialisasi Database Madrasah Diniyah di Spreadsheet">
+                                            <i class="fa-solid fa-table-cells text-xs"></i>
+                                            <span class="hidden sm:inline">Inisialisasi Sheet</span>
+                                        </button>
+                                        <button type="button" onclick="if(window.ASNMadin) ASNMadin.openStartSessionModal()"
+                                            class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[11px] font-bold transition flex items-center space-x-1.5 shadow-sm active:scale-95"
+                                            title="Buka Sesi KBM / Presensi Kelas">
+                                            <i class="fa-solid fa-chalkboard-user text-xs"></i>
+                                            <span>Mulai Sesi KBM</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- 4 KARTU STATISTIK RINGKASAN MADIN -->
+                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-2.5">
+                                    <div class="bg-white dark:bg-[#15202d] p-2.5 md:p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex items-start justify-between">
+                                        <div class="space-y-0.5 min-w-0">
+                                            <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">KELAS AKTIF</span>
+                                            <div id="madin-stat-total-kelas" class="text-lg md:text-xl font-black text-slate-800 dark:text-slate-100">0</div>
+                                            <p class="text-[9px] text-indigo-600 dark:text-indigo-400 font-semibold truncate">Awaliyah • Wustho • Ulya</p>
+                                        </div>
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 text-sm">
+                                            <i class="fa-solid fa-school"></i>
+                                        </div>
+                                    </div>
+
+                                    <div class="bg-white dark:bg-[#15202d] p-2.5 md:p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex items-start justify-between">
+                                        <div class="space-y-0.5 min-w-0">
+                                            <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">MATA PELAJARAN / KITAB</span>
+                                            <div id="madin-stat-total-kitab" class="text-lg md:text-xl font-black text-slate-800 dark:text-slate-100">0</div>
+                                            <p class="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold truncate">Kajian Kurikulum Madin</p>
+                                        </div>
+                                        <div class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 text-sm">
+                                            <i class="fa-solid fa-book"></i>
+                                        </div>
+                                    </div>
+
+                                    <div class="bg-white dark:bg-[#15202d] p-2.5 md:p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex items-start justify-between">
+                                        <div class="space-y-0.5 min-w-0">
+                                            <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">TATAP MUKA (SESI)</span>
+                                            <div id="madin-stat-sesi-bulan" class="text-lg md:text-xl font-black text-slate-800 dark:text-slate-100">0</div>
+                                            <p class="text-[9px] text-sky-600 dark:text-sky-400 font-semibold truncate">Jurnal Mengajar Tercatat</p>
+                                        </div>
+                                        <div class="w-8 h-8 rounded-xl bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 text-sm">
+                                            <i class="fa-solid fa-calendar-check"></i>
+                                        </div>
+                                    </div>
+
+                                    <div class="bg-white dark:bg-[#15202d] p-2.5 md:p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex items-start justify-between">
+                                        <div class="space-y-0.5 min-w-0">
+                                            <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">RERATA KEHADIRAN</span>
+                                            <div id="madin-stat-kehadiran-pct" class="text-lg md:text-xl font-black text-teal-600 dark:text-teal-400">100%</div>
+                                            <p class="text-[9px] text-teal-600 dark:text-teal-400 font-semibold truncate">Kedisiplinan Kelas Madin</p>
+                                        </div>
+                                        <div class="w-8 h-8 rounded-xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 text-sm">
+                                            <i class="fa-solid fa-user-check"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- SUB-TAB NAVIGATOR MADIN -->
+                                <div class="bg-white dark:bg-[#15202d] p-1.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm">
+                                    <div class="flex items-center gap-1 overflow-x-auto no-scrollbar">
+                                        <button type="button" id="btn-madin-tab-jurnal" onclick="if(window.ASNMadin) ASNMadin.switchTab('jurnal')"
+                                            class="madin-tab-btn flex-1 min-w-[130px] px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 bg-indigo-600 text-white shadow-sm">
+                                            <i class="fa-solid fa-clipboard-check text-xs"></i>
+                                            <span>Jurnal & Presensi KBM</span>
+                                        </button>
+                                        <button type="button" id="btn-madin-tab-nilai" onclick="if(window.ASNMadin) ASNMadin.switchTab('nilai')"
+                                            class="madin-tab-btn flex-1 min-w-[130px] px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836]">
+                                            <i class="fa-solid fa-pen-ruler text-xs"></i>
+                                            <span>Penilaian & Imtihan</span>
+                                        </button>
+                                        <button type="button" id="btn-madin-tab-rapor" onclick="if(window.ASNMadin) ASNMadin.switchTab('rapor')"
+                                            class="madin-tab-btn flex-1 min-w-[130px] px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836]">
+                                            <i class="fa-solid fa-file-invoice text-xs"></i>
+                                            <span>Buku Rapor Santri</span>
+                                        </button>
+                                        <button type="button" id="btn-madin-tab-master" onclick="if(window.ASNMadin) ASNMadin.switchTab('master')"
+                                            class="madin-tab-btn flex-1 min-w-[130px] px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836]">
+                                            <i class="fa-solid fa-chalkboard-user text-xs"></i>
+                                            <span>Kelas & Kitab</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- ================= TAB 1: JURNAL & PRESENSI KBM ================= -->
+                                <div id="panel-madin-jurnal" class="space-y-3.5">
+                                    <!-- Toolbar Filter Kelas & Kitab -->
+                                    <div class="bg-white dark:bg-[#15202d] p-3 md:p-4 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Pilih Kelas</label>
+                                                <select id="madin-jurnal-filter-kelas" onchange="if(window.ASNMadin) ASNMadin.onClassChanged()"
+                                                    class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs font-medium text-slate-800 dark:text-slate-100">
+                                                    <option value="">-- Memuat Daftar Kelas --</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Mata Pelajaran / Kitab</label>
+                                                <select id="madin-jurnal-filter-kitab" onchange="if(window.ASNMadin) ASNMadin.onSubjectChanged()"
+                                                    class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs font-medium text-slate-800 dark:text-slate-100">
+                                                    <option value="">-- Pilih Kelas Terlebih Dahulu --</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Tanggal KBM</label>
+                                                <input type="date" id="madin-jurnal-filter-date" onchange="if(window.ASNMadin) ASNMadin.onDateChanged()"
+                                                    class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs font-medium text-slate-800 dark:text-slate-100">
+                                            </div>
+                                            <div class="flex items-end">
+                                                <button type="button" onclick="if(window.ASNMadin) ASNMadin.loadSessionStudents()"
+                                                    class="w-full py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5">
+                                                    <i class="fa-solid fa-users-viewfinder text-xs"></i>
+                                                    <span>Tampilkan Presensi</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Panel Presensi & Jurnal Kelas Aktif -->
+                                    <div id="madin-active-session-card" class="bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm overflow-hidden">
+                                        <!-- Header Sesi -->
+                                        <div class="p-3.5 md:p-4 bg-slate-50/70 dark:bg-[#182332] border-b border-slate-100 dark:border-[#253447] flex flex-wrap items-center justify-between gap-2.5">
+                                            <div class="space-y-0.5">
+                                                <div class="flex items-center gap-2">
+                                                    <h3 id="madin-session-header-title" class="font-extrabold text-sm md:text-base text-slate-800 dark:text-slate-100">
+                                                        Presensi Kelas Madin
+                                                    </h3>
+                                                    <span id="madin-session-header-badge" class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">
+                                                        Pilih Kelas & Kitab
+                                                    </span>
+                                                </div>
+                                                <p id="madin-session-header-desc" class="text-[11px] text-slate-400">
+                                                    Silakan pilih kelas dan kitab pada filter di atas untuk memulai absensi dan mengisi jurnal mengajar.
+                                                </p>
+                                            </div>
+
+                                            <div class="flex items-center gap-2">
+                                                <button type="button" onclick="if(window.ASNMadin) ASNMadin.markAllPresent()"
+                                                    class="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 font-bold text-xs border border-emerald-200 dark:border-emerald-800/50 transition active:scale-95 flex items-center gap-1.5">
+                                                    <i class="fa-solid fa-check-double text-xs"></i>
+                                                    <span>1-Klik Hadir Semua</span>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Ringkasan Jurnal Materi KBM (Bab & Catatan) -->
+                                        <div class="p-3.5 md:p-4 border-b border-slate-100 dark:border-[#253447] bg-indigo-50/30 dark:bg-indigo-950/20">
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                <div>
+                                                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Asatidz Pengampu</label>
+                                                    <input type="text" id="madin-jurnal-ustadz" placeholder="Nama Guru / Asatidz"
+                                                        class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#1c2836] text-xs font-medium text-slate-800 dark:text-slate-100">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Materi / Bab / Halaman Kitab</label>
+                                                    <input type="text" id="madin-jurnal-bab" placeholder="Contoh: Bab Wudhu Hal. 12-15"
+                                                        class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#1c2836] text-xs font-medium text-slate-800 dark:text-slate-100">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Catatan KBM / Tugas Rumah</label>
+                                                    <input type="text" id="madin-jurnal-catatan" placeholder="Contoh: Hafalkan syarat sah shalat"
+                                                        class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#1c2836] text-xs font-medium text-slate-800 dark:text-slate-100">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Tabel / List Presensi Santri -->
+                                        <div class="p-3 md:p-4">
+                                            <!-- Pencarian Cepat Santri Kelas -->
+                                            <div class="flex items-center justify-between mb-3 gap-2">
+                                                <div class="relative flex-1 max-w-xs">
+                                                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                                                    <input type="text" id="madin-search-student" oninput="if(window.ASNMadin) ASNMadin.filterStudentList()"
+                                                        placeholder="Cari santri di kelas ini..."
+                                                        class="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100">
+                                                </div>
+                                                <div id="madin-presensi-summary-counters" class="flex items-center gap-1.5 text-[10px] font-bold">
+                                                    <span class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">H: <span id="madin-count-hadir">0</span></span>
+                                                    <span class="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">S: <span id="madin-count-sakit">0</span></span>
+                                                    <span class="px-2 py-0.5 rounded-md bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300">I: <span id="madin-count-izin">0</span></span>
+                                                    <span class="px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">A: <span id="madin-count-alpa">0</span></span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Wadah Kontainer Daftar Santri -->
+                                            <div id="madin-student-attendance-list" class="space-y-2">
+                                                <div class="py-12 text-center text-slate-400 space-y-2">
+                                                    <i class="fa-solid fa-graduation-cap text-3xl opacity-40"></i>
+                                                    <p class="text-xs">Pilih kelas di atas dan klik <strong>Tampilkan Presensi</strong></p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Tombol Simpan Presensi & Jurnal -->
+                                            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-end gap-2">
+                                                <button type="button" onclick="if(window.ASNMadin) ASNMadin.saveAttendanceAndJournal()"
+                                                    class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md transition active:scale-95 flex items-center gap-2">
+                                                    <i class="fa-solid fa-floppy-disk text-xs"></i>
+                                                    <span>Simpan Presensi & Jurnal KBM</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Riwayat Tatap Muka Terakhir -->
+                                    <div class="bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm space-y-3">
+                                        <div class="flex items-center justify-between">
+                                            <h4 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                                                <i class="fa-solid fa-clock-rotate-left text-indigo-500"></i>
+                                                <span>Riwayat Jurnal KBM Terakhir</span>
+                                            </h4>
+                                            <span class="text-[10px] text-slate-400">Log Tatap Muka</span>
+                                        </div>
+                                        <div id="madin-history-session-list" class="space-y-2">
+                                            <!-- Riwayat dimuat dinamis -->
+                                            <div class="py-6 text-center text-xs text-slate-400">Belum ada riwayat sesi tersimpan hari ini.</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- ================= TAB 2: PENILAIAN & IMTIHAN ================= -->
+                                <div id="panel-madin-nilai" class="hidden space-y-3.5">
+                                    <div class="bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Kelas</label>
+                                                <select id="madin-grade-filter-kelas" onchange="if(window.ASNMadin) ASNMadin.onGradeClassChanged()"
+                                                    class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs font-medium text-slate-800 dark:text-slate-100">
+                                                    <option value="">-- Pilih Kelas --</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Kitab / Mata Pelajaran</label>
+                                                <select id="madin-grade-filter-kitab" onchange="if(window.ASNMadin) ASNMadin.onGradeSubjectChanged()"
+                                                    class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs font-medium text-slate-800 dark:text-slate-100">
+                                                    <option value="">-- Pilih Kitab --</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Semester</label>
+                                                <select id="madin-grade-filter-semester"
+                                                    class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs font-medium text-slate-800 dark:text-slate-100">
+                                                    <option value="Ganjil">Semester Ganjil</option>
+                                                    <option value="Genap">Semester Genap</option>
+                                                </select>
+                                            </div>
+                                            <div class="flex items-end">
+                                                <button type="button" onclick="if(window.ASNMadin) ASNMadin.loadGradeSheet()"
+                                                    class="w-full py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5">
+                                                    <i class="fa-solid fa-table-list text-xs"></i>
+                                                    <span>Buka Lembar Nilai</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Lembar Input Nilai Massal -->
+                                    <div class="bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm p-3.5 md:p-4 space-y-3">
+                                        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-[#253447] pb-3">
+                                            <div>
+                                                <h4 id="madin-grade-sheet-title" class="font-extrabold text-sm text-slate-800 dark:text-slate-100">
+                                                    Input Nilai Santri
+                                                </h4>
+                                                <p id="madin-grade-sheet-desc" class="text-[11px] text-slate-400">
+                                                    Komponen penilaian: Nilai Harian/Sorogan, Imtihan Syafahi (Lisan), dan Imtihan Tahriri (Tulis).
+                                                </p>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <button type="button" onclick="if(window.ASNMadin) ASNMadin.exportGradeSheetExcel()"
+                                                    class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] text-slate-700 dark:text-slate-200 font-bold text-xs transition active:scale-95 flex items-center gap-1.5">
+                                                    <i class="fa-solid fa-file-excel text-emerald-600"></i>
+                                                    <span>Ekspor Excel</span>
+                                                </button>
+                                                <button type="button" onclick="if(window.ASNMadin) ASNMadin.saveAllGrades()"
+                                                    class="px-4 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm transition active:scale-95 flex items-center gap-1.5">
+                                                    <i class="fa-solid fa-floppy-disk text-xs"></i>
+                                                    <span>Simpan Semua Nilai</span>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Tabel Input Nilai -->
+                                        <div class="overflow-x-auto">
+                                            <table class="w-full text-left text-xs">
+                                                <thead class="bg-slate-50 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 font-bold uppercase text-[10px] tracking-wider border-y border-slate-100 dark:border-[#253447]">
+                                                    <tr>
+                                                        <th class="py-2.5 px-3 w-10 text-center">No</th>
+                                                        <th class="py-2.5 px-3 min-w-[160px]">Santri</th>
+                                                        <th class="py-2.5 px-3 w-24 text-center">Harian (30%)</th>
+                                                        <th class="py-2.5 px-3 w-24 text-center">Lisan (30%)</th>
+                                                        <th class="py-2.5 px-3 w-24 text-center">Tulis (40%)</th>
+                                                        <th class="py-2.5 px-3 w-20 text-center">Nilai Akhir</th>
+                                                        <th class="py-2.5 px-3 w-24 text-center">Predikat</th>
+                                                        <th class="py-2.5 px-3 min-w-[140px]">Catatan Asatidz</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="madin-grades-table-body" class="divide-y divide-slate-100 dark:divide-[#253447]">
+                                                    <tr>
+                                                        <td colspan="8" class="py-8 text-center text-slate-400">
+                                                            Silakan pilih kelas dan kitab untuk menampilkan tabel nilai.
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- ================= TAB 3: BUKU RAPOR SANTRI ================= -->
+                                <div id="panel-madin-rapor" class="hidden space-y-3.5">
+                                    <div class="bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm">
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Kelas</label>
+                                                <select id="madin-rapor-filter-kelas" onchange="if(window.ASNMadin) ASNMadin.onRaporClassChanged()"
+                                                    class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs font-medium text-slate-800 dark:text-slate-100">
+                                                    <option value="">-- Pilih Kelas --</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Nama Santri</label>
+                                                <select id="madin-rapor-filter-santri"
+                                                    class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs font-medium text-slate-800 dark:text-slate-100">
+                                                    <option value="">-- Pilih Santri --</option>
+                                                </select>
+                                            </div>
+                                            <div class="flex items-end">
+                                                <button type="button" onclick="if(window.ASNMadin) ASNMadin.generateRaporPreview()"
+                                                    class="w-full py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5">
+                                                    <i class="fa-solid fa-file-invoice text-xs"></i>
+                                                    <span>Tampilkan Lembar Rapor</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Lembar Pratinjau Rapor Diniyah -->
+                                    <div id="madin-rapor-preview-container" class="bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm p-4 md:p-6 space-y-4">
+                                        <div class="py-12 text-center text-slate-400 space-y-2">
+                                            <i class="fa-solid fa-file-invoice text-3xl opacity-40"></i>
+                                            <p class="text-xs">Pilih santri di atas untuk mencetak atau melihat pratinjau rapor diniyah.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- ================= TAB 4: STRUKTUR KELAS & KITAB ================= -->
+                                <div id="panel-madin-master" class="hidden space-y-3.5">
+                                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
+                                        <!-- Panel Master Kelas -->
+                                        <div class="bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm p-3.5 md:p-4 space-y-3">
+                                            <div class="flex items-center justify-between border-b border-slate-100 dark:border-[#253447] pb-2.5">
+                                                <div>
+                                                    <h4 class="font-extrabold text-xs md:text-sm text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                                                        <i class="fa-solid fa-school text-indigo-500"></i>
+                                                        <span>Daftar Kelas & Tingkatan</span>
+                                                    </h4>
+                                                    <p class="text-[10px] text-slate-400">Jenjang kelas Awaliyah, Wustho, dan Ulya</p>
+                                                </div>
+                                                <button type="button" onclick="if(window.ASNMadin) ASNMadin.openClassModal()"
+                                                    class="px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 font-bold text-xs border border-indigo-200 dark:border-indigo-800/40 transition active:scale-95 flex items-center gap-1">
+                                                    <i class="fa-solid fa-plus text-xs"></i>
+                                                    <span>Tambah Kelas</span>
+                                                </button>
+                                            </div>
+                                            <div id="madin-master-classes-list" class="space-y-2">
+                                                <!-- Daftar kelas dimuat dinamis -->
+                                                <div class="py-6 text-center text-xs text-slate-400">Memuat data kelas...</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Panel Master Kitab / Kurikulum -->
+                                        <div class="bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm p-3.5 md:p-4 space-y-3">
+                                            <div class="flex items-center justify-between border-b border-slate-100 dark:border-[#253447] pb-2.5">
+                                                <div>
+                                                    <h4 class="font-extrabold text-xs md:text-sm text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                                                        <i class="fa-solid fa-book-open text-emerald-500"></i>
+                                                        <span>Kurikulum Mata Pelajaran & Kitab</span>
+                                                    </h4>
+                                                    <p class="text-[10px] text-slate-400">Daftar kitab dan asatidz pengampu</p>
+                                                </div>
+                                                <button type="button" onclick="if(window.ASNMadin) ASNMadin.openSubjectModal()"
+                                                    class="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 font-bold text-xs border border-emerald-200 dark:border-emerald-800/40 transition active:scale-95 flex items-center gap-1">
+                                                    <i class="fa-solid fa-plus text-xs"></i>
+                                                    <span>Tambah Kitab</span>
+                                                </button>
+                                            </div>
+                                            <div id="madin-master-subjects-list" class="space-y-2">
+                                                <!-- Daftar kitab dimuat dinamis -->
+                                                <div class="py-6 text-center text-xs text-slate-400">Memuat data kitab...</div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -16515,11 +16977,19 @@
                     <div>
                         <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Target Peserta</label>
                         <select id="presensi-agenda-form-target" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100 font-medium">
-                            <option value="Semua">Semua Santri</option>
-                            <option value="Putra">Khusus Santri Putra</option>
-                            <option value="Putri">Khusus Santri Putri</option>
+                            <option value="Semua Santri">Semua Santri</option>
+                            <option value="Khusus Santri Putra">Khusus Santri Putra</option>
+                            <option value="Khusus Santri Putri">Khusus Santri Putri</option>
                         </select>
                     </div>
+                </div>
+
+                <!-- Info Box Panduan Ruang Lingkup Presensi Kegiatan vs Madin -->
+                <div class="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/70 dark:border-amber-900/50 flex items-start gap-2 text-[11px] text-amber-800 dark:text-amber-300">
+                    <i class="fa-solid fa-circle-info text-amber-600 dark:text-amber-400 mt-0.5 shrink-0"></i>
+                    <p class="leading-relaxed">
+                        Menu ini khusus <strong>kegiatan umum asrama / pondok</strong> (Ibadah, Ro'an, Ta'lim Umum). Untuk presensi per jenjang kelas & penilaian kitab, dikelola melalui menu <strong>Madrasah Diniyah</strong>.
+                    </p>
                 </div>
 
                 <div>
@@ -16549,6 +17019,189 @@
                     <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition active:scale-95 flex items-center gap-1.5">
                         <i class="fa-solid fa-floppy-disk text-xs"></i>
                         <span>Simpan Kegiatan</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL: BUKA SESI KBM MADRASAH DINIYAH ==================== -->
+    <div id="modal-madin-sesi" onclick="if(event.target === this) ASNMadin.closeStartSessionModal()" class="fixed inset-0 z-[9999] flex items-center justify-center p-3 bg-black/60 backdrop-blur-xs hidden">
+        <div class="bg-white dark:bg-[#15202d] rounded-2xl shadow-xl w-full max-w-md border border-slate-100 dark:border-[#253447] overflow-hidden animate-scale-up">
+            <div class="px-5 py-4 border-b border-slate-100 dark:border-[#253447] flex items-center justify-between bg-slate-50/50 dark:bg-[#182332]">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-chalkboard-user"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">Buka Sesi Presensi & KBM</h3>
+                        <p class="text-[10px] text-slate-400">Mulai tatap muka kelas Madrasah Diniyah</p>
+                    </div>
+                </div>
+                <button type="button" onclick="ASNMadin.closeStartSessionModal()" class="w-7 h-7 rounded-lg hover:bg-slate-200 dark:hover:bg-[#253447] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            </div>
+            <form id="form-madin-sesi" onsubmit="ASNMadin.handleStartSessionSubmit(event)" class="p-5 space-y-3">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Kelas <span class="text-rose-500">*</span></label>
+                    <select id="modal-sesi-kelas" required class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100 font-medium">
+                        <option value="">-- Pilih Kelas --</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Kitab / Mapel <span class="text-rose-500">*</span></label>
+                    <select id="modal-sesi-kitab" required class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100 font-medium">
+                        <option value="">-- Pilih Kitab --</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Tanggal KBM</label>
+                        <input type="date" id="modal-sesi-tanggal" required class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Asatidz Pengampu</label>
+                        <input type="text" id="modal-sesi-ustadz" placeholder="Nama Ustadz" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Bab / Halaman Kitab</label>
+                    <input type="text" id="modal-sesi-bab" placeholder="Contoh: Fasal Fardhu Wudhu (Hal 10)" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100">
+                </div>
+                <div class="pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-end gap-2">
+                    <button type="button" onclick="ASNMadin.closeStartSessionModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] dark:hover:bg-[#253447] text-slate-600 dark:text-slate-300 font-bold text-xs transition">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm transition active:scale-95 flex items-center gap-1.5">
+                        <i class="fa-solid fa-play text-xs"></i>
+                        <span>Buka Sesi Presensi</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL: TAMBAH / EDIT KELAS MADIN ==================== -->
+    <div id="modal-madin-kelas" onclick="if(event.target === this) ASNMadin.closeClassModal()" class="fixed inset-0 z-[9999] flex items-center justify-center p-3 bg-black/60 backdrop-blur-xs hidden">
+        <div class="bg-white dark:bg-[#15202d] rounded-2xl shadow-xl w-full max-w-md border border-slate-100 dark:border-[#253447] overflow-hidden animate-scale-up">
+            <div class="px-5 py-4 border-b border-slate-100 dark:border-[#253447] flex items-center justify-between bg-slate-50/50 dark:bg-[#182332]">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-school"></i>
+                    </div>
+                    <div>
+                        <h3 id="modal-madin-kelas-title" class="font-bold text-sm text-slate-800 dark:text-slate-100">Tambah Kelas Madin</h3>
+                        <p class="text-[10px] text-slate-400">Atur tingkat dan wali kelas diniyah</p>
+                    </div>
+                </div>
+                <button type="button" onclick="ASNMadin.closeClassModal()" class="w-7 h-7 rounded-lg hover:bg-slate-200 dark:hover:bg-[#253447] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            </div>
+            <form id="form-madin-kelas" onsubmit="ASNMadin.handleSaveClass(event)" class="p-5 space-y-3">
+                <input type="hidden" id="modal-kelas-id" value="">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Nama Kelas <span class="text-rose-500">*</span></label>
+                    <input type="text" id="modal-kelas-nama" required placeholder="Contoh: 1 Awaliyah A (Putra)" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100 font-medium">
+                </div>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Jenjang Tingkat <span class="text-rose-500">*</span></label>
+                        <select id="modal-kelas-tingkat" required class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100 font-medium">
+                            <option value="Awaliyah">Awaliyah (Dasar)</option>
+                            <option value="Wustho">Wustho (Menengah)</option>
+                            <option value="Ulya">Ulya (Tinggi)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Kategori Santri</label>
+                        <select id="modal-kelas-gender" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100 font-medium">
+                            <option value="all">Campur (Putra & Putri)</option>
+                            <option value="L">Khusus Putra</option>
+                            <option value="P">Khusus Putri</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Wali Kelas / Asatidz Pembina</label>
+                    <input type="text" id="modal-kelas-wali" placeholder="Nama Ustadz / Ustadzah" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100">
+                </div>
+                <div class="pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-end gap-2">
+                    <button type="button" onclick="ASNMadin.closeClassModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] dark:hover:bg-[#253447] text-slate-600 dark:text-slate-300 font-bold text-xs transition">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm transition active:scale-95 flex items-center gap-1.5">
+                        <i class="fa-solid fa-floppy-disk text-xs"></i>
+                        <span>Simpan Kelas</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL: TAMBAH / EDIT KITAB MADIN ==================== -->
+    <div id="modal-madin-kitab" onclick="if(event.target === this) ASNMadin.closeSubjectModal()" class="fixed inset-0 z-[9999] flex items-center justify-center p-3 bg-black/60 backdrop-blur-xs hidden">
+        <div class="bg-white dark:bg-[#15202d] rounded-2xl shadow-xl w-full max-w-md border border-slate-100 dark:border-[#253447] overflow-hidden animate-scale-up">
+            <div class="px-5 py-4 border-b border-slate-100 dark:border-[#253447] flex items-center justify-between bg-slate-50/50 dark:bg-[#182332]">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-book-open"></i>
+                    </div>
+                    <div>
+                        <h3 id="modal-madin-kitab-title" class="font-bold text-sm text-slate-800 dark:text-slate-100">Tambah Kitab / Mapel</h3>
+                        <p class="text-[10px] text-slate-400">Atur kurikulum kitab dan pengampu</p>
+                    </div>
+                </div>
+                <button type="button" onclick="ASNMadin.closeSubjectModal()" class="w-7 h-7 rounded-lg hover:bg-slate-200 dark:hover:bg-[#253447] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            </div>
+            <form id="form-madin-kitab" onsubmit="ASNMadin.handleSaveSubject(event)" class="p-5 space-y-3">
+                <input type="hidden" id="modal-kitab-id" value="">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Nama Kitab / Pelajaran <span class="text-rose-500">*</span></label>
+                    <input type="text" id="modal-kitab-nama" required placeholder="Contoh: Safinatun Naja (Fiqih)" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100 font-medium">
+                </div>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Bidang Ilmu <span class="text-rose-500">*</span></label>
+                        <select id="modal-kitab-bidang" required class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100 font-medium">
+                            <option value="Fiqih">Fiqih</option>
+                            <option value="Nahwu">Nahwu</option>
+                            <option value="Shorof">Shorof</option>
+                            <option value="Akhlaq">Akhlaq / Tasawuf</option>
+                            <option value="Tauhid">Aqidah / Tauhid</option>
+                            <option value="Hadits">Hadits</option>
+                            <option value="Tarikh">Tarikh Islam</option>
+                            <option value="Tajwid">Tajwid</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Diajarkan di Kelas <span class="text-rose-500">*</span></label>
+                        <select id="modal-kitab-kelas" required class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100 font-medium">
+                            <option value="">-- Pilih Kelas --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Asatidz Pengampu</label>
+                        <input type="text" id="modal-kitab-ustadz" placeholder="Nama Ustadz" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">KKM Kelulusan</label>
+                        <input type="number" id="modal-kitab-kkm" min="0" max="100" value="70" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#283a4e] bg-slate-50 dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100">
+                    </div>
+                </div>
+                <div class="pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-end gap-2">
+                    <button type="button" onclick="ASNMadin.closeSubjectModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] dark:hover:bg-[#253447] text-slate-600 dark:text-slate-300 font-bold text-xs transition">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition active:scale-95 flex items-center gap-1.5">
+                        <i class="fa-solid fa-floppy-disk text-xs"></i>
+                        <span>Simpan Kitab</span>
                     </button>
                 </div>
             </form>
@@ -16619,6 +17272,7 @@
     <script src="/js/sorogan.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="/js/presensi.js"></script>
+    <script src="/js/madin.js"></script>
     <script src="/js/keuangan.js"></script>
 
     <!-- Main Controller & Navigation -->

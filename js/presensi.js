@@ -1131,7 +1131,12 @@ function openPresensiKegiatanModal(kegiatanId = '') {
             if (namaInput) namaInput.value = item.namaKegiatan;
             if (katInput) katInput.value = item.kategori;
             if (jadwalInput) jadwalInput.value = item.jadwalRutin;
-            if (targetInput) targetInput.value = item.targetPeserta;
+            if (targetInput) {
+                const t = (item.targetPeserta || 'Semua Santri').toLowerCase();
+                if (t.includes('putri')) targetInput.value = 'Khusus Santri Putri';
+                else if (t.includes('putra')) targetInput.value = 'Khusus Santri Putra';
+                else targetInput.value = 'Semua Santri';
+            }
             if (pjInput) pjInput.value = item.penanggungJawab;
             if (statusInput) statusInput.value = item.status;
         }

@@ -84,6 +84,7 @@
             'tahfidz': { group: 'kesiswaan', category: 'Kesiswaan & Akademik', title: 'Tahfidz Al-Qur\'an' },
             'tpq': { group: 'kesiswaan', category: 'Kesiswaan & Akademik', title: 'TPQ Yanbu\'a' },
             'sorogan': { group: 'kesiswaan', category: 'Kesiswaan & Akademik', title: 'Sorogan Al-Qur\'an' },
+            'madin': { group: 'kesiswaan', category: 'Kesiswaan & Akademik', title: 'Madrasah Diniyah' },
             'presensi': { group: 'kesiswaan', category: 'Kesiswaan & Akademik', title: 'Presensi Kegiatan' },
             'ppdb': { group: 'kesiswaan', category: 'Kesiswaan & Akademik', title: 'Data Pendaftar PPDB' },
             'program': { group: 'kesiswaan', category: 'Kesiswaan & Akademik', title: 'Manajemen Program' },
@@ -243,6 +244,7 @@
             const tahfidzView = document.getElementById('admin-view-tahfidz');
             const tpqView = document.getElementById('admin-view-tpq');
             const soroganView = document.getElementById('admin-view-sorogan');
+            const madinView = document.getElementById('admin-view-madin');
             const presensiView = document.getElementById('admin-view-presensi');
             const keuanganView = document.getElementById('admin-view-keuangan');
             const ppdbView = document.getElementById('admin-view-ppdb');
@@ -265,6 +267,7 @@
             if (tahfidzView) tahfidzView.classList.add('hidden');
             if (tpqView) tpqView.classList.add('hidden');
             if (soroganView) soroganView.classList.add('hidden');
+            if (madinView) madinView.classList.add('hidden');
             if (presensiView) presensiView.classList.add('hidden');
             if (keuanganView) keuanganView.classList.add('hidden');
             if (ppdbView) ppdbView.classList.add('hidden');
@@ -318,6 +321,13 @@
                 if (soroganView) soroganView.classList.remove('hidden');
                 if (typeof loadAdminSoroganData === 'function') {
                     loadAdminSoroganData();
+                }
+            } else if (viewName === 'madin') {
+                if (madinView) madinView.classList.remove('hidden');
+                if (typeof loadAdminMadinData === 'function') {
+                    loadAdminMadinData();
+                } else if (window.ASNMadin && typeof window.ASNMadin.loadData === 'function') {
+                    window.ASNMadin.loadData();
                 }
             } else if (viewName === 'presensi') {
                 if (presensiView) presensiView.classList.remove('hidden');

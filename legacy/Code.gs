@@ -557,6 +557,39 @@ function doPost(e) {
     }
 
     // ========================================================
+    // MADRASAH DINIYAH (MADIN) ACTIONS (doPost)
+    // ========================================================
+    if (action === "getMadinData" || action === "madin.getData" || action === "getMadinDashboard") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(getMadinData(token));
+    }
+
+    if (action === "initMadinSheets" || action === "madin.initSheets") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(initMadinSheets(token));
+    }
+
+    if (action === "saveMadinSession" || action === "madin.saveSession") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(saveMadinSession(payload.data || payload, token));
+    }
+
+    if (action === "saveMadinGrades" || action === "madin.saveGrades") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(saveMadinGrades(payload.data || payload, token));
+    }
+
+    if (action === "saveMadinClass" || action === "madin.saveClass") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(saveMadinClass(payload.data || payload, token));
+    }
+
+    if (action === "saveMadinSubject" || action === "madin.saveSubject") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(saveMadinSubject(payload.data || payload, token));
+    }
+
+    // ========================================================
     // SOROGAN AL-QUR'AN ACTIONS (doPost)
     // ========================================================
     if (action === "getSoroganDashboard" || action === "sorogan.dashboard") {
@@ -1852,6 +1885,11 @@ function doGet(e) {
     if (action === "getTPQKelasList" || action === "tpq.getKelas") {
       const token = e.parameter.token || null;
       return createJsonResponse(getTPQKelasList(token));
+    }
+
+    if (action === "getMadinData" || action === "madin.getData" || action === "getMadinDashboard") {
+      const token = e.parameter.token || null;
+      return createJsonResponse(getMadinData(token));
     }
 
     if (action === "getSoroganDashboard" || action === "sorogan.dashboard") {
@@ -14880,6 +14918,360 @@ function deleteTPQSesi(sesiId, token) {
   });
 }
 
+// ====================================================================
+// MODUL BACKEND: MADRASAH DINIYAH (MADIN) - KELAS, KITAB, PRESENSI & NILAI
+// ====================================================================
+const SHEET_MADIN_KELAS = "Madin_Kelas";
+const SHEET_MADIN_KITAB = "Madin_Kitab";
+const SHEET_MADIN_JURNAL = "Madin_Jurnal";
+const SHEET_MADIN_PRESENSI = "Madin_Presensi";
+const SHEET_MADIN_NILAI = "Madin_Nilai";
+
+function getOrCreateMadinSheet(ss, sheetName, headers, headerColor) {
+  let s = ss.getSheetByName(sheetName);
+  if (!s) {
+    s = ss.insertSheet(sheetName);
+    s.getRange(1, 1, 1, headers.length).setValues([headers]);
+    s.getRange(1, 1, 1, headers.length).setFontWeight("bold").setBackground(headerColor || "#4338ca").setFontColor("#ffffff");
+    s.setFrozenRows(1);
+  }
+  return s;
+}
+
+function initMadinSheets(token) {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error("Database Spreadsheet tidak ditemukan.");
+
+    const headersKelas = ["class_id", "nama_kelas", "tingkat", "wali_kelas", "gender", "total_santri", "created_at"];
+    const headersKitab = ["subject_id", "nama_kitab", "bidang", "class_id", "ustadz_pengampu", "kkm", "created_at"];
+    const headersJurnal = ["session_id", "tanggal", "class_id", "nama_kelas", "subject_id", "nama_kitab", "asatidz", "materi_bab", "catatan", "created_at"];
+    const headersPresensi = ["presensi_id", "session_id", "tanggal", "student_id", "nis", "student_name", "class_id", "status", "keterangan", "created_at"];
+    const headersNilai = ["nilai_id", "semester", "class_id", "subject_id", "student_id", "nis", "student_name", "nilai_harian", "nilai_lisan", "nilai_tulis", "nilai_akhir", "predikat", "catatan", "updated_at"];
+
+    const created = [];
+    const existing = [];
+
+    [
+      { name: SHEET_MADIN_KELAS, headers: headersKelas, color: "#4338ca" },
+      { name: SHEET_MADIN_KITAB, headers: headersKitab, color: "#059669" },
+      { name: SHEET_MADIN_JURNAL, headers: headersJurnal, color: "#0284c7" },
+      { name: SHEET_MADIN_PRESENSI, headers: headersPresensi, color: "#d97706" },
+      { name: SHEET_MADIN_NILAI, headers: headersNilai, color: "#7c3aed" }
+    ].forEach(item => {
+      let s = ss.getSheetByName(item.name);
+      if (!s) {
+        s = ss.insertSheet(item.name);
+        s.getRange(1, 1, 1, item.headers.length).setValues([item.headers]);
+        s.getRange(1, 1, 1, item.headers.length).setFontWeight("bold").setBackground(item.color).setFontColor("#ffffff");
+        s.setFrozenRows(1);
+        created.push(item.name);
+      } else {
+        existing.push(item.name);
+      }
+    });
+
+    // Masukkan data master kelas default bila baru dibuat
+    if (created.includes(SHEET_MADIN_KELAS)) {
+      const kSheet = ss.getSheetByName(SHEET_MADIN_KELAS);
+      const nowIso = new Date().toISOString();
+      const defaultKelas = [
+        ["MD-ULA1", "1 Awaliyah A (Putra)", "Awaliyah", "Ust. M. Ridwan, S.Pd.I", "L", 24, nowIso],
+        ["MD-ULA2", "1 Awaliyah B (Putri)", "Awaliyah", "Usth. Siti Maryam, S.Ag", "P", 22, nowIso],
+        ["MD-WST1", "2 Wustho A (Putra)", "Wustho", "Ust. Ahmad Fauzan", "L", 20, nowIso],
+        ["MD-WST2", "2 Wustho B (Putri)", "Wustho", "Usth. Fatimah Az-Zahra", "P", 21, nowIso],
+        ["MD-ULY1", "3 Ulya (Aliyah)", "Ulya", "K.H. Masrur", "all", 18, nowIso]
+      ];
+      kSheet.getRange(2, 1, defaultKelas.length, headersKelas.length).setValues(defaultKelas);
+    }
+
+    // Masukkan data master kitab default bila baru dibuat
+    if (created.includes(SHEET_MADIN_KITAB)) {
+      const bSheet = ss.getSheetByName(SHEET_MADIN_KITAB);
+      const nowIso = new Date().toISOString();
+      const defaultKitab = [
+        ["SBJ-01", "Safinatun Naja", "Fiqih", "MD-ULA1", "Ust. M. Ridwan, S.Pd.I", 70, nowIso],
+        ["SBJ-02", "Al-Jurumiyyah", "Nahwu", "MD-ULA1", "Ust. Zaidan Al-Hafidz", 70, nowIso],
+        ["SBJ-03", "Taisirul Khalaq", "Akhlaq", "MD-ULA1", "Ust. Fauzi Rohman", 75, nowIso],
+        ["SBJ-04", "Al-Amtsilah At-Tashrifiyyah", "Shorof", "MD-ULA1", "Ust. Hasan Basri", 70, nowIso],
+        ["SBJ-05", "Fathul Qorib Al-Mujib", "Fiqih", "MD-WST1", "Ust. Ahmad Fauzan", 75, nowIso],
+        ["SBJ-06", "Al-Imrithi", "Nahwu", "MD-WST1", "Ust. Luqman Hakim", 75, nowIso],
+        ["SBJ-07", "Kifayatul Awam", "Tauhid", "MD-ULY1", "K.H. Masrur", 75, nowIso]
+      ];
+      bSheet.getRange(2, 1, defaultKitab.length, headersKitab.length).setValues(defaultKitab);
+    }
+
+    return {
+      status: "success",
+      success: true,
+      message: "Database Madrasah Diniyah (5 Tab Sheet) berhasil disiapkan di Spreadsheet.",
+      createdSheets: created,
+      existingSheets: existing
+    };
+  } catch (err) {
+    console.error("[INIT MADIN SHEETS ERROR]", err);
+    return { status: "error", success: false, message: "Gagal menyiapkan tabel Madin: " + err.message };
+  }
+}
+
+function getMadinData(token) {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error("Spreadsheet tidak ditemukan.");
+
+    let classes = [];
+    const kSheet = ss.getSheetByName(SHEET_MADIN_KELAS);
+    if (kSheet && kSheet.getLastRow() > 1) {
+      const vals = kSheet.getRange(2, 1, kSheet.getLastRow() - 1, 7).getValues();
+      classes = vals.map(r => ({
+        classId: String(r[0] || ""),
+        namaKelas: String(r[1] || ""),
+        tingkat: String(r[2] || "Awaliyah"),
+        waliKelas: String(r[3] || ""),
+        gender: String(r[4] || "all"),
+        totalSantri: Number(r[5] || 0)
+      })).filter(c => c.classId);
+    }
+
+    let subjects = [];
+    const subSheet = ss.getSheetByName(SHEET_MADIN_KITAB);
+    if (subSheet && subSheet.getLastRow() > 1) {
+      const vals = subSheet.getRange(2, 1, subSheet.getLastRow() - 1, 7).getValues();
+      subjects = vals.map(r => ({
+        subjectId: String(r[0] || ""),
+        namaKitab: String(r[1] || ""),
+        bidang: String(r[2] || "Fiqih"),
+        classId: String(r[3] || ""),
+        ustadzPengampu: String(r[4] || ""),
+        kkm: Number(r[5] || 70)
+      })).filter(s => s.subjectId);
+    }
+
+    let sessions = [];
+    const jSheet = ss.getSheetByName(SHEET_MADIN_JURNAL);
+    if (jSheet && jSheet.getLastRow() > 1) {
+      const maxRows = Math.min(jSheet.getLastRow() - 1, 50);
+      const startRow = jSheet.getLastRow() - maxRows + 1;
+      const vals = jSheet.getRange(startRow, 1, maxRows, 10).getValues();
+      sessions = vals.map(r => ({
+        sessionId: String(r[0] || ""),
+        tanggal: String(r[1] || ""),
+        classId: String(r[2] || ""),
+        namaKelas: String(r[3] || ""),
+        subjectId: String(r[4] || ""),
+        namaKitab: String(r[5] || ""),
+        asatidz: String(r[6] || ""),
+        materiBab: String(r[7] || ""),
+        catatan: String(r[8] || ""),
+        timestamp: String(r[9] || "")
+      })).reverse();
+    }
+
+    let grades = {};
+    const nSheet = ss.getSheetByName(SHEET_MADIN_NILAI);
+    if (nSheet && nSheet.getLastRow() > 1) {
+      const vals = nSheet.getRange(2, 1, nSheet.getLastRow() - 1, 14).getValues();
+      vals.forEach(r => {
+        const semester = String(r[1] || "Ganjil");
+        const classId = String(r[2] || "");
+        const subjectId = String(r[3] || "");
+        const studentId = String(r[4] || "");
+        const key = `${classId}_${subjectId}_${semester}`;
+        if (!grades[key]) grades[key] = {};
+        grades[key][studentId] = {
+          harian: Number(r[7] || 0),
+          lisan: Number(r[8] || 0),
+          tulis: Number(r[9] || 0),
+          catatan: String(r[12] || "")
+        };
+      });
+    }
+
+    return {
+      status: "success",
+      success: true,
+      data: {
+        classes: classes.length > 0 ? classes : null,
+        subjects: subjects.length > 0 ? subjects : null,
+        sessions: sessions,
+        grades: grades
+      }
+    };
+  } catch (err) {
+    console.error("[GET MADIN DATA ERROR]", err);
+    return { status: "error", success: false, message: err.message };
+  }
+}
+
+function saveMadinSession(payload, token) {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error("Spreadsheet tidak ditemukan.");
+    const headersJurnal = ["session_id", "tanggal", "class_id", "nama_kelas", "subject_id", "nama_kitab", "asatidz", "materi_bab", "catatan", "created_at"];
+    const jSheet = getOrCreateMadinSheet(ss, SHEET_MADIN_JURNAL, headersJurnal, "#0284c7");
+
+    const nowIso = new Date().toISOString();
+    const sessionId = payload.sessionId || ("SES-" + Date.now());
+
+    jSheet.appendRow([
+      sessionId,
+      payload.tanggal || "",
+      payload.classId || "",
+      payload.namaKelas || "",
+      payload.subjectId || "",
+      payload.namaKitab || "",
+      payload.asatidz || "",
+      payload.materiBab || "",
+      payload.catatan || "",
+      nowIso
+    ]);
+
+    if (payload.kehadiran && typeof payload.kehadiran === "object") {
+      const headersPresensi = ["presensi_id", "session_id", "tanggal", "student_id", "nis", "student_name", "class_id", "status", "keterangan", "created_at"];
+      const pSheet = getOrCreateMadinSheet(ss, SHEET_MADIN_PRESENSI, headersPresensi, "#d97706");
+      const rows = [];
+      Object.entries(payload.kehadiran).forEach(([stdId, att]) => {
+        rows.push([
+          "PR-" + Date.now() + "-" + stdId,
+          sessionId,
+          payload.tanggal || "",
+          stdId,
+          "",
+          "",
+          payload.classId || "",
+          att.status || "H",
+          att.keterangan || "",
+          nowIso
+        ]);
+      });
+      if (rows.length > 0) {
+        pSheet.getRange(pSheet.getLastRow() + 1, 1, rows.length, headersPresensi.length).setValues(rows);
+      }
+    }
+
+    return { status: "success", success: true, message: "Sesi KBM & Presensi Madin berhasil disimpan ke Spreadsheet." };
+  } catch (err) {
+    console.error("[SAVE MADIN SESSION ERROR]", err);
+    return { status: "error", success: false, message: err.message };
+  }
+}
+
+function saveMadinGrades(payload, token) {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error("Spreadsheet tidak ditemukan.");
+    const headersNilai = ["nilai_id", "semester", "class_id", "subject_id", "student_id", "nis", "student_name", "nilai_harian", "nilai_lisan", "nilai_tulis", "nilai_akhir", "predikat", "catatan", "updated_at"];
+    const nSheet = getOrCreateMadinSheet(ss, SHEET_MADIN_NILAI, headersNilai, "#7c3aed");
+
+    const classId = payload.classId;
+    const subjectId = payload.subjectId;
+    const semester = payload.semester || "Ganjil";
+    const gradesMap = payload.grades || {};
+    const nowIso = new Date().toISOString();
+
+    const rows = [];
+    Object.entries(gradesMap).forEach(([stdId, val]) => {
+      const harian = Number(val.harian || 0);
+      const lisan = Number(val.lisan || 0);
+      const tulis = Number(val.tulis || 0);
+      const akhir = Math.round((harian * 0.3) + (lisan * 0.3) + (tulis * 0.4));
+      let predikat = "Jayyid";
+      if (akhir >= 90) predikat = "Mumtaz";
+      else if (akhir >= 80) predikat = "Jayyid Jiddan";
+      else if (akhir >= 70) predikat = "Jayyid";
+      else if (akhir >= 60) predikat = "Maqbul";
+      else predikat = "Rosib";
+
+      rows.push([
+        `NIL-${classId}-${subjectId}-${stdId}`,
+        semester,
+        classId,
+        subjectId,
+        stdId,
+        "",
+        "",
+        harian,
+        lisan,
+        tulis,
+        akhir,
+        predikat,
+        val.catatan || "",
+        nowIso
+      ]);
+    });
+
+    if (rows.length > 0) {
+      nSheet.getRange(nSheet.getLastRow() + 1, 1, rows.length, headersNilai.length).setValues(rows);
+    }
+
+    return { status: "success", success: true, message: "Nilai santri berhasil disimpan ke Spreadsheet." };
+  } catch (err) {
+    console.error("[SAVE MADIN GRADES ERROR]", err);
+    return { status: "error", success: false, message: err.message };
+  }
+}
+
+function saveMadinClass(payload, token) {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error("Spreadsheet tidak ditemukan.");
+    const headersKelas = ["class_id", "nama_kelas", "tingkat", "wali_kelas", "gender", "total_santri", "created_at"];
+    const kSheet = getOrCreateMadinSheet(ss, SHEET_MADIN_KELAS, headersKelas, "#4338ca");
+
+    const nowIso = new Date().toISOString();
+    const classId = payload.classId || ("MD-CLS-" + Date.now().toString().slice(-4));
+
+    let updated = false;
+    if (kSheet.getLastRow() > 1) {
+      const ids = kSheet.getRange(2, 1, kSheet.getLastRow() - 1, 1).getValues();
+      for (let i = 0; i < ids.length; i++) {
+        if (String(ids[i][0]) === String(classId)) {
+          kSheet.getRange(i + 2, 2, 1, 4).setValues([[payload.namaKelas, payload.tingkat, payload.waliKelas, payload.gender || "all"]]);
+          updated = true;
+          break;
+        }
+      }
+    }
+    if (!updated) {
+      kSheet.appendRow([classId, payload.namaKelas, payload.tingkat, payload.waliKelas, payload.gender || "all", 0, nowIso]);
+    }
+
+    return { status: "success", success: true, message: "Data kelas berhasil disimpan ke Spreadsheet." };
+  } catch (err) {
+    return { status: "error", success: false, message: err.message };
+  }
+}
+
+function saveMadinSubject(payload, token) {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error("Spreadsheet tidak ditemukan.");
+    const headersKitab = ["subject_id", "nama_kitab", "bidang", "class_id", "ustadz_pengampu", "kkm", "created_at"];
+    const bSheet = getOrCreateMadinSheet(ss, SHEET_MADIN_KITAB, headersKitab, "#059669");
+
+    const nowIso = new Date().toISOString();
+    const subjectId = payload.subjectId || ("SBJ-" + Date.now().toString().slice(-4));
+
+    let updated = false;
+    if (bSheet.getLastRow() > 1) {
+      const ids = bSheet.getRange(2, 1, bSheet.getLastRow() - 1, 1).getValues();
+      for (let i = 0; i < ids.length; i++) {
+        if (String(ids[i][0]) === String(subjectId)) {
+          bSheet.getRange(i + 2, 2, 1, 5).setValues([[payload.namaKitab, payload.bidang, payload.classId, payload.ustadzPengampu, payload.kkm || 70]]);
+          updated = true;
+          break;
+        }
+      }
+    }
+    if (!updated) {
+      bSheet.appendRow([subjectId, payload.namaKitab, payload.bidang, payload.classId, payload.ustadzPengampu, payload.kkm || 70, nowIso]);
+    }
+
+    return { status: "success", success: true, message: "Data kitab berhasil disimpan ke Spreadsheet." };
+  } catch (err) {
+    return { status: "error", success: false, message: err.message };
+  }
+}
 
 // ====================================================================
 // MODUL BACKEND: SOROGAN AL-QUR'AN (BINNAZHAR MUSHAF POJOK 20 HAL/JUZ)
