@@ -100,6 +100,7 @@ const ASNMadin = {
         this.renderMasterSubjects();
         this.renderRecentSessions();
         this.ensureEmployeeDataLoaded();
+        this.fetchMasterStudents().then(() => this.renderMasterClasses()).catch(() => {});
     },
 
     loadStorage: function () {
@@ -471,6 +472,64 @@ const ASNMadin = {
         this.updateAttendanceCounters();
     },
 
+    fetchMasterStudents: async function (forceRefresh = false) {
+        if (!forceRefresh) {
+            if (window.adminStudentsData && Array.isArray(window.adminStudentsData) && window.adminStudentsData.length > 0) {
+                return window.adminStudentsData;
+            }
+            if (window.cachedStudents && Array.isArray(window.cachedStudents) && window.cachedStudents.length > 0) {
+                return window.cachedStudents;
+            }
+            try {
+                const s = localStorage.getItem('mubarokah_admin_students');
+                if (s) {
+                    const parsed = JSON.parse(s);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        window.adminStudentsData = parsed;
+                        window.cachedStudents = parsed;
+                        return parsed;
+                    }
+                }
+            } catch (e) {}
+        }
+
+        // 1. Coba panggil window.loadAdminStudentsData jika tersedia
+        if (typeof window.loadAdminStudentsData === 'function') {
+            try {
+                await window.loadAdminStudentsData();
+                if (window.adminStudentsData && Array.isArray(window.adminStudentsData) && window.adminStudentsData.length > 0) {
+                    return window.adminStudentsData;
+                }
+            } catch (e) {
+                console.warn('loadAdminStudentsData call fallback:', e);
+            }
+        }
+
+        // 2. Fallback: panggil API getStudents langsung dari server
+        try {
+            const token = getMadinToken();
+            let res = null;
+            if (typeof apiPost === 'function') {
+                res = await apiPost("getStudents", { token });
+            } else if (typeof apiGet === 'function') {
+                res = await apiGet("getStudents", token ? { token } : {});
+            }
+
+            if (res && (res.status === 'success' || res.success) && Array.isArray(res.data) && res.data.length > 0) {
+                window.adminStudentsData = res.data;
+                window.cachedStudents = res.data;
+                try {
+                    localStorage.setItem('mubarokah_admin_students', JSON.stringify(res.data));
+                } catch (e) {}
+                return res.data;
+            }
+        } catch (err) {
+            console.warn("fetchMasterStudents API error:", err);
+        }
+
+        return [];
+    },
+
     getAllMasterStudents: function () {
         let list = [];
         if (window.adminStudentsData && Array.isArray(window.adminStudentsData) && window.adminStudentsData.length > 0) {
@@ -481,41 +540,31 @@ const ASNMadin = {
             list = window.ASNPresensi.data.students;
         } else if (window.ASNTahfidz && window.ASNTahfidz.data && Array.isArray(window.ASNTahfidz.data.students) && window.ASNTahfidz.data.students.length > 0) {
             list = window.ASNTahfidz.data.students;
+        } else {
+            try {
+                const s = localStorage.getItem('mubarokah_admin_students');
+                if (s) {
+                    const parsed = JSON.parse(s);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        list = parsed;
+                        window.adminStudentsData = parsed;
+                    }
+                }
+            } catch (e) {}
         }
 
         if (list.length > 0) {
             return list.map((st, idx) => ({
                 id: String(st.id || st.studentId || st.nis || `STD-${idx + 1}`).trim(),
                 studentId: String(st.studentId || st.id || st.nis || `STD-${idx + 1}`).trim(),
-                nis: String(st.nis || `2026${100 + idx}`).trim(),
+                nis: String(st.nis || '').trim(),
                 nama: String(st.nama || st.name || `Santri ${idx + 1}`).trim(),
-                gender: String(st.gender || st.jenisKelamin || 'L').toUpperCase()
+                gender: String(st.gender || st.jenisKelamin || 'L').toUpperCase(),
+                status: String(st.status || 'ACTIVE').toUpperCase()
             }));
         }
 
-        // Mock santri jika master data di memori kosong
-        return [
-            { id: 'STD-L-101', studentId: 'STD-L-101', nis: '2026101', nama: 'Muhammad Fatih Al-Farisi', gender: 'L' },
-            { id: 'STD-L-102', studentId: 'STD-L-102', nis: '2026102', nama: 'Ahmad Khoirul Anam', gender: 'L' },
-            { id: 'STD-L-103', studentId: 'STD-L-103', nis: '2026103', nama: 'Ali Ridho Syahab', gender: 'L' },
-            { id: 'STD-L-104', studentId: 'STD-L-104', nis: '2026104', nama: 'Rizky Mahendra', gender: 'L' },
-            { id: 'STD-L-105', studentId: 'STD-L-105', nis: '2026105', nama: 'Zainal Abidin', gender: 'L' },
-            { id: 'STD-L-106', studentId: 'STD-L-106', nis: '2026106', nama: 'Fikri Haikal', gender: 'L' },
-            { id: 'STD-L-107', studentId: 'STD-L-107', nis: '2026107', nama: 'Bahrul Ulum', gender: 'L' },
-            { id: 'STD-L-108', studentId: 'STD-L-108', nis: '2026108', nama: 'Deni Setiawan', gender: 'L' },
-            { id: 'STD-L-109', studentId: 'STD-L-109', nis: '2026109', nama: 'Ibnu Sina Al-Hafidz', gender: 'L' },
-            { id: 'STD-L-110', studentId: 'STD-L-110', nis: '2026110', nama: 'Taufiqurrohman', gender: 'L' },
-            { id: 'STD-P-201', studentId: 'STD-P-201', nis: '2026201', nama: 'Aisyah Rahmawati', gender: 'P' },
-            { id: 'STD-P-202', studentId: 'STD-P-202', nis: '2026202', nama: 'Fatimah Zahra', gender: 'P' },
-            { id: 'STD-P-203', studentId: 'STD-P-203', nis: '2026203', nama: 'Zulfa Khoirunnisa', gender: 'P' },
-            { id: 'STD-P-204', studentId: 'STD-P-204', nis: '2026204', nama: 'Nabila Syakieb', gender: 'P' },
-            { id: 'STD-P-205', studentId: 'STD-P-205', nis: '2026205', nama: 'Khadijah Al-Kubro', gender: 'P' },
-            { id: 'STD-P-206', studentId: 'STD-P-206', nis: '2026206', nama: 'Wardah Fauziyah', gender: 'P' },
-            { id: 'STD-P-207', studentId: 'STD-P-207', nis: '2026207', nama: 'Lailatul Qodriyah', gender: 'P' },
-            { id: 'STD-P-208', studentId: 'STD-P-208', nis: '2026208', nama: 'Nurul Hidayah', gender: 'P' },
-            { id: 'STD-P-209', studentId: 'STD-P-209', nis: '2026209', nama: 'Salma Mutmainnah', gender: 'P' },
-            { id: 'STD-P-210', studentId: 'STD-P-210', nis: '2026210', nama: 'Hilyatun Nisa', gender: 'P' }
-        ];
+        return [];
     },
 
     getStudentsForClass: function (cls) {
@@ -1086,7 +1135,7 @@ const ASNMadin = {
     },
 
     // ==================== MODAL PLOTTING ANGGOTA KELAS ====================
-    openPlottingModal: function (classId) {
+    openPlottingModal: async function (classId) {
         const cls = this.data.classes.find(c => c.classId === classId);
         if (!cls) return;
 
@@ -1104,6 +1153,7 @@ const ASNMadin = {
         const subEl = document.getElementById('modal-plotting-class-subtitle');
         const searchInput = document.getElementById('modal-plotting-search');
         const filterSelect = document.getElementById('modal-plotting-filter-status');
+        const container = document.getElementById('modal-plotting-student-container');
 
         if (titleEl) titleEl.textContent = `Plotting: ${cls.namaKelas}`;
         if (badgeEl) badgeEl.textContent = `${cls.tingkat} • ${cls.gender === 'L' ? 'Putra' : (cls.gender === 'P' ? 'Putri' : 'Campur')}`;
@@ -1111,10 +1161,25 @@ const ASNMadin = {
         if (searchInput) searchInput.value = '';
         if (filterSelect) filterSelect.value = 'ALL';
 
-        this.renderPlottingStudentList();
-
         const modal = document.getElementById('modal-madin-plotting');
         if (modal) modal.classList.remove('hidden');
+
+        // Pastikan data santri master termuat dari database pondok
+        let master = this.getAllMasterStudents();
+        if (master.length === 0) {
+            if (container) {
+                container.innerHTML = `
+                    <div class="py-12 text-center">
+                        <i class="fa-solid fa-circle-notch fa-spin text-indigo-600 text-2xl mb-3"></i>
+                        <p class="text-xs font-bold text-slate-700 dark:text-slate-200">Memuat Data Santri Pondok...</p>
+                        <p class="text-[11px] text-slate-400 mt-1">Mengambil data santri yang telah diinput di database</p>
+                    </div>
+                `;
+            }
+            await this.fetchMasterStudents();
+        }
+
+        this.renderPlottingStudentList();
     },
 
     closePlottingModal: function () {
@@ -1137,6 +1202,27 @@ const ASNMadin = {
         const allStudents = this.getAllMasterStudents();
         const classId = this.plottingState.currentClassId;
         const cls = this.data.classes.find(c => c.classId === classId);
+
+        if (allStudents.length === 0) {
+            container.innerHTML = `
+                <div class="py-10 text-center">
+                    <div class="w-12 h-12 mx-auto rounded-full bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center text-amber-500 mb-2.5">
+                        <i class="fa-solid fa-triangle-exclamation text-base"></i>
+                    </div>
+                    <p class="text-xs font-bold text-slate-700 dark:text-slate-200">Belum Ada Data Santri di Database</p>
+                    <p class="text-[11px] text-slate-400 mt-1 max-w-xs mx-auto">Silakan tambahkan data santri terlebih dahulu melalui menu <strong>Data Santri</strong> agar dapat di-plot ke kelas Madin.</p>
+                    <button type="button" onclick="ASNMadin.fetchMasterStudents(true).then(() => ASNMadin.renderPlottingStudentList())" class="mt-3 px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 font-bold text-[11px] transition inline-flex items-center gap-1.5">
+                        <i class="fa-solid fa-arrows-rotate text-xs"></i>
+                        <span>Muat Ulang Santri</span>
+                    </button>
+                </div>
+            `;
+            const countSelectedEl = document.getElementById('modal-plotting-selected-count');
+            const countTotalEl = document.getElementById('modal-plotting-total-count');
+            if (countSelectedEl) countSelectedEl.textContent = 0;
+            if (countTotalEl) countTotalEl.textContent = 0;
+            return;
+        }
 
         // Buat mapping studentId -> namaKelas jika sudah terdaftar di kelas lain
         const studentOtherClassMap = new Map();
@@ -1175,7 +1261,7 @@ const ASNMadin = {
             // Search query
             if (query) {
                 const matchName = st.nama.toLowerCase().includes(query);
-                const matchNis = st.nis.toLowerCase().includes(query);
+                const matchNis = (st.nis || '').toLowerCase().includes(query);
                 if (!matchName && !matchNis) return false;
             }
 

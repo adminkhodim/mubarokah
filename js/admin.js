@@ -4184,7 +4184,19 @@
         }
 
         // ==================== DASHBOARD ADMIN: MANAJEMEN DATA SANTRI ====================
-        let adminStudentsData = [];
+        let adminStudentsData = (function() {
+            try {
+                const s = localStorage.getItem('mubarokah_admin_students');
+                if (s) {
+                    const parsed = JSON.parse(s);
+                    if (Array.isArray(parsed)) return parsed;
+                }
+            } catch (e) {}
+            return [];
+        })();
+        window.adminStudentsData = adminStudentsData;
+        window.cachedStudents = adminStudentsData;
+
         let filteredAdminStudentsData = [];
         let pendingDeleteStudentId = null;
         let selectedStudentPhotoFile = null;
@@ -4221,6 +4233,11 @@
 
                 if (response && (response.status === "success" || response.success)) {
                     adminStudentsData = response.data || [];
+                    window.adminStudentsData = adminStudentsData;
+                    window.cachedStudents = adminStudentsData;
+                    try {
+                        localStorage.setItem('mubarokah_admin_students', JSON.stringify(adminStudentsData));
+                    } catch (e) {}
 
                     // Update Hub Badge
                     const hubBadge = document.getElementById('admin-hub-santri-count');
@@ -4266,6 +4283,7 @@
                 if (loader) loader.classList.add('hidden');
             }
         }
+        window.loadAdminStudentsData = loadAdminStudentsData;
 
         /**
          * Mengambil daftar program dari Tab Sheet "Programs" (kolom B: name)
