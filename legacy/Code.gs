@@ -589,6 +589,11 @@ function doPost(e) {
       return createJsonResponse(saveMadinSubject(payload.data || payload, token));
     }
 
+    if (action === "saveMadinClassMembers" || action === "madin.saveClassMembers") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(saveMadinClassMembers(payload.data || payload, token));
+    }
+
     // ========================================================
     // SOROGAN AL-QUR'AN ACTIONS (doPost)
     // ========================================================
@@ -14926,6 +14931,7 @@ const SHEET_MADIN_KITAB = "Madin_Kitab";
 const SHEET_MADIN_JURNAL = "Madin_Jurnal";
 const SHEET_MADIN_PRESENSI = "Madin_Presensi";
 const SHEET_MADIN_NILAI = "Madin_Nilai";
+const SHEET_MADIN_ANGGOTA = "Madin_Anggota";
 
 function getOrCreateMadinSheet(ss, sheetName, headers, headerColor) {
   let s = ss.getSheetByName(sheetName);
@@ -14948,6 +14954,7 @@ function initMadinSheets(token) {
     const headersJurnal = ["session_id", "tanggal", "class_id", "nama_kelas", "subject_id", "nama_kitab", "asatidz", "materi_bab", "catatan", "created_at"];
     const headersPresensi = ["presensi_id", "session_id", "tanggal", "student_id", "nis", "student_name", "class_id", "status", "keterangan", "created_at"];
     const headersNilai = ["nilai_id", "semester", "class_id", "subject_id", "student_id", "nis", "student_name", "nilai_harian", "nilai_lisan", "nilai_tulis", "nilai_akhir", "predikat", "catatan", "updated_at"];
+    const headersAnggota = ["member_id", "class_id", "student_id", "nis", "student_name", "gender", "assigned_at"];
 
     const created = [];
     const existing = [];
@@ -14957,7 +14964,8 @@ function initMadinSheets(token) {
       { name: SHEET_MADIN_KITAB, headers: headersKitab, color: "#059669" },
       { name: SHEET_MADIN_JURNAL, headers: headersJurnal, color: "#0284c7" },
       { name: SHEET_MADIN_PRESENSI, headers: headersPresensi, color: "#d97706" },
-      { name: SHEET_MADIN_NILAI, headers: headersNilai, color: "#7c3aed" }
+      { name: SHEET_MADIN_NILAI, headers: headersNilai, color: "#7c3aed" },
+      { name: SHEET_MADIN_ANGGOTA, headers: headersAnggota, color: "#0d9488" }
     ].forEach(item => {
       let s = ss.getSheetByName(item.name);
       if (!s) {
@@ -15087,6 +15095,26 @@ function getMadinData(token) {
       });
     }
 
+    // 5. Baca Anggota Kelas (Plotting Santri)
+    let classMembers = {};
+    const mSheet = ss.getSheetByName(SHEET_MADIN_ANGGOTA);
+    if (mSheet && mSheet.getLastRow() > 1) {
+      const mVals = mSheet.getRange(2, 1, mSheet.getLastRow() - 1, 7).getValues();
+      mVals.forEach(r => {
+        const cId = String(r[1] || "").trim();
+        const sId = String(r[2] || "").trim();
+        if (cId && sId) {
+          if (!classMembers[cId]) classMembers[cId] = [];
+          classMembers[cId].push({
+            studentId: sId,
+            nis: String(r[3] || ""),
+            nama: String(r[4] || ""),
+            gender: String(r[5] || "")
+          });
+        }
+      });
+    }
+
     return {
       status: "success",
       success: true,
@@ -15094,7 +15122,8 @@ function getMadinData(token) {
         classes: classes.length > 0 ? classes : null,
         subjects: subjects.length > 0 ? subjects : null,
         sessions: sessions,
-        grades: grades
+        grades: grades,
+        classMembers: classMembers
       }
     };
   } catch (err) {
@@ -15269,6 +15298,76 @@ function saveMadinSubject(payload, token) {
 
     return { status: "success", success: true, message: "Data kitab berhasil disimpan ke Spreadsheet." };
   } catch (err) {
+    return { status: "error", success: false, message: err.message };
+  }
+}
+
+function saveMadinClassMembers(payload, token) {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error("Spreadsheet tidak ditemukan.");
+    const classId = String(payload.classId || "").trim();
+    if (!classId) throw new Error("Class ID wajib diisi.");
+
+    const members = Array.isArray(payload.members) ? payload.members : [];
+    const headersAnggota = ["member_id", "class_id", "student_id", "nis", "student_name", "gender", "assigned_at"];
+    const mSheet = getOrCreateMadinSheet(ss, SHEET_MADIN_ANGGOTA, headersAnggota, "#0d9488");
+
+    // 1. Hapus anggota lama untuk kelas ini dari sheet Madin_Anggota
+    if (mSheet.getLastRow() > 1) {
+      const data = mSheet.getRange(2, 1, mSheet.getLastRow() - 1, 7).getValues();
+      const remainingRows = [];
+      data.forEach(r => {
+        if (String(r[1]).trim() !== classId) {
+          remainingRows.push(r);
+        }
+      });
+
+      // Clear isi data lama dan timpa
+      mSheet.getRange(2, 1, Math.max(mSheet.getLastRow() - 1, 1), 7).clearContent();
+      if (remainingRows.length > 0) {
+        mSheet.getRange(2, 1, remainingRows.length, 7).setValues(remainingRows);
+      }
+    }
+
+    // 2. Append anggota baru
+    const nowIso = new Date().toISOString();
+    if (members.length > 0) {
+      const newRows = members.map((m, idx) => [
+        "MBR-" + classId + "-" + (m.studentId || m.id || idx),
+        classId,
+        m.studentId || m.id || "",
+        m.nis || "",
+        m.nama || m.name || "",
+        m.gender || "L",
+        nowIso
+      ]);
+      const startRow = mSheet.getLastRow() + 1;
+      mSheet.getRange(startRow, 1, newRows.length, 7).setValues(newRows);
+    }
+
+    // 3. Perbarui total_santri di sheet Madin_Kelas
+    const headersKelas = ["class_id", "nama_kelas", "tingkat", "wali_kelas", "gender", "total_santri", "created_at"];
+    const kSheet = getOrCreateMadinSheet(ss, SHEET_MADIN_KELAS, headersKelas, "#4338ca");
+    if (kSheet.getLastRow() > 1) {
+      const cVals = kSheet.getRange(2, 1, kSheet.getLastRow() - 1, 6).getValues();
+      for (let i = 0; i < cVals.length; i++) {
+        if (String(cVals[i][0]).trim() === classId) {
+          kSheet.getRange(i + 2, 6).setValue(members.length);
+          break;
+        }
+      }
+    }
+
+    return {
+      status: "success",
+      success: true,
+      message: `Berhasil menyimpan ${members.length} santri ke kelas ${classId}.`,
+      classId: classId,
+      totalSantri: members.length
+    };
+  } catch (err) {
+    console.error("[SAVE MADIN MEMBERS ERROR]", err);
     return { status: "error", success: false, message: err.message };
   }
 }

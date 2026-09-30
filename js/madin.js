@@ -15,7 +15,8 @@ const MADIN_STORAGE_KEYS = {
     classes: 'mubarokah_madin_classes',
     subjects: 'mubarokah_madin_subjects',
     sessions: 'mubarokah_madin_sessions',
-    grades: 'mubarokah_madin_grades'
+    grades: 'mubarokah_madin_grades',
+    members: 'mubarokah_madin_members'
 };
 
 const DEFAULT_MADIN_CLASSES = [
@@ -66,12 +67,20 @@ const ASNMadin = {
         subjects: [],
         sessions: [],
         grades: {},
+        classMembers: {}, // classId -> [ { studentId, nis, nama, gender }, ... ]
         activeTab: 'jurnal',
         selectedClassId: '',
         selectedSubjectId: '',
         selectedDate: '',
         sessionStudents: [],
         studentAttendanceMap: {} // studentId -> { status: 'H'|'S'|'I'|'A', keterangan: '' }
+    },
+
+    plottingState: {
+        currentClassId: '',
+        selectedStudentIds: new Set(),
+        searchQuery: '',
+        filterStatus: 'ALL'
     },
 
     init: function () {
@@ -106,10 +115,23 @@ const ASNMadin = {
 
             const rawGrades = localStorage.getItem(MADIN_STORAGE_KEYS.grades);
             this.data.grades = rawGrades ? JSON.parse(rawGrades) : {};
+
+            const rawMembers = localStorage.getItem(MADIN_STORAGE_KEYS.members);
+            this.data.classMembers = rawMembers ? JSON.parse(rawMembers) : {};
+
+            // Sinkronkan totalSantri di data kelas jika sudah ada data plotting
+            if (this.data.classMembers && typeof this.data.classMembers === 'object') {
+                this.data.classes.forEach(c => {
+                    if (Array.isArray(this.data.classMembers[c.classId])) {
+                        c.totalSantri = this.data.classMembers[c.classId].length;
+                    }
+                });
+            }
         } catch (err) {
             console.error('Gagal memuat local storage Madin:', err);
             this.data.classes = [...DEFAULT_MADIN_CLASSES];
             this.data.subjects = [...DEFAULT_MADIN_SUBJECTS];
+            this.data.classMembers = {};
         }
     },
 
@@ -119,6 +141,7 @@ const ASNMadin = {
             localStorage.setItem(MADIN_STORAGE_KEYS.subjects, JSON.stringify(this.data.subjects));
             localStorage.setItem(MADIN_STORAGE_KEYS.sessions, JSON.stringify(this.data.sessions));
             localStorage.setItem(MADIN_STORAGE_KEYS.grades, JSON.stringify(this.data.grades));
+            localStorage.setItem(MADIN_STORAGE_KEYS.members, JSON.stringify(this.data.classMembers || {}));
         } catch (e) {
             console.error('Gagal menyimpan storage Madin:', e);
         }
@@ -191,6 +214,15 @@ const ASNMadin = {
                 }
                 if (res.data.grades && typeof res.data.grades === 'object') {
                     this.data.grades = res.data.grades;
+                }
+                if (res.data.classMembers && typeof res.data.classMembers === 'object') {
+                    this.data.classMembers = res.data.classMembers;
+                    // Sinkronkan totalSantri di data kelas
+                    this.data.classes.forEach(c => {
+                        if (Array.isArray(this.data.classMembers[c.classId])) {
+                            c.totalSantri = this.data.classMembers[c.classId].length;
+                        }
+                    });
                 }
                 this.saveStorage();
                 this.renderStats();
@@ -439,41 +471,100 @@ const ASNMadin = {
         this.updateAttendanceCounters();
     },
 
-    getStudentsForClass: function (cls) {
-        // Cek data santri master di window
-        let allStudents = [];
-        if (window.cachedStudents && Array.isArray(window.cachedStudents) && window.cachedStudents.length > 0) {
-            allStudents = window.cachedStudents;
-        } else if (window.ASNPresensi && window.ASNPresensi.data && window.ASNPresensi.data.students && window.ASNPresensi.data.students.length > 0) {
-            allStudents = window.ASNPresensi.data.students;
+    getAllMasterStudents: function () {
+        let list = [];
+        if (window.adminStudentsData && Array.isArray(window.adminStudentsData) && window.adminStudentsData.length > 0) {
+            list = window.adminStudentsData;
+        } else if (window.cachedStudents && Array.isArray(window.cachedStudents) && window.cachedStudents.length > 0) {
+            list = window.cachedStudents;
+        } else if (window.ASNPresensi && window.ASNPresensi.data && Array.isArray(window.ASNPresensi.data.students) && window.ASNPresensi.data.students.length > 0) {
+            list = window.ASNPresensi.data.students;
+        } else if (window.ASNTahfidz && window.ASNTahfidz.data && Array.isArray(window.ASNTahfidz.data.students) && window.ASNTahfidz.data.students.length > 0) {
+            list = window.ASNTahfidz.data.students;
         }
 
-        if (allStudents.length > 0) {
-            // Filter berdasarkan gender kelas
-            if (cls && cls.gender === 'L') {
-                return allStudents.filter(s => (s.gender || s.jenisKelamin || 'L').toUpperCase() === 'L').slice(0, 25);
-            } else if (cls && cls.gender === 'P') {
-                return allStudents.filter(s => (s.gender || s.jenisKelamin || 'P').toUpperCase() === 'P').slice(0, 25);
-            }
-            return allStudents.slice(0, 30);
+        if (list.length > 0) {
+            return list.map((st, idx) => ({
+                id: String(st.id || st.studentId || st.nis || `STD-${idx + 1}`).trim(),
+                studentId: String(st.studentId || st.id || st.nis || `STD-${idx + 1}`).trim(),
+                nis: String(st.nis || `2026${100 + idx}`).trim(),
+                nama: String(st.nama || st.name || `Santri ${idx + 1}`).trim(),
+                gender: String(st.gender || st.jenisKelamin || 'L').toUpperCase()
+            }));
         }
 
-        // Mock santri representatif pesantren bila data kosong
-        const isPutri = cls && cls.gender === 'P';
-        const sampleNames = isPutri ? [
-            'Aisyah Rahmawati', 'Fatimah Zahra', 'Zulfa Khoirunnisa', 'Nabila Syakieb', 'Khadijah Al-Kubro',
-            'Wardah Fauziyah', 'Lailatul Qodriyah', 'Nurul Hidayah', 'Salma Mutmainnah', 'Hilyatun Nisa'
-        ] : [
-            'Muhammad Fatih Al-Farisi', 'Ahmad Khoirul Anam', 'Ali Ridho Syahab', 'Rizky Mahendra', 'Zainal Abidin',
-            'Fikri Haikal', 'Bahrul Ulum', 'Deni Setiawan', 'Ibnu Sina Al-Hafidz', 'Taufiqurrohman'
+        // Mock santri jika master data di memori kosong
+        return [
+            { id: 'STD-L-101', studentId: 'STD-L-101', nis: '2026101', nama: 'Muhammad Fatih Al-Farisi', gender: 'L' },
+            { id: 'STD-L-102', studentId: 'STD-L-102', nis: '2026102', nama: 'Ahmad Khoirul Anam', gender: 'L' },
+            { id: 'STD-L-103', studentId: 'STD-L-103', nis: '2026103', nama: 'Ali Ridho Syahab', gender: 'L' },
+            { id: 'STD-L-104', studentId: 'STD-L-104', nis: '2026104', nama: 'Rizky Mahendra', gender: 'L' },
+            { id: 'STD-L-105', studentId: 'STD-L-105', nis: '2026105', nama: 'Zainal Abidin', gender: 'L' },
+            { id: 'STD-L-106', studentId: 'STD-L-106', nis: '2026106', nama: 'Fikri Haikal', gender: 'L' },
+            { id: 'STD-L-107', studentId: 'STD-L-107', nis: '2026107', nama: 'Bahrul Ulum', gender: 'L' },
+            { id: 'STD-L-108', studentId: 'STD-L-108', nis: '2026108', nama: 'Deni Setiawan', gender: 'L' },
+            { id: 'STD-L-109', studentId: 'STD-L-109', nis: '2026109', nama: 'Ibnu Sina Al-Hafidz', gender: 'L' },
+            { id: 'STD-L-110', studentId: 'STD-L-110', nis: '2026110', nama: 'Taufiqurrohman', gender: 'L' },
+            { id: 'STD-P-201', studentId: 'STD-P-201', nis: '2026201', nama: 'Aisyah Rahmawati', gender: 'P' },
+            { id: 'STD-P-202', studentId: 'STD-P-202', nis: '2026202', nama: 'Fatimah Zahra', gender: 'P' },
+            { id: 'STD-P-203', studentId: 'STD-P-203', nis: '2026203', nama: 'Zulfa Khoirunnisa', gender: 'P' },
+            { id: 'STD-P-204', studentId: 'STD-P-204', nis: '2026204', nama: 'Nabila Syakieb', gender: 'P' },
+            { id: 'STD-P-205', studentId: 'STD-P-205', nis: '2026205', nama: 'Khadijah Al-Kubro', gender: 'P' },
+            { id: 'STD-P-206', studentId: 'STD-P-206', nis: '2026206', nama: 'Wardah Fauziyah', gender: 'P' },
+            { id: 'STD-P-207', studentId: 'STD-P-207', nis: '2026207', nama: 'Lailatul Qodriyah', gender: 'P' },
+            { id: 'STD-P-208', studentId: 'STD-P-208', nis: '2026208', nama: 'Nurul Hidayah', gender: 'P' },
+            { id: 'STD-P-209', studentId: 'STD-P-209', nis: '2026209', nama: 'Salma Mutmainnah', gender: 'P' },
+            { id: 'STD-P-210', studentId: 'STD-P-210', nis: '2026210', nama: 'Hilyatun Nisa', gender: 'P' }
         ];
+    },
 
-        return sampleNames.map((nama, idx) => ({
-            id: `STD-${isPutri ? 'P' : 'L'}-${100 + idx}`,
-            nis: `2026${100 + idx}`,
-            nama: nama,
-            gender: isPutri ? 'P' : 'L'
-        }));
+    getStudentsForClass: function (cls) {
+        if (!cls) return [];
+        const classId = typeof cls === 'string' ? cls : cls.classId;
+
+        // 1. Cek apakah kelas ini sudah memiliki santri ter-plot
+        const assigned = this.data.classMembers && this.data.classMembers[classId];
+        if (Array.isArray(assigned) && assigned.length > 0) {
+            const allMaster = this.getAllMasterStudents();
+            const masterMap = new Map();
+            allMaster.forEach(st => {
+                const sid = String(st.id || st.studentId || st.nis || '').trim();
+                if (sid) masterMap.set(sid, st);
+                if (st.nis) masterMap.set(String(st.nis).trim(), st);
+            });
+
+            return assigned.map(m => {
+                const sid = String(m.studentId || m.id || m.nis || '').trim();
+                const fromMaster = masterMap.get(sid) || (m.nis ? masterMap.get(String(m.nis).trim()) : null);
+                if (fromMaster) {
+                    return {
+                        id: sid,
+                        studentId: sid,
+                        nis: fromMaster.nis || m.nis || '',
+                        nama: fromMaster.nama || fromMaster.name || m.nama || m.name || 'Santri',
+                        gender: fromMaster.gender || fromMaster.jenisKelamin || m.gender || 'L'
+                    };
+                }
+                return {
+                    id: sid,
+                    studentId: sid,
+                    nis: m.nis || '',
+                    nama: m.nama || m.name || 'Santri',
+                    gender: m.gender || 'L'
+                };
+            });
+        }
+
+        // 2. Fallback jika belum di-plot: filter berdasarkan gender dari master
+        const allStudents = this.getAllMasterStudents();
+        const targetGender = typeof cls === 'object' ? cls.gender : 'all';
+
+        if (targetGender === 'L') {
+            return allStudents.filter(s => (s.gender || s.jenisKelamin || 'L').toUpperCase() === 'L').slice(0, 25);
+        } else if (targetGender === 'P') {
+            return allStudents.filter(s => (s.gender || s.jenisKelamin || 'P').toUpperCase() === 'P').slice(0, 25);
+        }
+        return allStudents.slice(0, 30);
     },
 
     renderAttendanceList: function () {
@@ -699,8 +790,12 @@ const ASNMadin = {
 
         let html = '';
         this.data.classes.forEach(c => {
+            const memberCount = (this.data.classMembers && Array.isArray(this.data.classMembers[c.classId])) 
+                ? this.data.classMembers[c.classId].length 
+                : (c.totalSantri || 0);
+
             html += `
-                <div class="p-3 rounded-xl border border-slate-100 dark:border-[#253447] bg-white dark:bg-[#182332] flex items-center justify-between gap-2">
+                <div class="p-3 rounded-xl border border-slate-100 dark:border-[#253447] bg-white dark:bg-[#182332] flex items-center justify-between gap-2 hover:border-indigo-200 dark:hover:border-indigo-900/60 transition">
                     <div>
                         <div class="flex items-center gap-1.5">
                             <h5 class="font-bold text-xs text-slate-800 dark:text-slate-100">${c.namaKelas}</h5>
@@ -708,8 +803,12 @@ const ASNMadin = {
                         </div>
                         <p class="text-[11px] text-slate-400 mt-0.5">Wali: ${c.waliKelas || '-'} • Target: ${c.gender === 'L' ? 'Putra' : (c.gender === 'P' ? 'Putri' : 'Campur')}</p>
                     </div>
-                    <div class="flex items-center gap-1">
-                        <button type="button" onclick="ASNMadin.openClassModal('${c.classId}')" class="w-7 h-7 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-[#1c2836] flex items-center justify-center transition">
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" onclick="ASNMadin.openPlottingModal('${c.classId}')" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-bold text-[10px] flex items-center gap-1.5 transition border border-indigo-200/50 dark:border-indigo-800/50" title="Kelola Anggota Santri">
+                            <i class="fa-solid fa-users text-xs"></i>
+                            <span>${memberCount} Santri</span>
+                        </button>
+                        <button type="button" onclick="ASNMadin.openClassModal('${c.classId}')" class="w-7 h-7 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-[#1c2836] flex items-center justify-center transition" title="Edit Kelas">
                             <i class="fa-solid fa-pen-to-square text-xs"></i>
                         </button>
                     </div>
@@ -984,6 +1083,279 @@ const ASNMadin = {
         }
 
         if (typeof showToast === 'function') showToast('✅ Data kitab berhasil disimpan');
+    },
+
+    // ==================== MODAL PLOTTING ANGGOTA KELAS ====================
+    openPlottingModal: function (classId) {
+        const cls = this.data.classes.find(c => c.classId === classId);
+        if (!cls) return;
+
+        this.plottingState.currentClassId = classId;
+        this.plottingState.searchQuery = '';
+        this.plottingState.filterStatus = 'ALL';
+
+        // Load existing members for this class
+        const currentAssigned = this.data.classMembers[classId] || [];
+        this.plottingState.selectedStudentIds = new Set(currentAssigned.map(m => String(m.studentId || m.id || m.nis)));
+
+        // Update modal info
+        const titleEl = document.getElementById('modal-plotting-class-name');
+        const badgeEl = document.getElementById('modal-plotting-class-badge');
+        const subEl = document.getElementById('modal-plotting-class-subtitle');
+        const searchInput = document.getElementById('modal-plotting-search');
+        const filterSelect = document.getElementById('modal-plotting-filter-status');
+
+        if (titleEl) titleEl.textContent = `Plotting: ${cls.namaKelas}`;
+        if (badgeEl) badgeEl.textContent = `${cls.tingkat} • ${cls.gender === 'L' ? 'Putra' : (cls.gender === 'P' ? 'Putri' : 'Campur')}`;
+        if (subEl) subEl.textContent = `Wali: ${cls.waliKelas || '-'} • Atur santri yang masuk ke kelas diniyah ini`;
+        if (searchInput) searchInput.value = '';
+        if (filterSelect) filterSelect.value = 'ALL';
+
+        this.renderPlottingStudentList();
+
+        const modal = document.getElementById('modal-madin-plotting');
+        if (modal) modal.classList.remove('hidden');
+    },
+
+    closePlottingModal: function () {
+        const modal = document.getElementById('modal-madin-plotting');
+        if (modal) modal.classList.add('hidden');
+    },
+
+    filterPlottingList: function () {
+        const searchInput = document.getElementById('modal-plotting-search');
+        const filterSelect = document.getElementById('modal-plotting-filter-status');
+        this.plottingState.searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        this.plottingState.filterStatus = filterSelect ? filterSelect.value : 'ALL';
+        this.renderPlottingStudentList();
+    },
+
+    renderPlottingStudentList: function () {
+        const container = document.getElementById('modal-plotting-student-container');
+        if (!container) return;
+
+        const allStudents = this.getAllMasterStudents();
+        const classId = this.plottingState.currentClassId;
+        const cls = this.data.classes.find(c => c.classId === classId);
+
+        // Buat mapping studentId -> namaKelas jika sudah terdaftar di kelas lain
+        const studentOtherClassMap = new Map();
+        if (this.data.classMembers && typeof this.data.classMembers === 'object') {
+            Object.entries(this.data.classMembers).forEach(([cId, members]) => {
+                if (cId !== classId && Array.isArray(members)) {
+                    const otherCls = this.data.classes.find(c => c.classId === cId);
+                    const className = otherCls ? otherCls.namaKelas : cId;
+                    members.forEach(m => {
+                        const sid = String(m.studentId || m.id || m.nis);
+                        studentOtherClassMap.set(sid, className);
+                    });
+                }
+            });
+        }
+
+        // Filter list
+        const query = this.plottingState.searchQuery;
+        const statusFilter = this.plottingState.filterStatus;
+
+        let filtered = allStudents.filter(st => {
+            const sid = String(st.id || st.studentId || st.nis);
+            const isSelected = this.plottingState.selectedStudentIds.has(sid);
+            const otherClass = studentOtherClassMap.get(sid);
+
+            // Filter gender sesuai kelas (jika kelas ber-gender spesifik L atau P)
+            if (cls && (cls.gender === 'L' || cls.gender === 'P')) {
+                if (st.gender !== cls.gender) return false;
+            }
+
+            // Filter Status
+            if (statusFilter === 'UNASSIGNED' && (isSelected || otherClass)) return false;
+            if (statusFilter === 'SELECTED' && !isSelected) return false;
+            if (statusFilter === 'OTHER' && !otherClass) return false;
+
+            // Search query
+            if (query) {
+                const matchName = st.nama.toLowerCase().includes(query);
+                const matchNis = st.nis.toLowerCase().includes(query);
+                if (!matchName && !matchNis) return false;
+            }
+
+            return true;
+        });
+
+        // Update counter
+        const countSelectedEl = document.getElementById('modal-plotting-selected-count');
+        const countTotalEl = document.getElementById('modal-plotting-total-count');
+        if (countSelectedEl) countSelectedEl.textContent = this.plottingState.selectedStudentIds.size;
+        if (countTotalEl) countTotalEl.textContent = filtered.length;
+
+        if (filtered.length === 0) {
+            container.innerHTML = `
+                <div class="py-8 text-center">
+                    <div class="w-12 h-12 mx-auto rounded-full bg-slate-100 dark:bg-[#1a2636] flex items-center justify-center text-slate-400 mb-2">
+                        <i class="fa-solid fa-user-slash text-base"></i>
+                    </div>
+                    <p class="text-xs font-bold text-slate-600 dark:text-slate-300">Tidak ada santri yang sesuai kriteria</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Coba ubah kata kunci pencarian atau ganti filter status</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        filtered.forEach(st => {
+            const sid = String(st.id || st.studentId || st.nis);
+            const isChecked = this.plottingState.selectedStudentIds.has(sid);
+            const otherClass = studentOtherClassMap.get(sid);
+
+            html += `
+                <div class="py-2.5 px-2 flex items-center justify-between gap-3 hover:bg-slate-50 dark:hover:bg-[#1c2836] rounded-xl transition cursor-pointer" onclick="ASNMadin.toggleStudentPlotting('${sid}')">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <input type="checkbox" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); ASNMadin.toggleStudentPlotting('${sid}')" class="w-4 h-4 rounded text-indigo-600 border-slate-300 dark:border-slate-600 focus:ring-indigo-500 cursor-pointer">
+                        <div class="w-8 h-8 rounded-full ${st.gender === 'P' ? 'bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'} flex items-center justify-center text-xs font-extrabold shrink-0">
+                            ${st.nama.charAt(0)}
+                        </div>
+                        <div class="min-w-0">
+                            <h5 class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">${st.nama}</h5>
+                            <div class="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-400">
+                                <span>NIS: ${st.nis}</span>
+                                <span>•</span>
+                                <span class="font-semibold ${st.gender === 'P' ? 'text-pink-500' : 'text-blue-500'}">${st.gender === 'P' ? 'Putri' : 'Putra'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="shrink-0 text-right">
+                        ${isChecked ? `
+                            <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                                <i class="fa-solid fa-check mr-1"></i>Anggota
+                            </span>
+                        ` : (otherClass ? `
+                            <span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800" title="Santri sudah di ${otherClass}">
+                                Kelas: ${otherClass}
+                            </span>
+                        ` : `
+                            <span class="px-2 py-0.5 rounded-md text-[9px] font-medium bg-slate-100 text-slate-500 dark:bg-[#202f42] dark:text-slate-400">
+                                Unassigned
+                            </span>
+                        `)}
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    },
+
+    toggleStudentPlotting: function (studentId) {
+        if (!studentId) return;
+        const sid = String(studentId);
+        if (this.plottingState.selectedStudentIds.has(sid)) {
+            this.plottingState.selectedStudentIds.delete(sid);
+        } else {
+            this.plottingState.selectedStudentIds.add(sid);
+        }
+        this.renderPlottingStudentList();
+    },
+
+    selectAllPlottingStudents: function () {
+        const allStudents = this.getAllMasterStudents();
+        const classId = this.plottingState.currentClassId;
+        const cls = this.data.classes.find(c => c.classId === classId);
+        const query = this.plottingState.searchQuery;
+
+        allStudents.forEach(st => {
+            if (cls && (cls.gender === 'L' || cls.gender === 'P')) {
+                if (st.gender !== cls.gender) return;
+            }
+            if (query) {
+                const matchName = st.nama.toLowerCase().includes(query);
+                const matchNis = st.nis.toLowerCase().includes(query);
+                if (!matchName && !matchNis) return;
+            }
+            const sid = String(st.id || st.studentId || st.nis);
+            this.plottingState.selectedStudentIds.add(sid);
+        });
+
+        this.renderPlottingStudentList();
+    },
+
+    deselectAllPlottingStudents: function () {
+        this.plottingState.selectedStudentIds.clear();
+        this.renderPlottingStudentList();
+    },
+
+    savePlottingMembers: function () {
+        const classId = this.plottingState.currentClassId;
+        if (!classId) return;
+
+        const allStudents = this.getAllMasterStudents();
+        const studentMap = new Map();
+        allStudents.forEach(st => {
+            const sid = String(st.id || st.studentId || st.nis);
+            studentMap.set(sid, st);
+        });
+
+        // Susun objek anggota terpilih
+        const selectedMembers = [];
+        this.plottingState.selectedStudentIds.forEach(sid => {
+            const st = studentMap.get(sid);
+            if (st) {
+                selectedMembers.push({
+                    studentId: st.studentId || st.id || sid,
+                    id: st.id || st.studentId || sid,
+                    nis: st.nis || '',
+                    nama: st.nama || st.name || '',
+                    gender: st.gender || 'L'
+                });
+            } else {
+                selectedMembers.push({
+                    studentId: sid,
+                    id: sid,
+                    nis: sid,
+                    nama: 'Santri',
+                    gender: 'L'
+                });
+            }
+        });
+
+        // 1. Simpan ke local state
+        this.data.classMembers[classId] = selectedMembers;
+
+        // 2. Perbarui totalSantri di data kelas
+        const clsIdx = this.data.classes.findIndex(c => c.classId === classId);
+        if (clsIdx !== -1) {
+            this.data.classes[clsIdx].totalSantri = selectedMembers.length;
+        }
+
+        // 3. Simpan ke storage
+        this.saveStorage();
+
+        // 4. Update UI
+        this.closePlottingModal();
+        this.renderMasterClasses();
+        this.renderStats();
+
+        // Jika sesi KBM atau penilaian sedang membuka kelas ini, reload santri
+        if (this.data.selectedClassId === classId) {
+            this.loadSessionStudents();
+        }
+
+        // 5. Background sync ke Google Spreadsheet
+        if (typeof apiPost === 'function') {
+            const token = getMadinToken();
+            apiPost("saveMadinClassMembers", {
+                classId: classId,
+                members: selectedMembers,
+                token: token
+            }).catch(e => {
+                console.log('Background sync madin members error:', e);
+            });
+        }
+
+        if (typeof showToast === 'function') {
+            showToast(`✅ Berhasil menyimpan ${selectedMembers.length} santri anggota kelas!`);
+        } else {
+            alert(`Berhasil menyimpan ${selectedMembers.length} santri anggota kelas!`);
+        }
     },
 
     // ==================== TAB 2: PENILAIAN ====================
