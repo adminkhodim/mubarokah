@@ -777,7 +777,7 @@ window.scrollKeuanganPOSToCheckout = scrollKeuanganPOSToCheckout;
 
 function setKeuanganPOSMetode(metode) {
     ASNKeuangan.pos.metodeBayar = metode;
-    const btns = ['TUNAI', 'TRANSFER_BCA', 'TRANSFER_BRI', 'QRIS'];
+    const btns = ['TUNAI', 'TRANSFER_BCA', 'TRANSFER_BRI', 'QRIS', 'MIDTRANS'];
     btns.forEach(m => {
         const el = document.getElementById(`keuangan-metode-btn-${m}`);
         if (el) {
@@ -793,6 +793,15 @@ function setKeuanganPOSMetode(metode) {
     if (wrapDiterima) {
         if (metode === 'TUNAI') wrapDiterima.classList.remove('hidden');
         else wrapDiterima.classList.add('hidden');
+    }
+
+    const btnSubmit = document.getElementById('keuangan-pos-btn-submit');
+    if (btnSubmit) {
+        if (metode === 'MIDTRANS') {
+            btnSubmit.innerHTML = `<i class="fa-solid fa-credit-card mr-1.5"></i> Buka Pembayaran Online Midtrans`;
+        } else {
+            btnSubmit.innerHTML = `<i class="fa-solid fa-receipt mr-1.5"></i> Proses Pembayaran & Terbitkan Kuitansi`;
+        }
     }
 
     calcKeuanganPOSTotal();
@@ -818,7 +827,7 @@ function setKeuanganPOSUangPas() {
 window.setKeuanganPOSUangPas = setKeuanganPOSUangPas;
 
 /**
- * Eksekusi Pembayaran Kasir
+ * Eksekusi Pembayaran Kasir (Mendukung Tunai, Transfer Bank, QRIS, & Midtrans)
  */
 async function submitKeuanganPOSPayment() {
     const st = ASNKeuangan.pos.selectedStudent;
@@ -830,7 +839,14 @@ async function submitKeuanganPOSPayment() {
     const items = [];
     Object.entries(ASNKeuangan.pos.selectedTagihanMap).forEach(([tId, bayarNom]) => {
         if (bayarNom > 0) {
-            items.push({ tagihanId: tId, bayarNominal: bayarNom });
+            // Dapatkan detail pos tagihan jika ada
+            const allTagihan = ASNKeuangan.data.tagihanList || [];
+            const foundTagihan = allTagihan.find(t => String(t.tagihanId) === String(tId));
+            items.push({
+                tagihanId: tId,
+                posName: foundTagihan ? foundTagihan.namaPos : "Tagihan Pesantren",
+                bayarNominal: bayarNom
+            });
         }
     });
 
@@ -842,14 +858,65 @@ async function submitKeuanganPOSPayment() {
     const btnSubmit = document.getElementById('keuangan-pos-btn-submit');
     const noteInput = document.getElementById('keuangan-pos-catatan');
     const catatan = noteInput ? noteInput.value.trim() : "";
+    const isMidtrans = ASNKeuangan.pos.metodeBayar === 'MIDTRANS';
 
     try {
         if (btnSubmit) {
             btnSubmit.disabled = true;
-            btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Memproses Pembayaran...`;
+            btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> ${isMidtrans ? 'Menghubungkan Midtrans...' : 'Memproses Pembayaran...'}`;
         }
 
         const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : null) || "";
+
+        // ALUR KHUSUS MIDTRANS PAYMENT GATEWAY
+        if (isMidtrans) {
+            const snapPayload = {
+                token: token,
+                studentId: st.studentId,
+                studentName: st.name,
+                nis: st.nis || "",
+                phone: st.phone || st.telepon || st.noHp || st.nomorWali || "",
+                email: st.email || "wali@mubarokah.my.id",
+                items: items
+            };
+
+            const snapRes = await apiPost("createMidtransSnapToken", snapPayload);
+
+            if (snapRes && snapRes.success && snapRes.token) {
+                if (typeof window.snap !== 'undefined' && typeof window.snap.pay === 'function') {
+                    window.snap.pay(snapRes.token, {
+                        onSuccess: function(result) {
+                            console.log("[MIDTRANS SUCCESS]", result);
+                            alert("✅ Pembayaran berhasil diselesaikan via Midtrans!");
+                            resetKeuanganPOS();
+                            loadAdminKeuanganData(true);
+                        },
+                        onPending: function(result) {
+                            console.log("[MIDTRANS PENDING]", result);
+                            alert("⏳ Menunggu pembayaran dari wali santri. Tagihan akan otomatis lunas saat transaksi sukses.");
+                            resetKeuanganPOS();
+                        },
+                        onError: function(result) {
+                            console.error("[MIDTRANS ERROR]", result);
+                            alert("❌ Pembayaran Midtrans gagal atau dibatalkan.");
+                        },
+                        onClose: function() {
+                            console.log("[MIDTRANS MODAL CLOSED]");
+                        }
+                    });
+                } else if (snapRes.redirect_url) {
+                    window.open(snapRes.redirect_url, '_blank');
+                } else {
+                    alert("Token pembayaran berhasil dibuat: " + snapRes.token);
+                }
+                return;
+            } else {
+                alert("Gagal memanggil Midtrans: " + ((snapRes && snapRes.message) || "Koneksi gateway gagal"));
+                return;
+            }
+        }
+
+        // ALUR STANDAR (TUNAI / TRANSFER / QRIS)
         const payload = {
             token: token,
             studentId: st.studentId,
@@ -885,7 +952,9 @@ async function submitKeuanganPOSPayment() {
     } finally {
         if (btnSubmit) {
             btnSubmit.disabled = false;
-            btnSubmit.innerHTML = `<i class="fa-solid fa-receipt mr-1.5"></i> Proses Pembayaran & Terbitkan Kuitansi`;
+            btnSubmit.innerHTML = isMidtrans 
+                ? `<i class="fa-solid fa-credit-card mr-1.5"></i> Buka Pembayaran Online Midtrans`
+                : `<i class="fa-solid fa-receipt mr-1.5"></i> Proses Pembayaran & Terbitkan Kuitansi`;
         }
     }
 }

@@ -55,6 +55,13 @@ function doPost(e) {
 
     const payload = JSON.parse(e.postData.contents);
 
+    // ========================================================
+    // MIDTRANS WEBHOOK NOTIFICATION HANDLER
+    // ========================================================
+    if (payload && payload.order_id && payload.signature_key && payload.transaction_status) {
+      return handleMidtransWebhook(payload);
+    }
+
     const action =
       payload.action ||
       (e.parameter && e.parameter.action) ||
@@ -849,6 +856,17 @@ function doPost(e) {
         const actor = authenticateSession(token);
         authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
         return createJsonResponse(prosesPembayaranTagihan(payload.data || payload, token, actor));
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", success: false, message: authErr.message });
+      }
+    }
+
+    if (action === "createMidtransSnapToken" || action === "keuangan.createMidtransToken" || action === "getMidtransSnapToken") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA", "PENGASUH"]);
+        return createJsonResponse(createMidtransSnapToken(payload.data || payload, token, actor));
       } catch (authErr) {
         return createJsonResponse({ status: "error", success: false, message: authErr.message });
       }
@@ -8573,13 +8591,44 @@ function saveRolePermissionsBackend(roleKey, newPermissions, token) {
   }
 }
 
+const CACHE_KEY_STUDENTS = "admin_students_list_v1";
+
+/**
+ * Cache Invalidation Helper untuk Master Data Santri
+ */
+function invalidateStudentsCache() {
+  try {
+    const cache = CacheService.getScriptCache();
+    if (cache) cache.remove(CACHE_KEY_STUDENTS);
+  } catch (e) {
+    console.warn("Gagal invalidate students cache: " + e.message);
+  }
+}
+
 /**
  * Ambil seluruh data santri untuk Dashboard Admin
+ * Dilengkapi ScriptCache level Apps Script (~150ms response)
  */
 function getAllStudentsData(token) {
   try {
     const actor = authenticateSession(token);
     authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH"]);
+
+    // Cek cache Apps Script terlebih dahulu untuk respon super cepat
+    try {
+      const cache = CacheService.getScriptCache();
+      if (cache) {
+        const cached = cache.get(CACHE_KEY_STUDENTS);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed && (parsed.status === "success" || parsed.success)) {
+            return parsed;
+          }
+        }
+      }
+    } catch (cErr) {
+      console.warn("[STUDENTS CACHE READ ERROR]", cErr);
+    }
 
     const ss = getDatabaseSpreadsheet();
     const sheet = getAuthSheet(ss, SHEET_STUDENTS);
@@ -8749,7 +8798,7 @@ function getAllStudentsData(token) {
       });
     }
 
-    return {
+    const result = {
       status: "success",
       success: true,
       data: students,
@@ -8762,6 +8811,20 @@ function getAllStudentsData(token) {
         nonaktif: nonaktif
       }
     };
+
+    try {
+      const cache = CacheService.getScriptCache();
+      if (cache) {
+        const serialized = JSON.stringify(result);
+        if (serialized.length < 100000) {
+          cache.put(CACHE_KEY_STUDENTS, serialized, 600); // 10 menit
+        }
+      }
+    } catch (cErr) {
+      console.warn("[STUDENTS CACHE WRITE ERROR]", cErr);
+    }
+
+    return result;
   } catch (err) {
     console.error("[GET ALL STUDENTS ERROR]", err);
     return {
@@ -8882,6 +8945,8 @@ function saveStudentData(studentObj, token) {
       syncStudentWaliContact(ss, actualStudentId, inputNis, inputName, inputPhone);
     }
 
+    invalidateStudentsCache();
+
     return {
       status: "success",
       success: true,
@@ -8908,6 +8973,8 @@ function saveStudentData(studentObj, token) {
     if (inputPhone) {
       syncStudentWaliContact(ss, newStudentId, inputNis, inputName, inputPhone);
     }
+
+    invalidateStudentsCache();
 
     return {
       status: "success",
@@ -9103,6 +9170,8 @@ function deleteStudentData(studentId, token) {
     } catch (cleanErr) {
       console.warn("Pembersihan Wali_Santri_Map:", cleanErr);
     }
+
+    invalidateStudentsCache();
 
     return {
       status: "success",
@@ -21236,6 +21305,217 @@ function getExecutiveAnalyticsKeuangan(token) {
   }
 }
 
+/**
+ * ====================================================================
+ * MODUL PAYMENT GATEWAY MIDTRANS (MUBAROKAH APP)
+ * ====================================================================
+ */
+const MIDTRANS_CONFIG = {
+  isProduction: false, // Sandbox = false, Production = true
+  merchantId: "M271921771",
+  clientKey: "Mid-client-tioY0m0hPoGgF5wE",
+  serverKey: "Mid-server-co9lfWi5gCbN9EFw_1kPIXQR"
+};
 
+/**
+ * Buat Snap Token Pembayaran Tagihan Santri via Midtrans API
+ */
+function createMidtransSnapToken(payload, token, actor) {
+  try {
+    const studentId = String(payload.studentId || "").trim();
+    const studentName = String(payload.studentName || "Santri").trim();
+    const nis = String(payload.nis || "").trim();
+    const phone = String(payload.phone || payload.customerPhone || "").trim();
+    const email = String(payload.email || "wali@mubarokah.my.id").trim();
+    const items = Array.isArray(payload.items) ? payload.items : [];
 
+    if (items.length === 0) {
+      return { status: "error", success: false, message: "Pilih minimal satu pos tagihan." };
+    }
 
+    let grossAmount = 0;
+    const snapItems = [];
+    const tagihanCustomPairs = [];
+
+    items.forEach((it, idx) => {
+      const nominal = Math.round(Number(it.bayarNominal || it.price || it.nominal) || 0);
+      if (nominal > 0) {
+        grossAmount += nominal;
+        const tagihanId = String(it.tagihanId || it.id || `ITEM_${idx + 1}`).trim();
+        const posName = String(it.posName || it.name || "Tagihan Pesantren").trim().substring(0, 45);
+        snapItems.push({
+          id: tagihanId.substring(0, 50),
+          price: nominal,
+          quantity: 1,
+          name: posName
+        });
+        tagihanCustomPairs.push(`${tagihanId}:${nominal}`);
+      }
+    });
+
+    if (grossAmount <= 0) {
+      return { status: "error", success: false, message: "Nominal pembayaran tidak valid." };
+    }
+
+    // Generate Order ID unik: MUB-<timestamp>-<random 4 digit>
+    const orderId = payload.orderId || `MUB-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const serverKey = MIDTRANS_CONFIG.serverKey;
+    const authHeader = "Basic " + Utilities.base64Encode(serverKey + ":");
+
+    const midtransPayload = {
+      transaction_details: {
+        order_id: orderId,
+        gross_amount: grossAmount
+      },
+      item_details: snapItems,
+      customer_details: {
+        first_name: studentName.substring(0, 50),
+        email: email,
+        phone: phone || "081234567890"
+      },
+      custom_field1: studentId,
+      custom_field2: tagihanCustomPairs.join(",").substring(0, 255),
+      custom_field3: nis
+    };
+
+    const apiUrl = MIDTRANS_CONFIG.isProduction
+      ? "https://app.midtrans.com/snap/v1/transactions"
+      : "https://app.sandbox.midtrans.com/snap/v1/transactions";
+
+    const fetchOptions = {
+      method: "post",
+      contentType: "application/json",
+      headers: {
+        "Authorization": authHeader,
+        "Accept": "application/json"
+      },
+      payload: JSON.stringify(midtransPayload),
+      muteHttpExceptions: true
+    };
+
+    const response = UrlFetchApp.fetch(apiUrl, fetchOptions);
+    const resText = response.getContentText();
+    const resJson = JSON.parse(resText);
+
+    if (resJson.token) {
+      return {
+        status: "success",
+        success: true,
+        token: resJson.token,
+        redirect_url: resJson.redirect_url,
+        orderId: orderId,
+        grossAmount: grossAmount
+      };
+    } else {
+      console.error("[MIDTRANS SNAP ERROR]", resText);
+      return {
+        status: "error",
+        success: false,
+        message: (resJson.error_messages && resJson.error_messages.join(", ")) || "Gagal mendapatkan token Midtrans."
+      };
+    }
+  } catch (err) {
+    console.error("[CREATE MIDTRANS SNAP ERROR]", err);
+    return { status: "error", success: false, message: "Kendala server Midtrans: " + err.message };
+  }
+}
+
+/**
+ * Webhook Handler Notifikasi Otomatis Midtrans
+ * Dipanggil langsung oleh Midtrans saat wali menyelesaikan pembayaran
+ */
+function handleMidtransWebhook(notif) {
+  try {
+    const orderId = String(notif.order_id || "");
+    const statusCode = String(notif.status_code || "");
+    const grossAmount = String(notif.gross_amount || "");
+    const serverKey = MIDTRANS_CONFIG.serverKey;
+    const incomingSignature = String(notif.signature_key || "").toLowerCase();
+    const transactionStatus = String(notif.transaction_status || "").toLowerCase();
+    const fraudStatus = String(notif.fraud_status || "").toLowerCase();
+    const paymentType = String(notif.payment_type || "online").toUpperCase();
+
+    // 1. Verifikasi Signature Hash SHA-512
+    const rawSignature = orderId + statusCode + grossAmount + serverKey;
+    const signatureBytes = Utilities.computeDigest(
+      Utilities.DigestAlgorithm.SHA_512,
+      rawSignature,
+      Utilities.Charset.UTF_8
+    );
+    let computedSignature = "";
+    for (let i = 0; i < signatureBytes.length; i++) {
+      let byteHex = (signatureBytes[i] & 0xFF).toString(16);
+      if (byteHex.length === 1) byteHex = "0" + byteHex;
+      computedSignature += byteHex;
+    }
+
+    if (computedSignature.toLowerCase() !== incomingSignature) {
+      console.warn("[MIDTRANS WEBHOOK] Signature Key Tidak Valid untuk Order: " + orderId);
+      return ContentService.createTextOutput("Invalid signature").setMimeType(ContentService.MimeType.TEXT);
+    }
+
+    console.log(`[MIDTRANS WEBHOOK SUCCESS] Order: ${orderId}, Status: ${transactionStatus}, Type: ${paymentType}`);
+
+    // 2. Eksekusi Pelunasan Otomatis jika Pembayaran Berhasil (settlement / capture)
+    if (transactionStatus === "settlement" || (transactionStatus === "capture" && fraudStatus === "accept")) {
+      const studentId = String(notif.custom_field1 || "").trim();
+      const customField2 = String(notif.custom_field2 || "").trim();
+      const itemsToPay = [];
+
+      if (customField2) {
+        const pairs = customField2.split(",");
+        pairs.forEach(p => {
+          const parts = p.split(":");
+          if (parts.length === 2) {
+            itemsToPay.push({
+              tagihanId: parts[0].trim(),
+              bayarNominal: Number(parts[1]) || 0
+            });
+          }
+        });
+      }
+
+      if (studentId && itemsToPay.length > 0) {
+        // Ambil nama santri jika tersedia
+        let studentName = "Santri";
+        const ss = getDatabaseSpreadsheet();
+        if (ss) {
+          const stSheet = ss.getSheetByName(SHEET_STUDENTS);
+          if (stSheet) {
+            const stData = stSheet.getDataRange().getValues();
+            for (let r = 1; r < stData.length; r++) {
+              if (String(stData[r][0] || "").trim() === studentId) {
+                studentName = String(stData[r][3] || "Santri").trim();
+                break;
+              }
+            }
+          }
+        }
+
+        // Panggil fungsi pembayaran kasir resmi pesantren
+        const payPayload = {
+          studentId: studentId,
+          studentName: studentName,
+          items: itemsToPay,
+          nominalDiterima: Number(grossAmount) || 0,
+          metodeBayar: `MIDTRANS (${paymentType})`,
+          namaKasir: "Midtrans Otomatis",
+          catatan: `Midtrans Trx #${orderId} via ${paymentType}`
+        };
+
+        const payRes = prosesPembayaranTagihan(payPayload, null, {
+          role: "SUPER_ADMIN",
+          name: "Midtrans Otomatis"
+        });
+
+        console.log(`[MIDTRANS AUTO-PAID RESULT] Order ${orderId}:`, JSON.stringify(payRes));
+      }
+    }
+
+    return ContentService.createTextOutput("OK").setMimeType(ContentService.MimeType.TEXT);
+  } catch (err) {
+    console.error("[MIDTRANS WEBHOOK HANDLER ERROR]", err);
+    return ContentService.createTextOutput("Error: " + err.message).setMimeType(ContentService.MimeType.TEXT);
+  }
+}

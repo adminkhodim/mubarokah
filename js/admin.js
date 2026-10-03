@@ -301,6 +301,11 @@
                 }
             } else if (viewName === 'santri') {
                 if (santriView) santriView.classList.remove('hidden');
+                if (Array.isArray(adminStudentsData) && adminStudentsData.length > 0) {
+                    if (typeof updateAdminStudentStats === 'function') updateAdminStudentStats(adminStudentsData);
+                    if (typeof populateAdminStudentProgramFilter === 'function') populateAdminStudentProgramFilter();
+                    if (typeof filterAdminStudentsList === 'function') filterAdminStudentsList();
+                }
                 loadAdminStudentsData();
             } else if (viewName === 'pegawai') {
                 if (pegawaiView) pegawaiView.classList.remove('hidden');
@@ -4238,16 +4243,64 @@
         let selectedStudentPhotoFile = null;
 
         /**
-         * Muat seluruh data santri dari backend API
+         * Helper untuk sinkronisasi nilai statistik cards data santri
          */
-        async function loadAdminStudentsData() {
+        function updateAdminStudentStats(list, summary = null) {
+            const dataList = list || [];
+            const totalEl = document.getElementById('admin-student-stat-total');
+            const putraEl = document.getElementById('admin-student-stat-putra');
+            const putriEl = document.getElementById('admin-student-stat-putri');
+            const aktifEl = document.getElementById('admin-student-stat-aktif');
+
+            const totalCount = (summary && summary.total !== undefined) ? summary.total : dataList.length;
+            const putraCount = (summary && summary.putra !== undefined) ? summary.putra : dataList.filter(s => (s.gender || '').toUpperCase() === 'L').length;
+            const putriCount = (summary && summary.putri !== undefined) ? summary.putri : dataList.filter(s => (s.gender || '').toUpperCase() === 'P').length;
+            const aktifCount = (summary && summary.aktif !== undefined) ? summary.aktif : dataList.filter(s => (s.status || '').toUpperCase() === 'ACTIVE').length;
+
+            if (totalEl) totalEl.innerText = totalCount;
+            if (putraEl) putraEl.innerText = putraCount;
+            if (putriEl) putriEl.innerText = putriCount;
+            if (aktifEl) aktifEl.innerText = aktifCount;
+
+            const hubBadge = document.getElementById('admin-hub-santri-count');
+            if (hubBadge) hubBadge.innerText = `${totalCount} Santri`;
+        }
+        window.updateAdminStudentStats = updateAdminStudentStats;
+
+        // Inisialisasi awal nilai kartu statistik santri jika sudah ada cache
+        if (Array.isArray(adminStudentsData) && adminStudentsData.length > 0) {
+            setTimeout(() => {
+                updateAdminStudentStats(adminStudentsData);
+            }, 60);
+        }
+
+        /**
+         * Muat seluruh data santri dari backend API dengan pola Cache-First (Stale-While-Revalidate)
+         * Data dari cache lokal dirender SEKETIKA (0ms), lalu disinkronkan di latar belakang tanpa blocking.
+         */
+        async function loadAdminStudentsData(forceReload = false) {
             const loader = document.getElementById('admin-student-loader');
             const tbody = document.getElementById('admin-student-table-tbody');
             const mobileList = document.getElementById('admin-student-mobile-list');
             const emptyState = document.getElementById('admin-student-empty-state');
+            const refreshIcon = document.getElementById('admin-student-refresh-icon') || document.querySelector('button[onclick*="loadAdminStudentsData"] i');
 
-            if (loader) loader.classList.remove('hidden');
-            if (emptyState) emptyState.classList.add('hidden');
+            const hasCache = Array.isArray(adminStudentsData) && adminStudentsData.length > 0;
+
+            // STALE-WHILE-REVALIDATE: Jika cache ada dan bukan forceReload, langsung render seketika (0 ms)
+            if (hasCache && !forceReload) {
+                updateAdminStudentStats(adminStudentsData);
+                populateAdminStudentProgramFilter();
+                filterAdminStudentsList();
+                if (loader) loader.classList.add('hidden');
+                if (emptyState) emptyState.classList.add('hidden');
+            } else {
+                // Belum ada data di cache sama sekali, tampilkan loader spinner
+                if (loader) loader.classList.remove('hidden');
+                if (emptyState) emptyState.classList.add('hidden');
+            }
+
+            if (refreshIcon) refreshIcon.classList.add('fa-spin');
 
             try {
                 const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(ADMIN_TOKEN_KEY)) || "";
@@ -4275,28 +4328,8 @@
                         localStorage.setItem('mubarokah_admin_students', JSON.stringify(adminStudentsData));
                     } catch (e) {}
 
-                    // Update Hub Badge
-                    const hubBadge = document.getElementById('admin-hub-santri-count');
-                    if (hubBadge) {
-                        hubBadge.innerText = `${adminStudentsData.length} Santri`;
-                    }
-
-                    // Update Statistik
-                    const summary = response.summary || {};
-                    const totalEl = document.getElementById('admin-student-stat-total');
-                    const putraEl = document.getElementById('admin-student-stat-putra');
-                    const putriEl = document.getElementById('admin-student-stat-putri');
-                    const aktifEl = document.getElementById('admin-student-stat-aktif');
-
-                    const totalCount = summary.total !== undefined ? summary.total : adminStudentsData.length;
-                    const putraCount = summary.putra !== undefined ? summary.putra : adminStudentsData.filter(s => (s.gender || '').toUpperCase() === 'L').length;
-                    const putriCount = summary.putri !== undefined ? summary.putri : adminStudentsData.filter(s => (s.gender || '').toUpperCase() === 'P').length;
-                    const aktifCount = summary.aktif !== undefined ? summary.aktif : adminStudentsData.filter(s => (s.status || '').toUpperCase() === 'ACTIVE').length;
-
-                    if (totalEl) totalEl.innerText = totalCount;
-                    if (putraEl) putraEl.innerText = putraCount;
-                    if (putriEl) putriEl.innerText = putriCount;
-                    if (aktifEl) aktifEl.innerText = aktifCount;
+                    // Update Statistik & Hub Badge
+                    updateAdminStudentStats(adminStudentsData, response.summary);
 
                     // Update Dropdown Filter Program secara dinamis
                     populateAdminStudentProgramFilter();
@@ -4304,19 +4337,30 @@
                         populateAdminStudentProgramFilter();
                     });
 
-                    // Filter & Render
+                    // Render Data Terkini
                     filterAdminStudentsList();
+                    if (loader) loader.classList.add('hidden');
+                    if (adminStudentsData.length === 0 && emptyState) {
+                        emptyState.classList.remove('hidden');
+                    }
                 } else {
                     const msg = (response && response.message) || "Gagal memuat data santri.";
-                    if (typeof showToast === 'function') showToast("⚠️ " + msg);
-                    if (emptyState) emptyState.classList.remove('hidden');
+                    if (!hasCache) {
+                        if (typeof showToast === 'function') showToast("⚠️ " + msg);
+                        if (emptyState) emptyState.classList.remove('hidden');
+                    }
                 }
             } catch (err) {
                 console.error("Gagal load data santri:", err);
-                if (typeof showToast === 'function') showToast("❌ Gagal memuat data santri: " + err.message);
-                if (emptyState) emptyState.classList.remove('hidden');
+                if (!hasCache) {
+                    if (typeof showToast === 'function') showToast("❌ Gagal memuat data santri: " + err.message);
+                    if (emptyState) emptyState.classList.remove('hidden');
+                }
             } finally {
-                if (loader) loader.classList.add('hidden');
+                if (loader && ((adminStudentsData && adminStudentsData.length > 0) || !hasCache)) {
+                    loader.classList.add('hidden');
+                }
+                if (refreshIcon) refreshIcon.classList.remove('fa-spin');
             }
         }
         window.loadAdminStudentsData = loadAdminStudentsData;

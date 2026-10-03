@@ -52,6 +52,11 @@
     <!-- Google Sign-In SDK -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
+    <!-- Midtrans Snap JS SDK (Sandbox Mode) -->
+    <script type="text/javascript"
+        src="https://app.sandbox.midtrans.com/snap/snap.js"
+        data-client-key="Mid-client-tioY0m0hPoGgF5wE"></script>
+
     <!-- SheetJS (Excel .xlsx Export & Read) -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
@@ -7568,10 +7573,10 @@
                                             <i class="fa-solid fa-user-plus text-xs"></i>
                                             <span class="hidden sm:inline">Tambah Santri</span>
                                         </button>
-                                        <button type="button" onclick="loadAdminStudentsData()"
+                                        <button type="button" id="admin-student-btn-refresh" onclick="loadAdminStudentsData(true)"
                                             class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 active:scale-95"
-                                            title="Refresh Data">
-                                            <i class="fa-solid fa-rotate text-xs"></i>
+                                            title="Sinkron / Muat Ulang Data Server">
+                                            <i id="admin-student-refresh-icon" class="fa-solid fa-rotate text-xs"></i>
                                             <span class="hidden sm:inline">Refresh</span>
                                         </button>
                                     </div>
@@ -9707,7 +9712,7 @@
                                                 <!-- Metode Pembayaran -->
                                                 <div class="space-y-1.5">
                                                     <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase">Metode Pembayaran:</label>
-                                                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                                                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1.5">
                                                         <button type="button" id="keuangan-metode-btn-TUNAI" onclick="setKeuanganPOSMetode('TUNAI')"
                                                             class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 text-white shadow-sm border border-emerald-600">
                                                             Tunai (Cash)
@@ -9723,6 +9728,10 @@
                                                         <button type="button" id="keuangan-metode-btn-QRIS" onclick="setKeuanganPOSMetode('QRIS')"
                                                             class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-50 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-[#253447]">
                                                             QRIS
+                                                        </button>
+                                                        <button type="button" id="keuangan-metode-btn-MIDTRANS" onclick="setKeuanganPOSMetode('MIDTRANS')"
+                                                            class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-50 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-[#253447] flex items-center justify-center gap-1">
+                                                            <i class="fa-solid fa-credit-card text-blue-500"></i> Midtrans
                                                         </button>
                                                     </div>
                                                 </div>
