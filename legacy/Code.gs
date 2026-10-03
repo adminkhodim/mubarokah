@@ -21314,7 +21314,7 @@ const MIDTRANS_CONFIG = {
   isProduction: false, // Sandbox = false, Production = true
   merchantId: "M271921771",
   clientKey: "Mid-client-tioY0m0hPoGgF5wE",
-  serverKey: "Mid-server-co9lfWi5gCbN9EFw_1kPIXQR"
+  serverKey: "Mid-server-co9IfWi5gCbN9EFw_1kPlXQR"
 };
 
 /**
@@ -21379,9 +21379,10 @@ function createMidtransSnapToken(payload, token, actor) {
       custom_field3: nis
     };
 
-    const apiUrl = MIDTRANS_CONFIG.isProduction
-      ? "https://app.midtrans.com/snap/v1/transactions"
-      : "https://app.sandbox.midtrans.com/snap/v1/transactions";
+    const isSandbox = MIDTRANS_CONFIG.serverKey.indexOf("SB-") === 0 || !MIDTRANS_CONFIG.isProduction;
+    const apiUrl = isSandbox
+      ? "https://app.sandbox.midtrans.com/snap/v1/transactions"
+      : "https://app.midtrans.com/snap/v1/transactions";
 
     const fetchOptions = {
       method: "post",
@@ -21395,8 +21396,14 @@ function createMidtransSnapToken(payload, token, actor) {
     };
 
     const response = UrlFetchApp.fetch(apiUrl, fetchOptions);
+    const statusCode = response.getResponseCode();
     const resText = response.getContentText();
-    const resJson = JSON.parse(resText);
+    let resJson = {};
+    try {
+      resJson = JSON.parse(resText);
+    } catch (e) {
+      resJson = { error: resText };
+    }
 
     if (resJson.token) {
       return {
@@ -21408,11 +21415,15 @@ function createMidtransSnapToken(payload, token, actor) {
         grossAmount: grossAmount
       };
     } else {
-      console.error("[MIDTRANS SNAP ERROR]", resText);
+      console.error("[MIDTRANS SNAP ERROR]", `HTTP ${statusCode}:`, resText);
+      const errMsg = (resJson.error_messages && resJson.error_messages.join(", "))
+        || resJson.error
+        || resJson.message
+        || `Gagal mendapatkan token Midtrans (HTTP ${statusCode}).`;
       return {
         status: "error",
         success: false,
-        message: (resJson.error_messages && resJson.error_messages.join(", ")) || "Gagal mendapatkan token Midtrans."
+        message: errMsg
       };
     }
   } catch (err) {
