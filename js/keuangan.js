@@ -333,14 +333,28 @@ function renderKeuanganSummaryCards() {
     if (elTunggakan) elTunggakan.innerText = formatRupiah(sum.totalTunggakan || 0);
     if (elLunas) elLunas.innerText = `(${sum.countLunas || 0} Lunas / ${sum.countBelumLunas || 0} Belum)`;
     if (elPersen) elPersen.innerText = `${sum.persentasePelunasan || 100}%`;
+
+    // Badge Pending Konfirmasi Transfer (Fase 3)
+    const pendingCount = Number(sum.pendingKonfirmasiCount) || 0;
+    const badgePending = document.getElementById('keuangan-badge-pending-count');
+    if (badgePending) {
+        if (pendingCount > 0) {
+            badgePending.innerText = pendingCount;
+            badgePending.classList.remove('hidden');
+        } else {
+            badgePending.classList.add('hidden');
+        }
+    }
 }
 window.renderKeuanganSummaryCards = renderKeuanganSummaryCards;
 
 /**
- * Berpindah Tab Utama di Modul Keuangan (Fase 1 & Fase 2):
+ * Berpindah Tab Utama di Modul Keuangan (Fase 1, Fase 2 & Fase 3):
  * - 'pos'         : Kasir Cepat (POS)
  * - 'tagihan'     : Daftar Tagihan & Piutang Santri
  * - 'transaksi'   : Buku Kas Masuk & Kuitansi
+ * - 'verifikasi'  : Verifikasi Transfer Online Santri/Wali
+ * - 'broadcast'   : WhatsApp Billing & Pengingat Tagihan
  * - 'pengeluaran' : Buku Kas Keluar (Beban Operasional)
  * - 'tutup-kasir' : Tutup Kasir & Rekonsiliasi Harian
  * - 'laporan'     : Laporan Arus Kas & Neraca
@@ -349,7 +363,7 @@ window.renderKeuanganSummaryCards = renderKeuanganSummaryCards;
 function switchKeuanganTab(tabName) {
     ASNKeuangan.activeTab = tabName;
 
-    const tabs = ['pos', 'tagihan', 'transaksi', 'pengeluaran', 'tutup-kasir', 'laporan', 'tarif'];
+    const tabs = ['pos', 'tagihan', 'transaksi', 'verifikasi', 'broadcast', 'pengeluaran', 'tutup-kasir', 'laporan', 'tarif'];
     tabs.forEach(t => {
         const btn = document.getElementById(`tab-btn-keuangan-${t}`);
         const view = document.getElementById(`keuangan-panel-${t}`);
@@ -369,6 +383,10 @@ function switchKeuanganTab(tabName) {
     if (tabName === 'pos') {
         const input = document.getElementById('keuangan-pos-search-input');
         if (input) setTimeout(() => input.focus(), 150);
+    } else if (tabName === 'verifikasi') {
+        renderKeuanganVerifikasiTable();
+    } else if (tabName === 'broadcast') {
+        loadBroadcastTagihanData();
     } else if (tabName === 'pengeluaran') {
         renderKeuanganPengeluaranTable();
         populateKategoriPengeluaranDropdown();
@@ -2308,3 +2326,639 @@ function printLaporanKeuangan() {
     window.print();
 }
 window.printLaporanKeuangan = printLaporanKeuangan;
+
+// ====================================================================
+// FASE 3: VERIFIKASI TRANSFER ONLINE, WHATSAPP BILLING & PORTAL WALI
+// ====================================================================
+
+/**
+ * Render Tabel Konfirmasi Transfer Online Santri/Wali untuk Verifikasi Bendahara
+ */
+function renderKeuanganVerifikasiTable() {
+    const list = ASNKeuangan.data.recentKonfirmasiList || [];
+    const tbody = document.getElementById('keuangan-verifikasi-table-body');
+    const mobileContainer = document.getElementById('keuangan-verifikasi-mobile-list');
+
+    if (!tbody && !mobileContainer) return;
+
+    if (list.length === 0) {
+        const emptyMsg = `<tr><td colspan="8" class="py-8 text-center text-slate-400 text-xs">Belum ada pengajuan konfirmasi transfer online dari wali santri.</td></tr>`;
+        if (tbody) tbody.innerHTML = emptyMsg;
+        if (mobileContainer) mobileContainer.innerHTML = `<div class="p-6 bg-white dark:bg-[#15202d] rounded-2xl text-center text-slate-400 text-xs border border-slate-100 dark:border-[#253447]">Belum ada data transfer online masuk.</div>`;
+        return;
+    }
+
+    let desktopHtml = '';
+    let mobileHtml = '';
+
+    list.forEach((item, index) => {
+        const st = String(item.status || 'PENDING').toUpperCase();
+        let statusBadge = '';
+        let actionButtons = '';
+
+        if (st === 'VERIFIED') {
+            statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/60"><i class="fa-solid fa-check mr-1"></i>Lunas / Verified</span>`;
+            actionButtons = item.noKuitansi ? `<span class="font-mono text-[10px] font-bold text-emerald-600 block">${escapeHtml(item.noKuitansi)}</span>` : '<span class="text-[10px] text-slate-400">Selesai</span>';
+        } else if (st === 'REJECTED') {
+            statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200/60"><i class="fa-solid fa-xmark mr-1"></i>Ditolak</span>`;
+            actionButtons = `<span class="text-[10px] text-slate-400 italic" title="${escapeHtml(item.catatanVerifikasi || '')}">Ditolak</span>`;
+        } else {
+            statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/60 animate-pulse"><i class="fa-solid fa-clock mr-1"></i>Menunggu Verifikasi</span>`;
+            actionButtons = `
+                <div class="flex items-center justify-end space-x-1.5">
+                    <button type="button" onclick="confirmVerifyTransfer('${escapeHtml(item.konfirmasiId)}')"
+                        class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold transition shadow-xs active:scale-95 flex items-center gap-1"
+                        title="Verifikasi & Terbitkan Kuitansi Kas">
+                        <i class="fa-solid fa-check"></i>
+                        <span>Setujui</span>
+                    </button>
+                    <button type="button" onclick="promptRejectTransfer('${escapeHtml(item.konfirmasiId)}')"
+                        class="px-2 py-1 bg-rose-100 hover:bg-rose-200 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 rounded-lg text-[10px] font-bold transition"
+                        title="Tolak Pembayaran">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            `;
+        }
+
+        const buktiThumbnail = item.buktiTransferUrl ? `
+            <button type="button" onclick="previewBuktiTransfer('${encodeURIComponent(item.buktiTransferUrl)}', '${escapeHtml(item.namaPengirim)}', '${escapeHtml(item.konfirmasiId)}')"
+                class="px-2 py-1 bg-slate-100 hover:bg-cyan-50 dark:bg-[#1c2836] text-cyan-600 dark:text-cyan-400 rounded-lg text-[11px] font-semibold border border-slate-200 dark:border-[#2c3d52] flex items-center gap-1 mx-auto transition">
+                <i class="fa-solid fa-image"></i>
+                <span>Lihat Bukti</span>
+            </button>
+        ` : `<span class="text-[10px] text-slate-400 italic">Tidak ada foto</span>`;
+
+        // Desktop Row
+        desktopHtml += `
+            <tr class="border-b border-slate-100 dark:border-[#253447] hover:bg-slate-50/50 dark:hover:bg-[#182332] transition">
+                <td class="py-3 px-3 text-center text-slate-400 font-medium">${index + 1}</td>
+                <td class="py-3 px-3">
+                    <div class="font-mono font-bold text-slate-800 dark:text-slate-100">${escapeHtml(item.konfirmasiId)}</div>
+                    <div class="text-[10px] text-slate-400">${escapeHtml(item.tanggalTransfer || item.createdAt.substring(0, 10))}</div>
+                </td>
+                <td class="py-3 px-3">
+                    <div class="font-bold text-slate-800 dark:text-slate-100">${escapeHtml(item.studentName)}</div>
+                    <div class="text-[10px] text-slate-400 font-mono">ID: ${escapeHtml(item.studentId)}</div>
+                </td>
+                <td class="py-3 px-3 font-bold text-emerald-600 dark:text-emerald-400">
+                    ${formatRupiah(item.nominalTransfer)}
+                </td>
+                <td class="py-3 px-3">
+                    <div class="font-semibold text-slate-700 dark:text-slate-200">${escapeHtml(item.bankTujuan)}</div>
+                    <div class="text-[10px] text-slate-400 truncate">a.n ${escapeHtml(item.namaPengirim)}</div>
+                </td>
+                <td class="py-3 px-3 text-center">${buktiThumbnail}</td>
+                <td class="py-3 px-3 text-center">${statusBadge}</td>
+                <td class="py-3 px-3 text-right">${actionButtons}</td>
+            </tr>
+        `;
+
+        // Mobile Card
+        mobileHtml += `
+            <div class="bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-xs space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="font-mono text-[10px] font-bold text-slate-500">${escapeHtml(item.konfirmasiId)}</span>
+                        <h4 class="font-bold text-xs text-slate-800 dark:text-slate-100 mt-0.5">${escapeHtml(item.studentName)}</h4>
+                    </div>
+                    <div>${statusBadge}</div>
+                </div>
+                <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-100 dark:border-[#253447]">
+                    <div>
+                        <span class="text-[10px] text-slate-400 block">${escapeHtml(item.bankTujuan)} a.n ${escapeHtml(item.namaPengirim)}</span>
+                        <div class="font-bold text-emerald-600 dark:text-emerald-400">${formatRupiah(item.nominalTransfer)}</div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        ${buktiThumbnail}
+                        ${st === 'PENDING' ? `
+                            <button type="button" onclick="confirmVerifyTransfer('${escapeHtml(item.konfirmasiId)}')"
+                                class="px-2.5 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold shadow-xs">
+                                Setujui
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    if (tbody) tbody.innerHTML = desktopHtml;
+    if (mobileContainer) mobileContainer.innerHTML = mobileHtml;
+}
+window.renderKeuanganVerifikasiTable = renderKeuanganVerifikasiTable;
+
+/**
+ * Pratinjau Modal Gambar Bukti Transfer
+ */
+function previewBuktiTransfer(imgUrlEncoded, senderName, konfirmasiId) {
+    const imgUrl = decodeURIComponent(imgUrlEncoded || '');
+    const modal = document.getElementById('modal-preview-bukti-transfer');
+    const img = document.getElementById('modal-preview-bukti-image');
+    const sub = document.getElementById('modal-preview-bukti-subtitle');
+    const sender = document.getElementById('modal-preview-bukti-sender');
+    const dl = document.getElementById('modal-preview-bukti-download');
+
+    if (!imgUrl || !modal) return;
+
+    if (img) img.src = imgUrl;
+    if (sub) sub.innerText = `Konfirmasi #${konfirmasiId}`;
+    if (sender) sender.innerText = `Pengirim: ${senderName || '-'}`;
+    if (dl) {
+        dl.href = imgUrl;
+        dl.download = `Bukti_${konfirmasiId}.jpg`;
+    }
+
+    modal.classList.remove('hidden');
+}
+window.previewBuktiTransfer = previewBuktiTransfer;
+
+function closeModalPreviewBuktiTransfer() {
+    const modal = document.getElementById('modal-preview-bukti-transfer');
+    if (modal) modal.classList.add('hidden');
+}
+window.closeModalPreviewBuktiTransfer = closeModalPreviewBuktiTransfer;
+
+/**
+ * Setujui & Verifikasi Konfirmasi Transfer Online oleh Bendahara
+ */
+async function confirmVerifyTransfer(konfirmasiId) {
+    if (!konfirmasiId) return;
+    if (!confirm(`Verifikasi dan setujui konfirmasi transfer ${konfirmasiId}?\nSistem akan secara otomatis melunasi tagihan santri dan menerbitkan kuitansi kas resmi.`)) return;
+
+    try {
+        if (typeof showToast === 'function') showToast("⏳ Memproses verifikasi transfer...");
+        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : null) || "";
+        const res = await apiPost("keuangan.verifyKonfirmasiTransfer", {
+            token: token,
+            konfirmasiId: konfirmasiId,
+            actionType: "VERIFY"
+        });
+
+        if (res && res.success) {
+            if (typeof showToast === 'function') {
+                showToast(`✅ ${res.message}`);
+            } else {
+                alert(res.message);
+            }
+            loadAdminKeuanganData(true);
+        } else {
+            alert("Gagal verifikasi transfer: " + ((res && res.message) || "Terjadi kesalahan"));
+        }
+    } catch (e) {
+        console.error("[CONFIRM VERIFY TRANSFER ERROR]", e);
+        alert("Error: " + e.message);
+    }
+}
+window.confirmVerifyTransfer = confirmVerifyTransfer;
+
+/**
+ * Tolak Konfirmasi Transfer Online
+ */
+async function promptRejectTransfer(konfirmasiId) {
+    if (!konfirmasiId) return;
+    const alasan = prompt("Masukkan alasan penolakan konfirmasi transfer (misal: Bukti transfer tidak jelas / dana belum masuk rekening pesantren):");
+    if (!alasan || alasan.trim().length < 3) {
+        alert("Penolakan dibatalkan. Alasan penolakan wajib diisi.");
+        return;
+    }
+
+    try {
+        if (typeof showToast === 'function') showToast("⏳ Memproses penolakan transfer...");
+        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : null) || "";
+        const res = await apiPost("keuangan.verifyKonfirmasiTransfer", {
+            token: token,
+            konfirmasiId: konfirmasiId,
+            actionType: "REJECT",
+            alasan: alasan.trim()
+        });
+
+        if (res && res.success) {
+            if (typeof showToast === 'function') showToast(`✅ Transfer ${konfirmasiId} ditolak.`);
+            loadAdminKeuanganData(true);
+        } else {
+            alert("Gagal menolak transfer: " + ((res && res.message) || "Terjadi kesalahan"));
+        }
+    } catch (e) {
+        console.error("[PROMPT REJECT TRANSFER ERROR]", e);
+        alert("Error: " + e.message);
+    }
+}
+window.promptRejectTransfer = promptRejectTransfer;
+
+/**
+ * Memuat Data WhatsApp Billing & Pengingat Tagihan Terjadwal
+ */
+async function loadBroadcastTagihanData() {
+    const tbody = document.getElementById('keuangan-broadcast-table-body');
+    const mobileContainer = document.getElementById('keuangan-broadcast-mobile-list');
+    const statCount = document.getElementById('broadcast-stat-count');
+    const statNominal = document.getElementById('broadcast-stat-nominal');
+
+    const periodeInput = document.getElementById('broadcast-filter-periode');
+    const programSelect = document.getElementById('broadcast-filter-program');
+
+    const periode = periodeInput ? periodeInput.value : '';
+    const program = programSelect ? programSelect.value : 'SEMUA';
+
+    if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400 text-xs"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Mengkalkulasi daftar tagihan santri...</td></tr>`;
+
+    try {
+        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : null) || "";
+        const res = await apiPost("keuangan.getBroadcastTagihanList", {
+            token: token,
+            periode: periode,
+            program: program
+        });
+
+        if (!res || !res.success) {
+            throw new Error((res && res.message) || "Gagal mengambil data broadcast");
+        }
+
+        const list = res.broadcastList || [];
+        const totalNominal = list.reduce((acc, curr) => acc + (Number(curr.totalTunggakan) || 0), 0);
+
+        if (statCount) statCount.innerText = `${list.length} Santri`;
+        if (statNominal) statNominal.innerText = `(${formatRupiah(totalNominal)})`;
+
+        if (list.length === 0) {
+            const emptyMsg = `<tr><td colspan="7" class="py-8 text-center text-slate-400 text-xs">Alhamdulillah, seluruh santri telah lunas untuk kriteria yang dipilih.</td></tr>`;
+            if (tbody) tbody.innerHTML = emptyMsg;
+            if (mobileContainer) mobileContainer.innerHTML = `<div class="p-6 bg-white dark:bg-[#15202d] rounded-2xl text-center text-slate-400 text-xs border border-slate-100 dark:border-[#253447]">Semua tagihan santri telah lunas.</div>`;
+            return;
+        }
+
+        let desktopHtml = '';
+        let mobileHtml = '';
+
+        list.forEach((st, idx) => {
+            const rincianHtml = (st.items || []).map(it => `
+                <div class="flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-300">
+                    <span>${escapeHtml(it.namaPos)} (${escapeHtml(it.periode)}):</span>
+                    <span class="font-bold text-slate-800 dark:text-slate-100 ml-2">${formatRupiah(it.sisa)}</span>
+                </div>
+            `).join('');
+
+            const waBtn = st.waLink ? `
+                <a href="${st.waLink}" target="_blank"
+                    class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[11px] font-bold transition inline-flex items-center gap-1.5 shadow-xs active:scale-95">
+                    <i class="fa-brands fa-whatsapp text-sm"></i>
+                    <span>Kirim WA</span>
+                </a>
+            ` : `<span class="text-[10px] text-slate-400 italic">No WA belum ada</span>`;
+
+            desktopHtml += `
+                <tr class="border-b border-slate-100 dark:border-[#253447] hover:bg-slate-50/50 dark:hover:bg-[#182332] transition">
+                    <td class="py-3 px-3 text-center text-slate-400 font-medium">${idx + 1}</td>
+                    <td class="py-3 px-3">
+                        <div class="font-bold text-slate-800 dark:text-slate-100">${escapeHtml(st.studentName)}</div>
+                        <div class="text-[10px] text-slate-400 font-mono">ID: ${escapeHtml(st.studentId)}</div>
+                    </td>
+                    <td class="py-3 px-3">
+                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-[#1c2836] text-slate-700 dark:text-slate-300">${escapeHtml(st.program)}</span>
+                    </td>
+                    <td class="py-3 px-3 font-mono text-slate-600 dark:text-slate-300">
+                        ${escapeHtml(st.phone || '-')}
+                    </td>
+                    <td class="py-3 px-3 max-w-xs space-y-0.5">${rincianHtml}</td>
+                    <td class="py-3 px-3 font-bold text-rose-600 dark:text-rose-400">
+                        ${formatRupiah(st.totalTunggakan)}
+                    </td>
+                    <td class="py-3 px-3 text-right">${waBtn}</td>
+                </tr>
+            `;
+
+            mobileHtml += `
+                <div class="bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-xs space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h4 class="font-bold text-xs text-slate-800 dark:text-slate-100">${escapeHtml(st.studentName)}</h4>
+                            <span class="text-[10px] text-slate-400">${escapeHtml(st.program)} • ${escapeHtml(st.phone || 'Tanpa No. WA')}</span>
+                        </div>
+                        <div class="font-bold text-rose-600 dark:text-rose-400 text-xs">${formatRupiah(st.totalTunggakan)}</div>
+                    </div>
+                    <div class="p-2.5 bg-slate-50 dark:bg-[#182332] rounded-xl space-y-1 text-xs">
+                        ${rincianHtml}
+                    </div>
+                    <div class="flex justify-end pt-1">
+                        ${waBtn}
+                    </div>
+                </div>
+            `;
+        });
+
+        if (tbody) tbody.innerHTML = desktopHtml;
+        if (mobileContainer) mobileContainer.innerHTML = mobileHtml;
+
+    } catch (e) {
+        console.error("[LOAD BROADCAST ERROR]", e);
+        if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-rose-500 text-xs">Gagal memuat broadcast: ${e.message}</td></tr>`;
+    }
+}
+window.loadBroadcastTagihanData = loadBroadcastTagihanData;
+
+// ====================================================================
+// SUB-MODUL PORTAL TAGIHAN MANDIRI WALI SANTRI
+// ====================================================================
+
+let portalActiveStudent = null;
+let portalSelectedTagihan = {};
+let portalBuktiBase64 = '';
+
+/**
+ * Buka Modal Portal Tagihan Mandiri Wali Santri
+ */
+function openPortalWaliTagihanModal(targetStudentId) {
+    const modal = document.getElementById('modal-portal-wali-tagihan');
+    if (!modal) return;
+
+    const students = ASNKeuangan.data.students || [];
+    if (students.length === 0) {
+        // Jika data santri belum ter-load di memori, trigger load
+        loadAdminKeuanganData().then(() => openPortalWaliTagihanModal(targetStudentId));
+        return;
+    }
+
+    let activeSt = null;
+    if (targetStudentId) {
+        activeSt = students.find(s => String(s.id).trim() === String(targetStudentId).trim());
+    }
+
+    // Fallback ke santri pertama jika belum dipilih
+    if (!activeSt) {
+        activeSt = students[0];
+    }
+
+    portalActiveStudent = activeSt;
+    portalSelectedTagihan = {};
+    portalBuktiBase64 = '';
+
+    // Isi Header Modal
+    const nameEl = document.getElementById('portal-wali-student-name');
+    const infoEl = document.getElementById('portal-wali-student-info');
+    if (nameEl) nameEl.innerText = activeSt.name;
+    if (infoEl) infoEl.innerText = `ID: ${activeSt.id} • Program: ${activeSt.program || 'Santri Aktif'}`;
+
+    // Selector jika banyak santri
+    const selWrap = document.getElementById('portal-wali-student-selector-wrap');
+    const selEl = document.getElementById('portal-wali-student-select');
+    if (selWrap && selEl && students.length > 1) {
+        selWrap.classList.remove('hidden');
+        selEl.innerHTML = students.map(s => `<option value="${escapeHtml(s.id)}" ${s.id === activeSt.id ? 'selected' : ''}>${escapeHtml(s.name)} (${escapeHtml(s.program || 'Santri')})</option>`).join('');
+    } else if (selWrap) {
+        selWrap.classList.add('hidden');
+    }
+
+    // Render Checklist Tagihan Santri Aktif
+    renderPortalWaliTagihanChecklist(activeSt.id);
+
+    // Render Riwayat Kuitansi Santri Aktif
+    renderPortalWaliRiwayatKuitansi(activeSt.id);
+
+    // Reset Form Upload Bukti
+    const fileInp = document.getElementById('portal-transfer-bukti-file');
+    const prevWrap = document.getElementById('portal-bukti-preview-wrap');
+    const senderInp = document.getElementById('portal-transfer-nama-pengirim');
+    if (fileInp) fileInp.value = '';
+    if (prevWrap) prevWrap.classList.add('hidden');
+    if (senderInp) senderInp.value = '';
+
+    switchPortalWaliTab('tagihan');
+    modal.classList.remove('hidden');
+}
+window.openPortalWaliTagihanModal = openPortalWaliTagihanModal;
+
+function closePortalWaliTagihanModal() {
+    const modal = document.getElementById('modal-portal-wali-tagihan');
+    if (modal) modal.classList.add('hidden');
+}
+window.closePortalWaliTagihanModal = closePortalWaliTagihanModal;
+
+function onSelectPortalWaliStudent(studentId) {
+    openPortalWaliTagihanModal(studentId);
+}
+window.onSelectPortalWaliStudent = onSelectPortalWaliStudent;
+
+function switchPortalWaliTab(subTab) {
+    const btnTagihan = document.getElementById('tab-portal-tagihan');
+    const btnRiwayat = document.getElementById('tab-portal-riwayat');
+    const viewTagihan = document.getElementById('portal-view-tagihan');
+    const viewRiwayat = document.getElementById('portal-view-riwayat');
+    const submitBtn = document.getElementById('btn-submit-portal-transfer');
+
+    if (subTab === 'tagihan') {
+        if (btnTagihan) btnTagihan.className = "px-3 py-1.5 rounded-xl font-bold transition bg-emerald-600 text-white text-xs";
+        if (btnRiwayat) btnRiwayat.className = "px-3 py-1.5 rounded-xl font-bold transition text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836] text-xs";
+        if (viewTagihan) viewTagihan.classList.remove('hidden');
+        if (viewRiwayat) viewRiwayat.classList.add('hidden');
+        if (submitBtn) submitBtn.classList.remove('hidden');
+    } else {
+        if (btnRiwayat) btnRiwayat.className = "px-3 py-1.5 rounded-xl font-bold transition bg-emerald-600 text-white text-xs";
+        if (btnTagihan) btnTagihan.className = "px-3 py-1.5 rounded-xl font-bold transition text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836] text-xs";
+        if (viewRiwayat) viewRiwayat.classList.remove('hidden');
+        if (viewTagihan) viewTagihan.classList.add('hidden');
+        if (submitBtn) submitBtn.classList.add('hidden');
+    }
+}
+window.switchPortalWaliTab = switchPortalWaliTab;
+
+function renderPortalWaliTagihanChecklist(studentId) {
+    const container = document.getElementById('portal-tagihan-checklist-container');
+    if (!container) return;
+
+    const allTagihan = ASNKeuangan.data.tagihanList || [];
+    const myTagihan = allTagihan.filter(t => String(t.studentId).trim() === String(studentId).trim() && String(t.status).toUpperCase() !== 'LUNAS');
+
+    if (myTagihan.length === 0) {
+        container.innerHTML = `<div class="p-4 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl text-center text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200/60"><i class="fa-solid fa-circle-check text-base mb-1 block"></i>Alhamdulillah! Tidak ada tunggakan tagihan untuk ananda saat ini.</div>`;
+        updatePortalTotalDisplay();
+        return;
+    }
+
+    portalSelectedTagihan = {};
+    let html = '';
+    myTagihan.forEach(t => {
+        // Default: pilih semua tagihan yang belum lunas
+        portalSelectedTagihan[t.tagihanId] = t.sisaTagihan;
+        html += `
+            <label class="p-3 bg-white dark:bg-[#1c2836] rounded-xl border border-slate-200 dark:border-[#253447] flex items-center justify-between gap-3 cursor-pointer hover:border-emerald-400 transition">
+                <div class="flex items-center space-x-2.5">
+                    <input type="checkbox" checked onchange="togglePortalTagihanItem('${escapeHtml(t.tagihanId)}', ${t.sisaTagihan}, this.checked)"
+                        class="w-4 h-4 text-emerald-600 rounded-sm focus:ring-emerald-500 border-slate-300">
+                    <div>
+                        <div class="font-bold text-xs text-slate-800 dark:text-slate-100">${escapeHtml(t.namaPos)}</div>
+                        <div class="text-[10px] text-slate-400">Periode: ${escapeHtml(t.periode || '-')}</div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="font-bold text-xs text-rose-600 dark:text-rose-400">${formatRupiah(t.sisaTagihan)}</div>
+                    <span class="text-[9px] text-slate-400 block">${t.nominalTerbayar > 0 ? 'Cicilan' : 'Belum Bayar'}</span>
+                </div>
+            </label>
+        `;
+    });
+
+    container.innerHTML = html;
+    updatePortalTotalDisplay();
+}
+
+function togglePortalTagihanItem(tagihanId, sisaNominal, isChecked) {
+    if (isChecked) {
+        portalSelectedTagihan[tagihanId] = sisaNominal;
+    } else {
+        delete portalSelectedTagihan[tagihanId];
+    }
+    updatePortalTotalDisplay();
+}
+window.togglePortalTagihanItem = togglePortalTagihanItem;
+
+function selectAllPortalTagihan(selectAll) {
+    const checkboxes = document.querySelectorAll('#portal-tagihan-checklist-container input[type="checkbox"]');
+    checkboxes.forEach(cb => {
+        cb.checked = selectAll;
+        cb.dispatchEvent(new Event('change'));
+    });
+}
+window.selectAllPortalTagihan = selectAllPortalTagihan;
+
+function updatePortalTotalDisplay() {
+    const totalEl = document.getElementById('portal-total-bayar-display');
+    const countEl = document.getElementById('portal-item-count-display');
+    const keys = Object.keys(portalSelectedTagihan);
+    const sum = keys.reduce((acc, k) => acc + (Number(portalSelectedTagihan[k]) || 0), 0);
+
+    if (totalEl) totalEl.innerText = formatRupiah(sum);
+    if (countEl) countEl.innerText = `${keys.length} pos dipilih`;
+}
+
+function renderPortalWaliRiwayatKuitansi(studentId) {
+    const container = document.getElementById('portal-riwayat-transaksi-list');
+    if (!container) return;
+
+    const allTrx = ASNKeuangan.data.recentTransactions || [];
+    const myTrx = allTrx.filter(t => String(t.studentId).trim() === String(studentId).trim());
+
+    if (myTrx.length === 0) {
+        container.innerHTML = `<div class="p-6 bg-slate-50 dark:bg-[#1c2836] rounded-xl text-center text-slate-400 text-xs">Belum ada riwayat transaksi pembayaran kasir.</div>`;
+        return;
+    }
+
+    container.innerHTML = myTrx.map(trx => `
+        <div class="p-3 bg-white dark:bg-[#1c2836] rounded-xl border border-slate-200 dark:border-[#253447] flex items-center justify-between gap-3">
+            <div>
+                <span class="font-mono text-[10px] font-bold text-emerald-600 block">${escapeHtml(trx.noKuitansi)}</span>
+                <h5 class="font-bold text-xs text-slate-800 dark:text-slate-100">${escapeHtml(trx.studentName)}</h5>
+                <span class="text-[10px] text-slate-400">${escapeHtml(trx.tanggalBayar)} • ${escapeHtml(trx.metodeBayar)}</span>
+            </div>
+            <div class="text-right flex flex-col items-end space-y-1">
+                <div class="font-bold text-xs text-emerald-600 dark:text-emerald-400">${formatRupiah(trx.nominalTotal)}</div>
+                <button type="button" onclick="openKuitansiModal(${JSON.stringify(trx).replace(/"/g, '&quot;')})"
+                    class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 rounded-lg text-[10px] font-bold transition flex items-center gap-1">
+                    <i class="fa-solid fa-receipt text-xs"></i>
+                    <span>Kuitansi</span>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function copyRekeningNumber(rek) {
+    if (!rek) return;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(rek);
+        if (typeof showToast === 'function') showToast(`✅ Nomor rekening ${rek} berhasil disalin.`);
+        else alert(`Nomor rekening ${rek} berhasil disalin.`);
+    } else {
+        prompt("Salin nomor rekening:", rek);
+    }
+}
+window.copyRekeningNumber = copyRekeningNumber;
+
+function onPortalBuktiFileSelected(input) {
+    const file = input && input.files && input.files[0];
+    const previewWrap = document.getElementById('portal-bukti-preview-wrap');
+    const previewImg = document.getElementById('portal-bukti-img-preview');
+
+    if (!file) {
+        portalBuktiBase64 = '';
+        if (previewWrap) previewWrap.classList.add('hidden');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        portalBuktiBase64 = e.target.result;
+        if (previewImg) previewImg.src = portalBuktiBase64;
+        if (previewWrap) previewWrap.classList.remove('hidden');
+    };
+    reader.readAsDataURL(file);
+}
+window.onPortalBuktiFileSelected = onPortalBuktiFileSelected;
+
+async function submitPortalWaliTransfer() {
+    if (!portalActiveStudent) {
+        alert("Pilih data santri terlebih dahulu.");
+        return;
+    }
+
+    const tagihanIds = Object.keys(portalSelectedTagihan);
+    const nominalTotal = tagihanIds.reduce((acc, k) => acc + (Number(portalSelectedTagihan[k]) || 0), 0);
+
+    if (nominalTotal <= 0 || tagihanIds.length === 0) {
+        alert("Silakan pilih minimal 1 pos tagihan yang akan dibayar.");
+        return;
+    }
+
+    const bankTujuan = document.getElementById('portal-transfer-bank-tujuan')?.value || 'BSI';
+    const namaPengirim = document.getElementById('portal-transfer-nama-pengirim')?.value.trim();
+
+    if (!namaPengirim) {
+        alert("Nama pemilik rekening pengirim wajib diisi agar bendahara mudah memverifikasi.");
+        document.getElementById('portal-transfer-nama-pengirim')?.focus();
+        return;
+    }
+
+    if (!portalBuktiBase64) {
+        alert("Silakan unggah foto bukti transfer (screenshot transfer / struk ATM).");
+        return;
+    }
+
+    const submitBtn = document.getElementById('btn-submit-portal-transfer');
+    let origText = '';
+    if (submitBtn) {
+        origText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Mengirim...';
+    }
+
+    try {
+        const payload = {
+            studentId: portalActiveStudent.id,
+            studentName: portalActiveStudent.name,
+            tagihanIds: tagihanIds,
+            nominalTransfer: nominalTotal,
+            bankTujuan: bankTujuan,
+            namaPengirim: namaPengirim,
+            tanggalTransfer: new Date().toISOString().substring(0, 10),
+            buktiTransferUrl: portalBuktiBase64
+        };
+
+        const res = await apiPost("keuangan.submitKonfirmasiTransfer", payload);
+        if (res && res.success) {
+            alert(`Alhamdulillah! ${res.message}\nBendahara pesantren akan memverifikasi mutasi bank dan menerbitkan kuitansi resmi.`);
+            closePortalWaliTagihanModal();
+            loadAdminKeuanganData(true);
+        } else {
+            alert("Gagal mengirim konfirmasi transfer: " + ((res && res.message) || "Terjadi kesalahan"));
+        }
+    } catch (e) {
+        console.error("[SUBMIT PORTAL TRANSFER ERROR]", e);
+        alert("Error: " + e.message);
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = origText;
+        }
+    }
+}
+window.submitPortalWaliTransfer = submitPortalWaliTransfer;

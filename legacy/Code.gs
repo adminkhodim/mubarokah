@@ -943,6 +943,32 @@ function doPost(e) {
       }
     }
 
+    if (action === "submitKonfirmasiTransfer" || action === "keuangan.submitKonfirmasiTransfer") {
+      return createJsonResponse(submitKonfirmasiTransferKeuangan(payload.data || payload));
+    }
+
+    if (action === "verifyKonfirmasiTransfer" || action === "keuangan.verifyKonfirmasiTransfer") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
+        return createJsonResponse(verifyKonfirmasiTransferKeuangan(payload.data || payload, token, actor));
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", success: false, message: authErr.message });
+      }
+    }
+
+    if (action === "getBroadcastTagihanList" || action === "keuangan.getBroadcastTagihanList") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
+        return createJsonResponse(getBroadcastTagihanListKeuangan(payload.data || payload, token));
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", success: false, message: authErr.message });
+      }
+    }
+
     // ========================================================
     // DATA PEGAWAI (ASATIDZ & KARYAWAN) ACTIONS (doPost)
     // ========================================================
@@ -18588,6 +18614,7 @@ const SHEET_KEUANGAN_TRANSAKSI = "Keuangan_Transaksi";
 const SHEET_KEUANGAN_PENGELUARAN = "Keuangan_Pengeluaran";
 const SHEET_KEUANGAN_KATEGORI_PENGELUARAN = "Keuangan_Kategori_Pengeluaran";
 const SHEET_KEUANGAN_TUTUP_KASIR = "Keuangan_Tutup_Kasir";
+const SHEET_KEUANGAN_KONFIRMASI_TRANSFER = "Keuangan_Konfirmasi_Transfer";
 
 function getOrCreateKeuanganSheet(ss, sheetName, headers, bgHeaderColor) {
   let sheet = ss.getSheetByName(sheetName);
@@ -18659,10 +18686,14 @@ function initKeuanganSheets(token) {
     const headersTutupKasir = ["closing_id", "tanggal", "nama_kasir", "modal_awal", "masuk_tunai", "masuk_transfer", "masuk_qris", "keluar_tunai", "saldo_sistem", "saldo_fisik", "selisih", "catatan", "status", "created_at"];
     getOrCreateKeuanganSheet(ss, SHEET_KEUANGAN_TUTUP_KASIR, headersTutupKasir, "#4f46e5");
 
+    // 7. Sheet Konfirmasi Transfer Online Santri / Wali
+    const headersKonfirmasi = ["konfirmasi_id", "student_id", "student_name", "tagihan_ids_json", "nominal_transfer", "bank_tujuan", "nama_pengirim", "tanggal_transfer", "bukti_transfer_url", "status", "catatan_verifikasi", "no_kuitansi", "created_at"];
+    getOrCreateKeuanganSheet(ss, SHEET_KEUANGAN_KONFIRMASI_TRANSFER, headersKonfirmasi, "#0891b2");
+
     return {
       status: "success",
       success: true,
-      message: "Sheet Keuangan (Tarif, Tagihan, Kas Masuk, Kas Keluar, Kategori, & Tutup Kasir) berhasil diinisialisasi."
+      message: "Sheet Keuangan (Tarif, Tagihan, Kas Masuk, Kas Keluar, Kategori, Tutup Kasir, & Konfirmasi Transfer) berhasil diinisialisasi."
     };
   } catch (err) {
     return { status: "error", success: false, message: "Gagal inisialisasi sheet keuangan: " + err.message };
@@ -18984,6 +19015,49 @@ function getKeuanganDashboard(token) {
       }
     }
 
+    // 8. Ambil Riwayat Konfirmasi Transfer Online Santri / Wali (Fase 3)
+    const recentKonfirmasiList = [];
+    let pendingKonfirmasiCount = 0;
+    const trfSheet = ss.getSheetByName(SHEET_KEUANGAN_KONFIRMASI_TRANSFER);
+    if (trfSheet) {
+      const tData = trfSheet.getDataRange().getValues();
+      if (tData.length >= 2) {
+        for (let i = tData.length - 1; i >= 1; i--) {
+          const r = tData[i];
+          if (r[0]) {
+            const stKonfirmasi = String(r[9] || "PENDING").trim().toUpperCase();
+            if (stKonfirmasi === "PENDING") {
+              pendingKonfirmasiCount++;
+            }
+            if (recentKonfirmasiList.length < 50) {
+              recentKonfirmasiList.push({
+                konfirmasiId: String(r[0]).trim(),
+                studentId: String(r[1] || "").trim(),
+                studentName: String(r[2] || "").trim(),
+                tagihanIdsJson: String(r[3] || "").trim(),
+                nominalTransfer: Number(r[4]) || 0,
+                bankTujuan: String(r[5] || "").trim(),
+                namaPengirim: String(r[6] || "").trim(),
+                tanggalTransfer: String(r[7] || "").substring(0, 10),
+                buktiTransferUrl: String(r[8] || "").trim(),
+                status: stKonfirmasi,
+                catatanVerifikasi: String(r[10] || "").trim(),
+                noKuitansi: String(r[11] || "").trim(),
+                createdAt: String(r[12] || "").trim()
+              });
+            }
+          }
+        }
+      }
+    }
+
+    const officialAccounts = [
+      { bank: "BSI", name: "Bank Syariah Indonesia", noRek: "7198234567", an: "PPTQ ROUDLOTUL MUBAROKAH KUDUS", badge: "Syariah Utama" },
+      { bank: "BRI", name: "Bank Rakyat Indonesia", noRek: "0038-01-002345-53-1", an: "PESANTREN ROUDLOTUL MUBAROKAH", badge: "Operasional" },
+      { bank: "BCA", name: "Bank Central Asia", noRek: "0898765432", an: "PPTQ ROUDLOTUL MUBAROKAH", badge: "Kemitraan" },
+      { bank: "QRIS", name: "QRIS Nasional Mubarokah", noRek: "NMID: ID1020038491823", an: "PPTQ ROUDLOTUL MUBAROKAH", badge: "Instan Semua Bank & E-Wallet" }
+    ];
+
     const totalTagihanSemua = countLunas + countBelumLunas;
     const persentasePelunasan = totalTagihanSemua > 0 ? Math.round((countLunas / totalTagihanSemua) * 100) : 100;
     const surplusDefisit = totalPendapatanBulanIni - totalPengeluaranBulanIni;
@@ -19000,6 +19074,7 @@ function getKeuanganDashboard(token) {
         countBelumLunas: countBelumLunas,
         persentasePelunasan: persentasePelunasan,
         totalSantriAktif: students.length,
+        pendingKonfirmasiCount: pendingKonfirmasiCount,
         // Data kasir realtime hari ini
         kasMasukHariIniTunai: kasMasukHariIniTunai,
         kasMasukHariIniNonTunai: kasMasukHariIniNonTunai,
@@ -19011,6 +19086,8 @@ function getKeuanganDashboard(token) {
       recentExpenses: recentExpenses,
       kategoriPengeluaranList: kategoriPengeluaranList,
       recentClosingList: recentClosingList,
+      recentKonfirmasiList: recentKonfirmasiList,
+      officialAccounts: officialAccounts,
       students: students,
       programs: programsList
     };
@@ -19773,6 +19850,371 @@ function submitTutupKasirKeuangan(payload, token, actorParam) {
       return { status: "error", success: false, message: "Gagal memproses tutup kasir: " + err.message };
     }
   });
+}
+
+// ====================================================================
+// FASE 3: KONFIRMASI TRANSFER ONLINE, VERIFIKASI & WHATSAPP BILLING
+// ====================================================================
+
+function submitKonfirmasiTransferKeuangan(payload) {
+  return withScriptLock(() => {
+    try {
+      const ss = getDatabaseSpreadsheet();
+      if (!ss) throw new Error("Spreadsheet database tidak ditemukan.");
+
+      const studentId = String(payload.studentId || "").trim();
+      const studentName = String(payload.studentName || "").trim();
+      const nominalTransfer = Number(payload.nominalTransfer) || 0;
+      const bankTujuan = String(payload.bankTujuan || "BSI").trim().toUpperCase();
+      const namaPengirim = String(payload.namaPengirim || "").trim();
+      const tanggalTransfer = String(payload.tanggalTransfer || new Date().toISOString().substring(0, 10)).trim();
+      const buktiTransferUrl = String(payload.buktiTransferUrl || "").trim();
+      const tagihanIds = payload.tagihanIds || [];
+      const tagihanIdsJson = Array.isArray(tagihanIds) ? JSON.stringify(tagihanIds) : String(payload.tagihanIdsJson || "[]");
+
+      if (!studentId) throw new Error("ID Santri wajib disertakan.");
+      if (nominalTransfer <= 0) throw new Error("Nominal transfer harus lebih besar dari Rp 0.");
+      if (!namaPengirim) throw new Error("Nama pemilik rekening pengirim wajib diisi.");
+
+      const headersKonfirmasi = ["konfirmasi_id", "student_id", "student_name", "tagihan_ids_json", "nominal_transfer", "bank_tujuan", "nama_pengirim", "tanggal_transfer", "bukti_transfer_url", "status", "catatan_verifikasi", "no_kuitansi", "created_at"];
+      const trfSheet = getOrCreateKeuanganSheet(ss, SHEET_KEUANGAN_KONFIRMASI_TRANSFER, headersKonfirmasi, "#0891b2");
+
+      const now = new Date();
+      const yr = now.getFullYear();
+      const mo = String(now.getMonth() + 1).padStart(2, "0");
+      const lastRow = trfSheet.getLastRow();
+      const counter = String(Math.max(1, lastRow)).padStart(4, "0");
+      const konfirmasiId = `TRF-${yr}${mo}-${counter}`;
+      const nowIso = now.toISOString();
+
+      trfSheet.appendRow([
+        konfirmasiId,
+        studentId,
+        studentName,
+        tagihanIdsJson,
+        nominalTransfer,
+        bankTujuan,
+        namaPengirim,
+        tanggalTransfer,
+        buktiTransferUrl,
+        "PENDING",
+        "",
+        "",
+        nowIso
+      ]);
+
+      return {
+        status: "success",
+        success: true,
+        message: `Konfirmasi pembayaran berhasil dikirim dengan ID ${konfirmasiId}. Menunggu verifikasi dari Bendahara Pesantren.`,
+        konfirmasiId: konfirmasiId
+      };
+    } catch (err) {
+      console.error("[SUBMIT KONFIRMASI TRANSFER ERROR]", err);
+      return { status: "error", success: false, message: "Gagal mengirim konfirmasi transfer: " + err.message };
+    }
+  });
+}
+
+function verifyKonfirmasiTransferKeuangan(payload, token, actorParam) {
+  return withScriptLock(() => {
+    try {
+      const ss = getDatabaseSpreadsheet();
+      if (!ss) throw new Error("Spreadsheet database tidak ditemukan.");
+
+      const actor = actorParam || (token ? authenticateSession(token) : null);
+      if (actor) {
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
+      } else {
+        throw new Error("Sesi otorisasi supervisor/bendahara tidak valid.");
+      }
+
+      const konfirmasiId = String(payload.konfirmasiId || "").trim();
+      const actionType = String(payload.actionType || "VERIFY").trim().toUpperCase(); // VERIFY or REJECT
+      const alasan = String(payload.alasan || "").trim();
+
+      if (!konfirmasiId) throw new Error("ID Konfirmasi Transfer wajib disertakan.");
+
+      const trfSheet = ss.getSheetByName(SHEET_KEUANGAN_KONFIRMASI_TRANSFER);
+      if (!trfSheet) throw new Error("Sheet konfirmasi transfer belum dibuat.");
+
+      const data = trfSheet.getDataRange().getValues();
+      let targetRow = -1;
+      let targetData = null;
+
+      for (let i = 1; i < data.length; i++) {
+        if (String(data[i][0]).trim() === konfirmasiId) {
+          targetRow = i + 1;
+          targetData = data[i];
+          break;
+        }
+      }
+
+      if (targetRow === -1 || !targetData) {
+        throw new Error("Konfirmasi transfer dengan ID " + konfirmasiId + " tidak ditemukan.");
+      }
+
+      const currentStatus = String(targetData[9] || "PENDING").trim().toUpperCase();
+      if (currentStatus !== "PENDING") {
+        throw new Error(`Konfirmasi ini sudah pernah diproses dengan status ${currentStatus}.`);
+      }
+
+      const nowIso = new Date().toISOString();
+      const actorName = (actor && actor.name) || "Bendahara";
+
+      if (actionType === "REJECT") {
+        if (!alasan || alasan.length < 3) throw new Error("Alasan penolakan wajib diisi (minimal 3 karakter).");
+        trfSheet.getRange(targetRow, 10).setValue("REJECTED");
+        trfSheet.getRange(targetRow, 11).setValue(`Ditolak oleh ${actorName} pada ${nowIso}. Alasan: ${alasan}`);
+        return {
+          status: "success",
+          success: true,
+          message: `Konfirmasi transfer ${konfirmasiId} berhasil ditolak.`,
+          konfirmasiId: konfirmasiId
+        };
+      }
+
+      // Action VERIFY -> Jalankan proses pelunasan tagihan & terbitkan kuitansi kas resmi
+      const studentId = String(targetData[1] || "").trim();
+      const studentName = String(targetData[2] || "").trim();
+      const rawTagihanIds = String(targetData[3] || "[]");
+      const nomTransfer = Number(targetData[4]) || 0;
+      const bankTujuan = String(targetData[5] || "BSI").trim();
+      const namaPengirim = String(targetData[6] || "-").trim();
+
+      let itemsToPay = [];
+      try {
+        const parsed = JSON.parse(rawTagihanIds);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Jika array string tagihanId
+          if (typeof parsed[0] === "string") {
+            const tagihanSheet = ss.getSheetByName(SHEET_KEUANGAN_TAGIHAN);
+            if (tagihanSheet) {
+              const tgData = tagihanSheet.getDataRange().getValues();
+              let sisaNominal = nomTransfer;
+              for (const tid of parsed) {
+                if (sisaNominal <= 0) break;
+                for (let r = 1; r < tgData.length; r++) {
+                  if (String(tgData[r][0]).trim() === tid) {
+                    const nomTagihan = Number(tgData[r][6]) || 0;
+                    const nomTerbayar = Number(tgData[r][7]) || 0;
+                    const sisaCur = Math.max(0, nomTagihan - nomTerbayar);
+                    const bayarItem = Math.min(sisaCur, sisaNominal);
+                    if (bayarItem > 0) {
+                      itemsToPay.push({ tagihanId: tid, bayarNominal: bayarItem });
+                      sisaNominal -= bayarItem;
+                    }
+                    break;
+                  }
+                }
+              }
+            }
+          } else {
+            itemsToPay = parsed;
+          }
+        }
+      } catch (e) {}
+
+      // Jika itemsToPay kosong, cari tagihan santri yang masih ada sisa
+      if (itemsToPay.length === 0) {
+        const tagihanSheet = ss.getSheetByName(SHEET_KEUANGAN_TAGIHAN);
+        if (tagihanSheet) {
+          const tgData = tagihanSheet.getDataRange().getValues();
+          let sisaNominal = nomTransfer;
+          for (let r = 1; r < tgData.length; r++) {
+            if (sisaNominal <= 0) break;
+            if (String(tgData[r][1]).trim() === studentId) {
+              const nomTagihan = Number(tgData[r][6]) || 0;
+              const nomTerbayar = Number(tgData[r][7]) || 0;
+              const sisaCur = Math.max(0, nomTagihan - nomTerbayar);
+              if (sisaCur > 0) {
+                const bayarItem = Math.min(sisaCur, sisaNominal);
+                itemsToPay.push({ tagihanId: String(tgData[r][0]).trim(), bayarNominal: bayarItem });
+                sisaNominal -= bayarItem;
+              }
+            }
+          }
+        }
+      }
+
+      if (itemsToPay.length === 0) {
+        throw new Error("Tidak ditemukan tagihan aktif yang dapat dialokasikan untuk santri ini.");
+      }
+
+      // Eksekusi pembayaran kasir resmi
+      const payRes = prosesPembayaranTagihan({
+        studentId: studentId,
+        studentName: studentName,
+        items: itemsToPay,
+        nominalDiterima: nomTransfer,
+        metodeBayar: bankTujuan.includes("TRANSFER") ? bankTujuan : `TRANSFER ${bankTujuan}`,
+        namaKasir: actorName,
+        catatan: `Verifikasi Transfer #${konfirmasiId} a.n ${namaPengirim}`
+      }, token, actor);
+
+      if (!payRes || !payRes.success) {
+        throw new Error("Gagal memproses transaksi kasir: " + ((payRes && payRes.message) || "Kesalahan tidak diketahui"));
+      }
+
+      const noKuitansi = payRes.noKuitansi || "-";
+      trfSheet.getRange(targetRow, 10).setValue("VERIFIED");
+      trfSheet.getRange(targetRow, 11).setValue(`Diverifikasi oleh ${actorName} pada ${nowIso}`);
+      trfSheet.getRange(targetRow, 12).setValue(noKuitansi);
+
+      return {
+        status: "success",
+        success: true,
+        message: `Konfirmasi transfer ${konfirmasiId} berhasil diverifikasi! Kuitansi resmi ${noKuitansi} telah diterbitkan.`,
+        konfirmasiId: konfirmasiId,
+        noKuitansi: noKuitansi,
+        transaksiId: payRes.transaksiId
+      };
+    } catch (err) {
+      console.error("[VERIFY KONFIRMASI TRANSFER ERROR]", err);
+      return { status: "error", success: false, message: "Gagal memverifikasi transfer: " + err.message };
+    }
+  });
+}
+
+function getBroadcastTagihanListKeuangan(payload, token) {
+  try {
+    const actor = token ? authenticateSession(token) : null;
+    if (actor) {
+      authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
+    } else {
+      throw new Error("Sesi otorisasi tidak valid.");
+    }
+
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error("Spreadsheet database tidak ditemukan.");
+
+    const filterPeriode = String(payload.periode || "").trim(); // e.g. "2026-10"
+    const filterProgram = String(payload.program || "SEMUA").trim().toUpperCase();
+
+    // 1. Ambil Data Santri & Kontak WhatsApp Wali
+    const studentMap = {};
+    const stSheet = ss.getSheetByName("Students");
+    if (stSheet) {
+      const sData = stSheet.getDataRange().getValues();
+      if (sData.length >= 2) {
+        const headers = sData[0].map(h => String(h || "").trim().toLowerCase());
+        const phoneIdx = headers.findIndex(h => h.includes("phone") || h.includes("hp") || h.includes("wa") || h.includes("telepon") || h.includes("kontak"));
+        for (let i = 1; i < sData.length; i++) {
+          const r = sData[i];
+          const sId = String(r[0] || "").trim();
+          if (sId) {
+            let phone = phoneIdx !== -1 ? String(r[phoneIdx] || "").trim() : "";
+            studentMap[sId] = {
+              name: String(r[1] || "").trim(),
+              program: String(r[3] || "Tahfidz").trim(),
+              phone: phone
+            };
+          }
+        }
+      }
+    }
+
+    // 2. Ambil Tagihan Belum Lunas
+    const tagihanSheet = ss.getSheetByName(SHEET_KEUANGAN_TAGIHAN);
+    const santriUnpaidMap = {};
+
+    if (tagihanSheet) {
+      const tgData = tagihanSheet.getDataRange().getValues();
+      if (tgData.length >= 2) {
+        for (let i = 1; i < tgData.length; i++) {
+          const r = tgData[i];
+          const sId = String(r[1] || "").trim();
+          const stStatus = String(r[9] || "BELUM_BAYAR").trim().toUpperCase();
+          const periode = String(r[5] || "").trim();
+
+          if (stStatus !== "LUNAS" && sId) {
+            if (filterPeriode && periode !== filterPeriode) continue;
+
+            const stInfo = studentMap[sId] || { name: String(r[2] || "").trim(), program: "Santri", phone: "" };
+            if (filterProgram !== "SEMUA" && stInfo.program.toUpperCase() !== filterProgram) continue;
+
+            const nomTagihan = Number(r[6]) || 0;
+            const nomTerbayar = Number(r[7]) || 0;
+            const sisa = Math.max(0, nomTagihan - nomTerbayar);
+
+            if (sisa > 0) {
+              if (!santriUnpaidMap[sId]) {
+                santriUnpaidMap[sId] = {
+                  studentId: sId,
+                  studentName: stInfo.name || String(r[2] || "").trim(),
+                  program: stInfo.program,
+                  phone: stInfo.phone,
+                  totalTunggakan: 0,
+                  items: []
+                };
+              }
+              santriUnpaidMap[sId].totalTunggakan += sisa;
+              santriUnpaidMap[sId].items.push({
+                namaPos: String(r[4] || "").trim(),
+                periode: periode,
+                sisa: sisa
+              });
+            }
+          }
+        }
+      }
+    }
+
+    const broadcastList = Object.values(santriUnpaidMap).map(st => {
+      let rincianText = st.items.map(it => `• ${it.namaPos} (${it.periode}): Rp ${it.sisa.toLocaleString("id-ID")}`).join("\n");
+      let rawWa = st.phone.replace(/[^0-9]/g, "");
+      if (rawWa.startsWith("0")) rawWa = "62" + rawWa.substring(1);
+
+      const messageTemplate = 
+`Assalamu'alaikum Wr. Wb.
+Yth. Bapak/Ibu Wali Santri dari ananda *${st.studentName}* (${st.program}).
+
+Semoga senantiasa dalam limpahan taufiq dan hidayah Allah SWT.
+Kami dari Bagian Keuangan PPTQ Roudlotul Mubarokah Kudus menginformasikan rincian kewajiban administrasi pesantren:
+
+${rincianText}
+*Total Yang Perlu Diselesaikan:* Rp ${st.totalTunggakan.toLocaleString("id-ID")}
+
+Pembayaran dapat disalurkan melalui:
+• Rekening BSI: *7198234567* a.n. PPTQ ROUDLOTUL MUBAROKAH KUDUS
+• Rekening BRI: *0038-01-002345-53-1* a.n. PESANTREN ROUDLOTUL MUBAROKAH
+• QRIS Nasional Mubarokah (tersedia di aplikasi / loket)
+• Loket Kasir Pesantren (Tunai)
+
+Konfirmasi pembayaran transfer dapat diunggah melalui Portal Santri di aplikasi Mubarokah.
+Atas perhatian dan kerjasamanya, kami haturkan jazakumullahu ahsanal jaza'.
+
+Wassalamu'alaikum Wr. Wb.
+_Bendahara PPTQ Roudlotul Mubarokah Kudus_`;
+
+      const waLink = rawWa ? `https://wa.me/${rawWa}?text=${encodeURIComponent(messageTemplate)}` : "";
+
+      return {
+        studentId: st.studentId,
+        studentName: st.studentName,
+        program: st.program,
+        phone: st.phone,
+        totalTunggakan: st.totalTunggakan,
+        itemsCount: st.items.length,
+        items: st.items,
+        waLink: waLink,
+        messagePreview: messageTemplate
+      };
+    });
+
+    // Urutkan dari tunggakan terbesar
+    broadcastList.sort((a, b) => b.totalTunggakan - a.totalTunggakan);
+
+    return {
+      status: "success",
+      success: true,
+      totalSantriTertunggak: broadcastList.length,
+      broadcastList: broadcastList
+    };
+  } catch (err) {
+    console.error("[GET BROADCAST TAGIHAN ERROR]", err);
+    return { status: "error", success: false, message: "Gagal memuat daftar broadcast: " + err.message };
+  }
 }
 
 

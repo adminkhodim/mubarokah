@@ -5637,11 +5637,18 @@
                                                 <p class="text-[10px] text-teal-300/80">Pantau setoran harian dan kehadiran putra-putri tercinta.</p>
                                             </div>
                                         </div>
-                                        <button type="button" onclick="switchTab('pengaturan')"
-                                            class="px-3 py-1.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm active:scale-95">
-                                            <span>Buka Akun Wali</span>
-                                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                                        </button>
+                                        <div class="flex items-center space-x-2">
+                                            <button type="button" onclick="openPortalWaliTagihanModal()"
+                                                class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm active:scale-95">
+                                                <i class="fa-solid fa-receipt text-[11px]"></i>
+                                                <span>Bayar SPP & Tagihan</span>
+                                            </button>
+                                            <button type="button" onclick="switchTab('pengaturan')"
+                                                class="px-3 py-1.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm active:scale-95">
+                                                <span>Akun Wali</span>
+                                                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -9385,7 +9392,7 @@
                                         </div>
                                     </div>
 
-                                    <!-- TAB NAVIGATION BAR (SCROLLABLE MULTI-LEDGER) -->
+                                    <!-- TAB NAVIGATION BAR (SCROLLABLE MULTI-LEDGER & ONLINE PAYMENT) -->
                                     <div class="bg-white dark:bg-[#15202d] p-1.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex items-center space-x-1 overflow-x-auto no-scrollbar scroll-smooth">
                                         <button type="button" id="tab-btn-keuangan-pos" onclick="switchKeuanganTab('pos')"
                                             class="px-3.5 py-2 rounded-xl text-xs font-bold transition bg-emerald-600 text-white shadow-sm flex items-center gap-1.5 shrink-0">
@@ -9401,6 +9408,17 @@
                                             class="px-3.5 py-2 rounded-xl text-xs font-bold transition text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836] flex items-center gap-1.5 shrink-0">
                                             <i class="fa-solid fa-book-journal-whills text-xs"></i>
                                             <span>Kas Masuk</span>
+                                        </button>
+                                        <button type="button" id="tab-btn-keuangan-verifikasi" onclick="switchKeuanganTab('verifikasi')"
+                                            class="px-3.5 py-2 rounded-xl text-xs font-bold transition text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836] flex items-center gap-1.5 shrink-0 relative">
+                                            <i class="fa-solid fa-credit-card text-xs text-cyan-600 dark:text-cyan-400"></i>
+                                            <span>Verifikasi Transfer</span>
+                                            <span id="keuangan-badge-pending-count" class="hidden px-1.5 py-0.2 rounded-full text-[9px] font-black bg-rose-500 text-white animate-pulse">0</span>
+                                        </button>
+                                        <button type="button" id="tab-btn-keuangan-broadcast" onclick="switchKeuanganTab('broadcast')"
+                                            class="px-3.5 py-2 rounded-xl text-xs font-bold transition text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836] flex items-center gap-1.5 shrink-0">
+                                            <i class="fa-brands fa-whatsapp text-xs text-emerald-500"></i>
+                                            <span>WhatsApp Billing</span>
                                         </button>
                                         <button type="button" id="tab-btn-keuangan-pengeluaran" onclick="switchKeuanganTab('pengeluaran')"
                                             class="px-3.5 py-2 rounded-xl text-xs font-bold transition text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836] flex items-center gap-1.5 shrink-0">
@@ -9943,6 +9961,147 @@
                                                 <!-- Rendered dynamically -->
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+
+                                <!-- ================= TAB 8: VERIFIKASI TRANSFER ONLINE ================= -->
+                                <div id="keuangan-panel-verifikasi" class="hidden space-y-4">
+                                    <div class="bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                        <div>
+                                            <h4 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Verifikasi Transfer & Pembayaran Online</h4>
+                                            <p class="text-[11px] text-slate-400">Persetujuan transfer santri/wali mandiri untuk penerbitan kuitansi resmi secara otomatis.</p>
+                                        </div>
+                                        <button type="button" onclick="loadAdminKeuanganData(true)"
+                                            class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 self-start sm:self-auto">
+                                            <i class="fa-solid fa-rotate text-xs"></i>
+                                            <span>Segarkan</span>
+                                        </button>
+                                    </div>
+
+                                    <!-- Banner Informasi Rekening Resmi Pesantren -->
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                                        <div class="p-3 rounded-2xl bg-teal-50/60 dark:bg-teal-950/30 border border-teal-200/60 dark:border-teal-900/40 flex items-center space-x-3">
+                                            <div class="w-9 h-9 rounded-xl bg-teal-600 text-white flex items-center justify-center font-black text-sm shrink-0">BSI</div>
+                                            <div class="min-w-0">
+                                                <div class="text-[10px] text-teal-700 dark:text-teal-400 font-bold uppercase">Bank Syariah Indonesia</div>
+                                                <div class="font-mono font-black text-slate-800 dark:text-slate-100 text-xs">7198234567</div>
+                                                <div class="text-[9px] text-slate-400 truncate">a.n. PPTQ Roudlotul Mubarokah</div>
+                                            </div>
+                                        </div>
+                                        <div class="p-3 rounded-2xl bg-sky-50/60 dark:bg-sky-950/30 border border-sky-200/60 dark:border-sky-900/40 flex items-center space-x-3">
+                                            <div class="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center font-black text-sm shrink-0">BRI</div>
+                                            <div class="min-w-0">
+                                                <div class="text-[10px] text-sky-700 dark:text-sky-400 font-bold uppercase">Bank Rakyat Indonesia</div>
+                                                <div class="font-mono font-black text-slate-800 dark:text-slate-100 text-xs">0038-01-002345-53-1</div>
+                                                <div class="text-[9px] text-slate-400 truncate">a.n. Pesantren Roudlotul Mubarokah</div>
+                                            </div>
+                                        </div>
+                                        <div class="p-3 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-900/40 flex items-center space-x-3">
+                                            <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-xs shrink-0">
+                                                <i class="fa-solid fa-qrcode text-base"></i>
+                                            </div>
+                                            <div class="min-w-0">
+                                                <div class="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold uppercase">QRIS Nasional Terpadu</div>
+                                                <div class="font-bold text-slate-800 dark:text-slate-100 text-xs">NMID: ID1020038491823</div>
+                                                <div class="text-[9px] text-slate-400">Instan BCA, Mandiri, DANA, GoPay</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tabel Konfirmasi Transfer (Desktop) -->
+                                    <div class="hidden md:block bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm overflow-x-auto">
+                                        <table class="w-full text-left text-xs">
+                                            <thead>
+                                                <tr class="border-b border-slate-100 dark:border-[#253447] bg-slate-50/50 dark:bg-[#182332] text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                                    <th class="py-2.5 px-3 text-center w-12">No</th>
+                                                    <th class="py-2.5 px-3">ID / Tanggal</th>
+                                                    <th class="py-2.5 px-3">Santri</th>
+                                                    <th class="py-2.5 px-3">Nominal Transfer</th>
+                                                    <th class="py-2.5 px-3">Bank & Pemilik Rekening</th>
+                                                    <th class="py-2.5 px-3 text-center">Bukti Bayar</th>
+                                                    <th class="py-2.5 px-3 text-center">Status</th>
+                                                    <th class="py-2.5 px-3 text-right">Aksi Bendahara</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="keuangan-verifikasi-table-body">
+                                                <!-- Rendered dynamically -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- Mobile Cards Verifikasi -->
+                                    <div id="keuangan-verifikasi-mobile-list" class="block md:hidden space-y-2.5">
+                                        <!-- Rendered dynamically -->
+                                    </div>
+                                </div>
+
+                                <!-- ================= TAB 9: WHATSAPP BILLING AUTOMATION ================= -->
+                                <div id="keuangan-panel-broadcast" class="hidden space-y-4">
+                                    <div class="bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                        <div>
+                                            <h4 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">WhatsApp Billing & Pengingat Tagihan</h4>
+                                            <p class="text-[11px] text-slate-400">Kirim notifikasi tagihan resmi pesantren langsung ke WhatsApp wali santri dalam 1-klik.</p>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <button type="button" onclick="loadBroadcastTagihanData()"
+                                                class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95">
+                                                <i class="fa-solid fa-arrows-rotate text-xs"></i>
+                                                <span>Muat Data Penagihan</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Filter Penagihan & Stats -->
+                                    <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                                        <div class="md:col-span-8 bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Filter Program Santri:</label>
+                                                <select id="broadcast-filter-program" onchange="loadBroadcastTagihanData()"
+                                                    class="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-slate-50 dark:bg-[#1c2836] text-xs font-semibold text-slate-800 dark:text-slate-100 outline-none">
+                                                    <option value="SEMUA">Semua Program</option>
+                                                    <option value="Tahfidz">Tahfidz Al-Qur'an</option>
+                                                    <option value="TPQ">TPQ Yanbu'a</option>
+                                                    <option value="Kitab">Madrasah Diniyah</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Filter Periode Bulan:</label>
+                                                <input type="month" id="broadcast-filter-periode" onchange="loadBroadcastTagihanData()"
+                                                    class="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-slate-50 dark:bg-[#1c2836] text-xs font-semibold text-slate-800 dark:text-slate-100 outline-none">
+                                            </div>
+                                        </div>
+                                        <div class="md:col-span-4 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30 p-3.5 rounded-2xl border border-emerald-200/60 dark:border-emerald-800/40 flex flex-col justify-center">
+                                            <div class="text-[10px] text-emerald-800 dark:text-emerald-300 font-bold uppercase">Santri Belum Lunas</div>
+                                            <div class="flex items-baseline gap-2 mt-0.5">
+                                                <span id="broadcast-stat-count" class="text-xl font-black text-emerald-700 dark:text-emerald-300">0 Santri</span>
+                                                <span id="broadcast-stat-nominal" class="text-xs font-bold text-slate-500">(Rp 0)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tabel Santri Tertunggak & WhatsApp Link (Desktop) -->
+                                    <div class="hidden md:block bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm overflow-x-auto">
+                                        <table class="w-full text-left text-xs">
+                                            <thead>
+                                                <tr class="border-b border-slate-100 dark:border-[#253447] bg-slate-50/50 dark:bg-[#182332] text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                                    <th class="py-2.5 px-3 text-center w-12">No</th>
+                                                    <th class="py-2.5 px-3">Nama Santri</th>
+                                                    <th class="py-2.5 px-3">Program</th>
+                                                    <th class="py-2.5 px-3">No. WhatsApp Wali</th>
+                                                    <th class="py-2.5 px-3">Rincian Pos Tertunggak</th>
+                                                    <th class="py-2.5 px-3">Total Tunggakan</th>
+                                                    <th class="py-2.5 px-3 text-right">Aksi WhatsApp</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="keuangan-broadcast-table-body">
+                                                <!-- Rendered dynamically -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- Mobile Cards Broadcast -->
+                                    <div id="keuangan-broadcast-mobile-list" class="block md:hidden space-y-2.5">
+                                        <!-- Rendered dynamically -->
                                     </div>
                                 </div>
                             </div>
@@ -11184,6 +11343,208 @@
                 <button type="button" id="btn-submit-pengeluaran" onclick="submitSavePengeluaran()"
                     class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition shadow-sm active:scale-95">
                     Simpan Kas Keluar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL PREVIEW BUKTI TRANSFER ==================== -->
+    <div id="modal-preview-bukti-transfer" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-5 hidden">
+        <div class="bg-white dark:bg-[#15202d] rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-[#253447] flex flex-col max-h-[90vh]">
+            <div class="p-4 border-b border-slate-100 dark:border-[#253447] flex items-center justify-between">
+                <div>
+                    <h4 class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                        <i class="fa-solid fa-receipt text-cyan-600"></i>
+                        <span>Bukti Pembayaran / Transfer</span>
+                    </h4>
+                    <p id="modal-preview-bukti-subtitle" class="text-[10px] text-slate-400">Pratinjau berkas transfer pembayaran online</p>
+                </div>
+                <button type="button" onclick="closeModalPreviewBuktiTransfer()" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+            <div class="p-4 overflow-y-auto flex-1 flex items-center justify-center bg-slate-50 dark:bg-[#121b26]">
+                <img id="modal-preview-bukti-image" src="" alt="Bukti Transfer" class="max-w-full max-h-[65vh] rounded-xl object-contain shadow-md border border-slate-200 dark:border-[#253447]">
+            </div>
+            <div class="p-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs">
+                <span id="modal-preview-bukti-sender" class="text-[11px] text-slate-500 font-semibold truncate">-</span>
+                <div class="flex items-center gap-2 shrink-0">
+                    <a id="modal-preview-bukti-download" href="#" target="_blank" download="bukti_transfer.jpg"
+                        class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] text-slate-700 dark:text-slate-200 rounded-xl font-bold transition flex items-center gap-1">
+                        <i class="fa-solid fa-download text-xs"></i>
+                        <span>Unduh</span>
+                    </a>
+                    <button type="button" onclick="closeModalPreviewBuktiTransfer()"
+                        class="px-3.5 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-bold transition">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL PORTAL WALI SANTRI: CEK & BAYAR TAGIHAN ==================== -->
+    <div id="modal-portal-wali-tagihan" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+        <div class="bg-white dark:bg-[#15202d] rounded-3xl max-w-xl w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-[#253447] flex flex-col max-h-[92vh]">
+            <!-- Header Modal Portal -->
+            <div class="bg-gradient-to-r from-emerald-800 to-teal-800 text-white p-4 sm:p-5 flex items-start justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-11 h-11 rounded-2xl bg-white/10 backdrop-blur-xs border border-white/20 flex items-center justify-center text-lg shrink-0">
+                        <i class="fa-solid fa-hands-holding-child text-emerald-300"></i>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold text-emerald-200 uppercase tracking-widest block">Portal Mandiri Wali Santri</span>
+                        <h3 id="portal-wali-student-name" class="font-bold text-sm sm:text-base text-white">Memuat Data Santri...</h3>
+                        <p id="portal-wali-student-info" class="text-[10px] text-teal-200/80">NIS: - • Program: -</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closePortalWaliTagihanModal()" class="text-white/70 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+
+            <!-- Body Modal: Tabs Portal -->
+            <div class="p-4 sm:p-5 overflow-y-auto flex-1 space-y-4 text-xs">
+                <!-- Selector Santri jika Akun Wali memiliki lebih dari 1 santri -->
+                <div id="portal-wali-student-selector-wrap" class="hidden">
+                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Pilih Putra/Putri:</label>
+                    <select id="portal-wali-student-select" onchange="onSelectPortalWaliStudent(this.value)"
+                        class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-slate-50 dark:bg-[#1c2836] font-bold text-slate-800 dark:text-slate-100 outline-none">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+
+                <!-- Navigasi Sub-Tab Portal -->
+                <div class="flex items-center space-x-1 border-b border-slate-100 dark:border-[#253447] pb-2">
+                    <button type="button" id="tab-portal-tagihan" onclick="switchPortalWaliTab('tagihan')"
+                        class="px-3 py-1.5 rounded-xl font-bold transition bg-emerald-600 text-white text-xs">
+                        Tagihan Berjalan
+                    </button>
+                    <button type="button" id="tab-portal-riwayat" onclick="switchPortalWaliTab('riwayat')"
+                        class="px-3 py-1.5 rounded-xl font-bold transition text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836] text-xs">
+                        Riwayat Kuitansi
+                    </button>
+                </div>
+
+                <!-- SUB-TAB 1: TAGIHAN & PEMBAYARAN ONLINE -->
+                <div id="portal-view-tagihan" class="space-y-4">
+                    <!-- Daftar Checklist Tagihan -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-slate-700 dark:text-slate-200 text-xs">Pilih Pos Tagihan yang Akan Dibayar:</span>
+                            <button type="button" onclick="selectAllPortalTagihan(true)" class="text-[10px] text-emerald-600 font-bold hover:underline">Pilih Semua</button>
+                        </div>
+                        <div id="portal-tagihan-checklist-container" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Total Nominal Bayar -->
+                    <div class="p-3.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800/40 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] text-emerald-800 dark:text-emerald-300 font-bold uppercase">Total Pembayaran Terpilih:</span>
+                            <div id="portal-total-bayar-display" class="text-base sm:text-lg font-black text-emerald-700 dark:text-emerald-300">Rp 0</div>
+                        </div>
+                        <span class="text-[10px] font-semibold text-slate-500" id="portal-item-count-display">0 pos dipilih</span>
+                    </div>
+
+                    <!-- Pilihan Saluran Bayar -->
+                    <div class="space-y-2.5">
+                        <label class="block font-bold text-slate-700 dark:text-slate-200 text-xs">Metode / Kanal Pembayaran Resmi:</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <!-- Bank BSI -->
+                            <div class="p-3 rounded-2xl border border-slate-200 dark:border-[#253447] bg-white dark:bg-[#1c2836] flex flex-col justify-between space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-black text-teal-700 dark:text-teal-400 text-xs">Bank BSI Syariah</span>
+                                    <button type="button" onclick="copyRekeningNumber('7198234567')" class="text-[10px] text-slate-400 hover:text-emerald-600 font-semibold flex items-center gap-1">
+                                        <i class="fa-regular fa-copy"></i> Salin
+                                    </button>
+                                </div>
+                                <div class="font-mono font-black text-slate-800 dark:text-slate-100 text-sm">7198234567</div>
+                                <div class="text-[9px] text-slate-400">a.n. PPTQ Roudlotul Mubarokah</div>
+                            </div>
+                            <!-- Bank BRI -->
+                            <div class="p-3 rounded-2xl border border-slate-200 dark:border-[#253447] bg-white dark:bg-[#1c2836] flex flex-col justify-between space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-black text-sky-700 dark:text-sky-400 text-xs">Bank BRI</span>
+                                    <button type="button" onclick="copyRekeningNumber('0038-01-002345-53-1')" class="text-[10px] text-slate-400 hover:text-emerald-600 font-semibold flex items-center gap-1">
+                                        <i class="fa-regular fa-copy"></i> Salin
+                                    </button>
+                                </div>
+                                <div class="font-mono font-black text-slate-800 dark:text-slate-100 text-sm">0038-01-002345-53-1</div>
+                                <div class="text-[9px] text-slate-400">a.n. Pesantren Roudlotul Mubarokah</div>
+                            </div>
+                        </div>
+
+                        <!-- Generator QRIS Dinamis Interaktif -->
+                        <div class="p-3.5 rounded-2xl border border-emerald-200 dark:border-emerald-800/40 bg-gradient-to-r from-emerald-50/50 to-teal-50/50 dark:from-[#182a2f] dark:to-[#172535] flex items-center space-x-3.5">
+                            <div class="w-16 h-16 rounded-xl bg-white p-1 shadow-sm shrink-0 border border-slate-200 flex items-center justify-center">
+                                <svg class="w-full h-full text-slate-900" viewBox="0 0 100 100" fill="currentColor">
+                                    <path d="M10 10h30v30H10zm5 5v20h20V15zm45-5h30v30H60zm5 5v20h20V15zM10 60h30v30H10zm5 5v20h20V65zm50 0h10v10H65zm15 0h10v10H80zm-15 15h10v15H65zm15 0h10v10H80zm0 10h10v5H80zM22 22h6v6h-6zm50 0h6v6h-6zm-50 50h6v6h-6zm25-45h6v30h-6zm0 35h6v10h-6zm-10-15h20v6H47z"/>
+                                </svg>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1">
+                                    <i class="fa-solid fa-qrcode text-emerald-600"></i>
+                                    <span>QRIS Nasional Pesantren</span>
+                                </div>
+                                <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                                    Bisa di-scan dari BCA Mobile, Livin, BRImo, DANA, GoPay, OVO, ShopeePay.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Konfirmasi Transfer -->
+                    <div class="border-t border-slate-100 dark:border-[#253447] pt-3 space-y-3">
+                        <span class="font-bold text-slate-700 dark:text-slate-200 text-xs block">Unggah Bukti Transfer:</span>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 mb-1">Bank Tujuan Transfer <span class="text-rose-500">*</span></label>
+                                <select id="portal-transfer-bank-tujuan"
+                                    class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-slate-50 dark:bg-[#1c2836] font-semibold text-slate-800 dark:text-slate-100 outline-none">
+                                    <option value="BSI">Bank BSI Syariah (7198234567)</option>
+                                    <option value="BRI">Bank BRI (0038-01-002345-53-1)</option>
+                                    <option value="QRIS">QRIS Nasional Terpadu</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 mb-1">Nama Pemilik Rekening Pengirim <span class="text-rose-500">*</span></label>
+                                <input type="text" id="portal-transfer-nama-pengirim" placeholder="Contoh: Bpk. Muhammad Hidayat"
+                                    class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 outline-none">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 mb-1">Foto Bukti Transfer (Struk ATM / Screenshot M-Banking) <span class="text-rose-500">*</span></label>
+                            <input type="file" id="portal-transfer-bukti-file" accept="image/*" onchange="onPortalBuktiFileSelected(this)"
+                                class="w-full text-xs text-slate-500 file:mr-2.5 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
+                            <div id="portal-bukti-preview-wrap" class="hidden mt-2 p-2 bg-slate-50 dark:bg-[#1a2636] rounded-xl border border-slate-200 dark:border-[#253447] flex items-center space-x-2">
+                                <img id="portal-bukti-img-preview" src="" class="w-12 h-12 object-cover rounded-lg border border-slate-200">
+                                <span class="text-[10px] text-emerald-600 font-bold">Foto bukti transfer siap diunggah.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-TAB 2: RIWAYAT KUITANSI SANTRI -->
+                <div id="portal-view-riwayat" class="hidden space-y-3">
+                    <div id="portal-riwayat-transaksi-list" class="space-y-2">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Modal Portal -->
+            <div class="p-3.5 sm:p-4 border-t border-slate-100 dark:border-[#253447] bg-slate-50 dark:bg-[#182332] flex items-center justify-between">
+                <button type="button" onclick="closePortalWaliTagihanModal()"
+                    class="px-4 py-2 bg-slate-200 dark:bg-[#202f42] text-slate-700 dark:text-slate-300 rounded-xl font-bold text-xs transition">
+                    Tutup
+                </button>
+                <button type="button" id="btn-submit-portal-transfer" onclick="submitPortalWaliTransfer()"
+                    class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs transition shadow-sm active:scale-95 flex items-center gap-1.5">
+                    <i class="fa-solid fa-paper-plane text-xs"></i>
+                    <span>Kirim Konfirmasi Bayar</span>
                 </button>
             </div>
         </div>
