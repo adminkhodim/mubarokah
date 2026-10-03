@@ -2680,7 +2680,109 @@ async function promptRejectTransfer(konfirmasiId) {
 window.promptRejectTransfer = promptRejectTransfer;
 
 /**
- * Memuat Data WhatsApp Billing & Pengingat Tagihan Terjadwal
+ * Kalkulasi Data WhatsApp Billing Langsung dari In-Memory Data (Zero-Delay & Resilient)
+ */
+function generateLocalBroadcastList(filterPeriode, filterProgram) {
+    const allTagihan = (ASNKeuangan.data && ASNKeuangan.data.tagihanList) || [];
+    const allStudents = (ASNKeuangan.data && ASNKeuangan.data.students) || (window.adminStudentsData || []);
+
+    const studentMap = {};
+    allStudents.forEach(st => {
+        const id = st.studentId || st.id;
+        if (id) studentMap[id] = st;
+    });
+
+    const unpaidMap = {};
+    const normFilterPeriode = filterPeriode ? normalizeYearMonthTagihan(filterPeriode) : "";
+
+    allTagihan.forEach(t => {
+        const status = String(t.status || "").trim().toUpperCase();
+        if (status === "LUNAS" || status === "PAID") return;
+
+        const sId = t.studentId;
+        if (!sId) return;
+
+        const stInfo = studentMap[sId] || { name: t.studentName, program: t.studentProgram, phone: t.phone || "" };
+
+        // Filter Program
+        if (filterProgram && filterProgram !== "SEMUA" && filterProgram !== "ALL") {
+            const prog = String(stInfo.program || t.studentProgram || "").toLowerCase();
+            const target = filterProgram.toLowerCase();
+            if (!prog.includes(target) && !target.includes(prog)) return;
+        }
+
+        // Filter Periode
+        if (normFilterPeriode) {
+            const curPer = normalizeYearMonthTagihan(t.periode);
+            if (curPer && curPer !== normFilterPeriode) return;
+        }
+
+        const sisa = Number(t.sisaTagihan !== undefined ? t.sisaTagihan : (t.nominalTagihan - (t.nominalTerbayar || 0))) || 0;
+        if (sisa <= 0) return;
+
+        if (!unpaidMap[sId]) {
+            let phone = String(stInfo.phone || stInfo.no_hp || stInfo.telepon || stInfo.whatsapp || stInfo.no_wa || t.phone || "").trim();
+            unpaidMap[sId] = {
+                studentId: sId,
+                studentName: stInfo.name || stInfo.nama || t.studentName,
+                program: stInfo.program || t.studentProgram || "Tahfidz",
+                phone: phone,
+                totalTunggakan: 0,
+                items: []
+            };
+        }
+
+        unpaidMap[sId].totalTunggakan += sisa;
+        unpaidMap[sId].items.push({
+            namaPos: t.namaPos || "Tagihan",
+            periode: t.periode || "-",
+            sisa: sisa
+        });
+    });
+
+    const list = Object.values(unpaidMap).map(st => {
+        let rincianText = st.items.map(it => `• ${it.namaPos} (${it.periode}): ${formatRupiah(it.sisa)}`).join("\n");
+        let rawWa = String(st.phone || "").replace(/[^0-9]/g, "");
+        if (rawWa.startsWith("0")) rawWa = "62" + rawWa.substring(1);
+
+        const template = 
+`Assalamu'alaikum Wr. Wb.
+Yth. Bapak/Ibu Wali Santri dari ananda *${st.studentName}* (${st.program}).
+
+Semoga senantiasa dalam limpahan taufiq dan hidayah Allah SWT.
+
+Kami dari Administrasi & Keuangan PPTQ Roudlotul Mubarokah menginformasikan rincian kewajiban administrasi santri yang belum terselesaikan:
+
+${rincianText}
+
+*Total Kewajiban: ${formatRupiah(st.totalTunggakan)}*
+
+Pembayaran dapat dilakukan melalui loket kantor pesantren atau transfer ke rekening resmi:
+Bank Syariah Indonesia (BSI)
+No. Rekening: *7200-888-999*
+A.n: *PPTQ ROUDLOTUL MUBAROKAH*
+
+Mohon konfirmasi setelah melakukan transfer melalui portal resmi wali santri:
+https://mubarokah.my.id/portal-wali
+
+Jazakumullah Khairan Katsiran.
+Wassalamu'alaikum Wr. Wb.`;
+
+        let waLink = rawWa ? `https://wa.me/${rawWa}?text=${encodeURIComponent(template)}` : "";
+
+        return {
+            ...st,
+            messageTemplate: template,
+            waLink: waLink
+        };
+    });
+
+    list.sort((a, b) => b.totalTunggakan - a.totalTunggakan);
+    return list;
+}
+
+/**
+ * Memuat Data WhatsApp Billing & Pengingat Tagihan Terjadwal (Hybrid Resilient)
  */
 async function loadBroadcastTagihanData() {
     const tbody = document.getElementById('keuangan-broadcast-table-body');
@@ -2696,6 +2798,7 @@ async function loadBroadcastTagihanData() {
 
     if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400 text-xs"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Mengkalkulasi daftar tagihan santri...</td></tr>`;
 
+    let list = [];
     try {
         const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : null) || "";
         const res = await apiPost("keuangan.getBroadcastTagihanList", {
@@ -2704,11 +2807,15 @@ async function loadBroadcastTagihanData() {
             program: program
         });
 
-        if (!res || !res.success) {
-            throw new Error((res && res.message) || "Gagal mengambil data broadcast");
+        if (res && res.success && Array.isArray(res.broadcastList)) {
+            list = res.broadcastList;
+        } else {
+            list = generateLocalBroadcastList(periode, program);
         }
-
-        const list = res.broadcastList || [];
+    } catch (err) {
+        console.warn("[BROADCAST] Network API gagal, fallback ke kalkulasi data lokal:", err);
+        list = generateLocalBroadcastList(periode, program);
+    }
         const totalNominal = list.reduce((acc, curr) => acc + (Number(curr.totalTunggakan) || 0), 0);
 
         if (statCount) statCount.innerText = `${list.length} Santri`;

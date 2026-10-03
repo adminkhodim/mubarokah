@@ -110,8 +110,8 @@
                 }
             }
 
-            // Fallback ke direct Apps Script jika proxy Vercel mengembalikan error 5xx (misal 504 timeout)
-            if (!response.ok && (response.status >= 500 && response.status < 600) && targetUrl === proxyBase && WEB_APP_URL && WEB_APP_URL !== proxyBase) {
+            // Fallback ke direct Apps Script jika proxy Vercel mengembalikan error (404 Not Found, 5xx server error, timeout, dll.)
+            if (!response.ok && targetUrl === proxyBase && WEB_APP_URL && WEB_APP_URL !== proxyBase) {
                 console.warn(`[apiPost] Proxy ${action} mengembalikan HTTP ${response.status}. Mencoba langsung ke Google Apps Script...`);
                 try {
                     const fallbackRes = await fetch(WEB_APP_URL, {
