@@ -910,6 +910,39 @@ function doPost(e) {
       }
     }
 
+    if (action === "savePengeluaran" || action === "keuangan.savePengeluaran") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
+        return createJsonResponse(savePengeluaranKeuangan(payload.data || payload, token, actor));
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", success: false, message: authErr.message });
+      }
+    }
+
+    if (action === "batalPengeluaran" || action === "keuangan.batalPengeluaran" || action === "voidPengeluaran") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
+        return createJsonResponse(batalPengeluaranKeuangan(payload.data || payload, token, actor));
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", success: false, message: authErr.message });
+      }
+    }
+
+    if (action === "submitTutupKasir" || action === "keuangan.submitTutupKasir") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
+        return createJsonResponse(submitTutupKasirKeuangan(payload.data || payload, token, actor));
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", success: false, message: authErr.message });
+      }
+    }
+
     // ========================================================
     // DATA PEGAWAI (ASATIDZ & KARYAWAN) ACTIONS (doPost)
     // ========================================================
@@ -18545,13 +18578,16 @@ function getPresensiRekap(filter, token) {
 }
 
 // ====================================================================
-// MODUL KEUANGAN & PEMBAYARAN SANTRI (TAHAP 1: KASIR & TAGIHAN RUTIN)
+// MODUL KEUANGAN & AKUNTANSI PESANTREN TERPADU (FASE 1 & 2)
 // PPTQ Roudlotul Mubarokah Kudus
 // ====================================================================
 
 const SHEET_KEUANGAN_TARIF = "Keuangan_Tarif";
 const SHEET_KEUANGAN_TAGIHAN = "Keuangan_Tagihan";
 const SHEET_KEUANGAN_TRANSAKSI = "Keuangan_Transaksi";
+const SHEET_KEUANGAN_PENGELUARAN = "Keuangan_Pengeluaran";
+const SHEET_KEUANGAN_KATEGORI_PENGELUARAN = "Keuangan_Kategori_Pengeluaran";
+const SHEET_KEUANGAN_TUTUP_KASIR = "Keuangan_Tutup_Kasir";
 
 function getOrCreateKeuanganSheet(ss, sheetName, headers, bgHeaderColor) {
   let sheet = ss.getSheetByName(sheetName);
@@ -18593,14 +18629,40 @@ function initKeuanganSheets(token) {
     const headersTagihan = ["tagihan_id", "student_id", "student_name", "pos_id", "nama_pos", "periode", "nominal_tagihan", "nominal_terbayar", "sisa_tagihan", "status", "due_date", "updated_at"];
     getOrCreateKeuanganSheet(ss, SHEET_KEUANGAN_TAGIHAN, headersTagihan, "#b45309");
 
-    // 3. Sheet Transaksi / Buku Kas
-    const headersTransaksi = ["transaksi_id", "no_kuitansi", "tanggal_bayar", "student_id", "student_name", "tagihan_ids_json", "nominal_total", "metode_bayar", "nama_kasir", "catatan", "created_at"];
+    // 3. Sheet Transaksi / Kas Masuk
+    const headersTransaksi = ["transaksi_id", "no_kuitansi", "tanggal_bayar", "student_id", "student_name", "tagihan_ids_json", "nominal_total", "metode_bayar", "nama_kasir", "catatan", "created_at", "status"];
     getOrCreateKeuanganSheet(ss, SHEET_KEUANGAN_TRANSAKSI, headersTransaksi, "#1e3a8a");
+
+    // 4. Sheet Kategori Pengeluaran / Beban Operasional Pesantren
+    const headersKatPengeluaran = ["kategori_id", "nama_kategori", "deskripsi", "tipe", "is_active", "created_at"];
+    const katSheet = getOrCreateKeuanganSheet(ss, SHEET_KEUANGAN_KATEGORI_PENGELUARAN, headersKatPengeluaran, "#0284c7");
+    if (katSheet.getLastRow() <= 1) {
+      const nowIso = new Date().toISOString();
+      const defaultCategories = [
+        ["EXP-CAT-01", "Dapur & Konsumsi Santri", "Belanja beras, lauk, bumbu, gas, dan logistik makan santri harian", "OPERASIONAL", "TRUE", nowIso],
+        ["EXP-CAT-02", "Honorarium Asatidz & Pegawai", "Mukafaah / honor bulanan asatidz, musyrif, staf dapur & kebersihan", "BULANAN", "TRUE", nowIso],
+        ["EXP-CAT-03", "Utilitas (Listrik, Air & Internet)", "Tagihan listrik PLN, air PDAM/sumur pompa, dan jaringan wifi kantor/santri", "RUTIN", "TRUE", nowIso],
+        ["EXP-CAT-04", "Pemeliharaan Gedung & Sarpras", "Perbaikan sanitasi asrama, kelas, masjid, dan sarana pesantren", "RUTIN", "TRUE", nowIso],
+        ["EXP-CAT-05", "ATK & Kebutuhan Kantor", "Kertas, tinta printer, fotokopi buku, kesekretariatan & perlengkapan kantor", "OPERASIONAL", "TRUE", nowIso],
+        ["EXP-CAT-06", "Kegiatan, Lomba & PHBI", "Kegiatan Maulid, Khataman, Imtihan, Haflah, lomba tahfidz santri", "INSIDENTAL", "TRUE", nowIso],
+        ["EXP-CAT-07", "Kesehatan & P3K Santri", "Obat-obatan, vitamin, perlengkapan medis, dan klinik rujukan santri", "OPERASIONAL", "TRUE", nowIso],
+        ["EXP-CAT-08", "Kas Kecil & Pengeluaran Darurat", "Kebutuhan mendesak harian pesantren yang tidak terduga", "LAINNYA", "TRUE", nowIso]
+      ];
+      katSheet.getRange(2, 1, defaultCategories.length, headersKatPengeluaran.length).setValues(defaultCategories);
+    }
+
+    // 5. Sheet Kas Keluar / Pengeluaran Operasional
+    const headersPengeluaran = ["pengeluaran_id", "no_bukti", "tanggal", "kategori_id", "nama_kategori", "nominal", "metode_bayar", "dibayarkan_kepada", "keterangan", "petugas", "status", "created_at"];
+    getOrCreateKeuanganSheet(ss, SHEET_KEUANGAN_PENGELUARAN, headersPengeluaran, "#e11d48");
+
+    // 6. Sheet Tutup Kasir & Rekonsiliasi Harian
+    const headersTutupKasir = ["closing_id", "tanggal", "nama_kasir", "modal_awal", "masuk_tunai", "masuk_transfer", "masuk_qris", "keluar_tunai", "saldo_sistem", "saldo_fisik", "selisih", "catatan", "status", "created_at"];
+    getOrCreateKeuanganSheet(ss, SHEET_KEUANGAN_TUTUP_KASIR, headersTutupKasir, "#4f46e5");
 
     return {
       status: "success",
       success: true,
-      message: "Sheet Keuangan berhasil diinisialisasi dengan struktur standar."
+      message: "Sheet Keuangan (Tarif, Tagihan, Kas Masuk, Kas Keluar, Kategori, & Tutup Kasir) berhasil diinisialisasi."
     };
   } catch (err) {
     return { status: "error", success: false, message: "Gagal inisialisasi sheet keuangan: " + err.message };
@@ -18769,10 +18831,13 @@ function getKeuanganDashboard(token) {
       }
     }
 
-    // 4. Ambil Riwayat Transaksi Terbaru (50 data terakhir)
+    // 4. Ambil Riwayat Transaksi Kas Masuk & Hitung Penerimaan
     const recentTransactions = [];
     let totalPendapatanBulanIni = 0;
-    const currentMonthPrefix = new Date().toISOString().substring(0, 7); // e.g. "2026-09"
+    let kasMasukHariIniTunai = 0;
+    let kasMasukHariIniNonTunai = 0;
+    const currentMonthPrefix = new Date().toISOString().substring(0, 7); // e.g. "2026-10"
+    const todayPrefix = new Date().toISOString().substring(0, 10);       // e.g. "2026-10-03"
 
     const trxData = trxSheet.getDataRange().getValues();
     if (trxData.length >= 2) {
@@ -18783,9 +18848,16 @@ function getKeuanganDashboard(token) {
           const nomTotal = Number(r[6]) || 0;
           const tglStr = String(r[2] || "").trim();
           const statusTrx = String(r[11] || (String(r[9] || "").includes("[VOID") ? "VOID" : "SUKSES")).trim().toUpperCase();
+          const metode = String(r[7] || "TUNAI").trim().toUpperCase();
 
-          if (tglStr.startsWith(currentMonthPrefix) && statusTrx !== "VOID") {
-            totalPendapatanBulanIni += nomTotal;
+          if (statusTrx !== "VOID") {
+            if (tglStr.startsWith(currentMonthPrefix)) {
+              totalPendapatanBulanIni += nomTotal;
+            }
+            if (tglStr.startsWith(todayPrefix)) {
+              if (metode === "TUNAI") kasMasukHariIniTunai += nomTotal;
+              else kasMasukHariIniNonTunai += nomTotal;
+            }
           }
 
           if (recentTransactions.length < 50) {
@@ -18805,7 +18877,7 @@ function getKeuanganDashboard(token) {
               studentName: String(r[4] || "").trim(),
               rincianItems: rincianItems,
               nominalTotal: nomTotal,
-              metodeBayar: String(r[7] || "TUNAI").trim(),
+              metodeBayar: metode,
               namaKasir: String(r[8] || "-").trim(),
               catatan: String(r[9] || "").trim(),
               createdAt: String(r[10] || "").trim(),
@@ -18816,23 +18888,129 @@ function getKeuanganDashboard(token) {
       }
     }
 
+    // 5. Ambil Kategori Pengeluaran Beban Pesantren
+    const kategoriPengeluaranList = [];
+    const expCatSheet = ss.getSheetByName(SHEET_KEUANGAN_KATEGORI_PENGELUARAN);
+    if (expCatSheet) {
+      const catData = expCatSheet.getDataRange().getValues();
+      if (catData.length >= 2) {
+        for (let i = 1; i < catData.length; i++) {
+          const r = catData[i];
+          if (r[0] && String(r[4] || "TRUE").toUpperCase() === "TRUE") {
+            kategoriPengeluaranList.push({
+              kategoriId: String(r[0]).trim(),
+              namaKategori: String(r[1] || "").trim(),
+              deskripsi: String(r[2] || "").trim(),
+              tipe: String(r[3] || "OPERASIONAL").trim()
+            });
+          }
+        }
+      }
+    }
+
+    // 6. Ambil Buku Kas Keluar (Pengeluaran Operasional Pesantren)
+    const recentExpenses = [];
+    let totalPengeluaranBulanIni = 0;
+    let kasKeluarHariIniTunai = 0;
+    const expSheet = ss.getSheetByName(SHEET_KEUANGAN_PENGELUARAN);
+    if (expSheet) {
+      const expData = expSheet.getDataRange().getValues();
+      if (expData.length >= 2) {
+        for (let i = expData.length - 1; i >= 1; i--) {
+          const r = expData[i];
+          if (r[0]) {
+            const nomExp = Number(r[5]) || 0;
+            const tglExp = String(r[2] || "").substring(0, 10);
+            const statusExp = String(r[10] || "ACTIVE").trim().toUpperCase();
+            const metodeExp = String(r[6] || "TUNAI").trim().toUpperCase();
+
+            if (statusExp !== "VOID") {
+              if (tglExp.startsWith(currentMonthPrefix)) {
+                totalPengeluaranBulanIni += nomExp;
+              }
+              if (tglExp.startsWith(todayPrefix) && metodeExp === "TUNAI") {
+                kasKeluarHariIniTunai += nomExp;
+              }
+            }
+
+            if (recentExpenses.length < 50) {
+              recentExpenses.push({
+                pengeluaranId: String(r[0]).trim(),
+                noBukti: String(r[1] || "").trim(),
+                tanggal: tglExp,
+                kategoriId: String(r[3] || "").trim(),
+                namaKategori: String(r[4] || "").trim(),
+                nominal: nomExp,
+                metodeBayar: metodeExp,
+                dibayarkanKepada: String(r[7] || "").trim(),
+                keterangan: String(r[8] || "").trim(),
+                petugas: String(r[9] || "").trim(),
+                status: statusExp,
+                createdAt: String(r[11] || "").trim()
+              });
+            }
+          }
+        }
+      }
+    }
+
+    // 7. Ambil Riwayat Tutup Kasir Harian
+    const recentClosingList = [];
+    const closingSheet = ss.getSheetByName(SHEET_KEUANGAN_TUTUP_KASIR);
+    if (closingSheet) {
+      const cData = closingSheet.getDataRange().getValues();
+      if (cData.length >= 2) {
+        for (let i = cData.length - 1; i >= 1; i--) {
+          const r = cData[i];
+          if (r[0] && recentClosingList.length < 20) {
+            recentClosingList.push({
+              closingId: String(r[0]).trim(),
+              tanggal: String(r[1] || "").substring(0, 10),
+              namaKasir: String(r[2] || "").trim(),
+              modalAwal: Number(r[3]) || 0,
+              masukTunai: Number(r[4]) || 0,
+              masukTransfer: Number(r[5]) || 0,
+              masukQris: Number(r[6]) || 0,
+              keluarTunai: Number(r[7]) || 0,
+              saldoSistem: Number(r[8]) || 0,
+              saldoFisik: Number(r[9]) || 0,
+              selisih: Number(r[10]) || 0,
+              catatan: String(r[11] || "").trim(),
+              status: String(r[12] || "SUBMITTED").trim(),
+              createdAt: String(r[13] || "").trim()
+            });
+          }
+        }
+      }
+    }
+
     const totalTagihanSemua = countLunas + countBelumLunas;
     const persentasePelunasan = totalTagihanSemua > 0 ? Math.round((countLunas / totalTagihanSemua) * 100) : 100;
+    const surplusDefisit = totalPendapatanBulanIni - totalPengeluaranBulanIni;
 
     return {
       status: "success",
       success: true,
       summary: {
         totalPendapatanBulanIni: totalPendapatanBulanIni,
+        totalPengeluaranBulanIni: totalPengeluaranBulanIni,
+        surplusDefisit: surplusDefisit,
         totalTunggakan: totalTunggakan,
         countLunas: countLunas,
         countBelumLunas: countBelumLunas,
         persentasePelunasan: persentasePelunasan,
-        totalSantriAktif: students.length
+        totalSantriAktif: students.length,
+        // Data kasir realtime hari ini
+        kasMasukHariIniTunai: kasMasukHariIniTunai,
+        kasMasukHariIniNonTunai: kasMasukHariIniNonTunai,
+        kasKeluarHariIniTunai: kasKeluarHariIniTunai
       },
       tarifList: tarifList,
       tagihanList: tagihanList,
       recentTransactions: recentTransactions,
+      recentExpenses: recentExpenses,
+      kategoriPengeluaranList: kategoriPengeluaranList,
+      recentClosingList: recentClosingList,
       students: students,
       programs: programsList
     };
@@ -19387,6 +19565,214 @@ function deleteMasterTarif(tarifId, token) {
   } catch (err) {
     return { status: "error", success: false, message: err.message };
   }
+}
+
+// ====================================================================
+// FASE 2: MANAJEMEN KAS KELUAR & TUTUP KASIR HARIAN
+// ====================================================================
+
+function savePengeluaranKeuangan(payload, token, actorParam) {
+  return withScriptLock(() => {
+    try {
+      const ss = getDatabaseSpreadsheet();
+      if (!ss) throw new Error("Spreadsheet database tidak ditemukan.");
+
+      const actor = actorParam || (token ? authenticateSession(token) : null);
+      if (actor) {
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
+      } else {
+        throw new Error("Sesi otorisasi supervisor/bendahara tidak valid.");
+      }
+
+      const nominal = Number(payload.nominal) || 0;
+      if (nominal <= 0) throw new Error("Nominal pengeluaran harus lebih besar dari Rp 0.");
+
+      const kategoriId = String(payload.kategoriId || "EXP-CAT-08").trim();
+      const namaKategori = String(payload.namaKategori || "Kas Kecil & Pengeluaran Darurat").trim();
+      const dibayarkanKepada = String(payload.dibayarkanKepada || "-").trim();
+      const keterangan = String(payload.keterangan || "").trim();
+      const metodeBayar = String(payload.metodeBayar || "TUNAI").trim().toUpperCase();
+      const tanggal = String(payload.tanggal || new Date().toISOString().substring(0, 10)).trim();
+      const petugas = (actor && actor.name) || "Bendahara Pesantren";
+      const now = new Date();
+      const nowIso = now.toISOString();
+
+      const expSheet = getOrCreateKeuanganSheet(
+        ss, 
+        SHEET_KEUANGAN_PENGELUARAN, 
+        ["pengeluaran_id", "no_bukti", "tanggal", "kategori_id", "nama_kategori", "nominal", "metode_bayar", "dibayarkan_kepada", "keterangan", "petugas", "status", "created_at"],
+        "#e11d48"
+      );
+
+      const yr = now.getFullYear();
+      const mo = String(now.getMonth() + 1).padStart(2, "0");
+      const lastRow = expSheet.getLastRow();
+      const counter = String(Math.max(1, lastRow)).padStart(4, "0");
+      const noBukti = `BK/RM/${yr}/${mo}/${counter}`;
+      const pengeluaranId = `EXP-${yr}${mo}-${counter}`;
+
+      expSheet.appendRow([
+        pengeluaranId,
+        noBukti,
+        tanggal,
+        kategoriId,
+        namaKategori,
+        nominal,
+        metodeBayar,
+        dibayarkanKepada,
+        keterangan,
+        petugas,
+        "ACTIVE",
+        nowIso
+      ]);
+
+      return {
+        status: "success",
+        success: true,
+        message: `Pengeluaran sebesar Rp ${nominal.toLocaleString("id-ID")} berhasil dicatat dengan No. Bukti ${noBukti}.`,
+        pengeluaranId: pengeluaranId,
+        noBukti: noBukti
+      };
+    } catch (err) {
+      console.error("[SAVE PENGELUARAN ERROR]", err);
+      return { status: "error", success: false, message: "Gagal menyimpan pengeluaran: " + err.message };
+    }
+  });
+}
+
+function batalPengeluaranKeuangan(payload, token, actorParam) {
+  return withScriptLock(() => {
+    try {
+      const ss = getDatabaseSpreadsheet();
+      if (!ss) throw new Error("Spreadsheet database tidak ditemukan.");
+
+      const actor = actorParam || (token ? authenticateSession(token) : null);
+      if (actor) {
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
+      } else {
+        throw new Error("Sesi otorisasi supervisor/bendahara tidak valid.");
+      }
+
+      const pengeluaranId = String(payload.pengeluaranId || "").trim();
+      const alasan = String(payload.alasan || "").trim();
+      if (!pengeluaranId) throw new Error("ID Pengeluaran wajib disertakan.");
+      if (!alasan || alasan.length < 3) throw new Error("Alasan pembatalan/void wajib diisi minimal 3 karakter.");
+
+      const expSheet = ss.getSheetByName(SHEET_KEUANGAN_PENGELUARAN);
+      if (!expSheet) throw new Error("Sheet pengeluaran belum dibuat.");
+
+      const data = expSheet.getDataRange().getValues();
+      let targetRow = -1;
+      let targetExp = null;
+
+      for (let i = 1; i < data.length; i++) {
+        if (String(data[i][0]).trim() === pengeluaranId) {
+          targetRow = i + 1;
+          targetExp = data[i];
+          break;
+        }
+      }
+
+      if (targetRow === -1 || !targetExp) {
+        throw new Error("Pengeluaran dengan ID " + pengeluaranId + " tidak ditemukan.");
+      }
+
+      const curStatus = String(targetExp[10] || "").trim().toUpperCase();
+      if (curStatus === "VOID") {
+        throw new Error("Pengeluaran ini sudah pernah dibatalkan (VOID).");
+      }
+
+      const nowIso = new Date().toISOString();
+      const actorName = (actor && actor.name) || "Bendahara";
+      const oldKet = String(targetExp[8] || "");
+      const newKet = `[VOID oleh ${actorName} pada ${nowIso}. Alasan: ${alasan}] ${oldKet}`.trim();
+
+      expSheet.getRange(targetRow, 9).setValue(newKet);    // Keterangan
+      expSheet.getRange(targetRow, 11).setValue("VOID");    // Status
+
+      return {
+        status: "success",
+        success: true,
+        message: `Pengeluaran ${targetExp[1] || pengeluaranId} berhasil dibatalkan (VOID).`,
+        pengeluaranId: pengeluaranId
+      };
+    } catch (err) {
+      console.error("[BATAL PENGELUARAN ERROR]", err);
+      return { status: "error", success: false, message: "Gagal membatalkan pengeluaran: " + err.message };
+    }
+  });
+}
+
+function submitTutupKasirKeuangan(payload, token, actorParam) {
+  return withScriptLock(() => {
+    try {
+      const ss = getDatabaseSpreadsheet();
+      if (!ss) throw new Error("Spreadsheet database tidak ditemukan.");
+
+      const actor = actorParam || (token ? authenticateSession(token) : null);
+      if (actor) {
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
+      } else {
+        throw new Error("Sesi otorisasi supervisor/bendahara tidak valid.");
+      }
+
+      const tanggal = String(payload.tanggal || new Date().toISOString().substring(0, 10)).trim();
+      const namaKasir = (actor && actor.name) || String(payload.namaKasir || "Kasir Loket").trim();
+      const modalAwal = Number(payload.modalAwal) || 0;
+      const masukTunai = Number(payload.masukTunai) || 0;
+      const masukTransfer = Number(payload.masukTransfer) || 0;
+      const masukQris = Number(payload.masukQris) || 0;
+      const keluarTunai = Number(payload.keluarTunai) || 0;
+      const saldoFisik = Number(payload.saldoFisik) || 0;
+      const catatan = String(payload.catatan || "").trim();
+
+      const saldoSistem = (modalAwal + masukTunai) - keluarTunai;
+      const selisih = saldoFisik - saldoSistem;
+      const nowIso = new Date().toISOString();
+
+      const closingSheet = getOrCreateKeuanganSheet(
+        ss,
+        SHEET_KEUANGAN_TUTUP_KASIR,
+        ["closing_id", "tanggal", "nama_kasir", "modal_awal", "masuk_tunai", "masuk_transfer", "masuk_qris", "keluar_tunai", "saldo_sistem", "saldo_fisik", "selisih", "catatan", "status", "created_at"],
+        "#4f46e5"
+      );
+
+      const dClean = tanggal.replace(/[^0-9]/g, "");
+      const lastRow = closingSheet.getLastRow();
+      const counter = String(Math.max(1, lastRow)).padStart(3, "0");
+      const closingId = `CLS-${dClean}-${counter}`;
+
+      closingSheet.appendRow([
+        closingId,
+        tanggal,
+        namaKasir,
+        modalAwal,
+        masukTunai,
+        masukTransfer,
+        masukQris,
+        keluarTunai,
+        saldoSistem,
+        saldoFisik,
+        selisih,
+        catatan,
+        selisih === 0 ? "SEIMBANG" : (selisih > 0 ? "LEBIH" : "SELISIH_KURANG"),
+        nowIso
+      ]);
+
+      return {
+        status: "success",
+        success: true,
+        message: `Rekonsiliasi tutup kasir berhasil disimpan. Status: ${selisih === 0 ? "SEIMBANG (Paspasan)" : (selisih > 0 ? "LEBIH Rp " + selisih.toLocaleString("id-ID") : "KURANG Rp " + Math.abs(selisih).toLocaleString("id-ID"))}.`,
+        closingId: closingId,
+        saldoSistem: saldoSistem,
+        saldoFisik: saldoFisik,
+        selisih: selisih
+      };
+    } catch (err) {
+      console.error("[SUBMIT TUTUP KASIR ERROR]", err);
+      return { status: "error", success: false, message: "Gagal memproses tutup kasir: " + err.message };
+    }
+  });
 }
 
 

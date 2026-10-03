@@ -137,19 +137,20 @@ html.dark option {
 }
 
 /* ========================================================================= */
-/* PENCETAKAN STRUK KASIR THERMAL & KUITANSI KEUANGAN                        */
+/* PENCETAKAN STRUK KASIR THERMAL & LAPORAN KEUANGAN                         */
 /* ========================================================================= */
 @media print {
   body * {
     visibility: hidden;
   }
   
-  #modal-keuangan-kuitansi,
-  #modal-keuangan-kuitansi * {
+  /* 1. Cetak Struk Kuitansi (jika modal kuitansi aktif/terbuka) */
+  #modal-keuangan-kuitansi:not(.hidden),
+  #modal-keuangan-kuitansi:not(.hidden) * {
     visibility: visible;
   }
 
-  #modal-keuangan-kuitansi {
+  #modal-keuangan-kuitansi:not(.hidden) {
     position: absolute !important;
     left: 0 !important;
     top: 0 !important;
@@ -191,5 +192,23 @@ html.dark option {
   #kuitansi-printable-area * {
     color: #000 !important;
     border-color: #333 !important;
+  }
+
+  /* 2. Cetak Laporan Keuangan (Arus Kas & Neraca Pesantren) */
+  #keuangan-printable-laporan,
+  #keuangan-printable-laporan * {
+    visibility: visible;
+  }
+
+  #keuangan-printable-laporan {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    background: #fff !important;
+    color: #000 !important;
+    padding: 15px !important;
+    border: none !important;
+    box-shadow: none !important;
   }
 }

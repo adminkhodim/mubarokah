@@ -211,6 +211,10 @@ async function loadAdminKeuanganData(forceRefresh = false) {
             populateKeuanganTagihanProgramFilter();
             filterKeuanganTagihan();
             renderKeuanganTransaksiTable();
+            renderKeuanganPengeluaranTable();
+            populateKategoriPengeluaranDropdown();
+            if (ASNKeuangan.activeTab === 'tutup-kasir') loadTutupKasirRealtime();
+            if (ASNKeuangan.activeTab === 'laporan') renderKeuanganLaporanView();
             hasRenderedFromCache = true;
             if (loader) loader.classList.add('hidden');
         }
@@ -249,6 +253,10 @@ async function loadAdminKeuanganData(forceRefresh = false) {
                 populateKeuanganTagihanProgramFilter();
                 filterKeuanganTagihan();
                 renderKeuanganTransaksiTable();
+                renderKeuanganPengeluaranTable();
+                populateKategoriPengeluaranDropdown();
+                if (ASNKeuangan.activeTab === 'tutup-kasir') loadTutupKasirRealtime();
+                if (ASNKeuangan.activeTab === 'laporan') renderKeuanganLaporanView();
 
                 if (forceRefresh && typeof showToast === 'function') {
                     showToast("✅ Data Keuangan berhasil disinkronkan.");
@@ -294,41 +302,62 @@ async function initKeuanganDatabaseSheets() {
 window.initKeuanganDatabaseSheets = initKeuanganDatabaseSheets;
 
 /**
- * Render Kartu Statistik Ringkasan Keuangan
+ * Render Kartu Statistik Ringkasan Keuangan (Inflow, Outflow, Surplus-Defisit, Piutang, Kepatuhan)
  */
 function renderKeuanganSummaryCards() {
     const sum = ASNKeuangan.data.summary || {};
     const elPendapatan = document.getElementById('keuangan-stat-pendapatan');
+    const elPengeluaran = document.getElementById('keuangan-stat-pengeluaran');
+    const elSurplus = document.getElementById('keuangan-stat-surplus');
     const elTunggakan = document.getElementById('keuangan-stat-tunggakan');
     const elLunas = document.getElementById('keuangan-stat-lunas');
     const elPersen = document.getElementById('keuangan-stat-persentase');
 
-    if (elPendapatan) elPendapatan.innerText = formatRupiah(sum.totalPendapatanBulanIni || 0);
+    const totalMasuk = Number(sum.totalPendapatanBulanIni) || 0;
+    const totalKeluar = Number(sum.totalPengeluaranBulanIni) || 0;
+    const surplusDefisit = sum.surplusDefisit !== undefined ? Number(sum.surplusDefisit) : (totalMasuk - totalKeluar);
+
+    if (elPendapatan) elPendapatan.innerText = formatRupiah(totalMasuk);
+    if (elPengeluaran) elPengeluaran.innerText = formatRupiah(totalKeluar);
+
+    if (elSurplus) {
+        if (surplusDefisit >= 0) {
+            elSurplus.innerText = formatRupiah(surplusDefisit);
+            elSurplus.className = "text-sm sm:text-base md:text-lg font-black text-teal-700 dark:text-teal-300";
+        } else {
+            elSurplus.innerText = `-${formatRupiah(Math.abs(surplusDefisit))}`;
+            elSurplus.className = "text-sm sm:text-base md:text-lg font-black text-rose-600 dark:text-rose-400";
+        }
+    }
+
     if (elTunggakan) elTunggakan.innerText = formatRupiah(sum.totalTunggakan || 0);
-    if (elLunas) elLunas.innerText = `${sum.countLunas || 0} Lunas / ${sum.countBelumLunas || 0} Tertunggak`;
+    if (elLunas) elLunas.innerText = `(${sum.countLunas || 0} Lunas / ${sum.countBelumLunas || 0} Belum)`;
     if (elPersen) elPersen.innerText = `${sum.persentasePelunasan || 100}%`;
 }
 window.renderKeuanganSummaryCards = renderKeuanganSummaryCards;
 
 /**
- * Berpindah Tab Utama di Modul Keuangan:
- * - 'pos'       : Kasir Cepat
- * - 'tagihan'   : Daftar Tagihan & Piutang Santri
- * - 'transaksi' : Buku Kas & Kuitansi
- * - 'tarif'     : Master Tarif Biaya
+ * Berpindah Tab Utama di Modul Keuangan (Fase 1 & Fase 2):
+ * - 'pos'         : Kasir Cepat (POS)
+ * - 'tagihan'     : Daftar Tagihan & Piutang Santri
+ * - 'transaksi'   : Buku Kas Masuk & Kuitansi
+ * - 'pengeluaran' : Buku Kas Keluar (Beban Operasional)
+ * - 'tutup-kasir' : Tutup Kasir & Rekonsiliasi Harian
+ * - 'laporan'     : Laporan Arus Kas & Neraca
+ * - 'tarif'       : Master Pos & Tarif Biaya
  */
 function switchKeuanganTab(tabName) {
     ASNKeuangan.activeTab = tabName;
 
-    const tabs = ['pos', 'tagihan', 'transaksi', 'tarif'];
+    const tabs = ['pos', 'tagihan', 'transaksi', 'pengeluaran', 'tutup-kasir', 'laporan', 'tarif'];
     tabs.forEach(t => {
         const btn = document.getElementById(`tab-btn-keuangan-${t}`);
         const view = document.getElementById(`keuangan-panel-${t}`);
         if (btn) {
             if (t === tabName) {
-                btn.className = "px-3 py-2 rounded-xl text-xs font-bold transition bg-emerald-600 text-white shadow-sm";
+                btn.className = "px-3.5 py-2 rounded-xl text-xs font-bold transition bg-emerald-600 text-white shadow-sm flex items-center gap-1.5 shrink-0";
             } else {
-                btn.className = "px-3 py-2 rounded-xl text-xs font-bold transition text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836]";
+                btn.className = "px-3.5 py-2 rounded-xl text-xs font-bold transition text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836] flex items-center gap-1.5 shrink-0";
             }
         }
         if (view) {
@@ -340,6 +369,13 @@ function switchKeuanganTab(tabName) {
     if (tabName === 'pos') {
         const input = document.getElementById('keuangan-pos-search-input');
         if (input) setTimeout(() => input.focus(), 150);
+    } else if (tabName === 'pengeluaran') {
+        renderKeuanganPengeluaranTable();
+        populateKategoriPengeluaranDropdown();
+    } else if (tabName === 'tutup-kasir') {
+        loadTutupKasirRealtime();
+    } else if (tabName === 'laporan') {
+        renderKeuanganLaporanView();
     }
 }
 window.switchKeuanganTab = switchKeuanganTab;
@@ -1711,3 +1747,564 @@ async function deleteMasterTarif(tarifId) {
     }
 }
 window.deleteMasterTarif = deleteMasterTarif;
+
+// ====================================================================
+// SUB-MODUL 5: BUKU KAS KELUAR (PENGELUARAN OPERASIONAL)
+// ====================================================================
+
+function populateKategoriPengeluaranDropdown() {
+    const select = document.getElementById('pengeluaran-input-kategori');
+    if (!select) return;
+    const cats = ASNKeuangan.data.kategoriPengeluaranList || [];
+
+    if (cats.length === 0) {
+        select.innerHTML = `
+            <option value="EXP-CAT-01">Dapur & Konsumsi Santri</option>
+            <option value="EXP-CAT-02">Honorarium Asatidz & Pegawai</option>
+            <option value="EXP-CAT-03">Utilitas (Listrik, Air & Internet)</option>
+            <option value="EXP-CAT-04">Pemeliharaan Gedung & Sarpras</option>
+            <option value="EXP-CAT-05">ATK & Kebutuhan Kantor</option>
+            <option value="EXP-CAT-06">Kegiatan, Lomba & PHBI</option>
+            <option value="EXP-CAT-07">Kesehatan & P3K Santri</option>
+            <option value="EXP-CAT-08" selected>Kas Kecil & Pengeluaran Darurat</option>
+        `;
+        return;
+    }
+
+    let html = '';
+    cats.forEach(c => {
+        html += `<option value="${escapeHtml(c.kategoriId)}">${escapeHtml(c.namaKategori)} (${escapeHtml(c.tipe || 'OPERASIONAL')})</option>`;
+    });
+    select.innerHTML = html;
+}
+window.populateKategoriPengeluaranDropdown = populateKategoriPengeluaranDropdown;
+
+function openModalPengeluaran() {
+    const modal = document.getElementById('modal-keuangan-pengeluaran');
+    if (!modal) return;
+
+    const tglInput = document.getElementById('pengeluaran-input-tanggal');
+    const nomInput = document.getElementById('pengeluaran-input-nominal');
+    const penInput = document.getElementById('pengeluaran-input-penerima');
+    const ketInput = document.getElementById('pengeluaran-input-keterangan');
+    const metInput = document.getElementById('pengeluaran-input-metode');
+
+    if (tglInput) tglInput.value = new Date().toISOString().substring(0, 10);
+    if (nomInput) nomInput.value = '';
+    if (penInput) penInput.value = '';
+    if (ketInput) ketInput.value = '';
+    if (metInput) metInput.value = 'TUNAI';
+
+    populateKategoriPengeluaranDropdown();
+    modal.classList.remove('hidden');
+    if (nomInput) setTimeout(() => nomInput.focus(), 150);
+}
+window.openModalPengeluaran = openModalPengeluaran;
+
+function closeModalPengeluaran() {
+    const modal = document.getElementById('modal-keuangan-pengeluaran');
+    if (modal) modal.classList.add('hidden');
+}
+window.closeModalPengeluaran = closeModalPengeluaran;
+
+async function submitSavePengeluaran() {
+    const roleCheck = checkKeuanganRoleAccess();
+    if (!roleCheck.isAllowed) {
+        alert("Akses ditolak: Hanya Super Admin, Admin, atau Bendahara yang diizinkan mencatat kas keluar.");
+        return;
+    }
+
+    const tglInput = document.getElementById('pengeluaran-input-tanggal');
+    const catInput = document.getElementById('pengeluaran-input-kategori');
+    const nomInput = document.getElementById('pengeluaran-input-nominal');
+    const penInput = document.getElementById('pengeluaran-input-penerima');
+    const ketInput = document.getElementById('pengeluaran-input-keterangan');
+    const metInput = document.getElementById('pengeluaran-input-metode');
+    const btnSubmit = document.getElementById('btn-submit-pengeluaran');
+
+    const tanggal = tglInput ? tglInput.value.trim() : "";
+    const kategoriId = catInput ? catInput.value.trim() : "";
+    const namaKategori = catInput && catInput.selectedOptions[0] ? catInput.selectedOptions[0].text.split(' (')[0].trim() : "Beban Operasional";
+    const nominal = nomInput ? (Number(nomInput.value) || 0) : 0;
+    const dibayarkanKepada = penInput ? penInput.value.trim() : "";
+    const keterangan = ketInput ? ketInput.value.trim() : "";
+    const metodeBayar = metInput ? metInput.value.trim() : "TUNAI";
+
+    if (!tanggal) {
+        alert("Pilih tanggal pengeluaran.");
+        return;
+    }
+    if (nominal <= 0) {
+        alert("Masukkan nominal pengeluaran lebih dari Rp 0.");
+        if (nomInput) nomInput.focus();
+        return;
+    }
+    if (!keterangan || keterangan.length < 3) {
+        alert("Tuliskan keterangan / rincian keperluan pengeluaran (min. 3 karakter).");
+        if (ketInput) ketInput.focus();
+        return;
+    }
+
+    try {
+        if (btnSubmit) {
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Menyimpan...`;
+        }
+
+        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : null) || "";
+        const res = await apiPost("keuangan.savePengeluaran", {
+            token: token,
+            tanggal: tanggal,
+            kategoriId: kategoriId,
+            namaKategori: namaKategori,
+            nominal: nominal,
+            metodeBayar: metodeBayar,
+            dibayarkanKepada: dibayarkanKepada,
+            keterangan: keterangan
+        });
+
+        if (res && res.success) {
+            closeModalPengeluaran();
+            if (typeof showToast === 'function') {
+                showToast(`✅ ${res.message || "Pengeluaran kas berhasil dicatat."}`);
+            } else {
+                alert(res.message);
+            }
+            loadAdminKeuanganData(true);
+        } else {
+            alert("Gagal mencatat pengeluaran: " + ((res && res.message) || "Terjadi kesalahan sistem."));
+        }
+    } catch (e) {
+        alert("Error pengeluaran: " + e.message);
+    } finally {
+        if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = `Simpan Kas Keluar`;
+        }
+    }
+}
+window.submitSavePengeluaran = submitSavePengeluaran;
+
+async function promptVoidPengeluaran(pengeluaranId, noBukti, nominal) {
+    const roleCheck = checkKeuanganRoleAccess();
+    if (!roleCheck.isAllowed) {
+        alert("Akses ditolak: Hanya Super Admin, Admin, atau Bendahara yang diizinkan membatalkan pengeluaran.");
+        return;
+    }
+
+    const alasan = prompt(
+        `⚠️ KONFIRMASI PEMBATALAN PENGELUARAN (VOID)\n\n` +
+        `• No. Bukti : ${noBukti || pengeluaranId}\n` +
+        `• Nominal   : ${formatRupiah(nominal)}\n\n` +
+        `PERHATIAN:\n` +
+        `Pengeluaran ini akan dibatalkan, total beban bulan ini akan dikurangi kembali.\n\n` +
+        `Silakan ketik alasan pembatalan (wajib, min. 3 karakter):`
+    );
+
+    if (alasan === null) return;
+    const trimmed = alasan.trim();
+    if (!trimmed || trimmed.length < 3) {
+        alert("Alasan pembatalan wajib diisi minimal 3 karakter untuk audit trail pembukuan.");
+        return;
+    }
+
+    try {
+        if (typeof showToast === 'function') showToast("⏳ Memproses pembatalan pengeluaran...");
+        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : null) || "";
+        const res = await apiPost("keuangan.batalPengeluaran", {
+            token: token,
+            pengeluaranId: pengeluaranId,
+            alasan: trimmed
+        });
+
+        if (res && res.success) {
+            if (typeof showToast === 'function') {
+                showToast(`✅ ${res.message || "Pengeluaran berhasil dibatalkan (VOID)."}`);
+            } else {
+                alert(res.message);
+            }
+            loadAdminKeuanganData(true);
+        } else {
+            alert("Gagal membatalkan pengeluaran: " + ((res && res.message) || "Terjadi kesalahan."));
+        }
+    } catch (e) {
+        alert("Error pembatalan pengeluaran: " + e.message);
+    }
+}
+window.promptVoidPengeluaran = promptVoidPengeluaran;
+
+function renderKeuanganPengeluaranTable() {
+    const tbody = document.getElementById('keuangan-pengeluaran-table-body');
+    const mobileList = document.getElementById('keuangan-pengeluaran-mobile-list');
+    const list = ASNKeuangan.data.recentExpenses || [];
+
+    if (!tbody && !mobileList) return;
+
+    if (list.length === 0) {
+        if (tbody) tbody.innerHTML = `<tr><td colspan="9" class="py-6 text-center text-xs text-slate-400">Belum ada catatan pengeluaran kas. Klik 'Catat Kas Keluar' untuk menambah.</td></tr>`;
+        if (mobileList) mobileList.innerHTML = `<div class="p-6 text-center bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] text-xs text-slate-400"><i class="fa-solid fa-money-bill-transfer text-2xl text-slate-300 dark:text-slate-600 block mb-1.5"></i>Belum ada riwayat pengeluaran kas keluar.</div>`;
+        return;
+    }
+
+    let htmlDesktop = '';
+    let htmlMobile = '';
+
+    list.forEach((exp, idx) => {
+        const isVoid = String(exp.status || '').toUpperCase() === 'VOID' || String(exp.keterangan || '').includes('[VOID');
+        const statusBadge = isVoid
+            ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/60 dark:text-rose-300"><i class="fa-solid fa-ban text-[9px]"></i> VOID</span>`
+            : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300"><i class="fa-solid fa-circle-check text-[9px]"></i> Terbayar</span>`;
+
+        const nomDisplay = isVoid
+            ? `<span class="line-through text-slate-400 font-semibold">${formatRupiah(exp.nominal)}</span>`
+            : `<span class="font-black text-rose-600 dark:text-rose-400">${formatRupiah(exp.nominal)}</span>`;
+
+        htmlDesktop += `
+            <tr class="hover:bg-slate-50/80 dark:hover:bg-[#1a2636]/60 transition border-b border-slate-100 dark:border-[#202f42] text-xs ${isVoid ? 'bg-rose-50/20 dark:bg-rose-950/10' : ''}">
+                <td class="p-3 text-center text-slate-400 font-medium">${idx + 1}</td>
+                <td class="p-3 font-mono font-bold ${isVoid ? 'text-slate-400 line-through' : 'text-slate-700 dark:text-slate-200'}">${escapeHtml(exp.noBukti || exp.pengeluaranId)}</td>
+                <td class="p-3 text-slate-500">${formatTglIndo(exp.tanggal)}</td>
+                <td class="p-3 font-bold text-slate-800 dark:text-slate-100">${escapeHtml(exp.namaKategori)}</td>
+                <td class="p-3 text-slate-600 dark:text-slate-300">
+                    <div class="font-semibold">${escapeHtml(exp.dibayarkanKepada || '-')}</div>
+                    <div class="text-[10px] text-slate-400 truncate max-w-xs">${escapeHtml(exp.keterangan || '')}</div>
+                </td>
+                <td class="p-3 font-bold">${nomDisplay}</td>
+                <td class="p-3">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#253447]">
+                        ${escapeHtml(exp.metodeBayar)}
+                    </span>
+                </td>
+                <td class="p-3 text-center">${statusBadge}</td>
+                <td class="p-3 text-right">
+                    ${!isVoid ? `
+                        <button type="button" onclick="promptVoidPengeluaran('${escapeHtml(exp.pengeluaranId)}', '${escapeHtml(exp.noBukti)}', ${Number(exp.nominal) || 0})"
+                            class="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition" title="Batalkan Pengeluaran (VOID)">
+                            <i class="fa-solid fa-ban text-xs"></i>
+                        </button>
+                    ` : '<span class="text-slate-300 text-xs">-</span>'}
+                </td>
+            </tr>
+        `;
+
+        htmlMobile += `
+            <div class="p-3.5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-xs space-y-2.5 ${isVoid ? 'border-rose-200/80 bg-rose-50/10' : ''}">
+                <div class="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-[#202f42] pb-2">
+                    <div class="flex items-center space-x-2">
+                        <span class="font-mono text-xs font-bold ${isVoid ? 'text-slate-400 line-through' : 'text-slate-700 dark:text-slate-200'}">${escapeHtml(exp.noBukti || exp.pengeluaranId)}</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        ${statusBadge}
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#253447]">
+                            ${escapeHtml(exp.metodeBayar)}
+                        </span>
+                    </div>
+                </div>
+                <div class="flex items-start justify-between gap-2">
+                    <div>
+                        <div class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(exp.namaKategori)}</div>
+                        <div class="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">${escapeHtml(exp.dibayarkanKepada || '-')}</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">${escapeHtml(exp.keterangan || '')}</div>
+                        <div class="text-[9px] text-slate-400 mt-1">${formatTglIndo(exp.tanggal)} • Oleh: ${escapeHtml(exp.petugas || 'Bendahara')}</div>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <div class="text-sm font-black ${isVoid ? 'text-slate-400 line-through' : 'text-rose-600 dark:text-rose-400'}">${formatRupiah(exp.nominal)}</div>
+                    </div>
+                </div>
+                ${!isVoid ? `
+                    <div class="pt-1 flex items-center justify-end">
+                        <button type="button" onclick="promptVoidPengeluaran('${escapeHtml(exp.pengeluaranId)}', '${escapeHtml(exp.noBukti)}', ${Number(exp.nominal) || 0})"
+                            class="py-1 px-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-300 rounded-lg text-xs font-bold transition flex items-center gap-1 border border-rose-200 dark:border-rose-900/40">
+                            <i class="fa-solid fa-ban text-[10px]"></i>
+                            <span>Batalkan (VOID)</span>
+                        </button>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    });
+
+    if (tbody) tbody.innerHTML = htmlDesktop;
+    if (mobileList) mobileList.innerHTML = htmlMobile;
+}
+window.renderKeuanganPengeluaranTable = renderKeuanganPengeluaranTable;
+
+// ====================================================================
+// SUB-MODUL 6: REKONSILIASI TUTUP KASIR HARIAN
+// ====================================================================
+
+function loadTutupKasirRealtime() {
+    const today = new Date().toISOString().substring(0, 10);
+    const dateDisplay = document.getElementById('tutup-kasir-date-display');
+    if (dateDisplay) dateDisplay.innerText = formatTglIndo(today);
+
+    const sum = ASNKeuangan.data.summary || {};
+    const masukTunaiEl = document.getElementById('tutup-kasir-masuk-tunai');
+    const nonTunaiEl = document.getElementById('tutup-kasir-non-tunai');
+    const keluarTunaiEl = document.getElementById('tutup-kasir-keluar-tunai');
+
+    const masukTunai = Number(sum.kasMasukHariIniTunai) || 0;
+    const nonTunai = Number(sum.kasMasukHariIniNonTunai) || 0;
+    const keluarTunai = Number(sum.kasKeluarHariIniTunai) || 0;
+
+    if (masukTunaiEl) masukTunaiEl.innerText = formatRupiah(masukTunai);
+    if (nonTunaiEl) nonTunaiEl.innerText = `(Transfer/QRIS: ${formatRupiah(nonTunai)})`;
+    if (keluarTunaiEl) keluarTunaiEl.innerText = formatRupiah(keluarTunai);
+
+    calcTutupKasirSelisih();
+    renderKeuanganClosingTable();
+}
+window.loadTutupKasirRealtime = loadTutupKasirRealtime;
+
+function calcTutupKasirSelisih() {
+    const modalAwalInput = document.getElementById('tutup-kasir-modal-awal');
+    const saldoFisikInput = document.getElementById('tutup-kasir-saldo-fisik');
+    const saldoSistemEl = document.getElementById('tutup-kasir-saldo-sistem');
+    const selisihBadge = document.getElementById('tutup-kasir-selisih-badge');
+    const selisihNominalEl = document.getElementById('tutup-kasir-selisih-nominal');
+
+    const sum = ASNKeuangan.data.summary || {};
+    const modalAwal = modalAwalInput ? (Number(modalAwalInput.value) || 0) : 0;
+    const masukTunai = Number(sum.kasMasukHariIniTunai) || 0;
+    const keluarTunai = Number(sum.kasKeluarHariIniTunai) || 0;
+
+    const saldoSistem = (modalAwal + masukTunai) - keluarTunai;
+    if (saldoSistemEl) saldoSistemEl.innerText = formatRupiah(saldoSistem);
+
+    const fisikVal = saldoFisikInput ? saldoFisikInput.value.trim() : "";
+    if (!fisikVal) {
+        if (selisihBadge) {
+            selisihBadge.innerText = "Masukkan hitungan uang fisik...";
+            selisihBadge.className = "text-xs font-semibold text-slate-400";
+        }
+        if (selisihNominalEl) selisihNominalEl.innerText = "Selisih: Rp 0";
+        return;
+    }
+
+    const saldoFisik = Number(fisikVal) || 0;
+    const selisih = saldoFisik - saldoSistem;
+
+    if (selisihNominalEl) {
+        selisihNominalEl.innerText = `Selisih: ${formatRupiah(selisih)}`;
+    }
+
+    if (selisihBadge) {
+        if (selisih === 0) {
+            selisihBadge.innerText = "✅ SEIMBANG (Uang Fisik Klop)";
+            selisihBadge.className = "text-sm font-black text-emerald-600 dark:text-emerald-400";
+        } else if (selisih > 0) {
+            selisihBadge.innerText = `⚠️ LEBIH KAS (+${formatRupiah(selisih)})`;
+            selisihBadge.className = "text-sm font-black text-teal-600 dark:text-teal-400";
+        } else {
+            selisihBadge.innerText = `🚨 SELISIH KURANG (-${formatRupiah(Math.abs(selisih))})`;
+            selisihBadge.className = "text-sm font-black text-rose-600 dark:text-rose-400";
+        }
+    }
+}
+window.calcTutupKasirSelisih = calcTutupKasirSelisih;
+
+async function submitTutupKasir() {
+    const roleCheck = checkKeuanganRoleAccess();
+    if (!roleCheck.isAllowed) {
+        alert("Akses ditolak: Hanya kasir / bendahara yang berwenang melakukan tutup kasir.");
+        return;
+    }
+
+    const modalAwalInput = document.getElementById('tutup-kasir-modal-awal');
+    const saldoFisikInput = document.getElementById('tutup-kasir-saldo-fisik');
+    const catatanInput = document.getElementById('tutup-kasir-catatan');
+    const btnSubmit = document.getElementById('btn-submit-tutup-kasir');
+
+    const fisikVal = saldoFisikInput ? saldoFisikInput.value.trim() : "";
+    if (fisikVal === "") {
+        alert("Silakan masukkan jumlah uang fisik yang ada di laci kasir terlebih dahulu.");
+        if (saldoFisikInput) saldoFisikInput.focus();
+        return;
+    }
+
+    const modalAwal = modalAwalInput ? (Number(modalAwalInput.value) || 0) : 0;
+    const saldoFisik = Number(fisikVal) || 0;
+    const catatan = catatanInput ? catatanInput.value.trim() : "";
+    const sum = ASNKeuangan.data.summary || {};
+    const masukTunai = Number(sum.kasMasukHariIniTunai) || 0;
+    const masukTransfer = Number(sum.kasMasukHariIniNonTunai) || 0;
+    const keluarTunai = Number(sum.kasKeluarHariIniTunai) || 0;
+    const saldoSistem = (modalAwal + masukTunai) - keluarTunai;
+    const selisih = saldoFisik - saldoSistem;
+
+    if (!confirm(`Konfirmasi Tutup Kasir Hari Ini:\n• Saldo Sistem: ${formatRupiah(saldoSistem)}\n• Uang Fisik: ${formatRupiah(saldoFisik)}\n• Selisih: ${formatRupiah(selisih)}\n\nLanjutkan mengunci rekonsiliasi kasir?`)) {
+        return;
+    }
+
+    try {
+        if (btnSubmit) {
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Menyimpan...`;
+        }
+
+        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : null) || "";
+        const res = await apiPost("keuangan.submitTutupKasir", {
+            token: token,
+            tanggal: new Date().toISOString().substring(0, 10),
+            modalAwal: modalAwal,
+            masukTunai: masukTunai,
+            masukTransfer: masukTransfer,
+            keluarTunai: keluarTunai,
+            saldoFisik: saldoFisik,
+            catatan: catatan
+        });
+
+        if (res && res.success) {
+            if (typeof showToast === 'function') {
+                showToast(`✅ ${res.message || "Tutup kasir berhasil disimpan."}`);
+            } else {
+                alert(res.message);
+            }
+            if (saldoFisikInput) saldoFisikInput.value = '';
+            if (catatanInput) catatanInput.value = '';
+            loadAdminKeuanganData(true);
+        } else {
+            alert("Gagal tutup kasir: " + ((res && res.message) || "Terjadi kesalahan sistem."));
+        }
+    } catch (e) {
+        alert("Error tutup kasir: " + e.message);
+    } finally {
+        if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = `<i class="fa-solid fa-lock text-xs mr-1"></i> Kunci & Simpan Tutup Kasir`;
+        }
+    }
+}
+window.submitTutupKasir = submitTutupKasir;
+
+function renderKeuanganClosingTable() {
+    const tbody = document.getElementById('keuangan-closing-table-body');
+    const mobileList = document.getElementById('keuangan-closing-mobile-list');
+    const list = ASNKeuangan.data.recentClosingList || [];
+
+    if (!tbody && !mobileList) return;
+
+    if (list.length === 0) {
+        if (tbody) tbody.innerHTML = `<tr><td colspan="9" class="py-6 text-center text-xs text-slate-400">Belum ada arsip rekonsiliasi tutup kasir.</td></tr>`;
+        if (mobileList) mobileList.innerHTML = `<div class="p-6 text-center bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] text-xs text-slate-400">Belum ada arsip tutup kasir.</div>`;
+        return;
+    }
+
+    let htmlDesktop = '';
+    let htmlMobile = '';
+
+    list.forEach((c, idx) => {
+        const sel = Number(c.selisih) || 0;
+        let selBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">Paspasan</span>`;
+        if (sel > 0) selBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-50 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300">+${formatRupiah(sel)}</span>`;
+        else if (sel < 0) selBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">${formatRupiah(sel)}</span>`;
+
+        htmlDesktop += `
+            <tr class="hover:bg-slate-50/80 dark:hover:bg-[#1a2636]/60 transition border-b border-slate-100 dark:border-[#202f42] text-xs">
+                <td class="p-2.5 text-center text-slate-400">${idx + 1}</td>
+                <td class="p-2.5 font-bold text-slate-800 dark:text-slate-100">${formatTglIndo(c.tanggal)}</td>
+                <td class="p-2.5 text-slate-600 dark:text-slate-300">${escapeHtml(c.namaKasir || '-')}</td>
+                <td class="p-2.5">${formatRupiah(c.modalAwal)}</td>
+                <td class="p-2.5 font-bold text-emerald-600">${formatRupiah(c.masukTunai)}</td>
+                <td class="p-2.5 font-bold text-blue-600">${formatRupiah(c.saldoSistem)}</td>
+                <td class="p-2.5 font-black text-slate-800 dark:text-slate-100">${formatRupiah(c.saldoFisik)}</td>
+                <td class="p-2.5 text-center">${selBadge}</td>
+                <td class="p-2.5 text-[11px] text-slate-500 max-w-xs truncate">${escapeHtml(c.catatan || '-')}</td>
+            </tr>
+        `;
+
+        htmlMobile += `
+            <div class="p-3 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] text-xs space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-slate-800 dark:text-slate-100">${formatTglIndo(c.tanggal)}</span>
+                    ${selBadge}
+                </div>
+                <div class="flex items-center justify-between text-slate-500">
+                    <span>Kasir: ${escapeHtml(c.namaKasir || '-')}</span>
+                    <span>Fisik: <strong class="text-slate-800 dark:text-slate-100">${formatRupiah(c.saldoFisik)}</strong></span>
+                </div>
+            </div>
+        `;
+    });
+
+    if (tbody) tbody.innerHTML = htmlDesktop;
+    if (mobileList) mobileList.innerHTML = htmlMobile;
+}
+window.renderKeuanganClosingTable = renderKeuanganClosingTable;
+
+// ====================================================================
+// SUB-MODUL 7: LAPORAN ARUS KAS & NERACA PESANTREN
+// ====================================================================
+
+function renderKeuanganLaporanView() {
+    const sum = ASNKeuangan.data.summary || {};
+    const totalMasuk = Number(sum.totalPendapatanBulanIni) || 0;
+    const totalKeluar = Number(sum.totalPengeluaranBulanIni) || 0;
+    const surplusDefisit = sum.surplusDefisit !== undefined ? Number(sum.surplusDefisit) : (totalMasuk - totalKeluar);
+
+    const elMasuk = document.getElementById('laporan-total-masuk');
+    const elKeluar = document.getElementById('laporan-total-keluar');
+    const elSurplus = document.getElementById('laporan-surplus-defisit');
+    const elPeriode = document.getElementById('laporan-periode-text');
+    const container = document.getElementById('laporan-breakdown-kategori');
+
+    const now = new Date();
+    const namaBulan = getNamaBulanIndo(now.getMonth() + 1);
+    if (elPeriode) elPeriode.innerText = `Bulan ${namaBulan} ${now.getFullYear()}`;
+
+    if (elMasuk) elMasuk.innerText = formatRupiah(totalMasuk);
+    if (elKeluar) elKeluar.innerText = formatRupiah(totalKeluar);
+    if (elSurplus) {
+        if (surplusDefisit >= 0) {
+            elSurplus.innerText = formatRupiah(surplusDefisit);
+            elSurplus.className = "text-base sm:text-lg font-black text-teal-700 dark:text-teal-300";
+        } else {
+            elSurplus.innerText = `-${formatRupiah(Math.abs(surplusDefisit))}`;
+            elSurplus.className = "text-base sm:text-lg font-black text-rose-600 dark:text-rose-400";
+        }
+    }
+
+    if (!container) return;
+
+    // Breakdown per kategori pengeluaran
+    const expenses = ASNKeuangan.data.recentExpenses || [];
+    const catTotals = {};
+
+    expenses.forEach(exp => {
+        if (String(exp.status || '').toUpperCase() !== 'VOID') {
+            const cat = exp.namaKategori || 'Lain-lain';
+            catTotals[cat] = (catTotals[cat] || 0) + (Number(exp.nominal) || 0);
+        }
+    });
+
+    const catEntries = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
+    if (catEntries.length === 0) {
+        container.innerHTML = `<div class="p-4 text-center text-slate-400 text-xs">Belum ada pengeluaran kas operasional bulan ini.</div>`;
+        return;
+    }
+
+    let html = '';
+    catEntries.forEach(([catName, nom]) => {
+        const pct = totalKeluar > 0 ? Math.round((nom / totalKeluar) * 100) : 0;
+        html += `
+            <div class="p-3 bg-white dark:bg-[#15202d] flex items-center justify-between gap-3">
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="font-bold text-slate-800 dark:text-slate-100 truncate">${escapeHtml(catName)}</span>
+                        <span class="font-bold text-rose-600 dark:text-rose-400 shrink-0 ml-2">${formatRupiah(nom)} (${pct}%)</span>
+                    </div>
+                    <div class="w-full bg-slate-100 dark:bg-[#1c2836] h-1.5 rounded-full overflow-hidden">
+                        <div class="bg-rose-500 h-full rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+window.renderKeuanganLaporanView = renderKeuanganLaporanView;
+
+function printLaporanKeuangan() {
+    window.print();
+}
+window.printLaporanKeuangan = printLaporanKeuangan;
