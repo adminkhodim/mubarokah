@@ -1132,6 +1132,27 @@ window.shareKuitansiWhatsApp = shareKuitansiWhatsApp;
 // SUB-MODUL 3: DAFTAR TAGIHAN & GENERATE BULANAN
 // ====================================================================
 
+function normalizeYearMonthTagihan(val) {
+    if (!val) return "";
+    if (val instanceof Date) {
+        const y = val.getFullYear();
+        const m = String(val.getMonth() + 1).padStart(2, '0');
+        return `${y}-${m}`;
+    }
+    const s = String(val).trim();
+    const match = s.match(/^(\d{4})[-\/](\d{1,2})/);
+    if (match) {
+        return `${match[1]}-${String(match[2]).padStart(2, '0')}`;
+    }
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        return `${y}-${m}`;
+    }
+    return s;
+}
+
 function filterKeuanganTagihan() {
     const searchInput = document.getElementById('keuangan-tagihan-search');
     const filterStatus = document.getElementById('keuangan-tagihan-filter-status');
@@ -1180,19 +1201,27 @@ function filterKeuanganTagihan() {
                 if (cleanCur !== cleanTarget && !curProg.includes(targetProg) && !targetProg.includes(curProg)) {
                     return false;
                 }
-            } else if (!curProg) {
-                // Jika tagihan belum ada metadata program, jangan sembunyikan jika dicari umum
             }
         }
 
-        // 4. Filter Periode Bulan (Abaikan jika input periode kosong / "ALL")
+        // 4. Filter Periode Bulan (dengan Normalisasi Tanggal YYYY-MM)
         if (stPeriode && stPeriode !== "ALL") {
-            const curPeriode = String(t.periode || "").trim();
-            if (curPeriode && curPeriode !== stPeriode) return false;
+            const curPeriode = normalizeYearMonthTagihan(t.periode);
+            const targetPeriode = normalizeYearMonthTagihan(stPeriode);
+            if (curPeriode && targetPeriode && curPeriode !== targetPeriode) return false;
         }
 
         return true;
     });
+
+    // Otomatis Tampilkan Semua: Jika hasil filter kosong padahal data tagihan ada di database,
+    // dan user tidak sedang mengetik pencarian khusus, otomatis lepas filter periode agar data langsung tampil
+    if (ASNKeuangan.filteredTagihan.length === 0 && all.length > 0 && !q && stStatus === "ALL" && stProgram === "ALL") {
+        if (filterPeriode && filterPeriode.value) {
+            filterPeriode.value = "";
+            ASNKeuangan.filteredTagihan = all;
+        }
+    }
 
     renderKeuanganTagihanTable();
 }

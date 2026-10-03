@@ -18923,7 +18923,22 @@ function getKeuanganDashboard(token) {
             studentProgram: stObj ? stObj.program : "",
             posId: String(r[3] || "").trim(),
             namaPos: String(r[4] || "").trim(),
-            periode: String(r[5] || "").trim(),
+            periode: (function(val) {
+              if (val instanceof Date) {
+                var y = val.getFullYear();
+                var m = String(val.getMonth() + 1);
+                if (m.length < 2) m = "0" + m;
+                return y + "-" + m;
+              }
+              var s = String(val || "").trim();
+              var match = s.match(/^(\d{4})[-\/](\d{1,2})/);
+              if (match) {
+                var mm = String(match[2]);
+                if (mm.length < 2) mm = "0" + mm;
+                return match[1] + "-" + mm;
+              }
+              return s;
+            })(r[5]),
             nominalTagihan: nomTagihan,
             nominalTerbayar: nomTerbayar,
             sisaTagihan: sisa,
