@@ -19364,7 +19364,7 @@ function getKeuanganDashboard(token) {
     }
 
     const officialAccounts = [
-      { bank: "BSI", name: "Bank Syariah Indonesia", noRek: "7198234567", an: "PPTQ ROUDLOTUL MUBAROKAH KUDUS", badge: "Syariah Utama" },
+      { bank: "BSI", name: "Bank Syariah Indonesia", noRek: "7198234567", an: "PPTQ ROUDLOTUL MUBAROKAH", badge: "Syariah Utama" },
       { bank: "BRI", name: "Bank Rakyat Indonesia", noRek: "0038-01-002345-53-1", an: "PESANTREN ROUDLOTUL MUBAROKAH", badge: "Operasional" },
       { bank: "BCA", name: "Bank Central Asia", noRek: "0898765432", an: "PPTQ ROUDLOTUL MUBAROKAH", badge: "Kemitraan" },
       { bank: "QRIS", name: "QRIS Nasional Mubarokah", noRek: "NMID: ID1020038491823", an: "PPTQ ROUDLOTUL MUBAROKAH", badge: "Instan Semua Bank & E-Wallet" }
@@ -20547,6 +20547,17 @@ function getBroadcastTagihanListKeuangan(payload, token) {
       }
     }
 
+    let configPengaturan = {};
+    try {
+      configPengaturan = getPengaturanData() || {};
+    } catch (errCfg) {
+      console.warn("Gagal memuat pengaturan lembaga untuk broadcast: " + errCfg.message);
+    }
+    const namaPesantrenBroadcast = configPengaturan.nama_pesantren || "Roudlotul Mubarokah";
+    const prefixLembaga = namaPesantrenBroadcast.toUpperCase().startsWith("PPTQ") ? "" : "PPTQ ";
+    const namaLengkapLembaga = prefixLembaga + namaPesantrenBroadcast;
+    const anRekeningLembaga = namaLengkapLembaga.toUpperCase();
+
     const broadcastList = Object.values(santriUnpaidMap).map(st => {
       let rincianText = st.items.map(it => `• ${it.namaPos} (${it.periode}): Rp ${it.sisa.toLocaleString("id-ID")}`).join("\n");
       let rawWa = st.phone.replace(/[^0-9]/g, "");
@@ -20557,14 +20568,14 @@ function getBroadcastTagihanListKeuangan(payload, token) {
 Yth. Bapak/Ibu Wali Santri dari ananda *${st.studentName}* (${st.program}).
 
 Semoga senantiasa dalam limpahan taufiq dan hidayah Allah SWT.
-Kami dari Bagian Keuangan PPTQ Roudlotul Mubarokah Kudus menginformasikan rincian kewajiban administrasi pesantren:
+Kami dari Bagian Keuangan ${namaLengkapLembaga} menginformasikan rincian kewajiban administrasi pesantren:
 
 ${rincianText}
 *Total Yang Perlu Diselesaikan:* Rp ${st.totalTunggakan.toLocaleString("id-ID")}
 
 Pembayaran dapat disalurkan melalui:
-• Rekening BSI: *7198234567* a.n. PPTQ ROUDLOTUL MUBAROKAH KUDUS
-• Rekening BRI: *0038-01-002345-53-1* a.n. PESANTREN ROUDLOTUL MUBAROKAH
+• Rekening BSI: *7198234567* a.n. ${anRekeningLembaga}
+• Rekening BRI: *0038-01-002345-53-1* a.n. PESANTREN ${namaPesantrenBroadcast.toUpperCase()}
 • QRIS Nasional Mubarokah (tersedia di aplikasi / loket)
 • Loket Kasir Pesantren (Tunai)
 
@@ -20572,7 +20583,7 @@ Konfirmasi pembayaran transfer dapat diunggah melalui Portal Santri di aplikasi 
 Atas perhatian dan kerjasamanya, kami haturkan jazakumullahu ahsanal jaza'.
 
 Wassalamu'alaikum Wr. Wb.
-_Bendahara PPTQ Roudlotul Mubarokah Kudus_`;
+_Bendahara ${namaLengkapLembaga}_`;
 
       const waLink = rawWa ? `https://wa.me/${rawWa}?text=${encodeURIComponent(messageTemplate)}` : "";
 

@@ -514,7 +514,7 @@
 
         const DEFAULT_PROFIL_MUBAROKAH = {
             nama_pesantren: "Pondok Pesantren Roudlotul Mubarokah",
-            alamat_pesantren: "Dukuh Krajan, RT 01 / RW 01, Kudus, Jawa Tengah",
+            alamat_pesantren: "Rimbukidul, RT 01 / RW 07, Rejosari, Karangawen, Demak, Jawa Tengah",
             tahun_berdiri: "1983",
             tanggal_berdiri: "12 Desember 1983",
             sejarah: "Pondok Pesantren Tahfidzul Qur'an Roudlotul Mubarokah didirikan dengan tekad luhur untuk mencetak generasi penghafal Al-Qur'an yang mutqin, berakhlak mulia, dan berwawasan kebangsaan yang luas.\n\nBerawal dari majelis halaqah tahfidz dan pembinaan keagamaan masyarakat, Pesantren Roudlotul Mubarokah kini berkembang menjadi lembaga pendidikan terpadu yang memadukan sanad tahfidz Al-Qur'an bersanad muttashil, kajian kitab kuning (salaf), serta penguasaan sains dan teknologi modern.\n\nDengan lingkungan pesantren yang kondusif, asri, dan berdisiplin tinggi di Karanganyar Demak, kami berkomitmen mendampingi para santri mencapai kemandirian spiritual, kedalaman keilmuan syariah, dan kesiapan menjadi pemimpin umat masa depan.",

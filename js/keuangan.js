@@ -971,15 +971,21 @@ function openKuitansiModal(kuitansi) {
 
     // Sinkronkan Nama & Alamat Pesantren Resmi pada Kop Kuitansi
     const profilState = window.APP_PROFIL_STATE || {};
-    const namaPesantren = profilState.nama_pesantren || 'PPTQ Roudlotul Mubarokah';
+    const rawNama = profilState.nama_pesantren || 'Roudlotul Mubarokah';
+    const namaPesantren = (rawNama.toUpperCase().startsWith("PPTQ") ? "" : "PPTQ ") + rawNama;
     let alamatPesantren = profilState.alamat_pesantren || '';
     if (!alamatPesantren) {
         try {
             alamatPesantren = localStorage.getItem('mubarokah_alamat_pesantren') || '';
         } catch(e) {}
     }
-    if (kopNamaEl && namaPesantren) kopNamaEl.innerText = namaPesantren;
-    if (kopAlamatEl && alamatPesantren) kopAlamatEl.innerText = alamatPesantren;
+    if (!alamatPesantren) {
+        alamatPesantren = "Rimbukidul, RT 01 / RW 07, Rejosari, Karangawen, Demak, Jawa Tengah";
+    }
+    const subTitleEl = document.getElementById('kuitansi-header-subtitle');
+    if (subTitleEl) subTitleEl.innerText = namaPesantren;
+    if (kopNamaEl) kopNamaEl.innerText = namaPesantren;
+    if (kopAlamatEl) kopAlamatEl.innerText = alamatPesantren;
 
     const isVoid = String(kuitansi.status || '').toUpperCase() === 'VOID' || 
                    String(kuitansi.catatan || '').includes('[VOID/BATAL]');
@@ -1124,7 +1130,11 @@ function shareKuitansiWhatsApp(kuitansiParam) {
         itemsText += `• ${it.namaPos} (${it.periode || '-'}): ${formatRupiah(it.nominalBayar)}\n`;
     });
 
-    const msg = `*BUKTI PEMBAYARAN RESMI*\n*PPTQ ROUDLOTUL MUBAROKAH KUDUS*\n----------------------------------------\n` +
+    const profilState = window.APP_PROFIL_STATE || {};
+    const rawNama = profilState.nama_pesantren || 'Roudlotul Mubarokah';
+    const namaLembaga = (rawNama.toUpperCase().startsWith("PPTQ") ? "" : "PPTQ ") + rawNama;
+
+    const msg = `*BUKTI PEMBAYARAN RESMI*\n*${namaLembaga.toUpperCase()}*\n----------------------------------------\n` +
         `Assalamu'alaikum Wr. Wb.\n` +
         `Yth. Wali Santri dari ananda *${k.studentName}* (NIS: ${k.nis || '-'}),\n\n` +
         `Alhamdulillah, telah kami terima pembayaran administrasi:\n` +
@@ -1138,7 +1148,7 @@ function shareKuitansiWhatsApp(kuitansiParam) {
         `*TOTAL DITERIMA : ${formatRupiah(k.nominalTotal)} (LUNAS)*\n\n` +
         `Semoga membawa berkah bagi ananda dan keluarga. Jazakumullahu khairan katsiran atas amanah dan kerjasamanya.\n\n` +
         `Wassalamu'alaikum Wr. Wb.\n` +
-        `_Bendahara PPTQ Roudlotul Mubarokah_`;
+        `_Bendahara ${namaLembaga}_`;
 
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
     window.open(url, '_blank');
