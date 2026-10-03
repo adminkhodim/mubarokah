@@ -243,7 +243,8 @@
         'notifikasi': ['notifikasi.broadcast'],
         'profil-lembaga': ['profil.manage'],
         'pengaturan': ['system.config'],
-        'keuangan': ['keuangan.view', 'keuangan.spp', 'keuangan.verify']
+        'keuangan': ['keuangan.view', 'keuangan.spp', 'keuangan.verify'],
+        'akuntansi': ['keuangan.view', 'keuangan.spp', 'keuangan.verify']
     };
 
     // Default Baseline Permissions per Role

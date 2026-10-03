@@ -334,6 +334,24 @@ function renderKeuanganSummaryCards() {
     if (elLunas) elLunas.innerText = `(${sum.countLunas || 0} Lunas / ${sum.countBelumLunas || 0} Belum)`;
     if (elPersen) elPersen.innerText = `${sum.persentasePelunasan || 100}%`;
 
+    // Sinkronisasi KPI Ringkasan View Akuntansi & Pembukuan
+    const elAkunInflow = document.getElementById('akuntansi-stat-inflow');
+    const elAkunOutflow = document.getElementById('akuntansi-stat-outflow');
+    const elAkunSurplus = document.getElementById('akuntansi-stat-surplus');
+    const elAkunPiutang = document.getElementById('akuntansi-stat-piutang');
+    if (elAkunInflow) elAkunInflow.innerText = formatRupiah(totalMasuk);
+    if (elAkunOutflow) elAkunOutflow.innerText = formatRupiah(totalKeluar);
+    if (elAkunSurplus) {
+        if (surplusDefisit >= 0) {
+            elAkunSurplus.innerText = formatRupiah(surplusDefisit);
+            elAkunSurplus.className = "text-sm sm:text-base md:text-lg font-black text-teal-700 dark:text-teal-300";
+        } else {
+            elAkunSurplus.innerText = `-${formatRupiah(Math.abs(surplusDefisit))}`;
+            elAkunSurplus.className = "text-sm sm:text-base md:text-lg font-black text-rose-600 dark:text-rose-400";
+        }
+    }
+    if (elAkunPiutang) elAkunPiutang.innerText = formatRupiah(sum.totalTunggakan || 0);
+
     // Badge Pending Konfirmasi Transfer (Fase 3)
     const pendingCount = Number(sum.pendingKonfirmasiCount) || 0;
     const badgePending = document.getElementById('keuangan-badge-pending-count');
@@ -348,26 +366,22 @@ function renderKeuanganSummaryCards() {
 }
 window.renderKeuanganSummaryCards = renderKeuanganSummaryCards;
 
+const KEUANGAN_SANTRI_TABS = ['pos', 'tagihan', 'verifikasi', 'broadcast', 'tabungan', 'kantin'];
+const AKUNTANSI_TABS = ['transaksi', 'pengeluaran', 'tutup-kasir', 'laporan', 'analytics', 'tarif'];
+
 /**
- * Berpindah Tab Utama di Modul Keuangan (Fase 1 s/d Fase 4 Enterprise):
- * - 'pos'         : Kasir Cepat (POS)
- * - 'tagihan'     : Daftar Tagihan & Piutang Santri
- * - 'transaksi'   : Buku Kas Masuk & Kuitansi
- * - 'verifikasi'  : Verifikasi Transfer Online Santri/Wali
- * - 'broadcast'   : WhatsApp Billing & Pengingat Tagihan
- * - 'pengeluaran' : Buku Kas Keluar (Beban Operasional)
- * - 'tutup-kasir' : Tutup Kasir & Rekonsiliasi Harian
- * - 'laporan'     : Laporan Arus Kas & Neraca
- * - 'tabungan'    : Uang Saku & Tabungan Santri
- * - 'kantin'      : POS Kantin & Koperasi Cashless
- * - 'analytics'   : Executive Financial Analytics
- * - 'tarif'       : Master Pos & Tarif Biaya
+ * Berpindah Tab di Modul 1: Keuangan & Kasir Santri (Front-Office)
  */
 function switchKeuanganTab(tabName) {
+    if (AKUNTANSI_TABS.includes(tabName)) {
+        if (typeof showAdminView === 'function') showAdminView('akuntansi');
+        switchAkuntansiTab(tabName);
+        return;
+    }
+
     ASNKeuangan.activeTab = tabName;
 
-    const tabs = ['pos', 'tagihan', 'transaksi', 'verifikasi', 'broadcast', 'pengeluaran', 'tutup-kasir', 'laporan', 'tabungan', 'kantin', 'analytics', 'tarif'];
-    tabs.forEach(t => {
+    KEUANGAN_SANTRI_TABS.forEach(t => {
         const btn = document.getElementById(`tab-btn-keuangan-${t}`);
         const view = document.getElementById(`keuangan-panel-${t}`);
         if (btn) {
@@ -386,10 +400,50 @@ function switchKeuanganTab(tabName) {
     if (tabName === 'pos') {
         const input = document.getElementById('keuangan-pos-search-input');
         if (input) setTimeout(() => input.focus(), 150);
+    } else if (tabName === 'tagihan') {
+        filterKeuanganTagihan();
     } else if (tabName === 'verifikasi') {
         renderKeuanganVerifikasiTable();
     } else if (tabName === 'broadcast') {
         loadBroadcastTagihanData();
+    } else if (tabName === 'tabungan') {
+        loadTabunganDashboardData();
+    } else if (tabName === 'kantin') {
+        initKantinCashlessPOS();
+    }
+}
+window.switchKeuanganTab = switchKeuanganTab;
+
+/**
+ * Berpindah Tab di Modul 2: Akuntansi & Pembukuan (Back-Office & Tata Kelola)
+ */
+function switchAkuntansiTab(tabName) {
+    if (KEUANGAN_SANTRI_TABS.includes(tabName)) {
+        if (typeof showAdminView === 'function') showAdminView('keuangan');
+        switchKeuanganTab(tabName);
+        return;
+    }
+
+    ASNKeuangan.activeAkuntansiTab = tabName;
+
+    AKUNTANSI_TABS.forEach(t => {
+        const btn = document.getElementById(`tab-btn-akuntansi-${t}`) || document.getElementById(`tab-btn-keuangan-${t}`);
+        const view = document.getElementById(`keuangan-panel-${t}`);
+        if (btn) {
+            if (t === tabName) {
+                btn.className = "px-3.5 py-2 rounded-xl text-xs font-bold transition bg-teal-600 text-white shadow-sm flex items-center gap-1.5 shrink-0";
+            } else {
+                btn.className = "px-3.5 py-2 rounded-xl text-xs font-bold transition text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836] flex items-center gap-1.5 shrink-0";
+            }
+        }
+        if (view) {
+            if (t === tabName) view.classList.remove('hidden');
+            else view.classList.add('hidden');
+        }
+    });
+
+    if (tabName === 'transaksi') {
+        renderKeuanganTransaksiTable();
     } else if (tabName === 'pengeluaran') {
         renderKeuanganPengeluaranTable();
         populateKategoriPengeluaranDropdown();
@@ -397,15 +451,14 @@ function switchKeuanganTab(tabName) {
         loadTutupKasirRealtime();
     } else if (tabName === 'laporan') {
         renderKeuanganLaporanView();
-    } else if (tabName === 'tabungan') {
-        loadTabunganDashboardData();
-    } else if (tabName === 'kantin') {
-        initKantinCashlessPOS();
     } else if (tabName === 'analytics') {
         loadExecutiveAnalyticsData();
+    } else if (tabName === 'tarif') {
+        renderKeuanganTarifTable();
+        populateKeuanganTarifProgramDropdown();
     }
 }
-window.switchKeuanganTab = switchKeuanganTab;
+window.switchAkuntansiTab = switchAkuntansiTab;
 
 // ====================================================================
 // SUB-MODUL 1: KASIR CEPAT (QUICK POS)

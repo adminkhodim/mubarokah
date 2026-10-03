@@ -98,7 +98,8 @@
             'notifikasi': { group: 'konten', category: 'Konten & Publikasi', title: 'Manajemen Notifikasi' },
             'profil-lembaga': { group: 'kelembagaan', category: 'Kelembagaan & Pengaturan', title: 'Profil & Kepengurusan' },
             'pengaturan': { group: 'kelembagaan', category: 'Kelembagaan & Pengaturan', title: 'Tautan & Sosmed' },
-            'keuangan': { group: 'keuangan', category: 'Keuangan & Kasir', title: 'Kasir & Tagihan Santri' }
+            'keuangan': { group: 'keuangan', category: 'Keuangan & Kasir Santri', title: 'Kasir & Keuangan Santri' },
+            'akuntansi': { group: 'akuntansi', category: 'Akuntansi & Pembukuan', title: 'Akuntansi & Buku Kas' }
         };
 
         
@@ -247,6 +248,7 @@
             const madinView = document.getElementById('admin-view-madin');
             const presensiView = document.getElementById('admin-view-presensi');
             const keuanganView = document.getElementById('admin-view-keuangan');
+            const akuntansiView = document.getElementById('admin-view-akuntansi');
             const ppdbView = document.getElementById('admin-view-ppdb');
             const programView = document.getElementById('admin-view-program');
             const galeriView = document.getElementById('admin-view-galeri');
@@ -271,6 +273,7 @@
             if (madinView) madinView.classList.add('hidden');
             if (presensiView) presensiView.classList.add('hidden');
             if (keuanganView) keuanganView.classList.add('hidden');
+            if (akuntansiView) akuntansiView.classList.add('hidden');
             if (ppdbView) ppdbView.classList.add('hidden');
             if (programView) programView.classList.add('hidden');
             if (galeriView) galeriView.classList.add('hidden');
@@ -345,6 +348,20 @@
                 if (keuanganView) keuanganView.classList.remove('hidden');
                 if (typeof loadAdminKeuanganData === 'function') {
                     loadAdminKeuanganData();
+                }
+            } else if (viewName === 'akuntansi') {
+                if (typeof checkKeuanganRoleAccess === 'function') {
+                    const chk = checkKeuanganRoleAccess();
+                    if (!chk.isAllowed && typeof showToast === 'function') {
+                        showToast("⚠️ Akses Terbatas: Fitur Akuntansi khusus untuk Super Admin, Admin, dan Bendahara.");
+                    }
+                }
+                if (akuntansiView) akuntansiView.classList.remove('hidden');
+                if (typeof loadAdminKeuanganData === 'function') {
+                    loadAdminKeuanganData();
+                }
+                if (typeof switchAkuntansiTab === 'function' && (!window.ASNKeuangan || !window.ASNKeuangan.activeAkuntansiTab)) {
+                    switchAkuntansiTab('transaksi');
                 }
             } else if (viewName === 'notifikasi') {
                 if (notifikasiView) notifikasiView.classList.remove('hidden');
