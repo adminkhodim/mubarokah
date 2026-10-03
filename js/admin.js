@@ -514,6 +514,7 @@
 
         const DEFAULT_PROFIL_MUBAROKAH = {
             nama_pesantren: "Pondok Pesantren Roudlotul Mubarokah",
+            alamat_pesantren: "Dukuh Krajan, RT 01 / RW 01, Kudus, Jawa Tengah",
             tahun_berdiri: "1983",
             tanggal_berdiri: "12 Desember 1983",
             sejarah: "Pondok Pesantren Tahfidzul Qur'an Roudlotul Mubarokah didirikan dengan tekad luhur untuk mencetak generasi penghafal Al-Qur'an yang mutqin, berakhlak mulia, dan berwawasan kebangsaan yang luas.\n\nBerawal dari majelis halaqah tahfidz dan pembinaan keagamaan masyarakat, Pesantren Roudlotul Mubarokah kini berkembang menjadi lembaga pendidikan terpadu yang memadukan sanad tahfidz Al-Qur'an bersanad muttashil, kajian kitab kuning (salaf), serta penguasaan sains dan teknologi modern.\n\nDengan lingkungan pesantren yang kondusif, asri, dan berdisiplin tinggi di Karanganyar Demak, kami berkomitmen mendampingi para santri mencapai kemandirian spiritual, kedalaman keilmuan syariah, dan kesiapan menjadi pemimpin umat masa depan.",
@@ -530,6 +531,13 @@
 
         window.APP_PROFIL_STATE = window.APP_PROFIL_STATE || {};
         if (!window.APP_PROFIL_STATE.nama_pesantren) window.APP_PROFIL_STATE.nama_pesantren = DEFAULT_PROFIL_MUBAROKAH.nama_pesantren;
+        if (!window.APP_PROFIL_STATE.alamat_pesantren) {
+            try {
+                window.APP_PROFIL_STATE.alamat_pesantren = localStorage.getItem('mubarokah_alamat_pesantren') || DEFAULT_PROFIL_MUBAROKAH.alamat_pesantren;
+            } catch(e) {
+                window.APP_PROFIL_STATE.alamat_pesantren = DEFAULT_PROFIL_MUBAROKAH.alamat_pesantren;
+            }
+        }
         if (!window.APP_PROFIL_STATE.tahun_berdiri) window.APP_PROFIL_STATE.tahun_berdiri = DEFAULT_PROFIL_MUBAROKAH.tahun_berdiri;
         if (!window.APP_PROFIL_STATE.tanggal_berdiri) window.APP_PROFIL_STATE.tanggal_berdiri = DEFAULT_PROFIL_MUBAROKAH.tanggal_berdiri;
         if (!window.APP_PROFIL_STATE.sejarah) window.APP_PROFIL_STATE.sejarah = DEFAULT_PROFIL_MUBAROKAH.sejarah;
@@ -549,6 +557,10 @@
                 if (data && data.status === "success" && data.data) {
                     const config = data.data;
                     if (config.nama_pesantren) window.APP_PROFIL_STATE.nama_pesantren = config.nama_pesantren;
+                    if (config.alamat_pesantren) {
+                        window.APP_PROFIL_STATE.alamat_pesantren = config.alamat_pesantren;
+                        try { localStorage.setItem('mubarokah_alamat_pesantren', config.alamat_pesantren); } catch(e) {}
+                    }
                     if (config.tahun_berdiri) window.APP_PROFIL_STATE.tahun_berdiri = config.tahun_berdiri;
                     if (config.tanggal_berdiri) window.APP_PROFIL_STATE.tanggal_berdiri = formatTanggalIndo(config.tanggal_berdiri);
                     if (config.sejarah) window.APP_PROFIL_STATE.sejarah = config.sejarah;
@@ -761,9 +773,11 @@
                 if (data && data.status === "success" && data.data) {
                     const config = data.data;
                     const inputNama = document.getElementById('input-profil-nama-pesantren');
+                    const inputAlamat = document.getElementById('input-profil-alamat-pesantren');
                     const inputTahun = document.getElementById('input-profil-tahun-berdiri');
                     const inputTanggal = document.getElementById('input-profil-tanggal-berdiri');
                     if (inputNama) inputNama.value = config.nama_pesantren || DEFAULT_PROFIL_MUBAROKAH.nama_pesantren;
+                    if (inputAlamat) inputAlamat.value = config.alamat_pesantren || window.APP_PROFIL_STATE.alamat_pesantren || DEFAULT_PROFIL_MUBAROKAH.alamat_pesantren || "";
                     if (inputTahun) inputTahun.value = config.tahun_berdiri || "1983";
                     if (inputTanggal) inputTanggal.value = formatTanggalIndo(config.tanggal_berdiri) || "12 Desember 1983";
 
@@ -806,11 +820,13 @@
                 syncPengurusList(); 
 
                 const inputNama = document.getElementById('input-profil-nama-pesantren');
+                const inputAlamat = document.getElementById('input-profil-alamat-pesantren');
                 const inputTahun = document.getElementById('input-profil-tahun-berdiri');
                 const inputTanggal = document.getElementById('input-profil-tanggal-berdiri');
 
                 const payload = {
                     nama_pesantren: inputNama ? inputNama.value.trim() : DEFAULT_PROFIL_MUBAROKAH.nama_pesantren,
+                    alamat_pesantren: inputAlamat ? inputAlamat.value.trim() : (window.APP_PROFIL_STATE.alamat_pesantren || DEFAULT_PROFIL_MUBAROKAH.alamat_pesantren || ""),
                     tahun_berdiri: inputTahun ? inputTahun.value.trim() : "1983",
                     tanggal_berdiri: inputTanggal ? formatTanggalIndo(inputTanggal.value.trim()) : "12 Desember 1983",
                     sejarah: document.getElementById('input-profil-sejarah').value,
@@ -823,6 +839,8 @@
                     showToast("Profil Lembaga berhasil disimpan!");
                     
                     window.APP_PROFIL_STATE.nama_pesantren = payload.nama_pesantren;
+                    window.APP_PROFIL_STATE.alamat_pesantren = payload.alamat_pesantren;
+                    try { localStorage.setItem('mubarokah_alamat_pesantren', payload.alamat_pesantren); } catch(e) {}
                     window.APP_PROFIL_STATE.tahun_berdiri = payload.tahun_berdiri;
                     window.APP_PROFIL_STATE.tanggal_berdiri = payload.tanggal_berdiri;
                     window.APP_PROFIL_STATE.sejarah = payload.sejarah;

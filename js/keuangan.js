@@ -966,6 +966,20 @@ function openKuitansiModal(kuitansi) {
     const statusTextEl = document.getElementById('kuitansi-status-text');
     const btnVoid = document.getElementById('btn-kuitansi-void');
     const btnWA = document.getElementById('btn-kuitansi-whatsapp');
+    const kopNamaEl = document.getElementById('kuitansi-kop-nama');
+    const kopAlamatEl = document.getElementById('kuitansi-kop-alamat');
+
+    // Sinkronkan Nama & Alamat Pesantren Resmi pada Kop Kuitansi
+    const profilState = window.APP_PROFIL_STATE || {};
+    const namaPesantren = profilState.nama_pesantren || 'PPTQ Roudlotul Mubarokah';
+    let alamatPesantren = profilState.alamat_pesantren || '';
+    if (!alamatPesantren) {
+        try {
+            alamatPesantren = localStorage.getItem('mubarokah_alamat_pesantren') || '';
+        } catch(e) {}
+    }
+    if (kopNamaEl && namaPesantren) kopNamaEl.innerText = namaPesantren;
+    if (kopAlamatEl && alamatPesantren) kopAlamatEl.innerText = alamatPesantren;
 
     const isVoid = String(kuitansi.status || '').toUpperCase() === 'VOID' || 
                    String(kuitansi.catatan || '').includes('[VOID/BATAL]');
