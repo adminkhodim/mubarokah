@@ -8332,7 +8332,9 @@ const DEFAULT_ROLE_PERMISSIONS_MAP = {
   "ADMIN": [
     "santri.view", "santri.create", "santri.edit", "santri.export", "unit.manage",
     "tahfidz.view", "tahfidz.entry", "tahfidz.target", "tpq.view", "tpq.entry", "sorogan.view", "sorogan.entry", "presensi.view", "presensi.entry",
-    "keuangan.view", "keuangan.spp", "keuangan.verify", "ppdb.manage",
+    "keuangan.view", "keuangan.spp", "keuangan.tagihan", "keuangan.verify", "keuangan.billing",
+    "akuntansi.view", "akuntansi.transaksi", "akuntansi.tutupkasir", "akuntansi.laporan",
+    "ppdb.manage",
     "berita.manage", "banner.manage", "galeri.manage", "notifikasi.broadcast",
     "profil.manage", "pegawai.manage", "users.manage", "roles.manage", "system.config"
   ],
@@ -8342,13 +8344,18 @@ const DEFAULT_ROLE_PERMISSIONS_MAP = {
     "pegawai.manage", "profil.manage"
   ],
   "BENDAHARA": [
-    "santri.view", "ppdb.manage", "keuangan.view", "keuangan.spp", "keuangan.verify", "notifikasi.broadcast", "pegawai.manage", "profil.manage"
+    "santri.view", "ppdb.manage",
+    "keuangan.view", "keuangan.spp", "keuangan.tagihan", "keuangan.verify", "keuangan.billing",
+    "akuntansi.view", "akuntansi.transaksi", "akuntansi.tutupkasir", "akuntansi.laporan",
+    "notifikasi.broadcast", "pegawai.manage", "profil.manage"
   ],
   "PENGURUS": [
     "santri.view", "presensi.view", "presensi.entry", "unit.manage", "ppdb.manage", "berita.manage", "banner.manage", "galeri.manage", "notifikasi.broadcast", "profil.manage"
   ],
   "PENGASUH": [
-    "santri.view", "tahfidz.view", "tpq.view", "sorogan.view", "presensi.view", "unit.manage", "ppdb.manage", "keuangan.view", "berita.manage", "galeri.manage", "profil.manage", "pegawai.manage"
+    "santri.view", "tahfidz.view", "tpq.view", "sorogan.view", "presensi.view", "unit.manage", "ppdb.manage",
+    "keuangan.view", "akuntansi.view", "akuntansi.laporan",
+    "berita.manage", "galeri.manage", "profil.manage", "pegawai.manage"
   ],
   "WALI_SANTRI": [
     "santri.view", "tahfidz.view", "tpq.view", "sorogan.view", "presensi.view", "keuangan.view", "berita.manage", "galeri.manage", "profil.manage"

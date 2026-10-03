@@ -186,14 +186,28 @@
         },
         {
             key: 'keuangan',
-            label: 'KEUANGAN & ADMINISTRASI',
+            label: 'KEUANGAN & ADMINISTRASI KASIR',
             icon: 'fa-wallet',
             color: 'amber',
             items: [
-                { key: 'keuangan.view', label: 'Melihat Kas & Saldo Pondok', desc: 'Akses memantau ringkasan buku kas dan saldo pesantren' },
-                { key: 'keuangan.spp', label: 'Pencatatan & Tagihan SPP', desc: 'Izin mencatat pembayaran iuran syahriah & SPP' },
-                { key: 'keuangan.verify', label: 'Verifikasi Pembayaran PPDB', desc: 'Izin memvalidasi konfirmasi bukti transfer wali santri' },
+                { key: 'keuangan.view', label: 'Dashboard & Saldo Kas Pondok', desc: 'Akses memantau ringkasan saldo, mutasi kas, dan statistik pelunasan' },
+                { key: 'keuangan.spp', label: 'Loket Kasir & Pembayaran SPP', desc: 'Izin melayani pembayaran langsung di loket kasir & cetak kuitansi' },
+                { key: 'keuangan.tagihan', label: 'Kelola Tagihan & Pos Biaya', desc: 'Izin mengatur pos biaya, tarif SPP, dan generate tagihan massal' },
+                { key: 'keuangan.verify', label: 'Verifikasi Pembayaran Transfer', desc: 'Izin memvalidasi konfirmasi bukti transfer wali santri' },
+                { key: 'keuangan.billing', label: 'WhatsApp Billing & Broadcast', desc: 'Izin mengirim tagihan penagihan & bukti kuitansi via WhatsApp Gateway' },
                 { key: 'ppdb.manage', label: 'Pengelolaan Berkas PPDB', desc: 'Akses seleksi berkas calon santri & formulir pendaftaran' }
+            ]
+        },
+        {
+            key: 'akuntansi',
+            label: 'AKUNTANSI & PEMBUKUAN PESANTREN',
+            icon: 'fa-file-invoice-dollar',
+            color: 'teal',
+            items: [
+                { key: 'akuntansi.view', label: 'Melihat Buku Kas & Pembukuan', desc: 'Akses melihat jurnal kas masuk, pengeluaran, dan buku kas pondok' },
+                { key: 'akuntansi.transaksi', label: 'Catat Kas Masuk & Kas Keluar', desc: 'Izin mencatat transaksi penerimaan dan pengeluaran operasional' },
+                { key: 'akuntansi.tutupkasir', label: 'Tutup Kasir & Rekonsiliasi', desc: 'Izin melakukan proses tutup shift kasir dan rekonsiliasi fisik uang' },
+                { key: 'akuntansi.laporan', label: 'Laporan Keuangan & Arus Kas', desc: 'Akses rekapitulasi surplus/defisit, cetak dan ekspor laporan keuangan' }
             ]
         },
         {
@@ -243,8 +257,8 @@
         'notifikasi': ['notifikasi.broadcast'],
         'profil-lembaga': ['profil.manage'],
         'pengaturan': ['system.config'],
-        'keuangan': ['keuangan.view', 'keuangan.spp', 'keuangan.verify'],
-        'akuntansi': ['keuangan.view', 'keuangan.spp', 'keuangan.verify']
+        'keuangan': ['keuangan.view', 'keuangan.spp', 'keuangan.tagihan', 'keuangan.verify', 'keuangan.billing'],
+        'akuntansi': ['akuntansi.view', 'akuntansi.transaksi', 'akuntansi.tutupkasir', 'akuntansi.laporan', 'keuangan.view']
     };
 
     // Default Baseline Permissions per Role
@@ -254,7 +268,9 @@
             'santri.view', 'santri.create', 'santri.edit', 'santri.export', 'unit.manage',
             'tahfidz.view', 'tahfidz.entry', 'tahfidz.target', 'tpq.view', 'tpq.entry', 'sorogan.view', 'sorogan.entry',
             'madin.view', 'madin.entry', 'madin.manage', 'presensi.view', 'presensi.entry',
-            'keuangan.view', 'keuangan.spp', 'keuangan.verify', 'ppdb.manage',
+            'keuangan.view', 'keuangan.spp', 'keuangan.tagihan', 'keuangan.verify', 'keuangan.billing',
+            'akuntansi.view', 'akuntansi.transaksi', 'akuntansi.tutupkasir', 'akuntansi.laporan',
+            'ppdb.manage',
             'berita.manage', 'banner.manage', 'galeri.manage', 'notifikasi.broadcast',
             'profil.manage', 'pegawai.manage', 'users.manage', 'roles.manage', 'system.config'
         ],
@@ -265,13 +281,18 @@
             'pegawai.manage', 'profil.manage'
         ],
         'BENDAHARA': [
-            'santri.view', 'ppdb.manage', 'keuangan.view', 'keuangan.spp', 'keuangan.verify', 'notifikasi.broadcast', 'pegawai.manage', 'profil.manage'
+            'santri.view', 'ppdb.manage',
+            'keuangan.view', 'keuangan.spp', 'keuangan.tagihan', 'keuangan.verify', 'keuangan.billing',
+            'akuntansi.view', 'akuntansi.transaksi', 'akuntansi.tutupkasir', 'akuntansi.laporan',
+            'notifikasi.broadcast', 'pegawai.manage', 'profil.manage'
         ],
         'PENGURUS': [
             'santri.view', 'presensi.view', 'presensi.entry', 'unit.manage', 'ppdb.manage', 'berita.manage', 'banner.manage', 'galeri.manage', 'notifikasi.broadcast', 'profil.manage'
         ],
         'PENGASUH': [
-            'santri.view', 'tahfidz.view', 'tpq.view', 'sorogan.view', 'madin.view', 'presensi.view', 'unit.manage', 'ppdb.manage', 'keuangan.view', 'berita.manage', 'galeri.manage', 'profil.manage', 'pegawai.manage'
+            'santri.view', 'tahfidz.view', 'tpq.view', 'sorogan.view', 'madin.view', 'presensi.view', 'unit.manage', 'ppdb.manage',
+            'keuangan.view', 'akuntansi.view', 'akuntansi.laporan',
+            'berita.manage', 'galeri.manage', 'profil.manage', 'pegawai.manage'
         ],
         'WALI_SANTRI': [
             'santri.view', 'tahfidz.view', 'tpq.view', 'sorogan.view', 'madin.view', 'presensi.view', 'keuangan.view', 'berita.manage', 'galeri.manage', 'profil.manage'
@@ -1204,14 +1225,14 @@
     const ROLE_ALLOWED_MODULES = {
         'SUPER_ADMIN': [
             'santri', 'tahfidz', 'tpq', 'sorogan', 'madin', 'presensi', 'ppdb', 'program', 'unit-kegiatan',
-            'keuangan',
+            'keuangan', 'akuntansi',
             'users', 'roles', 'pegawai',
             'berita', 'banner', 'galeri', 'notifikasi',
             'profil-lembaga', 'pengaturan'
         ],
         'ADMIN': [
             'santri', 'tahfidz', 'tpq', 'sorogan', 'madin', 'presensi', 'ppdb', 'program', 'unit-kegiatan',
-            'keuangan',
+            'keuangan', 'akuntansi',
             'users', 'roles', 'pegawai',
             'berita', 'banner', 'galeri', 'notifikasi',
             'profil-lembaga', 'pengaturan'
@@ -1220,13 +1241,13 @@
             'tahfidz', 'tpq', 'sorogan', 'madin', 'presensi', 'santri', 'pegawai', 'profil-lembaga'
         ],
         'BENDAHARA': [
-            'keuangan', 'santri', 'ppdb', 'notifikasi', 'pegawai', 'profil-lembaga'
+            'keuangan', 'akuntansi', 'santri', 'ppdb', 'notifikasi', 'pegawai', 'profil-lembaga'
         ],
         'PENGURUS': [
             'presensi', 'unit-kegiatan', 'ppdb', 'santri', 'berita', 'banner', 'galeri', 'notifikasi', 'profil-lembaga'
         ],
         'PENGASUH': [
-            'santri', 'tahfidz', 'tpq', 'sorogan', 'madin', 'presensi', 'unit-kegiatan', 'ppdb', 'pegawai', 'berita', 'galeri', 'profil-lembaga'
+            'santri', 'tahfidz', 'tpq', 'sorogan', 'madin', 'presensi', 'unit-kegiatan', 'ppdb', 'keuangan', 'akuntansi', 'pegawai', 'berita', 'galeri', 'profil-lembaga'
         ],
         'WALI_SANTRI': [
             'santri', 'tahfidz', 'tpq', 'sorogan', 'madin', 'presensi', 'berita', 'galeri', 'profil-lembaga'

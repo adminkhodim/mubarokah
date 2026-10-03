@@ -95,7 +95,10 @@ window.getKeuanganActiveRole = getKeuanganActiveRole;
 
 function checkKeuanganRoleAccess() {
     const role = getKeuanganActiveRole();
-    const isAllowed = ['SUPER_ADMIN', 'ADMIN', 'BENDAHARA'].includes(role);
+    let isAllowed = ['SUPER_ADMIN', 'ADMIN', 'BENDAHARA'].includes(role);
+    if (!isAllowed && typeof isModuleAllowedForRole === 'function') {
+        isAllowed = isModuleAllowedForRole('keuangan', role) || isModuleAllowedForRole('akuntansi', role);
+    }
     return { isAllowed, role };
 }
 window.checkKeuanganRoleAccess = checkKeuanganRoleAccess;
