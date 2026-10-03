@@ -2801,7 +2801,8 @@ async function loadBroadcastTagihanData() {
 
     if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400 text-xs"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Mengkalkulasi daftar tagihan santri...</td></tr>`;
 
-    let list = [];
+    try {
+        let list = [];
     try {
         const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : null) || "";
         const res = await apiPost("keuangan.getBroadcastTagihanList", {
