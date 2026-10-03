@@ -261,6 +261,7 @@
             if (!hubView || !beritaView || !bannerView) return;
 
             hubView.classList.add('hidden');
+            hubView.classList.remove('lg:block', 'block');
             beritaView.classList.add('hidden');
             bannerView.classList.add('hidden');
             if (santriView) santriView.classList.add('hidden');
