@@ -9653,6 +9653,11 @@
                                             </select>
                                             <input type="month" id="keuangan-tagihan-filter-periode" onchange="filterKeuanganTagihan()"
                                                 class="px-2.5 py-1 text-xs rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-white dark:bg-[#1c2836] text-slate-700 dark:text-slate-200 font-semibold outline-none" title="Filter Periode Bulan">
+                                            <button type="button" onclick="resetKeuanganTagihanFilter()"
+                                                class="px-2.5 py-1.5 text-xs rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] dark:hover:bg-[#253447] text-slate-600 dark:text-slate-300 font-bold transition flex items-center gap-1 shrink-0" title="Reset Semua Filter">
+                                                <i class="fa-solid fa-arrows-rotate text-[11px]"></i>
+                                                <span>Reset</span>
+                                            </button>
                                         </div>
                                         <div class="flex items-center space-x-2">
                                             <span id="keuangan-tagihan-count" class="text-xs font-bold text-slate-400">0 Tagihan</span>
@@ -9692,7 +9697,12 @@
 
                                     <div id="keuangan-tagihan-empty" class="hidden p-8 text-center bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] text-slate-400 text-xs">
                                         <i class="fa-solid fa-file-circle-check text-3xl mb-2 text-slate-300 dark:text-slate-600 block"></i>
-                                        Tidak ada tagihan yang cocok dengan filter.
+                                        <p class="mb-2.5">Tidak ada tagihan yang cocok dengan kombinasi filter saat ini.</p>
+                                        <button type="button" onclick="resetKeuanganTagihanFilter()"
+                                            class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition inline-flex items-center gap-1.5 shadow-sm active:scale-95">
+                                            <i class="fa-solid fa-arrows-rotate text-xs"></i>
+                                            <span>Tampilkan Semua Tagihan</span>
+                                        </button>
                                     </div>
                                 </div>
 

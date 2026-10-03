@@ -1086,32 +1086,56 @@ function filterKeuanganTagihan() {
     const filterPeriode = document.getElementById('keuangan-tagihan-filter-periode');
 
     const q = searchInput ? searchInput.value.trim().toLowerCase() : "";
-    const stStatus = filterStatus ? filterStatus.value : "ALL";
-    const stProgram = filterProgram ? filterProgram.value : "ALL";
-    const stPeriode = filterPeriode ? filterPeriode.value : "ALL";
+    const stStatus = (filterStatus && filterStatus.value) ? filterStatus.value.trim() : "ALL";
+    const stProgram = (filterProgram && filterProgram.value) ? filterProgram.value.trim() : "ALL";
+    const stPeriode = (filterPeriode && filterPeriode.value && filterPeriode.value.trim()) ? filterPeriode.value.trim() : "ALL";
 
     const all = ASNKeuangan.data.tagihanList || [];
 
     ASNKeuangan.filteredTagihan = all.filter(t => {
+        // 1. Pencarian Teks Bebas (Nama, Pos, Periode, Program)
         if (q) {
             const mName = (t.studentName || "").toLowerCase().includes(q);
             const mPos = (t.namaPos || "").toLowerCase().includes(q);
             const mPer = (t.periode || "").toLowerCase().includes(q);
             const mProg = (t.studentProgram || "").toLowerCase().includes(q);
-            if (!mName && !mPos && !mPer && !mProg) return false;
+            const mId = (t.studentId || "").toLowerCase().includes(q);
+            if (!mName && !mPos && !mPer && !mProg && !mId) return false;
         }
 
-        if (stStatus !== "ALL") {
-            if (t.status !== stStatus) return false;
+        // 2. Filter Status Pembayaran
+        if (stStatus && stStatus !== "ALL") {
+            const curStatus = String(t.status || "").trim().toUpperCase();
+            if (stStatus === "BELUM_BAYAR") {
+                if (curStatus !== "BELUM_BAYAR" && curStatus !== "UNPAID") return false;
+            } else if (stStatus === "SEBAGIAN") {
+                if (curStatus !== "SEBAGIAN" && curStatus !== "PARTIAL") return false;
+            } else if (stStatus === "LUNAS") {
+                if (curStatus !== "LUNAS" && curStatus !== "PAID") return false;
+            } else {
+                if (curStatus !== stStatus) return false;
+            }
         }
 
-        if (stProgram !== "ALL") {
-            const curProg = (t.studentProgram || "").toLowerCase();
-            if (curProg !== stProgram.toLowerCase()) return false;
+        // 3. Filter Program Santri (dengan Normalisasi Nama Program)
+        if (stProgram && stProgram !== "ALL") {
+            const curProg = String(t.studentProgram || "").toLowerCase().trim();
+            const targetProg = stProgram.toLowerCase().trim();
+            if (curProg && curProg !== targetProg) {
+                const cleanCur = curProg.replace(/^pesantren\s+/i, '').trim();
+                const cleanTarget = targetProg.replace(/^pesantren\s+/i, '').trim();
+                if (cleanCur !== cleanTarget && !curProg.includes(targetProg) && !targetProg.includes(curProg)) {
+                    return false;
+                }
+            } else if (!curProg) {
+                // Jika tagihan belum ada metadata program, jangan sembunyikan jika dicari umum
+            }
         }
 
-        if (stPeriode !== "ALL") {
-            if (t.periode !== stPeriode) return false;
+        // 4. Filter Periode Bulan (Abaikan jika input periode kosong / "ALL")
+        if (stPeriode && stPeriode !== "ALL") {
+            const curPeriode = String(t.periode || "").trim();
+            if (curPeriode && curPeriode !== stPeriode) return false;
         }
 
         return true;
@@ -1120,6 +1144,24 @@ function filterKeuanganTagihan() {
     renderKeuanganTagihanTable();
 }
 window.filterKeuanganTagihan = filterKeuanganTagihan;
+
+/**
+ * Reset Filter Tagihan ke Posisi Default (Semua)
+ */
+function resetKeuanganTagihanFilter() {
+    const searchInput = document.getElementById('keuangan-tagihan-search');
+    const filterStatus = document.getElementById('keuangan-tagihan-filter-status');
+    const filterProgram = document.getElementById('keuangan-tagihan-filter-program');
+    const filterPeriode = document.getElementById('keuangan-tagihan-filter-periode');
+
+    if (searchInput) searchInput.value = "";
+    if (filterStatus) filterStatus.value = "ALL";
+    if (filterProgram) filterProgram.value = "ALL";
+    if (filterPeriode) filterPeriode.value = "";
+
+    filterKeuanganTagihan();
+}
+window.resetKeuanganTagihanFilter = resetKeuanganTagihanFilter;
 
 function renderKeuanganTagihanTable() {
     const tbody = document.getElementById('keuangan-tagihan-table-body');
