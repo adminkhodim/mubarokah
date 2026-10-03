@@ -21342,7 +21342,22 @@ function createMidtransSnapToken(payload, token, actor) {
       if (nominal > 0) {
         grossAmount += nominal;
         const tagihanId = String(it.tagihanId || it.id || `ITEM_${idx + 1}`).trim();
-        const posName = String(it.posName || it.name || "Tagihan Pesantren").trim().substring(0, 45);
+        let posName = String(it.posName || it.name || "Tagihan Pesantren").trim();
+
+        // Pastikan nama bulan tertera pada rincian pesanan Midtrans jika belum ada
+        if (it.periode && !posName.includes(it.periode)) {
+          const match = String(it.periode).trim().match(/^(\d{4})-(\d{1,2})$/);
+          if (match) {
+            const bulanList = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
+            const bName = bulanList[parseInt(match[2], 10) - 1] || match[2];
+            if (!posName.toLowerCase().includes(bName.toLowerCase())) {
+              const suffix = ` (${bName} ${match[1]})`;
+              posName = (posName.substring(0, 50 - suffix.length) + suffix);
+            }
+          }
+        }
+        posName = posName.substring(0, 50);
+
         snapItems.push({
           id: tagihanId.substring(0, 50),
           price: nominal,

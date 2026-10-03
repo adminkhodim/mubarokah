@@ -81,6 +81,22 @@ function getNamaBulanIndo(bulanNum) {
 }
 window.getNamaBulanIndo = getNamaBulanIndo;
 
+/**
+ * Helper format periode (contoh: "2026-10" -> "Oktober 2026")
+ */
+function formatBulanPeriode(periode) {
+    if (!periode) return '';
+    const str = String(periode).trim();
+    const match = str.match(/^(\d{4})-(\d{1,2})$/);
+    if (match) {
+        const mIdx = parseInt(match[2], 10);
+        const bName = getNamaBulanIndo(mIdx);
+        return `${bName || match[2]} ${match[1]}`;
+    }
+    return str;
+}
+window.formatBulanPeriode = formatBulanPeriode;
+
 // ====================================================================
 // ROLE ACCESS CONTROL (SUPER_ADMIN, ADMIN, BENDAHARA)
 // ====================================================================
@@ -624,7 +640,7 @@ function renderKeuanganPOSTagihanList() {
                             class="mt-1 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" ${isChecked ? 'checked' : ''}>
                         <div>
                             <div class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(t.namaPos)}</div>
-                            <div class="text-[10px] text-slate-400">Periode: <strong class="text-slate-600 dark:text-slate-300">${escapeHtml(t.periode)}</strong> • Jatuh Tempo: ${t.dueDate || '-'}</div>
+                            <div class="text-[10px] text-slate-400">Periode: <strong class="text-slate-600 dark:text-slate-300">${escapeHtml(t.periode)}${formatBulanPeriode(t.periode) ? ` (${escapeHtml(formatBulanPeriode(t.periode))})` : ''}</strong> • Jatuh Tempo: ${t.dueDate || '-'}</div>
                             ${t.status === 'SEBAGIAN' ? `<span class="inline-block mt-1 text-[9px] font-extrabold text-amber-600 bg-amber-50 dark:bg-amber-950 px-1.5 py-0.5 rounded border border-amber-200">Cicil (Sudah Masuk: ${formatRupiah(t.nominalTerbayar)})</span>` : ''}
                         </div>
                     </label>
@@ -842,9 +858,21 @@ async function submitKeuanganPOSPayment() {
             // Dapatkan detail pos tagihan jika ada
             const allTagihan = ASNKeuangan.data.tagihanList || [];
             const foundTagihan = allTagihan.find(t => String(t.tagihanId) === String(tId));
+            const rawPosName = foundTagihan ? foundTagihan.namaPos : "Tagihan Pesantren";
+            const periodeStr = foundTagihan ? (foundTagihan.periode || "") : "";
+            const namaBulan = formatBulanPeriode(periodeStr);
+
+            // Sisipkan bulan ke dalam nama rincian item (misal: "Syahriyah Pesantren (Oktober 2026)")
+            let fullPosName = rawPosName;
+            if (namaBulan && !fullPosName.toLowerCase().includes(namaBulan.toLowerCase())) {
+                fullPosName = `${rawPosName} (${namaBulan})`;
+            }
+
             items.push({
                 tagihanId: tId,
-                posName: foundTagihan ? foundTagihan.namaPos : "Tagihan Pesantren",
+                posName: fullPosName.substring(0, 50),
+                namaPos: rawPosName,
+                periode: periodeStr,
                 bayarNominal: bayarNom
             });
         }
@@ -1133,7 +1161,7 @@ function openKuitansiModal(kuitansi) {
                     <td class="py-2 text-slate-400 text-center">${idx + 1}</td>
                     <td class="py-2 font-semibold text-slate-800 dark:text-slate-100">
                         ${escapeHtml(item.namaPos)}
-                        <span class="text-[10px] text-slate-400 block">${escapeHtml(item.periode || '')}</span>
+                        <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block">${escapeHtml(formatBulanPeriode(item.periode) ? `Bulan ${formatBulanPeriode(item.periode)}` : (item.periode || ''))}</span>
                     </td>
                     <td class="py-2 text-right font-bold ${isVoid ? 'line-through text-slate-400' : 'text-slate-800 dark:text-slate-100'}">${formatRupiah(item.nominalBayar)}</td>
                 </tr>
@@ -1210,7 +1238,9 @@ function shareKuitansiWhatsApp(kuitansiParam) {
     let itemsText = '';
     const items = k.rincianItems || [];
     items.forEach(it => {
-        itemsText += `• ${it.namaPos} (${it.periode || '-'}): ${formatRupiah(it.nominalBayar)}\n`;
+        const bln = formatBulanPeriode(it.periode);
+        const labelPeriode = bln ? ` (Bulan ${bln})` : (it.periode ? ` (${it.periode})` : '');
+        itemsText += `• ${it.namaPos}${labelPeriode}: ${formatRupiah(it.nominalBayar)}\n`;
     });
 
     const namaLembaga = getNamaLembagaKuitansi();
