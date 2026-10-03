@@ -9435,6 +9435,21 @@
                                             <i class="fa-solid fa-chart-pie text-xs"></i>
                                             <span>Laporan Arus Kas</span>
                                         </button>
+                                        <button type="button" id="tab-btn-keuangan-tabungan" onclick="switchKeuanganTab('tabungan')"
+                                            class="px-3.5 py-2 rounded-xl text-xs font-bold transition text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836] flex items-center gap-1.5 shrink-0">
+                                            <i class="fa-solid fa-piggy-bank text-xs text-amber-500"></i>
+                                            <span>Uang Saku & Tabungan</span>
+                                        </button>
+                                        <button type="button" id="tab-btn-keuangan-kantin" onclick="switchKeuanganTab('kantin')"
+                                            class="px-3.5 py-2 rounded-xl text-xs font-bold transition text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836] flex items-center gap-1.5 shrink-0">
+                                            <i class="fa-solid fa-store text-xs text-indigo-500"></i>
+                                            <span>Kantin Cashless</span>
+                                        </button>
+                                        <button type="button" id="tab-btn-keuangan-analytics" onclick="switchKeuanganTab('analytics')"
+                                            class="px-3.5 py-2 rounded-xl text-xs font-bold transition text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836] flex items-center gap-1.5 shrink-0">
+                                            <i class="fa-solid fa-chart-line text-xs text-purple-500"></i>
+                                            <span>Executive Analytics</span>
+                                        </button>
                                         <button type="button" id="tab-btn-keuangan-tarif" onclick="switchKeuanganTab('tarif')"
                                             class="px-3.5 py-2 rounded-xl text-xs font-bold transition text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836] flex items-center gap-1.5 shrink-0">
                                             <i class="fa-solid fa-tags text-xs"></i>
@@ -10102,6 +10117,294 @@
                                     <!-- Mobile Cards Broadcast -->
                                     <div id="keuangan-broadcast-mobile-list" class="block md:hidden space-y-2.5">
                                         <!-- Rendered dynamically -->
+                                    </div>
+                                </div>
+
+                                <!-- ================= TAB 10: TABUNGAN & UANG SAKU SANTRI ================= -->
+                                <div id="keuangan-panel-tabungan" class="hidden space-y-4">
+                                    <div class="bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                        <div>
+                                            <h4 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Tabungan & Uang Saku Santri (Digital Pocket)</h4>
+                                            <p class="text-[11px] text-slate-400">Pengelolaan dana titipan uang saku santri dengan pembatasan belanja harian mandiri.</p>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <button type="button" onclick="openModalTopupTabungan()"
+                                                class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95">
+                                                <i class="fa-solid fa-plus-circle text-xs"></i>
+                                                <span>Setor / Topup</span>
+                                            </button>
+                                            <button type="button" onclick="openModalTarikTabungan()"
+                                                class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95">
+                                                <i class="fa-solid fa-money-bill-wave text-xs"></i>
+                                                <span>Tarik Tunai</span>
+                                            </button>
+                                            <button type="button" onclick="loadTabunganDashboardData(true)"
+                                                class="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition" title="Segarkan Data">
+                                                <i class="fa-solid fa-rotate text-xs"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- 4 Stat Cards Tabungan -->
+                                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+                                        <div class="p-3.5 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40">
+                                            <span class="text-[10px] text-emerald-700 dark:text-emerald-300 font-bold uppercase block">Total Saldo Mengendap</span>
+                                            <div id="tabungan-stat-total-saldo" class="text-sm sm:text-base font-black text-emerald-800 dark:text-emerald-200 mt-0.5">Rp 0</div>
+                                            <span class="text-[9px] text-slate-400 block">Titipan kas uang saku</span>
+                                        </div>
+                                        <div class="p-3.5 rounded-2xl bg-teal-50/60 dark:bg-teal-950/30 border border-teal-200/60 dark:border-teal-800/40">
+                                            <span class="text-[10px] text-teal-700 dark:text-teal-300 font-bold uppercase block">Topup Bulan Ini</span>
+                                            <div id="tabungan-stat-total-topup" class="text-sm sm:text-base font-black text-teal-800 dark:text-teal-200 mt-0.5">Rp 0</div>
+                                            <span class="text-[9px] text-slate-400 block">Setoran wali/santri</span>
+                                        </div>
+                                        <div class="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200/60 dark:border-indigo-800/40">
+                                            <span class="text-[10px] text-indigo-700 dark:text-indigo-300 font-bold uppercase block">Jajan Kantin Cashless</span>
+                                            <div id="tabungan-stat-total-jajan" class="text-sm sm:text-base font-black text-indigo-800 dark:text-indigo-200 mt-0.5">Rp 0</div>
+                                            <span class="text-[9px] text-slate-400 block">Omzet kantin & koperasi</span>
+                                        </div>
+                                        <div class="p-3.5 rounded-2xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40">
+                                            <span class="text-[10px] text-amber-700 dark:text-amber-300 font-bold uppercase block">Tarik Tunai Santri</span>
+                                            <div id="tabungan-stat-total-tarik" class="text-sm sm:text-base font-black text-amber-800 dark:text-amber-200 mt-0.5">Rp 0</div>
+                                            <span class="text-[9px] text-slate-400 block">Penarikan izin/pulang</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Pencarian Santri Tabungan -->
+                                    <div class="bg-white dark:bg-[#15202d] p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex items-center gap-2">
+                                        <i class="fa-solid fa-search text-slate-400 text-xs ml-1"></i>
+                                        <input type="text" id="tabungan-search-input" oninput="filterTabunganSantriTable(this.value)" placeholder="Cari santri berdasarkan nama atau ID..."
+                                            class="w-full text-xs font-semibold bg-transparent text-slate-800 dark:text-slate-100 outline-none placeholder:text-slate-400">
+                                    </div>
+
+                                    <!-- Tabel Rekening Tabungan Santri (Desktop) -->
+                                    <div class="hidden md:block bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm overflow-x-auto">
+                                        <table class="w-full text-left text-xs">
+                                            <thead>
+                                                <tr class="border-b border-slate-100 dark:border-[#253447] bg-slate-50/50 dark:bg-[#182332] text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                                    <th class="py-2.5 px-3 text-center w-12">No</th>
+                                                    <th class="py-2.5 px-3">Santri</th>
+                                                    <th class="py-2.5 px-3">Program</th>
+                                                    <th class="py-2.5 px-3">Saldo Saat Ini</th>
+                                                    <th class="py-2.5 px-3">Limit Harian</th>
+                                                    <th class="py-2.5 px-3">Jajan Hari Ini</th>
+                                                    <th class="py-2.5 px-3 text-center">Status Kartu</th>
+                                                    <th class="py-2.5 px-3 text-right">Aksi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="keuangan-tabungan-table-body">
+                                                <!-- Rendered dynamically -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- Mobile Cards Tabungan -->
+                                    <div id="keuangan-tabungan-mobile-list" class="block md:hidden space-y-2.5">
+                                        <!-- Rendered dynamically -->
+                                    </div>
+
+                                    <!-- Riwayat Mutasi Uang Saku Santri -->
+                                    <div class="bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm space-y-3">
+                                        <h5 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Log Mutasi Uang Saku & Cashless Terbaru</h5>
+                                        <div class="overflow-x-auto">
+                                            <table class="w-full text-left text-xs">
+                                                <thead>
+                                                    <tr class="border-b border-slate-100 dark:border-[#253447] text-[10px] font-bold text-slate-400 uppercase">
+                                                        <th class="py-2 px-2">ID Mutasi</th>
+                                                        <th class="py-2 px-2">Santri</th>
+                                                        <th class="py-2 px-2">Jenis</th>
+                                                        <th class="py-2 px-2">Nominal</th>
+                                                        <th class="py-2 px-2">Sisa Saldo</th>
+                                                        <th class="py-2 px-2">Keterangan</th>
+                                                        <th class="py-2 px-2 text-right">Waktu</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="keuangan-tabungan-mutasi-table-body">
+                                                    <!-- Rendered dynamically -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- ================= TAB 11: POS KANTIN & KOPERASI CASHLESS ================= -->
+                                <div id="keuangan-panel-kantin" class="hidden space-y-4">
+                                    <div class="bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                        <div>
+                                            <h4 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">POS Kantin & Koperasi Cashless</h4>
+                                            <p class="text-[11px] text-slate-400">Transaksi jajan & kebutuhan santri tanpa uang tunai dengan verifikasi limit harian otomatis.</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                                        <!-- Kiri: Pilih Santri & Kartu Digital -->
+                                        <div class="lg:col-span-5 space-y-3">
+                                            <div class="bg-white dark:bg-[#15202d] p-4 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm space-y-3">
+                                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Scan Barcode / Cari Santri:</label>
+                                                <div class="relative">
+                                                    <input type="text" id="kantin-search-student-input" oninput="onKantinStudentSearch(this.value)" placeholder="Ketik nama santri atau scan barcode kartu..."
+                                                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-slate-50 dark:bg-[#1c2836] text-xs font-bold text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500">
+                                                    <div id="kantin-search-results" class="hidden absolute left-0 right-0 top-full mt-1 bg-white dark:bg-[#1c2836] rounded-xl shadow-xl border border-slate-200 dark:border-[#253447] max-h-48 overflow-y-auto z-30 divide-y divide-slate-100 dark:divide-[#253447] text-xs">
+                                                        <!-- Autocomplete items -->
+                                                    </div>
+                                                </div>
+
+                                                <!-- Visual Kartu Santri Cerdas Cashless -->
+                                                <div id="kantin-card-visual" class="p-4 rounded-2xl bg-gradient-to-br from-indigo-900 via-indigo-800 to-slate-900 text-white shadow-md space-y-3 relative overflow-hidden">
+                                                    <div class="flex items-center justify-between">
+                                                        <div class="flex items-center space-x-2">
+                                                            <div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center text-xs font-black">RM</div>
+                                                            <span class="text-[10px] font-bold uppercase tracking-widest text-indigo-200">Smart Cashless Card</span>
+                                                        </div>
+                                                        <i class="fa-solid fa-wifi text-indigo-300 text-sm rotate-90"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h3 id="kantin-card-student-name" class="font-black text-sm sm:text-base text-white">Pilih Santri Terlebih Dahulu</h3>
+                                                        <p id="kantin-card-student-info" class="text-[10px] text-indigo-200">NIS: - • Program: -</p>
+                                                    </div>
+                                                    <div class="pt-2 border-t border-indigo-700/50 flex items-center justify-between">
+                                                        <div>
+                                                            <span class="text-[9px] text-indigo-300 uppercase block font-bold">Saldo Kartu</span>
+                                                            <div id="kantin-card-student-saldo" class="text-base font-black text-emerald-300">Rp 0</div>
+                                                        </div>
+                                                        <div class="text-right">
+                                                            <span class="text-[9px] text-indigo-300 uppercase block font-bold">Sisa Limit Hari Ini</span>
+                                                            <div id="kantin-card-student-limit" class="text-xs font-bold text-amber-300">Rp 0</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Kanan: Form Transaksi Belanja Kantin -->
+                                        <div class="lg:col-span-7">
+                                            <div class="bg-white dark:bg-[#15202d] p-4 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm space-y-4">
+                                                <h5 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Input Belanja Santri</h5>
+
+                                                <!-- Tombol Nominal Cepat -->
+                                                <div>
+                                                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1.5">Pilihan Cepat Nominal Belanja:</label>
+                                                    <div class="grid grid-cols-3 sm:grid-cols-6 gap-1.5 text-xs">
+                                                        <button type="button" onclick="setKantinNominal(2000)" class="py-2 bg-slate-100 hover:bg-indigo-50 dark:bg-[#1c2836] text-slate-700 dark:text-slate-200 font-bold rounded-xl transition border border-slate-200 dark:border-[#253447]">2.000</button>
+                                                        <button type="button" onclick="setKantinNominal(5000)" class="py-2 bg-slate-100 hover:bg-indigo-50 dark:bg-[#1c2836] text-slate-700 dark:text-slate-200 font-bold rounded-xl transition border border-slate-200 dark:border-[#253447]">5.000</button>
+                                                        <button type="button" onclick="setKantinNominal(10000)" class="py-2 bg-slate-100 hover:bg-indigo-50 dark:bg-[#1c2836] text-slate-700 dark:text-slate-200 font-bold rounded-xl transition border border-slate-200 dark:border-[#253447]">10.000</button>
+                                                        <button type="button" onclick="setKantinNominal(15000)" class="py-2 bg-slate-100 hover:bg-indigo-50 dark:bg-[#1c2836] text-slate-700 dark:text-slate-200 font-bold rounded-xl transition border border-slate-200 dark:border-[#253447]">15.000</button>
+                                                        <button type="button" onclick="setKantinNominal(20000)" class="py-2 bg-slate-100 hover:bg-indigo-50 dark:bg-[#1c2836] text-slate-700 dark:text-slate-200 font-bold rounded-xl transition border border-slate-200 dark:border-[#253447]">20.000</button>
+                                                        <button type="button" onclick="setKantinNominal(25000)" class="py-2 bg-slate-100 hover:bg-indigo-50 dark:bg-[#1c2836] text-slate-700 dark:text-slate-200 font-bold rounded-xl transition border border-slate-200 dark:border-[#253447]">25.000</button>
+                                                    </div>
+                                                </div>
+
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                    <div>
+                                                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Nominal Belanja (Rp) <span class="text-rose-500">*</span></label>
+                                                        <input type="number" id="kantin-input-nominal" placeholder="0" min="0" step="500"
+                                                            class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 font-black text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Keterangan / Pos Jajan</label>
+                                                        <input type="text" id="kantin-input-keterangan" placeholder="Contoh: Snack, Alat Tulis, Minuman"
+                                                            class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 text-xs font-semibold outline-none focus:ring-2 focus:ring-indigo-500">
+                                                    </div>
+                                                </div>
+
+                                                <button type="button" id="btn-submit-kantin-cashless" onclick="submitKantinCashlessTransaction()"
+                                                    class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-md active:scale-95 flex items-center justify-center gap-2">
+                                                    <i class="fa-solid fa-credit-card text-sm"></i>
+                                                    <span>Proses Pembayaran Cashless (Potong Saldo Kartu)</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- ================= TAB 12: EXECUTIVE FINANCIAL ANALYTICS ================= -->
+                                <div id="keuangan-panel-analytics" class="hidden space-y-4">
+                                    <div class="bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                        <div>
+                                            <h4 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Executive Financial Analytics & Health Monitor</h4>
+                                            <p class="text-[11px] text-slate-400">Ringkasan analitik rasio likuiditas operasional dan aging piutang untuk Pengasuh & Masyayikh.</p>
+                                        </div>
+                                        <button type="button" onclick="loadExecutiveAnalyticsData()"
+                                            class="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95 self-start sm:self-auto">
+                                            <i class="fa-solid fa-arrows-rotate text-xs"></i>
+                                            <span>Muat Analitik</span>
+                                        </button>
+                                    </div>
+
+                                    <!-- 4 KPI Cards Kesehatan Finansial -->
+                                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+                                        <div class="p-3.5 rounded-2xl bg-purple-50/60 dark:bg-purple-950/30 border border-purple-200/60 dark:border-purple-800/40">
+                                            <span class="text-[10px] text-purple-700 dark:text-purple-300 font-bold uppercase block">Net Cash Flow (Bulan Ini)</span>
+                                            <div id="analytics-stat-net-flow" class="text-sm sm:text-base font-black text-purple-800 dark:text-purple-200 mt-0.5">Rp 0</div>
+                                            <span class="text-[9px] text-slate-400 block">Surplus operasional bersih</span>
+                                        </div>
+                                        <div class="p-3.5 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40">
+                                            <span class="text-[10px] text-emerald-700 dark:text-emerald-300 font-bold uppercase block">Collection Rate</span>
+                                            <div id="analytics-stat-collection-rate" class="text-sm sm:text-base font-black text-emerald-800 dark:text-emerald-200 mt-0.5">100%</div>
+                                            <span class="text-[9px] text-slate-400 block">Tingkat efektivitas penagihan</span>
+                                        </div>
+                                        <div class="p-3.5 rounded-2xl bg-sky-50/60 dark:bg-sky-950/30 border border-sky-200/60 dark:border-sky-800/40">
+                                            <span class="text-[10px] text-sky-700 dark:text-sky-300 font-bold uppercase block">Financial Runway</span>
+                                            <div id="analytics-stat-runway" class="text-sm sm:text-base font-black text-sky-800 dark:text-sky-200 mt-0.5">Aman (>6 bln)</div>
+                                            <span class="text-[9px] text-slate-400 block">Ketahanan likuiditas kas</span>
+                                        </div>
+                                        <div class="p-3.5 rounded-2xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40">
+                                            <span class="text-[10px] text-amber-700 dark:text-amber-300 font-bold uppercase block">Dana Saku Titipan</span>
+                                            <div id="analytics-stat-tabungan" class="text-sm sm:text-base font-black text-amber-800 dark:text-amber-200 mt-0.5">Rp 0</div>
+                                            <span class="text-[9px] text-slate-400 block">Dana mengendap cashless</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Aging Piutang Analysis Card -->
+                                    <div class="bg-white dark:bg-[#15202d] p-4 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm space-y-3">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <h5 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Analisis Aging Piutang / Tunggakan Tagihan Santri</h5>
+                                                <p class="text-[11px] text-slate-400">Klasifikasi usia piutang untuk memprioritaskan penagihan dan pembinaan wali santri.</p>
+                                            </div>
+                                            <div class="text-right">
+                                                <span class="text-[10px] text-slate-400 block">Total Piutang Berjalan</span>
+                                                <div id="analytics-aging-total-piutang" class="text-sm font-black text-rose-600 dark:text-rose-400">Rp 0</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-2.5 pt-2">
+                                            <!-- Lancar -->
+                                            <div class="p-3 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 space-y-1">
+                                                <div class="flex items-center justify-between text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
+                                                    <span>Lancar (&lt; 30 hr)</span>
+                                                    <span id="aging-count-lancar">0</span>
+                                                </div>
+                                                <div id="aging-nom-lancar" class="font-black text-xs text-slate-800 dark:text-slate-100">Rp 0</div>
+                                                <span class="text-[9px] text-slate-400 block">Tagihan bulan berjalan</span>
+                                            </div>
+                                            <!-- Dalam Perhatian -->
+                                            <div class="p-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 space-y-1">
+                                                <div class="flex items-center justify-between text-[11px] font-bold text-amber-800 dark:text-amber-300">
+                                                    <span>Perhatian (31-60 hr)</span>
+                                                    <span id="aging-count-perhatian">0</span>
+                                                </div>
+                                                <div id="aging-nom-perhatian" class="font-black text-xs text-slate-800 dark:text-slate-100">Rp 0</div>
+                                                <span class="text-[9px] text-slate-400 block">Keterlambatan 1 bulan</span>
+                                            </div>
+                                            <!-- Kurang Lancar -->
+                                            <div class="p-3 rounded-xl bg-orange-50/50 dark:bg-orange-950/30 border border-orange-200/60 dark:border-orange-800/40 space-y-1">
+                                                <div class="flex items-center justify-between text-[11px] font-bold text-orange-800 dark:text-orange-300">
+                                                    <span>Kurang Lancar (61-90 hr)</span>
+                                                    <span id="aging-count-kurang-lancar">0</span>
+                                                </div>
+                                                <div id="aging-nom-kurang-lancar" class="font-black text-xs text-slate-800 dark:text-slate-100">Rp 0</div>
+                                                <span class="text-[9px] text-slate-400 block">Keterlambatan 2 bulan</span>
+                                            </div>
+                                            <!-- Macet -->
+                                            <div class="p-3 rounded-xl bg-rose-50/50 dark:bg-rose-950/30 border border-rose-200/60 dark:border-rose-800/40 space-y-1">
+                                                <div class="flex items-center justify-between text-[11px] font-bold text-rose-800 dark:text-rose-300">
+                                                    <span>Macet (&gt; 90 hr)</span>
+                                                    <span id="aging-count-macet">0</span>
+                                                </div>
+                                                <div id="aging-nom-macet" class="font-black text-xs text-rose-600 dark:text-rose-400">Rp 0</div>
+                                                <span class="text-[9px] text-slate-400 block">Butuh dispensasi/beasiswa</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -11545,6 +11848,181 @@
                     class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs transition shadow-sm active:scale-95 flex items-center gap-1.5">
                     <i class="fa-solid fa-paper-plane text-xs"></i>
                     <span>Kirim Konfirmasi Bayar</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL TOPUP TABUNGAN SANTRI ==================== -->
+    <div id="modal-topup-tabungan" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+        <div class="bg-white dark:bg-[#15202d] rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-[#253447] space-y-4 p-5">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-[#253447] pb-3">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center">
+                        <i class="fa-solid fa-circle-arrow-down text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">Setor / Topup Saldo Uang Saku</h3>
+                        <p class="text-[10px] text-slate-400">Titipan uang saku santri untuk kebutuhan harian & kantin</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModalTopupTabungan()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Pilih Santri <span class="text-rose-500">*</span></label>
+                    <select id="topup-input-student" onchange="onTopupStudentSelected(this.value)"
+                        class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 outline-none font-semibold">
+                        <!-- Populated dynamically -->
+                    </select>
+                    <div id="topup-student-current-saldo" class="text-[10px] text-emerald-600 font-bold mt-1">Saldo saat ini: Rp 0</div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Nominal Topup (Rp) <span class="text-rose-500">*</span></label>
+                        <input type="number" id="topup-input-nominal" placeholder="0" min="5000" step="5000"
+                            class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 outline-none font-bold text-emerald-600">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Metode Setoran</label>
+                        <select id="topup-input-metode"
+                            class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 outline-none font-semibold">
+                            <option value="TUNAI">Tunai (Kasir/Laci)</option>
+                            <option value="TRANSFER_BSI">Transfer Bank BSI</option>
+                            <option value="TRANSFER_BRI">Transfer Bank BRI</option>
+                            <option value="QRIS">QRIS Nasional</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Catatan / Keterangan</label>
+                    <input type="text" id="topup-input-catatan" placeholder="Contoh: Titipan uang saku dari Ummi (Bpk. Ahmad)"
+                        class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 outline-none">
+                </div>
+            </div>
+
+            <div class="pt-2 flex items-center justify-end space-x-2">
+                <button type="button" onclick="closeModalTopupTabungan()"
+                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition">
+                    Batal
+                </button>
+                <button type="button" id="btn-submit-topup-tabungan" onclick="submitTopupTabungan()"
+                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm active:scale-95 flex items-center gap-1.5">
+                    <i class="fa-solid fa-check text-xs"></i>
+                    <span>Simpan Setoran</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL TARIK TABUNGAN SANTRI ==================== -->
+    <div id="modal-tarik-tabungan" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+        <div class="bg-white dark:bg-[#15202d] rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-[#253447] space-y-4 p-5">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-[#253447] pb-3">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-600 flex items-center justify-center">
+                        <i class="fa-solid fa-circle-arrow-up text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">Tarik Tunai Uang Saku Santri</h3>
+                        <p class="text-[10px] text-slate-400">Penarikan uang saku untuk keperluan izin keluar/pulang</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModalTarikTabungan()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Pilih Santri <span class="text-rose-500">*</span></label>
+                    <select id="tarik-input-student" onchange="onTarikStudentSelected(this.value)"
+                        class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 outline-none font-semibold">
+                        <!-- Populated dynamically -->
+                    </select>
+                    <div id="tarik-student-current-saldo" class="text-[10px] text-amber-600 font-bold mt-1">Saldo saat ini: Rp 0</div>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Nominal Penarikan (Rp) <span class="text-rose-500">*</span></label>
+                    <input type="number" id="tarik-input-nominal" placeholder="0" min="1000" step="1000"
+                        class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 outline-none font-bold text-amber-600">
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Keperluan / Keterangan Penarikan <span class="text-rose-500">*</span></label>
+                    <input type="text" id="tarik-input-keperluan" placeholder="Contoh: Beli kitab di luar / Izin pulang liburan"
+                        class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 outline-none">
+                </div>
+            </div>
+
+            <div class="pt-2 flex items-center justify-end space-x-2">
+                <button type="button" onclick="closeModalTarikTabungan()"
+                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition">
+                    Batal
+                </button>
+                <button type="button" id="btn-submit-tarik-tabungan" onclick="submitTarikTabungan()"
+                    class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition shadow-sm active:scale-95 flex items-center gap-1.5">
+                    <i class="fa-solid fa-money-bill-transfer text-xs"></i>
+                    <span>Tarik Tunai</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL SET LIMIT & KUNCI KARTU SANTRI ==================== -->
+    <div id="modal-set-limit-tabungan" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+        <div class="bg-white dark:bg-[#15202d] rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-[#253447] space-y-4 p-5">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-[#253447] pb-3">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 flex items-center justify-center">
+                        <i class="fa-solid fa-sliders text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">Atur Limit & Keamanan Kartu</h3>
+                        <p id="set-limit-modal-subtitle" class="text-[10px] text-slate-400">Santri: -</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModalSetLimitTabungan()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <input type="hidden" id="set-limit-student-id" value="">
+
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Limit Belanja Harian (Rp)</label>
+                    <input type="number" id="set-limit-input-nominal" placeholder="25000" min="0" step="5000"
+                        class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 font-bold text-indigo-600 outline-none">
+                    <span class="text-[9px] text-slate-400 block mt-1">Isi 0 jika tidak ada batas limit harian.</span>
+                </div>
+
+                <div class="p-3 bg-slate-50 dark:bg-[#1c2836] rounded-xl border border-slate-200 dark:border-[#253447] flex items-center justify-between">
+                    <div>
+                        <span class="font-bold text-slate-800 dark:text-slate-100 block">Status Kartu Santri</span>
+                        <span class="text-[9px] text-slate-400">Kunci jika kartu hilang atau dibekukan</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="set-limit-input-locked" class="sr-only peer">
+                        <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-600"></div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="pt-2 flex items-center justify-end space-x-2">
+                <button type="button" onclick="closeModalSetLimitTabungan()"
+                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition">
+                    Batal
+                </button>
+                <button type="button" id="btn-submit-set-limit" onclick="submitUpdateLimitTabungan()"
+                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-sm active:scale-95">
+                    Simpan Perubahan
                 </button>
             </div>
         </div>

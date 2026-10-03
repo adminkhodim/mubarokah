@@ -970,6 +970,69 @@ function doPost(e) {
     }
 
     // ========================================================
+    // FASE 4: TABUNGAN SANTRI, KANTIN CASHLESS & ANALYTICS
+    // ========================================================
+    if (action === "getTabunganDashboard" || action === "keuangan.getTabunganDashboard") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(getTabunganSantriDashboard(token));
+    }
+
+    if (action === "topupTabungan" || action === "keuangan.topupTabungan") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
+        return createJsonResponse(topupTabunganSantri(payload.data || payload, token, actor));
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", success: false, message: authErr.message });
+      }
+    }
+
+    if (action === "tarikTabungan" || action === "keuangan.tarikTabungan") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
+        return createJsonResponse(tarikTabunganSantri(payload.data || payload, token, actor));
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", success: false, message: authErr.message });
+      }
+    }
+
+    if (action === "transaksiKantin" || action === "keuangan.transaksiKantin" || action === "transaksiKantinCashless") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA", "KASIR", "KANTIN"]);
+        return createJsonResponse(transaksiKantinCashless(payload.data || payload, token, actor));
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", success: false, message: authErr.message });
+      }
+    }
+
+    if (action === "updateLimitTabungan" || action === "keuangan.updateLimitTabungan") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
+        return createJsonResponse(updateLimitTabunganSantri(payload.data || payload, token, actor));
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", success: false, message: authErr.message });
+      }
+    }
+
+    if (action === "getExecutiveAnalytics" || action === "keuangan.getExecutiveAnalytics") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA", "PENGASUH"]);
+        return createJsonResponse(getExecutiveAnalyticsKeuangan(token));
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", success: false, message: authErr.message });
+      }
+    }
+
+    // ========================================================
     // DATA PEGAWAI (ASATIDZ & KARYAWAN) ACTIONS (doPost)
     // ========================================================
     if (action === "getEmployees" || action === "employee.list") {
@@ -18615,6 +18678,8 @@ const SHEET_KEUANGAN_PENGELUARAN = "Keuangan_Pengeluaran";
 const SHEET_KEUANGAN_KATEGORI_PENGELUARAN = "Keuangan_Kategori_Pengeluaran";
 const SHEET_KEUANGAN_TUTUP_KASIR = "Keuangan_Tutup_Kasir";
 const SHEET_KEUANGAN_KONFIRMASI_TRANSFER = "Keuangan_Konfirmasi_Transfer";
+const SHEET_KEUANGAN_TABUNGAN = "Keuangan_Tabungan_Santri";
+const SHEET_KEUANGAN_MUTASI_TABUNGAN = "Keuangan_Mutasi_Tabungan";
 
 function getOrCreateKeuanganSheet(ss, sheetName, headers, bgHeaderColor) {
   let sheet = ss.getSheetByName(sheetName);
@@ -18690,10 +18755,18 @@ function initKeuanganSheets(token) {
     const headersKonfirmasi = ["konfirmasi_id", "student_id", "student_name", "tagihan_ids_json", "nominal_transfer", "bank_tujuan", "nama_pengirim", "tanggal_transfer", "bukti_transfer_url", "status", "catatan_verifikasi", "no_kuitansi", "created_at"];
     getOrCreateKeuanganSheet(ss, SHEET_KEUANGAN_KONFIRMASI_TRANSFER, headersKonfirmasi, "#0891b2");
 
+    // 8. Sheet Tabungan Santri (Dompet Digital Uang Saku)
+    const headersTabungan = ["student_id", "student_name", "program", "saldo_tabungan", "limit_harian", "total_jajan_hari_ini", "tgl_jajan_terakhir", "is_locked", "updated_at"];
+    getOrCreateKeuanganSheet(ss, SHEET_KEUANGAN_TABUNGAN, headersTabungan, "#059669");
+
+    // 9. Sheet Mutasi Tabungan & Transaksi Kantin Cashless
+    const headersMutasi = ["mutasi_id", "student_id", "student_name", "jenis_mutasi", "nominal", "saldo_sebelum", "saldo_sesudah", "keterangan", "petugas", "created_at"];
+    getOrCreateKeuanganSheet(ss, SHEET_KEUANGAN_MUTASI_TABUNGAN, headersMutasi, "#0d9488");
+
     return {
       status: "success",
       success: true,
-      message: "Sheet Keuangan (Tarif, Tagihan, Kas Masuk, Kas Keluar, Kategori, Tutup Kasir, & Konfirmasi Transfer) berhasil diinisialisasi."
+      message: "Sheet Keuangan Enterprise (Tarif, Tagihan, Kas Masuk, Kas Keluar, Tutup Kasir, Transfer Online, Tabungan & Mutasi Cashless) berhasil diinisialisasi."
     };
   } catch (err) {
     return { status: "error", success: false, message: "Gagal inisialisasi sheet keuangan: " + err.message };
@@ -20214,6 +20287,623 @@ _Bendahara PPTQ Roudlotul Mubarokah Kudus_`;
   } catch (err) {
     console.error("[GET BROADCAST TAGIHAN ERROR]", err);
     return { status: "error", success: false, message: "Gagal memuat daftar broadcast: " + err.message };
+  }
+}
+
+// ====================================================================
+// FASE 4: SMART PESANTREN, TABUNGAN UANG SAKU, CASHLESS & ANALYTICS
+// ====================================================================
+
+function getTabunganSantriDashboard(token) {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error("Spreadsheet database tidak ditemukan.");
+
+    // Pastikan sheet tabungan & mutasi tersedia
+    const headersTabungan = ["student_id", "student_name", "program", "saldo_tabungan", "limit_harian", "total_jajan_hari_ini", "tgl_jajan_terakhir", "is_locked", "updated_at"];
+    const tabSheet = getOrCreateKeuanganSheet(ss, SHEET_KEUANGAN_TABUNGAN, headersTabungan, "#059669");
+
+    const headersMutasi = ["mutasi_id", "student_id", "student_name", "jenis_mutasi", "nominal", "saldo_sebelum", "saldo_sesudah", "keterangan", "petugas", "created_at"];
+    const mutSheet = getOrCreateKeuanganSheet(ss, SHEET_KEUANGAN_MUTASI_TABUNGAN, headersMutasi, "#0d9488");
+
+    // Ambil data santri untuk sinkronisasi akun tabungan otomatis
+    const studentsMap = {};
+    const stSheet = ss.getSheetByName("Students");
+    if (stSheet) {
+      const sData = stSheet.getDataRange().getValues();
+      for (let i = 1; i < sData.length; i++) {
+        const sid = String(sData[i][0] || "").trim();
+        if (sid) {
+          studentsMap[sid] = {
+            id: sid,
+            name: String(sData[i][1] || "").trim(),
+            program: String(sData[i][3] || "Santri").trim()
+          };
+        }
+      }
+    }
+
+    // Baca data tabungan yang ada
+    const tData = tabSheet.getDataRange().getValues();
+    const existingAccounts = {};
+    const todayStr = new Date().toISOString().substring(0, 10);
+
+    for (let r = 1; r < tData.length; r++) {
+      const sid = String(tData[r][0] || "").trim();
+      if (sid) {
+        existingAccounts[sid] = {
+          rowIndex: r + 1,
+          studentId: sid,
+          studentName: String(tData[r][1] || "").trim(),
+          program: String(tData[r][2] || "").trim(),
+          saldoTabungan: Number(tData[r][3]) || 0,
+          limitHarian: Number(tData[r][4]) || 25000,
+          totalJajanHariIni: String(tData[r][6] || "").trim() === todayStr ? (Number(tData[r][5]) || 0) : 0,
+          tglJajanTerakhir: String(tData[r][6] || "").trim(),
+          isLocked: String(tData[r][7] || "FALSE").trim().toUpperCase() === "TRUE",
+          updatedAt: String(tData[r][8] || "").trim()
+        };
+      }
+    }
+
+    // Auto-create baris tabungan santri baru jika belum tercatat
+    const newRowsToAppend = [];
+    const nowIso = new Date().toISOString();
+    Object.keys(studentsMap).forEach(sid => {
+      if (!existingAccounts[sid]) {
+        const st = studentsMap[sid];
+        newRowsToAppend.push([
+          st.id,
+          st.name,
+          st.program,
+          0,
+          25000,
+          0,
+          todayStr,
+          "FALSE",
+          nowIso
+        ]);
+        existingAccounts[sid] = {
+          rowIndex: -1,
+          studentId: st.id,
+          studentName: st.name,
+          program: st.program,
+          saldoTabungan: 0,
+          limitHarian: 25000,
+          totalJajanHariIni: 0,
+          tglJajanTerakhir: todayStr,
+          isLocked: false,
+          updatedAt: nowIso
+        };
+      }
+    });
+
+    if (newRowsToAppend.length > 0) {
+      tabSheet.getRange(tabSheet.getLastRow() + 1, 1, newRowsToAppend.length, headersTabungan.length).setValues(newRowsToAppend);
+    }
+
+    // Baca 50 mutasi tabungan terakhir
+    const mData = mutSheet.getDataRange().getValues();
+    const recentMutasi = [];
+    let totalTopupBulanIni = 0;
+    let totalJajanBulanIni = 0;
+    let totalTarikBulanIni = 0;
+    const currentYearMonth = todayStr.substring(0, 7);
+
+    for (let m = mData.length - 1; m >= 1 && recentMutasi.length < 50; m--) {
+      const row = mData[m];
+      const mId = String(row[0] || "").trim();
+      if (!mId) continue;
+
+      const jenis = String(row[3] || "").trim().toUpperCase();
+      const nom = Number(row[4]) || 0;
+      const tgl = String(row[9] || "").trim();
+
+      if (tgl.startsWith(currentYearMonth)) {
+        if (jenis === "TOPUP") totalTopupBulanIni += nom;
+        else if (jenis === "JAJAN_KANTIN") totalJajanBulanIni += nom;
+        else if (jenis === "TARIK_TUNAI") totalTarikBulanIni += nom;
+      }
+
+      recentMutasi.push({
+        mutasiId: mId,
+        studentId: String(row[1] || "").trim(),
+        studentName: String(row[2] || "").trim(),
+        jenisMutasi: jenis,
+        nominal: nom,
+        saldoSebelum: Number(row[5]) || 0,
+        saldoSesudah: Number(row[6]) || 0,
+        keterangan: String(row[7] || "").trim(),
+        petugas: String(row[8] || "-").trim(),
+        createdAt: tgl
+      });
+    }
+
+    const accountsList = Object.values(existingAccounts);
+    const totalSaldoMengendap = accountsList.reduce((acc, curr) => acc + curr.saldoTabungan, 0);
+
+    return {
+      status: "success",
+      success: true,
+      summary: {
+        totalSaldoMengendap: totalSaldoMengendap,
+        totalTopupBulanIni: totalTopupBulanIni,
+        totalJajanBulanIni: totalJajanBulanIni,
+        totalTarikBulanIni: totalTarikBulanIni,
+        totalSantriTerdaftar: accountsList.length
+      },
+      accounts: accountsList,
+      recentMutasi: recentMutasi
+    };
+  } catch (err) {
+    console.error("[GET TABUNGAN DASHBOARD ERROR]", err);
+    return { status: "error", success: false, message: "Gagal memuat dashboard tabungan: " + err.message };
+  }
+}
+
+function topupTabunganSantri(payload, token, actorParam) {
+  return withScriptLock(() => {
+    try {
+      const ss = getDatabaseSpreadsheet();
+      if (!ss) throw new Error("Spreadsheet database tidak ditemukan.");
+
+      const actor = actorParam || (token ? authenticateSession(token) : null);
+      if (actor) {
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
+      } else {
+        throw new Error("Sesi tidak terotorisasi.");
+      }
+
+      const studentId = String(payload.studentId || "").trim();
+      const nominalTopup = Number(payload.nominalTopup) || 0;
+      const metodeBayar = String(payload.metodeBayar || "TUNAI").trim().toUpperCase();
+      const catatan = String(payload.catatan || "Topup Saldo Uang Saku").trim();
+      const petugas = (actor && actor.name) || "Petugas Bendahara";
+
+      if (!studentId) throw new Error("ID Santri wajib disertakan.");
+      if (nominalTopup <= 0) throw new Error("Nominal topup harus lebih dari Rp 0.");
+
+      const tabSheet = ss.getSheetByName(SHEET_KEUANGAN_TABUNGAN);
+      if (!tabSheet) throw new Error("Sheet tabungan belum diinisialisasi.");
+
+      const tData = tabSheet.getDataRange().getValues();
+      let targetRow = -1;
+      let studentName = "";
+      let saldoSebelum = 0;
+
+      for (let r = 1; r < tData.length; r++) {
+        if (String(tData[r][0]).trim() === studentId) {
+          targetRow = r + 1;
+          studentName = String(tData[r][1] || "").trim();
+          saldoSebelum = Number(tData[r][3]) || 0;
+          break;
+        }
+      }
+
+      if (targetRow === -1) {
+        throw new Error("Akun tabungan santri dengan ID " + studentId + " tidak ditemukan.");
+      }
+
+      const saldoSesudah = saldoSebelum + nominalTopup;
+      const now = new Date();
+      const nowIso = now.toISOString();
+
+      // Update Saldo Tabungan
+      tabSheet.getRange(targetRow, 4).setValue(saldoSesudah);
+      tabSheet.getRange(targetRow, 9).setValue(nowIso);
+
+      // Catat ke Log Mutasi Tabungan
+      const mutSheet = ss.getSheetByName(SHEET_KEUANGAN_MUTASI_TABUNGAN);
+      const yr = now.getFullYear();
+      const mo = String(now.getMonth() + 1).padStart(2, "0");
+      const mutasiId = `MUT-${yr}${mo}-${String(Math.max(1, mutSheet.getLastRow())).padStart(4, "0")}`;
+
+      mutSheet.appendRow([
+        mutasiId,
+        studentId,
+        studentName,
+        "TOPUP",
+        nominalTopup,
+        saldoSebelum,
+        saldoSesudah,
+        `${catatan} (${metodeBayar})`,
+        petugas,
+        nowIso
+      ]);
+
+      return {
+        status: "success",
+        success: true,
+        message: `Topup uang saku Rp ${nominalTopup.toLocaleString("id-ID")} untuk ananda ${studentName} berhasil. Saldo saat ini: Rp ${saldoSesudah.toLocaleString("id-ID")}.`,
+        mutasiId: mutasiId,
+        saldoBaru: saldoSesudah
+      };
+    } catch (err) {
+      console.error("[TOPUP TABUNGAN ERROR]", err);
+      return { status: "error", success: false, message: "Gagal memproses topup: " + err.message };
+    }
+  });
+}
+
+function tarikTabunganSantri(payload, token, actorParam) {
+  return withScriptLock(() => {
+    try {
+      const ss = getDatabaseSpreadsheet();
+      if (!ss) throw new Error("Spreadsheet database tidak ditemukan.");
+
+      const actor = actorParam || (token ? authenticateSession(token) : null);
+      if (actor) {
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
+      } else {
+        throw new Error("Sesi tidak terotorisasi.");
+      }
+
+      const studentId = String(payload.studentId || "").trim();
+      const nominalTarik = Number(payload.nominalTarik) || 0;
+      const keperluan = String(payload.keperluan || "Penarikan Uang Saku Santri").trim();
+      const petugas = (actor && actor.name) || "Petugas Bendahara";
+
+      if (!studentId) throw new Error("ID Santri wajib disertakan.");
+      if (nominalTarik <= 0) throw new Error("Nominal penarikan harus lebih dari Rp 0.");
+
+      const tabSheet = ss.getSheetByName(SHEET_KEUANGAN_TABUNGAN);
+      if (!tabSheet) throw new Error("Sheet tabungan belum diinisialisasi.");
+
+      const tData = tabSheet.getDataRange().getValues();
+      let targetRow = -1;
+      let studentName = "";
+      let saldoSebelum = 0;
+
+      for (let r = 1; r < tData.length; r++) {
+        if (String(tData[r][0]).trim() === studentId) {
+          targetRow = r + 1;
+          studentName = String(tData[r][1] || "").trim();
+          saldoSebelum = Number(tData[r][3]) || 0;
+          break;
+        }
+      }
+
+      if (targetRow === -1) {
+        throw new Error("Akun tabungan santri dengan ID " + studentId + " tidak ditemukan.");
+      }
+
+      if (saldoSebelum < nominalTarik) {
+        throw new Error(`Saldo tabungan tidak mencukupi! Saldo saat ini: Rp ${saldoSebelum.toLocaleString("id-ID")}, penarikan: Rp ${nominalTarik.toLocaleString("id-ID")}.`);
+      }
+
+      const saldoSesudah = saldoSebelum - nominalTarik;
+      const now = new Date();
+      const nowIso = now.toISOString();
+
+      tabSheet.getRange(targetRow, 4).setValue(saldoSesudah);
+      tabSheet.getRange(targetRow, 9).setValue(nowIso);
+
+      const mutSheet = ss.getSheetByName(SHEET_KEUANGAN_MUTASI_TABUNGAN);
+      const yr = now.getFullYear();
+      const mo = String(now.getMonth() + 1).padStart(2, "0");
+      const mutasiId = `MUT-${yr}${mo}-${String(Math.max(1, mutSheet.getLastRow())).padStart(4, "0")}`;
+
+      mutSheet.appendRow([
+        mutasiId,
+        studentId,
+        studentName,
+        "TARIK_TUNAI",
+        nominalTarik,
+        saldoSebelum,
+        saldoSesudah,
+        keperluan,
+        petugas,
+        nowIso
+      ]);
+
+      return {
+        status: "success",
+        success: true,
+        message: `Penarikan uang saku Rp ${nominalTarik.toLocaleString("id-ID")} untuk ${studentName} berhasil. Sisa saldo: Rp ${saldoSesudah.toLocaleString("id-ID")}.`,
+        mutasiId: mutasiId,
+        saldoBaru: saldoSesudah
+      };
+    } catch (err) {
+      console.error("[TARIK TABUNGAN ERROR]", err);
+      return { status: "error", success: false, message: "Gagal penarikan tabungan: " + err.message };
+    }
+  });
+}
+
+function transaksiKantinCashless(payload, token, actorParam) {
+  return withScriptLock(() => {
+    try {
+      const ss = getDatabaseSpreadsheet();
+      if (!ss) throw new Error("Spreadsheet database tidak ditemukan.");
+
+      const actor = actorParam || (token ? authenticateSession(token) : null);
+      if (actor) {
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA", "KASIR", "KANTIN"]);
+      } else {
+        throw new Error("Sesi kasir kantin/koperasi tidak terotorisasi.");
+      }
+
+      const studentId = String(payload.studentId || "").trim();
+      const nominalBelanja = Number(payload.nominalBelanja) || 0;
+      const namaBarang = String(payload.namaBarang || "Jajan Kantin").trim();
+      const kasirKantin = String(payload.namaKasirKantin || (actor && actor.name) || "Kasir Kantin").trim();
+
+      if (!studentId) throw new Error("ID / Scan Kartu Santri wajib disertakan.");
+      if (nominalBelanja <= 0) throw new Error("Nominal belanja harus lebih dari Rp 0.");
+
+      const tabSheet = ss.getSheetByName(SHEET_KEUANGAN_TABUNGAN);
+      if (!tabSheet) throw new Error("Sheet tabungan belum diinisialisasi.");
+
+      const tData = tabSheet.getDataRange().getValues();
+      let targetRow = -1;
+      let targetData = null;
+
+      for (let r = 1; r < tData.length; r++) {
+        if (String(tData[r][0]).trim() === studentId) {
+          targetRow = r + 1;
+          targetData = tData[r];
+          break;
+        }
+      }
+
+      if (targetRow === -1 || !targetData) {
+        throw new Error("Kartu / Akun Santri ID " + studentId + " tidak terdaftar dalam sistem cashless.");
+      }
+
+      const studentName = String(targetData[1] || "").trim();
+      const isLocked = String(targetData[7] || "FALSE").trim().toUpperCase() === "TRUE";
+      if (isLocked) {
+        throw new Error(`Transaksi Ditolak: Kartu santri ananda ${studentName} sedang DIBEKUKAN / DIKUNCI oleh wali santri.`);
+      }
+
+      const saldoSebelum = Number(targetData[3]) || 0;
+      if (saldoSebelum < nominalBelanja) {
+        throw new Error(`Transaksi Ditolak: Saldo kartu tidak mencukupi! Saldo saat ini: Rp ${saldoSebelum.toLocaleString("id-ID")}, belanja: Rp ${nominalBelanja.toLocaleString("id-ID")}.`);
+      }
+
+      const limitHarian = Number(targetData[4]) || 25000;
+      const todayStr = new Date().toISOString().substring(0, 10);
+      const tglTerakhir = String(targetData[6] || "").trim();
+      const totalJajanHariIni = tglTerakhir === todayStr ? (Number(targetData[5]) || 0) : 0;
+
+      if (limitHarian > 0 && (totalJajanHariIni + nominalBelanja) > limitHarian) {
+        const sisaLimit = Math.max(0, limitHarian - totalJajanHariIni);
+        throw new Error(`Transaksi Ditolak: Melebihi limit jajan harian santri! Maksimal per hari: Rp ${limitHarian.toLocaleString("id-ID")}, sisa kuota hari ini: Rp ${sisaLimit.toLocaleString("id-ID")}.`);
+      }
+
+      const saldoSesudah = saldoSebelum - nominalBelanja;
+      const jajanHariIniBaru = totalJajanHariIni + nominalBelanja;
+      const now = new Date();
+      const nowIso = now.toISOString();
+
+      // Update Saldo, Total Jajan Hari Ini, dan Tanggal Jajan Terakhir
+      tabSheet.getRange(targetRow, 4).setValue(saldoSesudah);
+      tabSheet.getRange(targetRow, 6).setValue(jajanHariIniBaru);
+      tabSheet.getRange(targetRow, 7).setValue(todayStr);
+      tabSheet.getRange(targetRow, 9).setValue(nowIso);
+
+      // Catat ke Log Mutasi Tabungan
+      const mutSheet = ss.getSheetByName(SHEET_KEUANGAN_MUTASI_TABUNGAN);
+      const yr = now.getFullYear();
+      const mo = String(now.getMonth() + 1).padStart(2, "0");
+      const mutasiId = `KNT-${yr}${mo}-${String(Math.max(1, mutSheet.getLastRow())).padStart(4, "0")}`;
+
+      mutSheet.appendRow([
+        mutasiId,
+        studentId,
+        studentName,
+        "JAJAN_KANTIN",
+        nominalBelanja,
+        saldoSebelum,
+        saldoSesudah,
+        `Belanja Kantin: ${namaBarang}`,
+        kasirKantin,
+        nowIso
+      ]);
+
+      const sisaLimitHariIni = Math.max(0, limitHarian - jajanHariIniBaru);
+
+      return {
+        status: "success",
+        success: true,
+        message: `Pembayaran cashless Rp ${nominalBelanja.toLocaleString("id-ID")} berhasil. Sisa saldo: Rp ${saldoSesudah.toLocaleString("id-ID")}.`,
+        mutasiId: mutasiId,
+        studentName: studentName,
+        nominalBelanja: nominalBelanja,
+        sisaSaldo: saldoSesudah,
+        sisaLimitHariIni: sisaLimitHariIni
+      };
+    } catch (err) {
+      console.error("[TRANSAKSI KANTIN ERROR]", err);
+      return { status: "error", success: false, message: err.message };
+    }
+  });
+}
+
+function updateLimitTabunganSantri(payload, token, actorParam) {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error("Spreadsheet database tidak ditemukan.");
+
+    const actor = actorParam || (token ? authenticateSession(token) : null);
+    if (actor) {
+      authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
+    } else {
+      throw new Error("Sesi tidak terotorisasi.");
+    }
+
+    const studentId = String(payload.studentId || "").trim();
+    const limitHarian = Number(payload.limitHarian);
+    const isLocked = payload.isLocked !== undefined ? (payload.isLocked ? "TRUE" : "FALSE") : null;
+
+    if (!studentId) throw new Error("ID Santri wajib disertakan.");
+
+    const tabSheet = ss.getSheetByName(SHEET_KEUANGAN_TABUNGAN);
+    if (!tabSheet) throw new Error("Sheet tabungan belum diinisialisasi.");
+
+    const tData = tabSheet.getDataRange().getValues();
+    let targetRow = -1;
+
+    for (let r = 1; r < tData.length; r++) {
+      if (String(tData[r][0]).trim() === studentId) {
+        targetRow = r + 1;
+        break;
+      }
+    }
+
+    if (targetRow === -1) {
+      throw new Error("Akun santri dengan ID " + studentId + " tidak ditemukan.");
+    }
+
+    if (!isNaN(limitHarian) && limitHarian >= 0) {
+      tabSheet.getRange(targetRow, 5).setValue(limitHarian);
+    }
+
+    if (isLocked !== null) {
+      tabSheet.getRange(targetRow, 8).setValue(isLocked);
+    }
+
+    tabSheet.getRange(targetRow, 9).setValue(new Date().toISOString());
+
+    return {
+      status: "success",
+      success: true,
+      message: "Pengaturan batas limit belanja & status kartu santri berhasil diperbarui."
+    };
+  } catch (err) {
+    console.error("[UPDATE LIMIT TABUNGAN ERROR]", err);
+    return { status: "error", success: false, message: "Gagal memperbarui limit: " + err.message };
+  }
+}
+
+function getExecutiveAnalyticsKeuangan(token) {
+  try {
+    const actor = token ? authenticateSession(token) : null;
+    if (actor) {
+      authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA", "PENGASUH"]);
+    } else {
+      throw new Error("Sesi tidak terotorisasi untuk laporan eksekutif.");
+    }
+
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error("Spreadsheet database tidak ditemukan.");
+
+    const now = new Date();
+    const currentYearMonth = now.toISOString().substring(0, 7);
+
+    // 1. Analisis Aging Piutang / Tunggakan Tagihan Santri
+    const tagihanSheet = ss.getSheetByName(SHEET_KEUANGAN_TAGIHAN);
+    let totalPiutang = 0;
+    const aging = {
+      lancar: { count: 0, nominal: 0, label: "< 30 Hari (Bulan Berjalan)" },
+      perhatian: { count: 0, nominal: 0, label: "31 - 60 Hari" },
+      kurangLancar: { count: 0, nominal: 0, label: "61 - 90 Hari" },
+      macet: { count: 0, nominal: 0, label: "> 90 Hari (Perlu Tindakan Khusus)" }
+    };
+
+    if (tagihanSheet) {
+      const tgData = tagihanSheet.getDataRange().getValues();
+      for (let i = 1; i < tgData.length; i++) {
+        const status = String(tgData[i][9] || "").trim().toUpperCase();
+        if (status !== "LUNAS") {
+          const nomTagihan = Number(tgData[i][6]) || 0;
+          const nomTerbayar = Number(tgData[i][7]) || 0;
+          const sisa = Math.max(0, nomTagihan - nomTerbayar);
+
+          if (sisa > 0) {
+            totalPiutang += sisa;
+            const periode = String(tgData[i][5] || "").trim(); // YYYY-MM
+            let diffMonths = 0;
+            if (periode && periode.length === 7) {
+              const [pYr, pMo] = periode.split("-").map(Number);
+              const curYr = now.getFullYear();
+              const curMo = now.getMonth() + 1;
+              diffMonths = (curYr - pYr) * 12 + (curMo - pMo);
+            }
+
+            if (diffMonths <= 0) {
+              aging.lancar.count++;
+              aging.lancar.nominal += sisa;
+            } else if (diffMonths === 1) {
+              aging.perhatian.count++;
+              aging.perhatian.nominal += sisa;
+            } else if (diffMonths === 2) {
+              aging.kurangLancar.count++;
+              aging.kurangLancar.nominal += sisa;
+            } else {
+              aging.macet.count++;
+              aging.macet.nominal += sisa;
+            }
+          }
+        }
+      }
+    }
+
+    // 2. Analisis Kas Masuk & Kas Keluar
+    let totalMasukBulanIni = 0;
+    let totalKeluarBulanIni = 0;
+    const trxSheet = ss.getSheetByName(SHEET_KEUANGAN_TRANSAKSI);
+    if (trxSheet) {
+      const tData = trxSheet.getDataRange().getValues();
+      for (let i = 1; i < tData.length; i++) {
+        const st = String(tData[i][11] || "SUCCESS").trim().toUpperCase();
+        if (st !== "VOID") {
+          const tgl = String(tData[i][2] || "").trim();
+          if (tgl.startsWith(currentYearMonth)) {
+            totalMasukBulanIni += Number(tData[i][6]) || 0;
+          }
+        }
+      }
+    }
+
+    const expSheet = ss.getSheetByName(SHEET_KEUANGAN_PENGELUARAN);
+    if (expSheet) {
+      const eData = expSheet.getDataRange().getValues();
+      for (let i = 1; i < eData.length; i++) {
+        const st = String(eData[i][10] || "POSTED").trim().toUpperCase();
+        if (st !== "VOID") {
+          const tgl = String(eData[i][2] || "").trim();
+          if (tgl.startsWith(currentYearMonth)) {
+            totalKeluarBulanIni += Number(eData[i][5]) || 0;
+          }
+        }
+      }
+    }
+
+    // 3. Saldo Dana Tabungan Santri Mengendap (Cashless)
+    let totalDanaTabunganMengendap = 0;
+    const tabSheet = ss.getSheetByName(SHEET_KEUANGAN_TABUNGAN);
+    if (tabSheet) {
+      const tbData = tabSheet.getDataRange().getValues();
+      for (let i = 1; i < tbData.length; i++) {
+        totalDanaTabunganMengendap += Number(tbData[i][3]) || 0;
+      }
+    }
+
+    const surplusDefisit = totalMasukBulanIni - totalKeluarBulanIni;
+    const collectionRate = (totalMasukBulanIni + totalPiutang) > 0 ? Math.round((totalMasukBulanIni / (totalMasukBulanIni + totalPiutang)) * 100) : 100;
+    const runwayBulan = totalKeluarBulanIni > 0 ? ((totalMasukBulanIni + totalDanaTabunganMengendap) / totalKeluarBulanIni).toFixed(1) : "Aman (>6)";
+
+    return {
+      status: "success",
+      success: true,
+      currentPeriode: currentYearMonth,
+      financialHealth: {
+        totalMasukBulanIni: totalMasukBulanIni,
+        totalKeluarBulanIni: totalKeluarBulanIni,
+        surplusDefisit: surplusDefisit,
+        collectionRate: collectionRate,
+        runwayBulan: runwayBulan,
+        totalDanaTabunganMengendap: totalDanaTabunganMengendap
+      },
+      agingPiutang: {
+        totalPiutang: totalPiutang,
+        kategori: aging
+      }
+    };
+  } catch (err) {
+    console.error("[GET EXECUTIVE ANALYTICS ERROR]", err);
+    return { status: "error", success: false, message: "Gagal memuat analitik eksekutif: " + err.message };
   }
 }
 

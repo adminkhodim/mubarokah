@@ -349,7 +349,7 @@ function renderKeuanganSummaryCards() {
 window.renderKeuanganSummaryCards = renderKeuanganSummaryCards;
 
 /**
- * Berpindah Tab Utama di Modul Keuangan (Fase 1, Fase 2 & Fase 3):
+ * Berpindah Tab Utama di Modul Keuangan (Fase 1 s/d Fase 4 Enterprise):
  * - 'pos'         : Kasir Cepat (POS)
  * - 'tagihan'     : Daftar Tagihan & Piutang Santri
  * - 'transaksi'   : Buku Kas Masuk & Kuitansi
@@ -358,12 +358,15 @@ window.renderKeuanganSummaryCards = renderKeuanganSummaryCards;
  * - 'pengeluaran' : Buku Kas Keluar (Beban Operasional)
  * - 'tutup-kasir' : Tutup Kasir & Rekonsiliasi Harian
  * - 'laporan'     : Laporan Arus Kas & Neraca
+ * - 'tabungan'    : Uang Saku & Tabungan Santri
+ * - 'kantin'      : POS Kantin & Koperasi Cashless
+ * - 'analytics'   : Executive Financial Analytics
  * - 'tarif'       : Master Pos & Tarif Biaya
  */
 function switchKeuanganTab(tabName) {
     ASNKeuangan.activeTab = tabName;
 
-    const tabs = ['pos', 'tagihan', 'transaksi', 'verifikasi', 'broadcast', 'pengeluaran', 'tutup-kasir', 'laporan', 'tarif'];
+    const tabs = ['pos', 'tagihan', 'transaksi', 'verifikasi', 'broadcast', 'pengeluaran', 'tutup-kasir', 'laporan', 'tabungan', 'kantin', 'analytics', 'tarif'];
     tabs.forEach(t => {
         const btn = document.getElementById(`tab-btn-keuangan-${t}`);
         const view = document.getElementById(`keuangan-panel-${t}`);
@@ -394,6 +397,12 @@ function switchKeuanganTab(tabName) {
         loadTutupKasirRealtime();
     } else if (tabName === 'laporan') {
         renderKeuanganLaporanView();
+    } else if (tabName === 'tabungan') {
+        loadTabunganDashboardData();
+    } else if (tabName === 'kantin') {
+        initKantinCashlessPOS();
+    } else if (tabName === 'analytics') {
+        loadExecutiveAnalyticsData();
     }
 }
 window.switchKeuanganTab = switchKeuanganTab;
@@ -2962,3 +2971,727 @@ async function submitPortalWaliTransfer() {
     }
 }
 window.submitPortalWaliTransfer = submitPortalWaliTransfer;
+
+// ====================================================================
+// FASE 4: SMART PESANTREN, TABUNGAN UANG SAKU, CASHLESS & ANALYTICS
+// ====================================================================
+
+let ASNTabunganData = {
+    summary: {},
+    accounts: [],
+    recentMutasi: []
+};
+
+let kantinActiveStudent = null;
+
+/**
+ * Muat Data Dashboard Tabungan & Uang Saku Santri
+ */
+async function loadTabunganDashboardData(forceRefresh) {
+    const tbody = document.getElementById('keuangan-tabungan-table-body');
+    const mobileContainer = document.getElementById('keuangan-tabungan-mobile-list');
+    const mutasiTbody = document.getElementById('keuangan-tabungan-mutasi-table-body');
+
+    if (tbody && (!ASNTabunganData.accounts || ASNTabunganData.accounts.length === 0)) {
+        tbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-slate-400 text-xs"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Memuat rekening tabungan santri...</td></tr>`;
+    }
+
+    try {
+        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : null) || "";
+        const res = await apiPost("keuangan.getTabunganDashboard", { token });
+
+        if (res && res.success) {
+            ASNTabunganData = res;
+            renderTabunganDashboard(res);
+            if (forceRefresh && typeof showToast === 'function') {
+                showToast("✅ Data Tabungan Santri berhasil diperbarui.");
+            }
+        } else {
+            console.warn("Gagal memuat data tabungan:", res);
+        }
+    } catch (e) {
+        console.error("[LOAD TABUNGAN ERROR]", e);
+        if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="py-6 text-center text-rose-500 text-xs">Gagal memuat tabungan: ${e.message}</td></tr>`;
+    }
+}
+window.loadTabunganDashboardData = loadTabunganDashboardData;
+
+/**
+ * Render Kartu Statistik dan Tabel Tabungan Santri
+ */
+function renderTabunganDashboard(data) {
+    const sum = data.summary || {};
+    const accounts = data.accounts || [];
+    const mutasi = data.recentMutasi || [];
+
+    // 1. Update 4 Stat Cards
+    const elSaldo = document.getElementById('tabungan-stat-total-saldo');
+    const elTopup = document.getElementById('tabungan-stat-total-topup');
+    const elJajan = document.getElementById('tabungan-stat-total-jajan');
+    const elTarik = document.getElementById('tabungan-stat-total-tarik');
+
+    if (elSaldo) elSaldo.innerText = formatRupiah(sum.totalSaldoMengendap || 0);
+    if (elTopup) elTopup.innerText = formatRupiah(sum.totalTopupBulanIni || 0);
+    if (elJajan) elJajan.innerText = formatRupiah(sum.totalJajanBulanIni || 0);
+    if (elTarik) elTarik.innerText = formatRupiah(sum.totalTarikBulanIni || 0);
+
+    // 2. Render Tabel Rekening Santri (Desktop & Mobile)
+    renderTabunganAccountsTable(accounts);
+
+    // 3. Render Log Mutasi
+    const mutasiTbody = document.getElementById('keuangan-tabungan-mutasi-table-body');
+    if (mutasiTbody) {
+        if (mutasi.length === 0) {
+            mutasiTbody.innerHTML = `<tr><td colspan="7" class="py-4 text-center text-slate-400 text-xs">Belum ada riwayat mutasi uang saku.</td></tr>`;
+        } else {
+            mutasiTbody.innerHTML = mutasi.map(m => {
+                let badgeClass = "bg-slate-100 text-slate-700";
+                let sign = "+";
+                let nomColor = "text-emerald-600";
+
+                if (m.jenisMutasi === "TOPUP") {
+                    badgeClass = "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300";
+                    sign = "+";
+                    nomColor = "text-emerald-600 dark:text-emerald-400";
+                } else if (m.jenisMutasi === "JAJAN_KANTIN") {
+                    badgeClass = "bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300";
+                    sign = "-";
+                    nomColor = "text-indigo-600 dark:text-indigo-400";
+                } else if (m.jenisMutasi === "TARIK_TUNAI") {
+                    badgeClass = "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300";
+                    sign = "-";
+                    nomColor = "text-amber-600 dark:text-amber-400";
+                }
+
+                return `
+                    <tr class="border-b border-slate-100 dark:border-[#253447] hover:bg-slate-50/50 dark:hover:bg-[#182332]">
+                        <td class="py-2.5 px-2 font-mono text-[10px] font-bold text-slate-500">${escapeHtml(m.mutasiId)}</td>
+                        <td class="py-2.5 px-2 font-bold text-slate-800 dark:text-slate-100">${escapeHtml(m.studentName)}</td>
+                        <td class="py-2.5 px-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${badgeClass}">${escapeHtml(m.jenisMutasi)}</span></td>
+                        <td class="py-2.5 px-2 font-bold ${nomColor}">${sign}${formatRupiah(m.nominal)}</td>
+                        <td class="py-2.5 px-2 font-bold text-slate-700 dark:text-slate-300">${formatRupiah(m.saldoSesudah)}</td>
+                        <td class="py-2.5 px-2 text-slate-500 text-[11px] truncate max-w-xs" title="${escapeHtml(m.keterangan)}">${escapeHtml(m.keterangan)}</td>
+                        <td class="py-2.5 px-2 text-right text-[10px] text-slate-400">${escapeHtml(m.createdAt.substring(0, 16).replace("T", " "))}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    }
+}
+
+function renderTabunganAccountsTable(accounts) {
+    const tbody = document.getElementById('keuangan-tabungan-table-body');
+    const mobileContainer = document.getElementById('keuangan-tabungan-mobile-list');
+
+    if (!tbody && !mobileContainer) return;
+
+    if (!accounts || accounts.length === 0) {
+        const emptyMsg = `<tr><td colspan="8" class="py-6 text-center text-slate-400 text-xs">Belum ada akun tabungan santri.</td></tr>`;
+        if (tbody) tbody.innerHTML = emptyMsg;
+        if (mobileContainer) mobileContainer.innerHTML = `<div class="p-6 bg-white dark:bg-[#15202d] rounded-2xl text-center text-slate-400 text-xs border border-slate-100 dark:border-[#253447]">Belum ada akun tabungan santri.</div>`;
+        return;
+    }
+
+    let desktopHtml = '';
+    let mobileHtml = '';
+
+    accounts.forEach((acc, idx) => {
+        const isLocked = acc.isLocked;
+        const lockBadge = isLocked ? `
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-200">
+                <i class="fa-solid fa-lock mr-1"></i>Dibekukan
+            </span>
+        ` : `
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200">
+                <i class="fa-solid fa-check mr-1"></i>Aktif
+            </span>
+        `;
+
+        const sisaLimit = Math.max(0, acc.limitHarian - acc.totalJajanHariIni);
+
+        desktopHtml += `
+            <tr class="border-b border-slate-100 dark:border-[#253447] hover:bg-slate-50/50 dark:hover:bg-[#182332] transition">
+                <td class="py-3 px-3 text-center text-slate-400 font-medium">${idx + 1}</td>
+                <td class="py-3 px-3">
+                    <div class="font-bold text-slate-800 dark:text-slate-100">${escapeHtml(acc.studentName)}</div>
+                    <div class="text-[10px] text-slate-400 font-mono">ID: ${escapeHtml(acc.studentId)}</div>
+                </td>
+                <td class="py-3 px-3">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-[#1c2836] text-slate-700 dark:text-slate-300">${escapeHtml(acc.program)}</span>
+                </td>
+                <td class="py-3 px-3 font-black text-emerald-600 dark:text-emerald-400 text-xs">
+                    ${formatRupiah(acc.saldoTabungan)}
+                </td>
+                <td class="py-3 px-3 font-semibold text-slate-700 dark:text-slate-200">
+                    ${acc.limitHarian > 0 ? formatRupiah(acc.limitHarian) : '<span class="text-slate-400">Tanpa Limit</span>'}
+                </td>
+                <td class="py-3 px-3">
+                    <div class="font-bold text-slate-700 dark:text-slate-200">${formatRupiah(acc.totalJajanHariIni)}</div>
+                    <span class="text-[9px] text-slate-400">Sisa limit: ${formatRupiah(sisaLimit)}</span>
+                </td>
+                <td class="py-3 px-3 text-center">${lockBadge}</td>
+                <td class="py-3 px-3 text-right">
+                    <div class="flex items-center justify-end space-x-1.5">
+                        <button type="button" onclick="openModalTopupTabungan('${escapeHtml(acc.studentId)}')"
+                            class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 rounded-lg text-[10px] font-bold transition flex items-center gap-1" title="Topup">
+                            <i class="fa-solid fa-plus"></i> Setor
+                        </button>
+                        <button type="button" onclick="openModalTarikTabungan('${escapeHtml(acc.studentId)}')"
+                            class="px-2 py-1 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 text-amber-700 dark:text-amber-300 rounded-lg text-[10px] font-bold transition flex items-center gap-1" title="Tarik">
+                            <i class="fa-solid fa-minus"></i> Tarik
+                        </button>
+                        <button type="button" onclick="openModalSetLimitTabungan('${escapeHtml(acc.studentId)}', ${acc.limitHarian}, ${isLocked})"
+                            class="px-2 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 rounded-lg text-[10px] font-bold transition" title="Atur Limit / Kunci">
+                            <i class="fa-solid fa-gear"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+
+        mobileHtml += `
+            <div class="bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-xs space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="font-bold text-xs text-slate-800 dark:text-slate-100">${escapeHtml(acc.studentName)}</h4>
+                        <span class="text-[10px] text-slate-400 font-mono">${escapeHtml(acc.studentId)} • ${escapeHtml(acc.program)}</span>
+                    </div>
+                    <div>${lockBadge}</div>
+                </div>
+                <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-100 dark:border-[#253447]">
+                    <div>
+                        <span class="text-[9px] text-slate-400 block">Saldo Uang Saku</span>
+                        <div class="font-black text-emerald-600 dark:text-emerald-400 text-sm">${formatRupiah(acc.saldoTabungan)}</div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[9px] text-slate-400 block">Jajan Hari Ini</span>
+                        <div class="font-bold text-slate-700 dark:text-slate-200">${formatRupiah(acc.totalJajanHariIni)}</div>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end space-x-1.5 pt-1 border-t border-slate-100 dark:border-[#253447]">
+                    <button type="button" onclick="openModalTopupTabungan('${escapeHtml(acc.studentId)}')"
+                        class="px-2.5 py-1 bg-emerald-600 text-white rounded-lg text-[11px] font-bold">Setor</button>
+                    <button type="button" onclick="openModalTarikTabungan('${escapeHtml(acc.studentId)}')"
+                        class="px-2.5 py-1 bg-amber-600 text-white rounded-lg text-[11px] font-bold">Tarik</button>
+                    <button type="button" onclick="openModalSetLimitTabungan('${escapeHtml(acc.studentId)}', ${acc.limitHarian}, ${isLocked})"
+                        class="px-2.5 py-1 bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 rounded-lg text-[11px] font-bold">Limit</button>
+                </div>
+            </div>
+        `;
+    });
+
+    if (tbody) tbody.innerHTML = desktopHtml;
+    if (mobileContainer) mobileContainer.innerHTML = mobileHtml;
+}
+
+function filterTabunganSantriTable(query) {
+    const q = String(query || "").trim().toLowerCase();
+    const all = ASNTabunganData.accounts || [];
+    if (!q) {
+        renderTabunganAccountsTable(all);
+        return;
+    }
+    const filtered = all.filter(a =>
+        a.studentName.toLowerCase().includes(q) ||
+        a.studentId.toLowerCase().includes(q) ||
+        (a.program && a.program.toLowerCase().includes(q))
+    );
+    renderTabunganAccountsTable(filtered);
+}
+window.filterTabunganSantriTable = filterTabunganSantriTable;
+
+// ==================== MODAL TOPUP TABUNGAN ====================
+
+function openModalTopupTabungan(defaultStudentId) {
+    const modal = document.getElementById('modal-topup-tabungan');
+    const select = document.getElementById('topup-input-student');
+    const nominalInp = document.getElementById('topup-input-nominal');
+    const catatanInp = document.getElementById('topup-input-catatan');
+
+    if (!modal || !select) return;
+
+    const accounts = ASNTabunganData.accounts || [];
+    select.innerHTML = accounts.map(a => `
+        <option value="${escapeHtml(a.studentId)}" ${a.studentId === defaultStudentId ? 'selected' : ''}>
+            ${escapeHtml(a.studentName)} (${escapeHtml(a.studentId)}) - Saldo: ${formatRupiah(a.saldoTabungan)}
+        </option>
+    `).join('');
+
+    if (defaultStudentId) {
+        select.value = defaultStudentId;
+    }
+
+    onTopupStudentSelected(select.value);
+    if (nominalInp) nominalInp.value = '';
+    if (catatanInp) catatanInp.value = '';
+
+    modal.classList.remove('hidden');
+}
+window.openModalTopupTabungan = openModalTopupTabungan;
+
+function closeModalTopupTabungan() {
+    const modal = document.getElementById('modal-topup-tabungan');
+    if (modal) modal.classList.add('hidden');
+}
+window.closeModalTopupTabungan = closeModalTopupTabungan;
+
+function onTopupStudentSelected(studentId) {
+    const el = document.getElementById('topup-student-current-saldo');
+    if (!el) return;
+    const acc = (ASNTabunganData.accounts || []).find(a => a.studentId === studentId);
+    if (acc) {
+        el.innerText = `Saldo saat ini: ${formatRupiah(acc.saldoTabungan)}`;
+    } else {
+        el.innerText = 'Saldo saat ini: Rp 0';
+    }
+}
+window.onTopupStudentSelected = onTopupStudentSelected;
+
+async function submitTopupTabungan() {
+    const studentId = document.getElementById('topup-input-student')?.value;
+    const nominal = Number(document.getElementById('topup-input-nominal')?.value) || 0;
+    const metode = document.getElementById('topup-input-metode')?.value || 'TUNAI';
+    const catatan = document.getElementById('topup-input-catatan')?.value.trim();
+
+    if (!studentId) {
+        alert("Pilih santri terlebih dahulu.");
+        return;
+    }
+    if (nominal <= 0) {
+        alert("Masukkan nominal topup yang valid (minimal Rp 5.000).");
+        return;
+    }
+
+    const btn = document.getElementById('btn-submit-topup-tabungan');
+    let origText = '';
+    if (btn) {
+        origText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Menyimpan...';
+    }
+
+    try {
+        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : null) || "";
+        const res = await apiPost("keuangan.topupTabungan", {
+            token: token,
+            studentId: studentId,
+            nominalTopup: nominal,
+            metodeBayar: metode,
+            catatan: catatan
+        });
+
+        if (res && res.success) {
+            if (typeof showToast === 'function') showToast(`✅ ${res.message}`);
+            else alert(res.message);
+            closeModalTopupTabungan();
+            loadTabunganDashboardData(true);
+        } else {
+            alert("Gagal topup: " + ((res && res.message) || "Terjadi kesalahan"));
+        }
+    } catch (e) {
+        console.error("[SUBMIT TOPUP ERROR]", e);
+        alert("Error: " + e.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = origText;
+        }
+    }
+}
+window.submitTopupTabungan = submitTopupTabungan;
+
+// ==================== MODAL TARIK TABUNGAN ====================
+
+function openModalTarikTabungan(defaultStudentId) {
+    const modal = document.getElementById('modal-tarik-tabungan');
+    const select = document.getElementById('tarik-input-student');
+    const nominalInp = document.getElementById('tarik-input-nominal');
+    const keperluanInp = document.getElementById('tarik-input-keperluan');
+
+    if (!modal || !select) return;
+
+    const accounts = ASNTabunganData.accounts || [];
+    select.innerHTML = accounts.map(a => `
+        <option value="${escapeHtml(a.studentId)}" ${a.studentId === defaultStudentId ? 'selected' : ''}>
+            ${escapeHtml(a.studentName)} (${escapeHtml(a.studentId)}) - Saldo: ${formatRupiah(a.saldoTabungan)}
+        </option>
+    `).join('');
+
+    if (defaultStudentId) {
+        select.value = defaultStudentId;
+    }
+
+    onTarikStudentSelected(select.value);
+    if (nominalInp) nominalInp.value = '';
+    if (keperluanInp) keperluanInp.value = '';
+
+    modal.classList.remove('hidden');
+}
+window.openModalTarikTabungan = openModalTarikTabungan;
+
+function closeModalTarikTabungan() {
+    const modal = document.getElementById('modal-tarik-tabungan');
+    if (modal) modal.classList.add('hidden');
+}
+window.closeModalTarikTabungan = closeModalTarikTabungan;
+
+function onTarikStudentSelected(studentId) {
+    const el = document.getElementById('tarik-student-current-saldo');
+    if (!el) return;
+    const acc = (ASNTabunganData.accounts || []).find(a => a.studentId === studentId);
+    if (acc) {
+        el.innerText = `Saldo saat ini: ${formatRupiah(acc.saldoTabungan)}`;
+    } else {
+        el.innerText = 'Saldo saat ini: Rp 0';
+    }
+}
+window.onTarikStudentSelected = onTarikStudentSelected;
+
+async function submitTarikTabungan() {
+    const studentId = document.getElementById('tarik-input-student')?.value;
+    const nominal = Number(document.getElementById('tarik-input-nominal')?.value) || 0;
+    const keperluan = document.getElementById('tarik-input-keperluan')?.value.trim();
+
+    if (!studentId) {
+        alert("Pilih santri terlebih dahulu.");
+        return;
+    }
+    if (nominal <= 0) {
+        alert("Masukkan nominal penarikan yang valid.");
+        return;
+    }
+    if (!keperluan) {
+        alert("Tuliskan keperluan penarikan uang saku santri.");
+        return;
+    }
+
+    const btn = document.getElementById('btn-submit-tarik-tabungan');
+    let origText = '';
+    if (btn) {
+        origText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Memproses...';
+    }
+
+    try {
+        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : null) || "";
+        const res = await apiPost("keuangan.tarikTabungan", {
+            token: token,
+            studentId: studentId,
+            nominalTarik: nominal,
+            keperluan: keperluan
+        });
+
+        if (res && res.success) {
+            if (typeof showToast === 'function') showToast(`✅ ${res.message}`);
+            else alert(res.message);
+            closeModalTarikTabungan();
+            loadTabunganDashboardData(true);
+        } else {
+            alert("Gagal penarikan: " + ((res && res.message) || "Terjadi kesalahan"));
+        }
+    } catch (e) {
+        console.error("[SUBMIT TARIK ERROR]", e);
+        alert("Error: " + e.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = origText;
+        }
+    }
+}
+window.submitTarikTabungan = submitTarikTabungan;
+
+// ==================== MODAL SET LIMIT & KUNCI KARTU ====================
+
+function openModalSetLimitTabungan(studentId, currentLimit, isLocked) {
+    const modal = document.getElementById('modal-set-limit-tabungan');
+    const idInp = document.getElementById('set-limit-student-id');
+    const sub = document.getElementById('set-limit-modal-subtitle');
+    const limitInp = document.getElementById('set-limit-input-nominal');
+    const lockedInp = document.getElementById('set-limit-input-locked');
+
+    if (!modal) return;
+
+    const acc = (ASNTabunganData.accounts || []).find(a => a.studentId === studentId);
+    if (idInp) idInp.value = studentId;
+    if (sub) sub.innerText = `Santri: ${acc ? acc.studentName : studentId}`;
+    if (limitInp) limitInp.value = currentLimit !== undefined ? currentLimit : 25000;
+    if (lockedInp) lockedInp.checked = !!isLocked;
+
+    modal.classList.remove('hidden');
+}
+window.openModalSetLimitTabungan = openModalSetLimitTabungan;
+
+function closeModalSetLimitTabungan() {
+    const modal = document.getElementById('modal-set-limit-tabungan');
+    if (modal) modal.classList.add('hidden');
+}
+window.closeModalSetLimitTabungan = closeModalSetLimitTabungan;
+
+async function submitUpdateLimitTabungan() {
+    const studentId = document.getElementById('set-limit-student-id')?.value;
+    const limitHarian = Number(document.getElementById('set-limit-input-nominal')?.value);
+    const isLocked = document.getElementById('set-limit-input-locked')?.checked;
+
+    if (!studentId) return;
+
+    try {
+        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : null) || "";
+        const res = await apiPost("keuangan.updateLimitTabungan", {
+            token: token,
+            studentId: studentId,
+            limitHarian: limitHarian,
+            isLocked: isLocked
+        });
+
+        if (res && res.success) {
+            if (typeof showToast === 'function') showToast("✅ Pengaturan kartu uang saku berhasil disimpan.");
+            closeModalSetLimitTabungan();
+            loadTabunganDashboardData(true);
+        } else {
+            alert("Gagal memperbarui limit: " + ((res && res.message) || "Terjadi kesalahan"));
+        }
+    } catch (e) {
+        console.error("[SUBMIT UPDATE LIMIT ERROR]", e);
+        alert("Error: " + e.message);
+    }
+}
+window.submitUpdateLimitTabungan = submitUpdateLimitTabungan;
+
+// ====================================================================
+// SUB-MODUL POS KANTIN & KOPERASI CASHLESS
+// ====================================================================
+
+function initKantinCashlessPOS() {
+    if (!ASNTabunganData.accounts || ASNTabunganData.accounts.length === 0) {
+        loadTabunganDashboardData();
+    }
+    const input = document.getElementById('kantin-search-student-input');
+    if (input) setTimeout(() => input.focus(), 150);
+}
+window.initKantinCashlessPOS = initKantinCashlessPOS;
+
+function onKantinStudentSearch(query) {
+    const q = String(query || "").trim().toLowerCase();
+    const dropdown = document.getElementById('kantin-search-results');
+    if (!dropdown) return;
+
+    if (!q) {
+        dropdown.classList.add('hidden');
+        dropdown.innerHTML = '';
+        return;
+    }
+
+    const accounts = ASNTabunganData.accounts || [];
+    const matched = accounts.filter(a =>
+        a.studentName.toLowerCase().includes(q) ||
+        a.studentId.toLowerCase().includes(q)
+    ).slice(0, 10);
+
+    if (matched.length === 0) {
+        dropdown.innerHTML = `<div class="p-3 text-center text-slate-400 text-xs">Santri tidak ditemukan.</div>`;
+        dropdown.classList.remove('hidden');
+        return;
+    }
+
+    dropdown.innerHTML = matched.map(a => `
+        <div onclick="selectKantinStudent('${escapeHtml(a.studentId)}')"
+            class="p-2.5 hover:bg-slate-50 dark:hover:bg-[#1a2533] cursor-pointer flex items-center justify-between">
+            <div>
+                <div class="font-bold text-slate-800 dark:text-slate-100">${escapeHtml(a.studentName)}</div>
+                <div class="text-[10px] text-slate-400 font-mono">ID: ${escapeHtml(a.studentId)} • ${escapeHtml(a.program)}</div>
+            </div>
+            <div class="text-right">
+                <span class="font-black text-emerald-600 text-xs">${formatRupiah(a.saldoTabungan)}</span>
+                <span class="text-[9px] text-slate-400 block">${a.isLocked ? '🔒 Dikunci' : '✅ Aktif'}</span>
+            </div>
+        </div>
+    `).join('');
+    dropdown.classList.remove('hidden');
+}
+window.onKantinStudentSearch = onKantinStudentSearch;
+
+function selectKantinStudent(studentId) {
+    const dropdown = document.getElementById('kantin-search-results');
+    const input = document.getElementById('kantin-search-student-input');
+    if (dropdown) dropdown.classList.add('hidden');
+
+    const acc = (ASNTabunganData.accounts || []).find(a => a.studentId === studentId);
+    if (!acc) return;
+
+    kantinActiveStudent = acc;
+    if (input) input.value = `${acc.studentName} (${acc.studentId})`;
+
+    // Update Visual Kartu
+    const nameEl = document.getElementById('kantin-card-student-name');
+    const infoEl = document.getElementById('kantin-card-student-info');
+    const saldoEl = document.getElementById('kantin-card-student-saldo');
+    const limitEl = document.getElementById('kantin-card-student-limit');
+
+    if (nameEl) nameEl.innerText = acc.studentName;
+    if (infoEl) infoEl.innerText = `NIS: ${acc.studentId} • Program: ${acc.program || 'Santri Aktif'}`;
+    if (saldoEl) saldoEl.innerText = formatRupiah(acc.saldoTabungan);
+
+    const sisaLimit = Math.max(0, acc.limitHarian - acc.totalJajanHariIni);
+    if (limitEl) limitEl.innerText = acc.limitHarian > 0 ? formatRupiah(sisaLimit) : 'Tanpa Limit';
+
+    // Focus ke nominal
+    document.getElementById('kantin-input-nominal')?.focus();
+}
+window.selectKantinStudent = selectKantinStudent;
+
+function setKantinNominal(nom) {
+    const inp = document.getElementById('kantin-input-nominal');
+    if (inp) {
+        inp.value = nom;
+        inp.focus();
+    }
+}
+window.setKantinNominal = setKantinNominal;
+
+async function submitKantinCashlessTransaction() {
+    if (!kantinActiveStudent) {
+        alert("Pilih atau scan kartu santri terlebih dahulu.");
+        document.getElementById('kantin-search-student-input')?.focus();
+        return;
+    }
+
+    const nominal = Number(document.getElementById('kantin-input-nominal')?.value) || 0;
+    const namaBarang = document.getElementById('kantin-input-keterangan')?.value.trim() || 'Jajan Kantin';
+
+    if (nominal <= 0) {
+        alert("Masukkan nominal belanja yang valid.");
+        document.getElementById('kantin-input-nominal')?.focus();
+        return;
+    }
+
+    if (!confirm(`Konfirmasi Belanja Cashless:\nSantri: ${kantinActiveStudent.studentName}\nNominal: Rp ${nominal.toLocaleString("id-ID")}\nKeterangan: ${namaBarang}\n\nPotong saldo kartu santri sekarang?`)) {
+        return;
+    }
+
+    const btn = document.getElementById('btn-submit-kantin-cashless');
+    let origText = '';
+    if (btn) {
+        origText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Memproses Cashless...';
+    }
+
+    try {
+        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : null) || "";
+        const res = await apiPost("keuangan.transaksiKantin", {
+            token: token,
+            studentId: kantinActiveStudent.studentId,
+            nominalBelanja: nominal,
+            namaBarang: namaBarang
+        });
+
+        if (res && res.success) {
+            alert(`✅ Transaksi Berhasil!\n${res.message}\nSisa kuota jajan hari ini: ${formatRupiah(res.sisaLimitHariIni)}.`);
+            
+            // Reset Form Belanja
+            document.getElementById('kantin-input-nominal').value = '';
+            document.getElementById('kantin-input-keterangan').value = '';
+
+            // Update Kartu
+            kantinActiveStudent.saldoTabungan = res.sisaSaldo;
+            selectKantinStudent(kantinActiveStudent.studentId);
+
+            // Refresh Background
+            loadTabunganDashboardData(false);
+        } else {
+            alert("Transaksi Gagal: " + ((res && res.message) || "Terjadi kesalahan"));
+        }
+    } catch (e) {
+        console.error("[SUBMIT KANTIN TRANSACTION ERROR]", e);
+        alert("Error: " + e.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = origText;
+        }
+    }
+}
+window.submitKantinCashlessTransaction = submitKantinCashlessTransaction;
+
+// ====================================================================
+// SUB-MODUL EXECUTIVE FINANCIAL ANALYTICS
+// ====================================================================
+
+async function loadExecutiveAnalyticsData() {
+    try {
+        if (typeof showToast === 'function') showToast("⏳ Mengkalkulasi analitik keuangan pesantren...");
+        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : null) || "";
+        const res = await apiPost("keuangan.getExecutiveAnalytics", { token });
+
+        if (res && res.success) {
+            renderExecutiveAnalytics(res);
+            if (typeof showToast === 'function') showToast("✅ Analitik eksekutif berhasil dimuat.");
+        } else {
+            alert("Gagal memuat analitik: " + ((res && res.message) || "Terjadi kesalahan"));
+        }
+    } catch (e) {
+        console.error("[LOAD EXECUTIVE ANALYTICS ERROR]", e);
+        alert("Error: " + e.message);
+    }
+}
+window.loadExecutiveAnalyticsData = loadExecutiveAnalyticsData;
+
+function renderExecutiveAnalytics(data) {
+    const health = data.financialHealth || {};
+    const aging = data.agingPiutang || {};
+    const kat = aging.kategori || {};
+
+    // 1. KPI Cards
+    const elFlow = document.getElementById('analytics-stat-net-flow');
+    const elRate = document.getElementById('analytics-stat-collection-rate');
+    const elRunway = document.getElementById('analytics-stat-runway');
+    const elTab = document.getElementById('analytics-stat-tabungan');
+
+    if (elFlow) {
+        const net = Number(health.surplusDefisit) || 0;
+        if (net >= 0) {
+            elFlow.innerText = `+${formatRupiah(net)}`;
+            elFlow.className = "text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400 mt-0.5";
+        } else {
+            elFlow.innerText = `-${formatRupiah(Math.abs(net))}`;
+            elFlow.className = "text-sm sm:text-base font-black text-rose-600 dark:text-rose-400 mt-0.5";
+        }
+    }
+
+    if (elRate) elRate.innerText = `${health.collectionRate || 100}%`;
+    if (elRunway) elRunway.innerText = `${health.runwayBulan} Bulan`;
+    if (elTab) elTab.innerText = formatRupiah(health.totalDanaTabunganMengendap || 0);
+
+    // 2. Aging Piutang
+    const elTotPiutang = document.getElementById('analytics-aging-total-piutang');
+    if (elTotPiutang) elTotPiutang.innerText = formatRupiah(aging.totalPiutang || 0);
+
+    const l = kat.lancar || { count: 0, nominal: 0 };
+    const p = kat.perhatian || { count: 0, nominal: 0 };
+    const kl = kat.kurangLancar || { count: 0, nominal: 0 };
+    const m = kat.macet || { count: 0, nominal: 0 };
+
+    const cLancar = document.getElementById('aging-count-lancar');
+    const nLancar = document.getElementById('aging-nom-lancar');
+    if (cLancar) cLancar.innerText = `${l.count} Tagihan`;
+    if (nLancar) nLancar.innerText = formatRupiah(l.nominal);
+
+    const cPerhatian = document.getElementById('aging-count-perhatian');
+    const nPerhatian = document.getElementById('aging-nom-perhatian');
+    if (cPerhatian) cPerhatian.innerText = `${p.count} Tagihan`;
+    if (nPerhatian) nPerhatian.innerText = formatRupiah(p.nominal);
+
+    const cKurang = document.getElementById('aging-count-kurang-lancar');
+    const nKurang = document.getElementById('aging-nom-kurang-lancar');
+    if (cKurang) cKurang.innerText = `${kl.count} Tagihan`;
+    if (nKurang) nKurang.innerText = formatRupiah(kl.nominal);
+
+    const cMacet = document.getElementById('aging-count-macet');
+    const nMacet = document.getElementById('aging-nom-macet');
+    if (cMacet) cMacet.innerText = `${m.count} Tagihan`;
+    if (nMacet) nMacet.innerText = formatRupiah(m.nominal);
+}
+window.renderExecutiveAnalytics = renderExecutiveAnalytics;
+
