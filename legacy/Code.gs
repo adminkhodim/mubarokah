@@ -20553,9 +20553,13 @@ function getBroadcastTagihanListKeuangan(payload, token) {
     } catch (errCfg) {
       console.warn("Gagal memuat pengaturan lembaga untuk broadcast: " + errCfg.message);
     }
-    const namaPesantrenBroadcast = configPengaturan.nama_pesantren || "Roudlotul Mubarokah";
-    const prefixLembaga = namaPesantrenBroadcast.toUpperCase().startsWith("PPTQ") ? "" : "PPTQ ";
-    const namaLengkapLembaga = prefixLembaga + namaPesantrenBroadcast;
+    const rawPesantren = configPengaturan.nama_pesantren || "Roudlotul Mubarokah";
+    let cleanedBroadcast = String(rawPesantren).trim()
+      .replace(/^PPTQ\s*/i, "")
+      .replace(/^(Pondok\s+Pesantren|Pesantren)\s*/i, "")
+      .trim();
+    if (!cleanedBroadcast) cleanedBroadcast = "Roudlotul Mubarokah";
+    const namaLengkapLembaga = "PPTQ " + cleanedBroadcast;
     const anRekeningLembaga = namaLengkapLembaga.toUpperCase();
 
     const broadcastList = Object.values(santriUnpaidMap).map(st => {
@@ -20575,7 +20579,7 @@ ${rincianText}
 
 Pembayaran dapat disalurkan melalui:
 • Rekening BSI: *7198234567* a.n. ${anRekeningLembaga}
-• Rekening BRI: *0038-01-002345-53-1* a.n. PESANTREN ${namaPesantrenBroadcast.toUpperCase()}
+• Rekening BRI: *0038-01-002345-53-1* a.n. PESANTREN ${cleanedBroadcast.toUpperCase()}
 • QRIS Nasional Mubarokah (tersedia di aplikasi / loket)
 • Loket Kasir Pesantren (Tunai)
 

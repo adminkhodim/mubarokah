@@ -949,6 +949,22 @@ window.getStudentPhoneNumber = getStudentPhoneNumber;
 // SUB-MODUL 2: KUITANSI DIGITAL & WHATSAPP GATEWAY
 // ====================================================================
 
+/**
+ * Format nama resmi lembaga untuk Kuitansi, Bukti Bayar & Laporan Resmi
+ * Mencegah redundansi kata seperti "PPTQ Pondok Pesantren Roudlotul Mubarokah"
+ * Menjadi standar "PPTQ Roudlotul Mubarokah"
+ */
+function getNamaLembagaKuitansi() {
+    const profilState = window.APP_PROFIL_STATE || {};
+    let raw = String(profilState.nama_pesantren || 'Roudlotul Mubarokah').trim();
+    raw = raw.replace(/^PPTQ\s*/i, '')
+             .replace(/^(Pondok\s+Pesantren|Pesantren)\s*/i, '')
+             .trim();
+    if (!raw) raw = 'Roudlotul Mubarokah';
+    return 'PPTQ ' + raw;
+}
+window.getNamaLembagaKuitansi = getNamaLembagaKuitansi;
+
 function openKuitansiModal(kuitansi) {
     ASNKeuangan.lastKuitansi = kuitansi;
     const modal = document.getElementById('modal-keuangan-kuitansi');
@@ -970,10 +986,8 @@ function openKuitansiModal(kuitansi) {
     const kopAlamatEl = document.getElementById('kuitansi-kop-alamat');
 
     // Sinkronkan Nama & Alamat Pesantren Resmi pada Kop Kuitansi
-    const profilState = window.APP_PROFIL_STATE || {};
-    const rawNama = profilState.nama_pesantren || 'Roudlotul Mubarokah';
-    const namaPesantren = (rawNama.toUpperCase().startsWith("PPTQ") ? "" : "PPTQ ") + rawNama;
-    let alamatPesantren = profilState.alamat_pesantren || '';
+    const namaPesantren = getNamaLembagaKuitansi();
+    let alamatPesantren = (window.APP_PROFIL_STATE && window.APP_PROFIL_STATE.alamat_pesantren) || '';
     if (!alamatPesantren) {
         try {
             alamatPesantren = localStorage.getItem('mubarokah_alamat_pesantren') || '';
@@ -1130,9 +1144,7 @@ function shareKuitansiWhatsApp(kuitansiParam) {
         itemsText += `• ${it.namaPos} (${it.periode || '-'}): ${formatRupiah(it.nominalBayar)}\n`;
     });
 
-    const profilState = window.APP_PROFIL_STATE || {};
-    const rawNama = profilState.nama_pesantren || 'Roudlotul Mubarokah';
-    const namaLembaga = (rawNama.toUpperCase().startsWith("PPTQ") ? "" : "PPTQ ") + rawNama;
+    const namaLembaga = getNamaLembagaKuitansi();
 
     const msg = `*BUKTI PEMBAYARAN RESMI*\n*${namaLembaga.toUpperCase()}*\n----------------------------------------\n` +
         `Assalamu'alaikum Wr. Wb.\n` +
@@ -2424,7 +2436,12 @@ function renderKeuanganLaporanView() {
     const elKeluar = document.getElementById('laporan-total-keluar');
     const elSurplus = document.getElementById('laporan-surplus-defisit');
     const elPeriode = document.getElementById('laporan-periode-text');
+    const elKopLaporan = document.getElementById('laporan-kop-nama');
     const container = document.getElementById('laporan-breakdown-kategori');
+
+    if (elKopLaporan) {
+        elKopLaporan.innerText = getNamaLembagaKuitansi().toUpperCase();
+    }
 
     const now = new Date();
     const namaBulan = getNamaBulanIndo(now.getMonth() + 1);
