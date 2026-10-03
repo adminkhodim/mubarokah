@@ -4532,6 +4532,11 @@
                         ? `<img src="${escapeHtml(photoUrl)}" alt="${name}" class="w-9 h-9 rounded-xl object-cover border border-slate-200 dark:border-[#253447] shadow-sm" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'36\\' height=\\'36\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'%2394a3b8\\' stroke-width=\\'2\\'><path d=\\'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\\'/><circle cx=\\'12\\' cy=\\'7\\' r=\\'4\\'/></svg>';">`
                         : `<div class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-[#1c2836] border border-slate-200 dark:border-[#253447] flex items-center justify-center text-slate-400 text-sm"><i class="fa-solid fa-user"></i></div>`;
 
+                    const phone = s.phone || s.parentPhone || s.whatsapp || s.no_hp || '';
+                    const phoneHtml = phone 
+                        ? `<div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1 mt-0.5"><i class="fa-brands fa-whatsapp"></i> ${escapeHtml(phone)}</div>`
+                        : '';
+
                     const studentJson = escapeHtml(JSON.stringify(s));
 
                     return `
@@ -4541,6 +4546,7 @@
                             <td class="py-3 px-3">
                                 <div class="font-bold text-slate-800 dark:text-slate-100">${name}</div>
                                 <div class="text-[10px] text-slate-400">ID: ${escapeHtml(id)}</div>
+                                ${phoneHtml}
                             </td>
                             <td class="py-3 px-3 font-mono font-bold text-cyan-700 dark:text-cyan-400">${nis}</td>
                             <td class="py-3 px-3 font-mono text-slate-500 dark:text-slate-400">${nik}</td>
@@ -4572,6 +4578,7 @@
                     const nis = escapeHtml(s.nis || s.nisn || '-');
                     const nik = escapeHtml(s.nik || '-');
                     const name = escapeHtml(s.name || 'Tanpa Nama');
+                    const phone = s.phone || s.parentPhone || s.whatsapp || s.no_hp || '';
                     const gender = (s.gender || 'L').toUpperCase() === 'P' ? 'P' : 'L';
                     const genderBadge = gender === 'P'
                         ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-pink-100 text-pink-700 dark:bg-pink-950/80 dark:text-pink-300">Putri (P)</span>`
@@ -4602,6 +4609,7 @@
                                             <span>•</span>
                                             <span>NIK: ${nik}</span>
                                         </div>
+                                        ${phone ? `<div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1 mt-0.5"><i class="fa-brands fa-whatsapp"></i> Wali: ${escapeHtml(phone)}</div>` : ''}
                                     </div>
                                 </div>
                                 <div>${statusBadge}</div>
@@ -4668,6 +4676,9 @@
                 document.getElementById('admin-student-form-birthdate').value = student.birthDate || student.birth_date || '';
                 document.getElementById('admin-student-form-status').value = (student.status || 'ACTIVE').toUpperCase() === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE';
                 
+                const phoneInput = document.getElementById('admin-student-form-phone');
+                if (phoneInput) phoneInput.value = student.phone || student.parentPhone || student.whatsapp || student.no_hp || '';
+
                 populateAdminStudentProgramDropdown(student.program || '');
 
                 const photoUrl = student.photoUrl || student.photo_url || '';
@@ -4692,6 +4703,9 @@
                 document.getElementById('admin-student-form-photo-url').value = '';
                 document.getElementById('admin-student-form-gender').value = 'L';
                 document.getElementById('admin-student-form-status').value = 'ACTIVE';
+
+                const phoneInput = document.getElementById('admin-student-form-phone');
+                if (phoneInput) phoneInput.value = '';
 
                 populateAdminStudentProgramDropdown("");
 
@@ -4784,6 +4798,7 @@
             const nis = (document.getElementById('admin-student-form-nis')?.value || '').trim();
             const nik = (document.getElementById('admin-student-form-nik')?.value || '').trim();
             const name = (document.getElementById('admin-student-form-name')?.value || '').trim();
+            const phone = (document.getElementById('admin-student-form-phone')?.value || '').trim();
             const gender = document.getElementById('admin-student-form-gender')?.value || 'L';
             const birthDate = document.getElementById('admin-student-form-birthdate')?.value || '';
             const program = (document.getElementById('admin-student-form-program')?.value || '').trim();
@@ -4839,6 +4854,9 @@
                     nis,
                     nik,
                     name,
+                    phone,
+                    parentPhone: phone,
+                    whatsapp: phone,
                     gender,
                     birthDate,
                     birth_date: birthDate,

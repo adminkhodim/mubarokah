@@ -8637,6 +8637,41 @@ function getAllStudentsData(token) {
     let qrIdx = headers.indexOf("qr_code");
     if (qrIdx === -1) qrIdx = headers.indexOf("qrcode");
 
+    let phoneIdx = headers.findIndex(h => h.includes("phone") || h.includes("hp") || h.includes("wa") || h.includes("telepon") || h.includes("kontak"));
+
+    // Ambil mapping kontak wali santri dari Wali_Santri_Map & Wali_Identities/Users
+    const waliPhoneMap = {};
+    try {
+      const mapSheet = getAuthSheet(ss, SHEET_WALI_SANTRI_MAP);
+      const waliSheet = getAuthSheet(ss, SHEET_WALI_IDENTITIES) || getAuthSheet(ss, "Users");
+      if (mapSheet && waliSheet) {
+        const wData = waliSheet.getDataRange().getValues();
+        if (wData.length > 1) {
+          const wHead = wData[0].map(h => String(h || "").trim().toLowerCase());
+          const wIdIdx = wHead.findIndex(h => h.includes("id"));
+          const wPhoneIdx = wHead.findIndex(h => h.includes("phone") || h.includes("hp") || h.includes("wa") || h.includes("telepon") || h.includes("kontak"));
+          const phoneById = {};
+          if (wIdIdx !== -1 && wPhoneIdx !== -1) {
+            for (let w = 1; w < wData.length; w++) {
+              const wId = String(wData[w][wIdIdx] || "").trim();
+              const wPhone = String(wData[w][wPhoneIdx] || "").trim();
+              if (wId && wPhone) phoneById[wId] = wPhone;
+            }
+          }
+          const mData = mapSheet.getDataRange().getValues();
+          for (let m = 1; m < mData.length; m++) {
+            const waliId = String(mData[m][1] || "").trim();
+            const sId = String(mData[m][2] || "").trim();
+            if (sId && waliId && phoneById[waliId]) {
+              waliPhoneMap[sId] = phoneById[waliId];
+            }
+          }
+        }
+      }
+    } catch (wErr) {
+      console.warn("[STUDENTS WALI MAP ERROR]", wErr);
+    }
+
     const students = [];
     let putra = 0, putri = 0, aktif = 0, nonaktif = 0;
 
@@ -8671,6 +8706,11 @@ function getAllStudentsData(token) {
       const directHalaqah = halaqahIdx !== -1 ? String(row[halaqahIdx] || "").trim() : "";
       const directMuhafiz = muhafizIdx !== -1 ? String(row[muhafizIdx] || "").trim() : "";
 
+      let phone = phoneIdx !== -1 ? String(row[phoneIdx] || "").trim() : "";
+      if (!phone && studentId && waliPhoneMap[studentId]) {
+        phone = waliPhoneMap[studentId];
+      }
+
       if (gender === "L") putra++;
       else putri++;
 
@@ -8695,7 +8735,10 @@ function getAllStudentsData(token) {
         muhafiz: directMuhafiz,
         program: program || "Reguler",
         status: status,
-        createdAt: createdAt
+        createdAt: createdAt,
+        phone: phone,
+        parentPhone: phone,
+        whatsapp: phone
       });
     }
 
@@ -8764,11 +8807,13 @@ function saveStudentData(studentObj, token) {
   if (photoIdx === -1) photoIdx = headers.indexOf("foto");
   let progIdx = headers.indexOf("program");
   let statusIdx = headers.indexOf("status");
+  let phoneIdx = headers.findIndex(h => h.includes("phone") || h.includes("hp") || h.includes("wa") || h.includes("telepon") || h.includes("kontak"));
 
   const inputId = String(studentObj.studentId || studentObj.student_id || "").trim();
   const inputNis = String(studentObj.nis || studentObj.nisn || "").trim();
   const inputNik = String(studentObj.nik || "").trim();
   const inputName = String(studentObj.name || studentObj.nama || "").trim();
+  const inputPhone = String(studentObj.phone || studentObj.parentPhone || studentObj.whatsapp || studentObj.no_hp || "").trim();
   let inputGender = String(studentObj.gender || studentObj.jenis || "").trim().toUpperCase();
   if (inputGender === "PEREMPUAN" || inputGender === "PUTRI" || inputGender === "P") {
     inputGender = "P";
@@ -8789,6 +8834,17 @@ function saveStudentData(studentObj, token) {
     throw new Error("NIS dan Nama Santri wajib diisi.");
   }
 
+  // Jika ada input nomor telepon tapi kolom phone belum ada di sheet, buatkan kolomnya otomatis
+  if (inputPhone && phoneIdx === -1) {
+    try {
+      sheet.getRange(1, headers.length + 1).setValue("phone");
+      phoneIdx = headers.length;
+      headers.push("phone");
+    } catch (colErr) {
+      console.warn("[ADD PHONE COLUMN ERROR]", colErr);
+    }
+  }
+
   let foundRow = -1;
   for (let i = 1; i < data.length; i++) {
     const rowId = idIdx !== -1 ? String(data[i][idIdx] || "").trim() : "";
@@ -8800,6 +8856,7 @@ function saveStudentData(studentObj, token) {
   }
 
   const nowIso = new Date().toISOString();
+  let actualStudentId = inputId;
 
   if (foundRow !== -1) {
     if (nisIdx !== -1) sheet.getRange(foundRow, nisIdx + 1).setValue(inputNis);
@@ -8810,6 +8867,13 @@ function saveStudentData(studentObj, token) {
     if (photoIdx !== -1 && inputPhoto) sheet.getRange(foundRow, photoIdx + 1).setValue(inputPhoto);
     if (progIdx !== -1) sheet.getRange(foundRow, progIdx + 1).setValue(inputProgram);
     if (statusIdx !== -1) sheet.getRange(foundRow, statusIdx + 1).setValue(inputStatus);
+    if (phoneIdx !== -1 && inputPhone) sheet.getRange(foundRow, phoneIdx + 1).setValue(inputPhone);
+
+    actualStudentId = idIdx !== -1 ? String(data[foundRow - 1][idIdx] || inputId) : inputId;
+
+    if (inputPhone) {
+      syncStudentWaliContact(ss, actualStudentId, inputNis, inputName, inputPhone);
+    }
 
     return {
       status: "success",
@@ -8828,16 +8892,130 @@ function saveStudentData(studentObj, token) {
     if (photoIdx !== -1) newRow[photoIdx] = inputPhoto;
     if (progIdx !== -1) newRow[progIdx] = inputProgram;
     if (statusIdx !== -1) newRow[statusIdx] = inputStatus;
+    if (phoneIdx !== -1 && inputPhone) newRow[phoneIdx] = inputPhone;
     const createdIdx = headers.indexOf("created_at");
     if (createdIdx !== -1) newRow[createdIdx] = nowIso;
 
     sheet.appendRow(newRow);
+
+    if (inputPhone) {
+      syncStudentWaliContact(ss, newStudentId, inputNis, inputName, inputPhone);
+    }
+
     return {
       status: "success",
       success: true,
       studentId: newStudentId,
       message: `Santri baru ${inputName} (NIS: ${inputNis}) berhasil ditambahkan ke database.`
     };
+  }
+}
+
+/**
+ * Sinkronisasi otomatis nomor kontak WhatsApp Wali Santri ke Users, Wali_Identities & Wali_Santri_Map
+ */
+function syncStudentWaliContact(ss, studentId, nis, studentName, phone) {
+  if (!studentId || !phone) return;
+  try {
+    const nowIso = new Date().toISOString();
+    const mapSheet = getAuthSheet(ss, SHEET_WALI_SANTRI_MAP);
+    let waliId = "";
+    if (mapSheet) {
+      const mData = mapSheet.getDataRange().getValues();
+      for (let m = 1; m < mData.length; m++) {
+        if (String(mData[m][2]).trim() === studentId) {
+          waliId = String(mData[m][1]).trim();
+          break;
+        }
+      }
+    }
+
+    const waliSheet = getAuthSheet(ss, SHEET_WALI_IDENTITIES);
+    const usersSheet = getAuthSheet(ss, "Users");
+
+    if (waliId) {
+      if (waliSheet) {
+        const wData = waliSheet.getDataRange().getValues();
+        const wHead = wData[0].map(h => String(h || "").trim().toLowerCase());
+        const idIdx = wHead.findIndex(h => h.includes("id"));
+        const pIdx = wHead.findIndex(h => h.includes("phone") || h.includes("hp") || h.includes("wa") || h.includes("telepon"));
+        if (idIdx !== -1 && pIdx !== -1) {
+          for (let i = 1; i < wData.length; i++) {
+            if (String(wData[i][idIdx]).trim() === waliId) {
+              waliSheet.getRange(i + 1, pIdx + 1).setValue(phone);
+              break;
+            }
+          }
+        }
+      }
+      if (usersSheet) {
+        const uData = usersSheet.getDataRange().getValues();
+        const uHead = uData[0].map(h => String(h || "").trim().toLowerCase());
+        const idIdx = uHead.indexOf("user_id");
+        const pIdx = uHead.indexOf("phone");
+        if (idIdx !== -1 && pIdx !== -1) {
+          for (let i = 1; i < uData.length; i++) {
+            if (String(uData[i][idIdx]).trim() === waliId) {
+              usersSheet.getRange(i + 1, pIdx + 1).setValue(phone);
+              break;
+            }
+          }
+        }
+      }
+    } else {
+      const newWaliId = "WALI_" + Utilities.getUuid().replace(/-/g, "").substring(0, 10);
+      const waliName = "Wali " + studentName;
+      const waliEmail = nis ? `wali.${nis}@mubarokah.app` : `wali.${studentId.toLowerCase()}@mubarokah.app`;
+
+      if (usersSheet) {
+        const uHeaders = usersSheet.getDataRange().getValues()[0].map(h => String(h || "").trim().toLowerCase());
+        const newU = new Array(uHeaders.length).fill("");
+        const idIdx = uHeaders.indexOf("user_id");
+        const emIdx = uHeaders.indexOf("email");
+        const phIdx = uHeaders.indexOf("phone");
+        const nmIdx = uHeaders.indexOf("name");
+        const rlIdx = uHeaders.indexOf("role");
+        const stIdx = uHeaders.indexOf("status");
+        const crIdx = uHeaders.indexOf("created_at");
+
+        if (idIdx !== -1) newU[idIdx] = newWaliId;
+        if (emIdx !== -1) newU[emIdx] = waliEmail;
+        if (phIdx !== -1) newU[phIdx] = phone;
+        if (nmIdx !== -1) newU[nmIdx] = waliName;
+        if (rlIdx !== -1) newU[rlIdx] = "WALI_SANTRI";
+        if (stIdx !== -1) newU[stIdx] = "ACTIVE";
+        if (crIdx !== -1) newU[crIdx] = nowIso;
+        usersSheet.appendRow(newU);
+      }
+
+      if (waliSheet) {
+        const wHeaders = waliSheet.getDataRange().getValues()[0].map(h => String(h || "").trim().toLowerCase());
+        const newW = new Array(wHeaders.length).fill("");
+        const idIdx = wHeaders.findIndex(h => h.includes("id"));
+        const emIdx = wHeaders.indexOf("email");
+        const phIdx = wHeaders.findIndex(h => h.includes("phone") || h.includes("hp") || h.includes("wa"));
+        const nmIdx = wHeaders.indexOf("name");
+        const rlIdx = wHeaders.indexOf("role");
+        const stIdx = wHeaders.indexOf("status");
+        const crIdx = wHeaders.indexOf("created_at");
+
+        if (idIdx !== -1) newW[idIdx] = newWaliId;
+        if (emIdx !== -1) newW[emIdx] = waliEmail;
+        if (phIdx !== -1) newW[phIdx] = phone;
+        if (nmIdx !== -1) newW[nmIdx] = waliName;
+        if (rlIdx !== -1) newW[rlIdx] = "WALI_SANTRI";
+        if (stIdx !== -1) newW[stIdx] = "ACTIVE";
+        if (crIdx !== -1) newW[crIdx] = nowIso;
+        waliSheet.appendRow(newW);
+      }
+
+      if (mapSheet) {
+        const mapId = "MAP_" + Utilities.getUuid().replace(/-/g, "").substring(0, 12);
+        mapSheet.appendRow([mapId, newWaliId, studentId, "GUARDIAN", "VERIFIED", nowIso]);
+      }
+    }
+  } catch (err) {
+    console.warn("[syncStudentWaliContact error]", err);
   }
 }
 
@@ -18868,17 +19046,56 @@ function getKeuanganDashboard(token) {
         if (phoneIdx === -1) phoneIdx = sHead.indexOf("wali_phone");
         if (phoneIdx === -1) phoneIdx = sHead.indexOf("kontak");
 
+        // Cek fallback kontak wali dari Wali_Santri_Map
+        const waliPhoneMap = {};
+        try {
+          const mapSheet = ss.getSheetByName(SHEET_WALI_SANTRI_MAP);
+          const waliSheet = ss.getSheetByName(SHEET_WALI_IDENTITIES) || ss.getSheetByName("Users");
+          if (mapSheet && waliSheet) {
+            const wData = waliSheet.getDataRange().getValues();
+            if (wData.length > 1) {
+              const wHead = wData[0].map(h => String(h || "").trim().toLowerCase());
+              const wIdIdx = wHead.findIndex(h => h.includes("id"));
+              const wPhoneIdx = wHead.findIndex(h => h.includes("phone") || h.includes("hp") || h.includes("wa") || h.includes("telepon") || h.includes("kontak"));
+              const phoneById = {};
+              if (wIdIdx !== -1 && wPhoneIdx !== -1) {
+                for (let w = 1; w < wData.length; w++) {
+                  const wId = String(wData[w][wIdIdx] || "").trim();
+                  const wPhone = String(wData[w][wPhoneIdx] || "").trim();
+                  if (wId && wPhone) phoneById[wId] = wPhone;
+                }
+              }
+              const mData = mapSheet.getDataRange().getValues();
+              for (let m = 1; m < mData.length; m++) {
+                const waliId = String(mData[m][1] || "").trim();
+                const sId = String(mData[m][2] || "").trim();
+                if (sId && waliId && phoneById[waliId]) {
+                  waliPhoneMap[sId] = phoneById[waliId];
+                }
+              }
+            }
+          }
+        } catch (wErr) {
+          console.warn("[DASHBOARD WALI MAP LOOKUP ERROR]", wErr);
+        }
+
         for (let i = 1; i < sData.length; i++) {
           const stStatus = statusIdx !== -1 ? String(sData[i][statusIdx] || "").trim().toUpperCase() : "AKTIF";
           if (["AKTIF", "ACTIVE", ""].includes(stStatus)) {
+            const sId = String(sData[i][idIdx] || "").trim();
+            let phone = phoneIdx !== -1 ? String(sData[i][phoneIdx] || "").trim() : "";
+            if (!phone && waliPhoneMap[sId]) {
+              phone = waliPhoneMap[sId];
+            }
             const sObj = {
-              studentId: String(sData[i][idIdx] || "").trim(),
+              studentId: sId,
               nis: String(sData[i][nisIdx] || "").trim(),
               name: String(sData[i][nameIdx] || "").trim(),
               gender: String(sData[i][genderIdx] || "L").trim().toUpperCase(),
               program: programIdx !== -1 ? String(sData[i][programIdx] || "").trim() : "",
               photoUrl: photoIdx !== -1 ? String(sData[i][photoIdx] || "").trim() : "",
-              phone: phoneIdx !== -1 ? String(sData[i][phoneIdx] || "").trim() : "",
+              phone: phone,
+              parentPhone: phone,
               status: "AKTIF"
             };
             if (sObj.studentId) {
@@ -20179,27 +20396,100 @@ function getBroadcastTagihanListKeuangan(payload, token) {
     const filterPeriode = String(payload.periode || "").trim(); // e.g. "2026-10"
     const filterProgram = String(payload.program || "SEMUA").trim().toUpperCase();
 
-    // 1. Ambil Data Santri & Kontak WhatsApp Wali
+    // 1. Ambil Data Santri & Kontak WhatsApp Wali (dari Students sheet & Wali_Santri_Map)
     const studentMap = {};
+    const waliPhoneMap = {};
+
+    // 1a. Cek relasi Wali Santri di Wali_Santri_Map & Wali_Identities/Users
+    try {
+      const mapSheet = ss.getSheetByName(SHEET_WALI_SANTRI_MAP);
+      const waliSheet = ss.getSheetByName(SHEET_WALI_IDENTITIES) || ss.getSheetByName("Users");
+      if (mapSheet && waliSheet) {
+        const wData = waliSheet.getDataRange().getValues();
+        if (wData.length > 1) {
+          const wHead = wData[0].map(h => String(h || "").trim().toLowerCase());
+          const wIdIdx = wHead.findIndex(h => h.includes("id"));
+          const wPhoneIdx = wHead.findIndex(h => h.includes("phone") || h.includes("hp") || h.includes("wa") || h.includes("telepon") || h.includes("kontak"));
+          
+          const phoneById = {};
+          if (wIdIdx !== -1 && wPhoneIdx !== -1) {
+            for (let w = 1; w < wData.length; w++) {
+              const wId = String(wData[w][wIdIdx] || "").trim();
+              const wPhone = String(wData[w][wPhoneIdx] || "").trim();
+              if (wId && wPhone) phoneById[wId] = wPhone;
+            }
+          }
+
+          const mData = mapSheet.getDataRange().getValues();
+          for (let m = 1; m < mData.length; m++) {
+            const waliId = String(mData[m][1] || "").trim();
+            const sId = String(mData[m][2] || "").trim();
+            if (sId && waliId && phoneById[waliId]) {
+              waliPhoneMap[sId] = phoneById[waliId];
+            }
+          }
+        }
+      }
+    } catch (wErr) {
+      console.warn("[BROADCAST WALI MAP LOOKUP ERROR]", wErr);
+    }
+
+    // 1b. Ambil dari sheet Students
     const stSheet = ss.getSheetByName("Students");
     if (stSheet) {
       const sData = stSheet.getDataRange().getValues();
       if (sData.length >= 2) {
         const headers = sData[0].map(h => String(h || "").trim().toLowerCase());
+        const idIdx = headers.indexOf("student_id");
+        const nisIdx = headers.indexOf("nis") !== -1 ? headers.indexOf("nis") : headers.indexOf("nisn");
+        const nameIdx = headers.indexOf("name") !== -1 ? headers.indexOf("name") : headers.indexOf("nama");
+        const progIdx = headers.indexOf("program");
         const phoneIdx = headers.findIndex(h => h.includes("phone") || h.includes("hp") || h.includes("wa") || h.includes("telepon") || h.includes("kontak"));
+
         for (let i = 1; i < sData.length; i++) {
           const r = sData[i];
-          const sId = String(r[0] || "").trim();
+          const sId = idIdx !== -1 ? String(r[idIdx] || "").trim() : String(r[0] || "").trim();
           if (sId) {
             let phone = phoneIdx !== -1 ? String(r[phoneIdx] || "").trim() : "";
+            if (!phone && waliPhoneMap[sId]) {
+              phone = waliPhoneMap[sId];
+            }
+            const sName = nameIdx !== -1 ? String(r[nameIdx] || "").trim() : (r[3] ? String(r[3]).trim() : "");
+            const sProg = progIdx !== -1 ? String(r[progIdx] || "Tahfidz").trim() : "Tahfidz";
+            const sNis = nisIdx !== -1 ? String(r[nisIdx] || "").trim() : "";
+
             studentMap[sId] = {
-              name: String(r[1] || "").trim(),
-              program: String(r[3] || "Tahfidz").trim(),
+              studentId: sId,
+              nis: sNis,
+              name: sName,
+              program: sProg,
               phone: phone
             };
           }
         }
       }
+    }
+
+    // Helper format periode agar rapi (tidak mencetak 'Thu Oct 01 2026...')
+    function formatPeriodeClean(rawVal) {
+      if (!rawVal) return "-";
+      if (rawVal instanceof Date) {
+        const y = rawVal.getFullYear();
+        const m = String(rawVal.getMonth() + 1).padStart(2, "0");
+        return `${y}-${m}`;
+      }
+      const s = String(rawVal).trim();
+      const matchDate = s.match(/(\d{4})[-/](\d{1,2})/);
+      if (matchDate) {
+        return `${matchDate[1]}-${String(matchDate[2]).padStart(2, "0")}`;
+      }
+      const matchGmt = s.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}\s+(\d{4})/i);
+      if (matchGmt) {
+        const months = { jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06", jul: "07", aug: "08", sep: "09", oct: "10", nov: "11", dec: "12" };
+        const monNum = months[matchGmt[1].toLowerCase()] || "01";
+        return `${matchGmt[2]}-${monNum}`;
+      }
+      return s;
     }
 
     // 2. Ambil Tagihan Belum Lunas
@@ -20213,12 +20503,14 @@ function getBroadcastTagihanListKeuangan(payload, token) {
           const r = tgData[i];
           const sId = String(r[1] || "").trim();
           const stStatus = String(r[9] || "BELUM_BAYAR").trim().toUpperCase();
-          const periode = String(r[5] || "").trim();
+          const rawPeriode = r[5];
+          const cleanPeriode = formatPeriodeClean(rawPeriode);
 
           if (stStatus !== "LUNAS" && sId) {
-            if (filterPeriode && periode !== filterPeriode) continue;
+            if (filterPeriode && cleanPeriode !== filterPeriode && String(rawPeriode) !== filterPeriode) continue;
 
-            const stInfo = studentMap[sId] || { name: String(r[2] || "").trim(), program: "Santri", phone: "" };
+            const fallbackName = String(r[2] || "").trim();
+            const stInfo = studentMap[sId] || { name: fallbackName, program: "Santri", phone: waliPhoneMap[sId] || "" };
             if (filterProgram !== "SEMUA" && stInfo.program.toUpperCase() !== filterProgram) continue;
 
             const nomTagihan = Number(r[6]) || 0;
@@ -20229,9 +20521,9 @@ function getBroadcastTagihanListKeuangan(payload, token) {
               if (!santriUnpaidMap[sId]) {
                 santriUnpaidMap[sId] = {
                   studentId: sId,
-                  studentName: stInfo.name || String(r[2] || "").trim(),
-                  program: stInfo.program,
-                  phone: stInfo.phone,
+                  studentName: stInfo.name || fallbackName,
+                  program: stInfo.program || "Santri",
+                  phone: stInfo.phone || waliPhoneMap[sId] || "",
                   totalTunggakan: 0,
                   items: []
                 };
@@ -20239,7 +20531,7 @@ function getBroadcastTagihanListKeuangan(payload, token) {
               santriUnpaidMap[sId].totalTunggakan += sisa;
               santriUnpaidMap[sId].items.push({
                 namaPos: String(r[4] || "").trim(),
-                periode: periode,
+                periode: cleanPeriode,
                 sisa: sisa
               });
             }
