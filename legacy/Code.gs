@@ -845,28 +845,69 @@ function doPost(e) {
 
     if (action === "bayarTagihan" || action === "keuangan.bayarTagihan" || action === "prosesPembayaranTagihan") {
       const token = payload.token || (payload.data && payload.data.token) || "";
-      return createJsonResponse(prosesPembayaranTagihan(payload.data || payload, token));
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
+        return createJsonResponse(prosesPembayaranTagihan(payload.data || payload, token, actor));
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", success: false, message: authErr.message });
+      }
+    }
+
+    if (action === "batalTransaksi" || action === "keuangan.batalTransaksi" || action === "voidTransaksi") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
+        return createJsonResponse(batalTransaksiKeuangan(payload.data || payload, token, actor));
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", success: false, message: authErr.message });
+      }
     }
 
     if (action === "generateBulkMonthlyBills" || action === "keuangan.generateBulanan" || action === "generateBulkTagihan") {
       const token = payload.token || (payload.data && payload.data.token) || "";
-      return createJsonResponse(generateBulkMonthlyBills(payload.data || payload, token));
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
+        return createJsonResponse(generateBulkMonthlyBills(payload.data || payload, token, actor));
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", success: false, message: authErr.message });
+      }
     }
 
     if (action === "saveMasterTarif" || action === "keuangan.saveTarif") {
       const token = payload.token || (payload.data && payload.data.token) || "";
-      return createJsonResponse(saveMasterTarif(payload.data || payload, token));
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
+        return createJsonResponse(saveMasterTarif(payload.data || payload, token, actor));
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", success: false, message: authErr.message });
+      }
     }
 
     if (action === "deleteMasterTarif" || action === "keuangan.deleteTarif") {
       const token = payload.token || (payload.data && payload.data.token) || "";
-      const tarifId = payload.tarifId || (payload.data && payload.data.tarifId) || "";
-      return createJsonResponse(deleteMasterTarif(tarifId, token));
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
+        const tarifId = payload.tarifId || (payload.data && payload.data.tarifId) || "";
+        return createJsonResponse(deleteMasterTarif(tarifId, token));
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", success: false, message: authErr.message });
+      }
     }
 
     if (action === "initKeuanganSheets" || action === "keuangan.initSheets") {
       const token = payload.token || (payload.data && payload.data.token) || "";
-      return createJsonResponse(initKeuanganSheets(token));
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN"]);
+        return createJsonResponse(initKeuanganSheets(token));
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", success: false, message: authErr.message });
+      }
     }
 
     // ========================================================
@@ -18653,6 +18694,14 @@ function getKeuanganDashboard(token) {
         const statusIdx = sHead.indexOf("status");
         const photoIdx = sHead.indexOf("photo_url");
 
+        let phoneIdx = sHead.indexOf("phone");
+        if (phoneIdx === -1) phoneIdx = sHead.indexOf("no_hp");
+        if (phoneIdx === -1) phoneIdx = sHead.indexOf("telepon");
+        if (phoneIdx === -1) phoneIdx = sHead.indexOf("whatsapp");
+        if (phoneIdx === -1) phoneIdx = sHead.indexOf("no_wa");
+        if (phoneIdx === -1) phoneIdx = sHead.indexOf("wali_phone");
+        if (phoneIdx === -1) phoneIdx = sHead.indexOf("kontak");
+
         for (let i = 1; i < sData.length; i++) {
           const stStatus = statusIdx !== -1 ? String(sData[i][statusIdx] || "").trim().toUpperCase() : "AKTIF";
           if (["AKTIF", "ACTIVE", ""].includes(stStatus)) {
@@ -18663,6 +18712,7 @@ function getKeuanganDashboard(token) {
               gender: String(sData[i][genderIdx] || "L").trim().toUpperCase(),
               program: programIdx !== -1 ? String(sData[i][programIdx] || "").trim() : "",
               photoUrl: photoIdx !== -1 ? String(sData[i][photoIdx] || "").trim() : "",
+              phone: phoneIdx !== -1 ? String(sData[i][phoneIdx] || "").trim() : "",
               status: "AKTIF"
             };
             if (sObj.studentId) {
@@ -18732,8 +18782,9 @@ function getKeuanganDashboard(token) {
         if (r[0]) {
           const nomTotal = Number(r[6]) || 0;
           const tglStr = String(r[2] || "").trim();
+          const statusTrx = String(r[11] || (String(r[9] || "").includes("[VOID") ? "VOID" : "SUKSES")).trim().toUpperCase();
 
-          if (tglStr.startsWith(currentMonthPrefix)) {
+          if (tglStr.startsWith(currentMonthPrefix) && statusTrx !== "VOID") {
             totalPendapatanBulanIni += nomTotal;
           }
 
@@ -18757,7 +18808,8 @@ function getKeuanganDashboard(token) {
               metodeBayar: String(r[7] || "TUNAI").trim(),
               namaKasir: String(r[8] || "-").trim(),
               catatan: String(r[9] || "").trim(),
-              createdAt: String(r[10] || "").trim()
+              createdAt: String(r[10] || "").trim(),
+              status: statusTrx
             });
           }
         }
@@ -18837,26 +18889,25 @@ function getStudentBilling(studentId, token) {
   }
 }
 
-function prosesPembayaranTagihan(payload, token) {
+function prosesPembayaranTagihan(payload, token, actorParam) {
   return withScriptLock(() => {
     try {
       const ss = getDatabaseSpreadsheet();
       if (!ss) throw new Error("Spreadsheet database tidak ditemukan.");
+
+      const actor = actorParam || (token ? authenticateSession(token) : null);
+      if (actor) {
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
+      } else {
+        throw new Error("Sesi login kasir/bendahara tidak valid.");
+      }
 
       const studentId = String(payload.studentId || "").trim();
       const studentName = String(payload.studentName || "").trim();
       const nis = String(payload.nis || "").trim();
       const metodeBayar = String(payload.metodeBayar || "TUNAI").trim().toUpperCase();
       const catatan = String(payload.catatan || "").trim();
-      let namaKasir = String(payload.namaKasir || "").trim();
-
-      if (!namaKasir && token) {
-        try {
-          const actor = authenticateSession(token);
-          if (actor && actor.name) namaKasir = actor.name;
-        } catch (e) {}
-      }
-      if (!namaKasir) namaKasir = "Bendahara Pesantren";
+      let namaKasir = (actor && actor.name) || String(payload.namaKasir || "").trim() || "Bendahara Pesantren";
 
       const items = Array.isArray(payload.items) ? payload.items : [];
       if (items.length === 0) throw new Error("Pilih minimal satu pos tagihan yang ingin dibayar.");
@@ -18864,6 +18915,32 @@ function prosesPembayaranTagihan(payload, token) {
       const tagihanSheet = ss.getSheetByName(SHEET_KEUANGAN_TAGIHAN);
       const trxSheet = ss.getSheetByName(SHEET_KEUANGAN_TRANSAKSI);
       if (!tagihanSheet || !trxSheet) throw new Error("Sheet keuangan belum siap. Silakan inisialisasi terlebih dahulu.");
+
+      // Cari nomor telepon/WA wali santri dari master Students
+      let studentPhone = "";
+      const studentsSheet = ss.getSheetByName(SHEET_STUDENTS);
+      if (studentsSheet) {
+        const sData = studentsSheet.getDataRange().getValues();
+        if (sData.length >= 2) {
+          const sHead = sData[0].map(h => String(h || "").trim().toLowerCase());
+          const idIdx = sHead.indexOf("student_id");
+          let pIdx = sHead.indexOf("phone");
+          if (pIdx === -1) pIdx = sHead.indexOf("no_hp");
+          if (pIdx === -1) pIdx = sHead.indexOf("telepon");
+          if (pIdx === -1) pIdx = sHead.indexOf("whatsapp");
+          if (pIdx === -1) pIdx = sHead.indexOf("no_wa");
+          if (pIdx === -1) pIdx = sHead.indexOf("wali_phone");
+          if (pIdx === -1) pIdx = sHead.indexOf("kontak");
+          if (idIdx !== -1 && pIdx !== -1) {
+            for (let i = 1; i < sData.length; i++) {
+              if (String(sData[i][idIdx] || "").trim() === studentId) {
+                studentPhone = String(sData[i][pIdx] || "").trim();
+                break;
+              }
+            }
+          }
+        }
+      }
 
       // 1. Generate Nomor Kuitansi Unik
       const now = new Date();
@@ -18878,10 +18955,11 @@ function prosesPembayaranTagihan(payload, token) {
       const noKuitansi = `KW/RM/${yr}/${mo}/${counter}`;
       const transaksiId = `TRX-${yr}${mo}${day}-${Date.now().toString().slice(-4)}`;
 
-      // 2. Baca seluruh data tagihan untuk update status
+      // 2. Baca seluruh data tagihan untuk update status secara batch di memori
       const tData = tagihanSheet.getDataRange().getValues();
       let totalNominalBayar = 0;
       const rincianKuitansi = [];
+      let hasChanges = false;
 
       items.forEach(item => {
         const tId = String(item.tagihanId || "").trim();
@@ -18891,18 +18969,24 @@ function prosesPembayaranTagihan(payload, token) {
         // Cari row tagihan
         for (let i = 1; i < tData.length; i++) {
           if (String(tData[i][0]).trim() === tId) {
-            const rowNumber = i + 1;
             const nomTagihan = Number(tData[i][6]) || 0;
             const curTerbayar = Number(tData[i][7]) || 0;
+            const curSisa = Math.max(0, nomTagihan - curTerbayar);
+
+            if (bayarNom > curSisa) {
+              throw new Error(`Nominal bayar (Rp ${bayarNom.toLocaleString('id-ID')}) melebihi sisa tagihan (Rp ${curSisa.toLocaleString('id-ID')}) untuk pos ${tData[i][4] || tId}.`);
+            }
+
             const newTerbayar = curTerbayar + bayarNom;
             const newSisa = Math.max(0, nomTagihan - newTerbayar);
             const newStatus = newSisa <= 0 ? "LUNAS" : "SEBAGIAN";
 
-            // Update sel di Google Sheets
-            tagihanSheet.getRange(rowNumber, 8).setValue(newTerbayar); // nominal_terbayar
-            tagihanSheet.getRange(rowNumber, 9).setValue(newSisa);      // sisa_tagihan
-            tagihanSheet.getRange(rowNumber, 10).setValue(newStatus);  // status
-            tagihanSheet.getRange(rowNumber, 12).setValue(nowIso);     // updated_at
+            // Update sel di memory array (Batch operation)
+            tData[i][7] = newTerbayar; // nominal_terbayar
+            tData[i][8] = newSisa;      // sisa_tagihan
+            tData[i][9] = newStatus;   // status
+            tData[i][11] = nowIso;     // updated_at
+            hasChanges = true;
 
             totalNominalBayar += bayarNom;
             rincianKuitansi.push({
@@ -18922,7 +19006,17 @@ function prosesPembayaranTagihan(payload, token) {
         throw new Error("Total nominal pembayaran harus lebih besar dari Rp 0.");
       }
 
+      // Tulis pembaruan tagihan secara ATOMIK / BATCH ke Google Sheets
+      if (hasChanges) {
+        tagihanSheet.getRange(1, 1, tData.length, tData[0].length).setValues(tData);
+      }
+
       // 3. Catat di Sheet Transaksi
+      const trxHeaders = trxSheet.getRange(1, 1, 1, Math.max(12, trxSheet.getLastColumn())).getValues()[0];
+      if (trxHeaders.length < 12 || !trxHeaders[11]) {
+        trxSheet.getRange(1, 12).setValue("status").setFontWeight("bold");
+      }
+
       const newTrxRow = [
         transaksiId,
         noKuitansi,
@@ -18934,7 +19028,8 @@ function prosesPembayaranTagihan(payload, token) {
         metodeBayar,
         namaKasir,
         catatan,
-        nowIso
+        nowIso,
+        "SUKSES" // status transaksi
       ];
       trxSheet.appendRow(newTrxRow);
 
@@ -18949,16 +19044,136 @@ function prosesPembayaranTagihan(payload, token) {
           studentId: studentId,
           studentName: studentName,
           nis: nis,
+          phone: studentPhone,
+          parentPhone: studentPhone,
           nominalTotal: totalNominalBayar,
           metodeBayar: metodeBayar,
           namaKasir: namaKasir,
           catatan: catatan,
+          status: "SUKSES",
           rincianItems: rincianKuitansi
         }
       };
     } catch (err) {
       console.error("[PROSES PEMBAYARAN ERROR]", err);
       return { status: "error", success: false, message: "Gagal memproses pembayaran: " + err.message };
+    }
+  });
+}
+
+function batalTransaksiKeuangan(payload, token, actorParam) {
+  return withScriptLock(() => {
+    try {
+      const ss = getDatabaseSpreadsheet();
+      if (!ss) throw new Error("Spreadsheet database tidak ditemukan.");
+
+      const actor = actorParam || (token ? authenticateSession(token) : null);
+      if (actor) {
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
+      } else {
+        throw new Error("Sesi otorisasi supervisor/bendahara tidak valid.");
+      }
+
+      const transaksiId = String(payload.transaksiId || "").trim();
+      const alasan = String(payload.alasan || "").trim();
+      if (!transaksiId) throw new Error("ID Transaksi wajib disertakan.");
+      if (!alasan || alasan.length < 3) throw new Error("Alasan pembatalan/void wajib diisi (minimal 3 karakter).");
+
+      const trxSheet = ss.getSheetByName(SHEET_KEUANGAN_TRANSAKSI);
+      const tagihanSheet = ss.getSheetByName(SHEET_KEUANGAN_TAGIHAN);
+      if (!trxSheet || !tagihanSheet) throw new Error("Sheet keuangan belum siap.");
+
+      // 1. Cari data transaksi
+      const trxData = trxSheet.getDataRange().getValues();
+      let trxRowIdx = -1;
+      let targetTrx = null;
+
+      for (let i = 1; i < trxData.length; i++) {
+        if (String(trxData[i][0]).trim() === transaksiId) {
+          trxRowIdx = i + 1;
+          targetTrx = trxData[i];
+          break;
+        }
+      }
+
+      if (trxRowIdx === -1 || !targetTrx) {
+        throw new Error("Transaksi dengan ID " + transaksiId + " tidak ditemukan.");
+      }
+
+      // Cek apakah sudah pernah di-VOID
+      const curStatus = String(targetTrx[11] || "").trim().toUpperCase();
+      const curCatatan = String(targetTrx[9] || "").trim();
+      if (curStatus === "VOID" || curCatatan.includes("[VOID/BATAL]")) {
+        throw new Error("Transaksi ini sudah pernah dibatalkan (VOID).");
+      }
+
+      // 2. Parse rincian tagihan yang pernah dibayar
+      let rincianItems = [];
+      try {
+        const rawJson = String(targetTrx[5] || "");
+        if (rawJson.startsWith("[")) {
+          rincianItems = JSON.parse(rawJson);
+        }
+      } catch (e) {
+        throw new Error("Gagal membaca rincian tagihan dari transaksi ini.");
+      }
+
+      if (!Array.isArray(rincianItems) || rincianItems.length === 0) {
+        throw new Error("Tidak ada rincian tagihan yang terhubung pada transaksi ini.");
+      }
+
+      // 3. Revert data tagihan di Keuangan_Tagihan secara batch di memori
+      const tData = tagihanSheet.getDataRange().getValues();
+      const nowIso = new Date().toISOString();
+      let affectedCount = 0;
+
+      rincianItems.forEach(item => {
+        const tId = String(item.tagihanId || "").trim();
+        const nomBayar = Number(item.nominalBayar) || 0;
+        if (!tId || nomBayar <= 0) return;
+
+        for (let i = 1; i < tData.length; i++) {
+          if (String(tData[i][0]).trim() === tId) {
+            const nomTagihan = Number(tData[i][6]) || 0;
+            const curTerbayar = Number(tData[i][7]) || 0;
+            const newTerbayar = Math.max(0, curTerbayar - nomBayar);
+            const newSisa = Math.max(0, nomTagihan - newTerbayar);
+            const newStatus = newTerbayar <= 0 ? "BELUM_BAYAR" : (newSisa <= 0 ? "LUNAS" : "SEBAGIAN");
+
+            tData[i][7] = newTerbayar;
+            tData[i][8] = newSisa;
+            tData[i][9] = newStatus;
+            tData[i][11] = nowIso;
+            affectedCount++;
+            break;
+          }
+        }
+      });
+
+      if (affectedCount > 0) {
+        tagihanSheet.getRange(1, 1, tData.length, tData[0].length).setValues(tData);
+      }
+
+      // 4. Update status transaksi menjadi VOID di Keuangan_Transaksi
+      const actorName = (actor && actor.name) || "Bendahara";
+      const voidNote = `[VOID/BATAL oleh ${actorName} pada ${nowIso}. Alasan: ${alasan}] ${curCatatan}`.trim();
+      
+      if (trxData[0].length < 12) {
+        trxSheet.getRange(1, 12).setValue("status").setFontWeight("bold");
+      }
+      trxSheet.getRange(trxRowIdx, 10).setValue(voidNote); // Catatan
+      trxSheet.getRange(trxRowIdx, 12).setValue("VOID");    // Status
+
+      return {
+        status: "success",
+        success: true,
+        message: "Transaksi " + (targetTrx[1] || transaksiId) + " berhasil dibatalkan (VOID). Status tagihan telah dikembalikan.",
+        transaksiId: transaksiId,
+        noKuitansi: String(targetTrx[1] || "")
+      };
+    } catch (err) {
+      console.error("[BATAL TRANSAKSI ERROR]", err);
+      return { status: "error", success: false, message: "Gagal membatalkan transaksi: " + err.message };
     }
   });
 }

@@ -800,6 +800,32 @@ function resetKeuanganPOS() {
 }
 window.resetKeuanganPOS = resetKeuanganPOS;
 
+/**
+ * Helper mencari nomor telepon/WhatsApp wali santri secara otomatis
+ */
+function getStudentPhoneNumber(studentId, nis) {
+    if (!studentId && !nis) return "";
+    let phone = "";
+
+    // 1. Dari data students di ASNKeuangan
+    const list = ASNKeuangan.data.students || [];
+    const st = list.find(s => (studentId && (s.studentId === studentId || s.id === studentId)) || (nis && s.nis === nis));
+    if (st) {
+        phone = st.parentPhone || st.phone || st.no_hp || st.telepon || st.whatsapp || st.wali_phone || st.kontak || "";
+    }
+
+    // 2. Dari adminStudentsData jika belum ketemu
+    if (!phone && typeof window !== 'undefined' && Array.isArray(window.adminStudentsData)) {
+        const ast = window.adminStudentsData.find(s => (studentId && (s.studentId === studentId || s.id === studentId)) || (nis && s.nis === nis));
+        if (ast) {
+            phone = ast.parentPhone || ast.phone || ast.no_hp || ast.telepon || ast.whatsapp || ast.wali_phone || ast.kontak || ast.no_wali || "";
+        }
+    }
+
+    return String(phone || "").trim();
+}
+window.getStudentPhoneNumber = getStudentPhoneNumber;
+
 // ====================================================================
 // SUB-MODUL 2: KUITANSI DIGITAL & WHATSAPP GATEWAY
 // ====================================================================
@@ -817,12 +843,62 @@ function openKuitansiModal(kuitansi) {
     const metodeEl = document.getElementById('kuitansi-metode');
     const kasirEl = document.getElementById('kuitansi-kasir');
     const rincianContainer = document.getElementById('kuitansi-rincian-list');
+    const voidBanner = document.getElementById('kuitansi-void-banner');
+    const statusTextEl = document.getElementById('kuitansi-status-text');
+    const btnVoid = document.getElementById('btn-kuitansi-void');
+    const btnWA = document.getElementById('btn-kuitansi-whatsapp');
+
+    const isVoid = String(kuitansi.status || '').toUpperCase() === 'VOID' || 
+                   String(kuitansi.catatan || '').includes('[VOID/BATAL]');
+
+    if (voidBanner) {
+        if (isVoid) voidBanner.classList.remove('hidden');
+        else voidBanner.classList.add('hidden');
+    }
+
+    if (statusTextEl) {
+        if (isVoid) {
+            statusTextEl.innerText = "DIBATALKAN (VOID)";
+            statusTextEl.className = "text-rose-600 font-bold uppercase";
+        } else {
+            statusTextEl.innerText = "LUNAS / DITERIMA";
+            statusTextEl.className = "text-emerald-600 font-bold";
+        }
+    }
+
+    // Role check untuk tombol Void
+    const roleCheck = checkKeuanganRoleAccess();
+    if (btnVoid) {
+        if (isVoid || !roleCheck.isAllowed) {
+            btnVoid.classList.add('hidden');
+        } else {
+            btnVoid.classList.remove('hidden');
+        }
+    }
+
+    if (btnWA) {
+        if (isVoid) {
+            btnWA.classList.add('opacity-50', 'pointer-events-none');
+            btnWA.title = "Tidak dapat mengirim kuitansi yang telah dibatalkan (VOID)";
+        } else {
+            btnWA.classList.remove('opacity-50', 'pointer-events-none');
+            btnWA.title = "Kirim kuitansi ke WhatsApp Wali Santri";
+        }
+    }
 
     if (noEl) noEl.innerText = kuitansi.noKuitansi || '-';
     if (tglEl) tglEl.innerText = formatTglIndo(kuitansi.tanggalBayar);
     if (nameEl) nameEl.innerText = kuitansi.studentName || '-';
     if (nisEl) nisEl.innerText = kuitansi.nis || '-';
-    if (totalEl) totalEl.innerText = formatRupiah(kuitansi.nominalTotal || 0);
+    
+    if (totalEl) {
+        if (isVoid) {
+            totalEl.innerHTML = `<span class="line-through opacity-60 text-slate-400 mr-2">${formatRupiah(kuitansi.nominalTotal || 0)}</span> <span class="text-rose-600 font-black text-sm">BATAL</span>`;
+        } else {
+            totalEl.innerText = formatRupiah(kuitansi.nominalTotal || 0);
+        }
+    }
+
     if (metodeEl) metodeEl.innerText = kuitansi.metodeBayar || 'TUNAI';
     if (kasirEl) kasirEl.innerText = kuitansi.namaKasir || 'Bendahara Pesantren';
 
@@ -837,7 +913,7 @@ function openKuitansiModal(kuitansi) {
                         ${escapeHtml(item.namaPos)}
                         <span class="text-[10px] text-slate-400 block">${escapeHtml(item.periode || '')}</span>
                     </td>
-                    <td class="py-2 text-right font-bold text-slate-800 dark:text-slate-100">${formatRupiah(item.nominalBayar)}</td>
+                    <td class="py-2 text-right font-bold ${isVoid ? 'line-through text-slate-400' : 'text-slate-800 dark:text-slate-100'}">${formatRupiah(item.nominalBayar)}</td>
                 </tr>
             `;
         });
@@ -859,16 +935,54 @@ function printKuitansi() {
 }
 window.printKuitansi = printKuitansi;
 
-function shareKuitansiWhatsApp() {
+function handleKuitansiModalVoid() {
     const k = ASNKeuangan.lastKuitansi;
+    if (!k || !k.transaksiId) {
+        alert("Data transaksi kuitansi tidak valid.");
+        return;
+    }
+    promptVoidKeuanganTransaksi(k.transaksiId, k.noKuitansi, k.nominalTotal);
+}
+window.handleKuitansiModalVoid = handleKuitansiModalVoid;
+
+function shareKuitansiWhatsApp(kuitansiParam) {
+    const k = kuitansiParam || ASNKeuangan.lastKuitansi;
     if (!k) return;
 
-    let phoneInput = prompt("Masukkan nomor WhatsApp Wali Santri (contoh: 08123456789):", "");
+    const isVoid = String(k.status || '').toUpperCase() === 'VOID' || String(k.catatan || '').includes('[VOID/BATAL]');
+    if (isVoid) {
+        alert("Peringatan: Transaksi ini sudah dibatalkan (VOID) dan tidak dapat dikirim ke wali santri.");
+        return;
+    }
+
+    // Ambil nomor HP wali santri secara otomatis
+    let defaultPhone = k.parentPhone || k.phone || k.telepon || k.noHp || k.whatsapp || k.waliPhone || "";
+    if (!defaultPhone) {
+        defaultPhone = getStudentPhoneNumber(k.studentId, k.nis);
+    }
+
+    // Format tampilan awal (08... jika ada)
+    if (defaultPhone.startsWith('62')) {
+        defaultPhone = '0' + defaultPhone.substring(2);
+    }
+
+    let phoneInput = prompt(
+        `Kirim Kuitansi WhatsApp ke Wali Santri: ${k.studentName}\n` +
+        `Nomor HP otomatis terisi jika terdaftar di biodata santri:`,
+        defaultPhone
+    );
     if (!phoneInput) return;
 
     let phone = phoneInput.replace(/[^0-9]/g, '');
     if (phone.startsWith('0')) {
         phone = '62' + phone.substring(1);
+    } else if (phone.startsWith('8')) {
+        phone = '62' + phone;
+    }
+
+    if (phone.length < 9) {
+        alert("Nomor telepon tidak valid. Pastikan format nomor benar.");
+        return;
     }
 
     let itemsText = '';
@@ -884,7 +998,7 @@ function shareKuitansiWhatsApp() {
         `📄 *No. Kuitansi* : ${k.noKuitansi}\n` +
         `📅 *Tanggal*      : ${formatTglIndo(k.tanggalBayar)}\n` +
         `💳 *Metode*       : ${k.metodeBayar}\n` +
-        `👤 *Penerima*     : ${k.namaKasir}\n\n` +
+        `👤 *Penerima*     : ${k.namaKasir || 'Bendahara Pesantren'}\n\n` +
         `*Rincian Pos Pembayaran:*\n` +
         itemsText +
         `----------------------------------------\n` +
@@ -1128,6 +1242,65 @@ window.submitGenerateBulkTagihan = submitGenerateBulkTagihan;
 // SUB-MODUL 4: RIWAYAT TRANSAKSI / BUKU KAS
 // ====================================================================
 
+/**
+ * Prompt dan eksekusi Void / Pembatalan Transaksi Kasir
+ */
+async function promptVoidKeuanganTransaksi(transaksiId, noKuitansi, nominalTotal) {
+    const roleCheck = checkKeuanganRoleAccess();
+    if (!roleCheck.isAllowed) {
+        alert("Akses ditolak: Hanya Super Admin, Admin, atau Bendahara yang diizinkan membatalkan transaksi.");
+        return;
+    }
+
+    const alasan = prompt(
+        `⚠️ KONFIRMASI PEMBATALAN TRANSAKSI (VOID KASIR)\n\n` +
+        `• No. Kuitansi : ${noKuitansi || '-'}\n` +
+        `• Nominal      : ${formatRupiah(nominalTotal)}\n\n` +
+        `PERHATIAN:\n` +
+        `1. Sisa tagihan santri akan otomatis dipulihkan/dikembalikan seperti sebelum bayar.\n` +
+        `2. Total kas masuk di laporan akan dikurangi.\n` +
+        `3. Transaksi ini akan ditandai permanen sebagai VOID di audit log.\n\n` +
+        `Silakan ketik alasan pembatalan (wajib, min. 3 karakter):`
+    );
+
+    if (alasan === null) return; // User batalkan prompt
+    const trimmedAlasan = alasan.trim();
+    if (!trimmedAlasan || trimmedAlasan.length < 3) {
+        alert("Pembatalan gagal: Alasan pembatalan wajib diisi minimal 3 karakter untuk audit trail pembukuan.");
+        return;
+    }
+
+    if (!confirm(`Apakah Anda benar-benar yakin ingin membatalkan (VOID) kuitansi ${noKuitansi || transaksiId}? Tindakan ini bersifat permanen!`)) {
+        return;
+    }
+
+    try {
+        if (typeof showToast === 'function') showToast("⏳ Memproses pembatalan transaksi (VOID)...");
+        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : null) || "";
+        const res = await apiPost("keuangan.batalTransaksi", {
+            token: token,
+            transaksiId: transaksiId,
+            alasan: trimmedAlasan
+        });
+
+        if (res && res.success) {
+            closeKuitansiModal();
+            if (typeof showToast === 'function') {
+                showToast(`✅ ${res.message || "Transaksi berhasil dibatalkan (VOID)."}`);
+            } else {
+                alert(res.message || "Transaksi berhasil dibatalkan (VOID).");
+            }
+            // Muat ulang data dashboard kasir & tagihan
+            await loadAdminKeuanganData(true);
+        } else {
+            alert("Gagal membatalkan transaksi: " + ((res && res.message) || "Terjadi kesalahan sistem."));
+        }
+    } catch (e) {
+        alert("Error pembatalan transaksi: " + e.message);
+    }
+}
+window.promptVoidKeuanganTransaksi = promptVoidKeuanganTransaksi;
+
 function renderKeuanganTransaksiTable() {
     const tbody = document.getElementById('keuangan-transaksi-table-body');
     const mobileList = document.getElementById('keuangan-transaksi-mobile-list');
@@ -1136,7 +1309,7 @@ function renderKeuanganTransaksiTable() {
     if (!tbody && !mobileList) return;
 
     if (list.length === 0) {
-        if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-xs text-slate-400">Belum ada riwayat transaksi pembayaran.</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="py-6 text-center text-xs text-slate-400">Belum ada riwayat transaksi pembayaran.</td></tr>`;
         if (mobileList) mobileList.innerHTML = `<div class="p-6 text-center bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] text-xs text-slate-400"><i class="fa-solid fa-receipt text-2xl text-slate-300 dark:text-slate-600 block mb-1.5"></i>Belum ada riwayat transaksi pembayaran kasir.</div>`;
         return;
     }
@@ -1145,39 +1318,60 @@ function renderKeuanganTransaksiTable() {
     let htmlMobile = '';
 
     list.forEach((trx, idx) => {
+        const isVoid = String(trx.status || '').toUpperCase() === 'VOID' || String(trx.catatan || '').includes('[VOID/BATAL]');
+        const statusBadge = isVoid
+            ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/60 dark:text-rose-300" title="${escapeHtml(trx.catatan || 'VOID')}"><i class="fa-solid fa-ban text-[9px]"></i> VOID</span>`
+            : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300"><i class="fa-solid fa-circle-check text-[9px]"></i> Berhasil</span>`;
+
+        const nomDisplay = isVoid
+            ? `<span class="line-through text-slate-400 font-semibold">${formatRupiah(trx.nominalTotal)}</span>`
+            : `<span class="font-black text-slate-800 dark:text-slate-100">${formatRupiah(trx.nominalTotal)}</span>`;
+
+        const jsonStr = escapeHtml(JSON.stringify(trx));
+
         htmlDesktop += `
-            <tr class="hover:bg-slate-50/80 dark:hover:bg-[#1a2636]/60 transition border-b border-slate-100 dark:border-[#202f42] text-xs">
+            <tr class="hover:bg-slate-50/80 dark:hover:bg-[#1a2636]/60 transition border-b border-slate-100 dark:border-[#202f42] text-xs ${isVoid ? 'bg-rose-50/20 dark:bg-rose-950/10' : ''}">
                 <td class="p-3 text-center text-slate-400 font-medium">${idx + 1}</td>
-                <td class="p-3 font-mono font-bold text-emerald-700 dark:text-emerald-400">${escapeHtml(trx.noKuitansi)}</td>
+                <td class="p-3 font-mono font-bold ${isVoid ? 'text-slate-400 line-through' : 'text-emerald-700 dark:text-emerald-400'}">${escapeHtml(trx.noKuitansi)}</td>
                 <td class="p-3 text-slate-500">${formatTglIndo(trx.tanggalBayar)}</td>
                 <td class="p-3 font-bold text-slate-800 dark:text-slate-100">${escapeHtml(trx.studentName)}</td>
-                <td class="p-3 font-black text-slate-800 dark:text-slate-100">${formatRupiah(trx.nominalTotal)}</td>
+                <td class="p-3">${nomDisplay}</td>
                 <td class="p-3">
                     <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#253447]">
                         ${escapeHtml(trx.metodeBayar)}
                     </span>
                 </td>
+                <td class="p-3 text-center">${statusBadge}</td>
                 <td class="p-3 text-right space-x-1">
-                    <button type="button" onclick="openKuitansiModal(${escapeHtml(JSON.stringify(trx))})"
+                    <button type="button" onclick="openKuitansiModal(${jsonStr})"
                         class="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-[#1c2836] transition" title="Lihat Kuitansi">
                         <i class="fa-solid fa-receipt text-xs text-emerald-600"></i>
                     </button>
+                    ${!isVoid ? `
+                        <button type="button" onclick="promptVoidKeuanganTransaksi('${escapeHtml(trx.transaksiId)}', '${escapeHtml(trx.noKuitansi)}', ${Number(trx.nominalTotal) || 0})"
+                            class="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition" title="Batalkan Transaksi (VOID)">
+                            <i class="fa-solid fa-ban text-xs"></i>
+                        </button>
+                    ` : ''}
                 </td>
             </tr>
         `;
 
         htmlMobile += `
-            <div class="p-3.5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-xs space-y-2.5">
+            <div class="p-3.5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-xs space-y-2.5 ${isVoid ? 'border-rose-200/80 bg-rose-50/10' : ''}">
                 <div class="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-[#202f42] pb-2">
                     <div class="flex items-center space-x-2">
-                        <div class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center text-xs">
-                            <i class="fa-solid fa-receipt"></i>
+                        <div class="w-7 h-7 rounded-lg ${isVoid ? 'bg-rose-50 dark:bg-rose-950/50 text-rose-600' : 'bg-emerald-50 dark:bg-emerald-950 text-emerald-600'} flex items-center justify-center text-xs">
+                            <i class="fa-solid ${isVoid ? 'fa-ban' : 'fa-receipt'}"></i>
                         </div>
-                        <span class="font-mono text-xs font-bold text-emerald-700 dark:text-emerald-400">${escapeHtml(trx.noKuitansi)}</span>
+                        <span class="font-mono text-xs font-bold ${isVoid ? 'text-slate-400 line-through' : 'text-emerald-700 dark:text-emerald-400'}">${escapeHtml(trx.noKuitansi)}</span>
                     </div>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#253447]">
-                        ${escapeHtml(trx.metodeBayar)}
-                    </span>
+                    <div class="flex items-center gap-1.5">
+                        ${statusBadge}
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#253447]">
+                            ${escapeHtml(trx.metodeBayar)}
+                        </span>
+                    </div>
                 </div>
                 <div class="flex items-start justify-between gap-2">
                     <div>
@@ -1185,20 +1379,24 @@ function renderKeuanganTransaksiTable() {
                         <div class="text-[10px] text-slate-400 mt-0.5">${formatTglIndo(trx.tanggalBayar)}</div>
                     </div>
                     <div class="text-right">
-                        <div class="text-sm font-black text-emerald-600 dark:text-emerald-400">${formatRupiah(trx.nominalTotal)}</div>
-                        <span class="text-[9px] text-slate-400">Total Diterima</span>
+                        <div class="text-sm font-black ${isVoid ? 'text-slate-400 line-through' : 'text-emerald-600 dark:text-emerald-400'}">${formatRupiah(trx.nominalTotal)}</div>
+                        <span class="text-[9px] text-slate-400">${isVoid ? 'Dibatalkan (VOID)' : 'Total Diterima'}</span>
                     </div>
                 </div>
                 <div class="pt-1 flex items-center gap-2">
-                    <button type="button" onclick="openKuitansiModal(${escapeHtml(JSON.stringify(trx))})"
+                    <button type="button" onclick="openKuitansiModal(${jsonStr})"
                         class="flex-1 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 dark:text-emerald-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border border-emerald-200 dark:border-emerald-800">
                         <i class="fa-solid fa-receipt text-xs"></i>
                         <span>Buka Kuitansi</span>
                     </button>
-                    ${trx.phone ? `
-                        <button type="button" onclick="shareKuitansiWhatsApp(${escapeHtml(JSON.stringify(trx))})"
+                    ${!isVoid ? `
+                        <button type="button" onclick="shareKuitansiWhatsApp(${jsonStr})"
                             class="py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1" title="Kirim ke WhatsApp">
                             <i class="fa-brands fa-whatsapp text-sm"></i>
+                        </button>
+                        <button type="button" onclick="promptVoidKeuanganTransaksi('${escapeHtml(trx.transaksiId)}', '${escapeHtml(trx.noKuitansi)}', ${Number(trx.nominalTotal) || 0})"
+                            class="py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 border border-rose-200 dark:border-rose-900/40" title="Batalkan Transaksi (VOID)">
+                            <i class="fa-solid fa-ban text-xs"></i>
                         </button>
                     ` : ''}
                 </div>
