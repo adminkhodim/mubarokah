@@ -1174,6 +1174,42 @@ const ASNIdentity = {
                     </div>
                 </div>
 
+                <!-- KARTU KEUANGAN & PEMBAYARAN SPP SANTRI (KHUSUS MOBILE - DI ATAS KARTU MUTABA'AH) -->
+                <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-[#06382c] to-slate-900 text-white p-4 sm:p-5 border border-emerald-500/40 shadow-lg space-y-3.5 transition-all">
+                    <div class="flex items-center justify-between text-xs font-bold">
+                        <span class="flex items-center gap-1.5 text-emerald-300 uppercase tracking-wider text-[11px]">
+                            <i class="fa-solid fa-receipt text-xs text-amber-400"></i> Keuangan & Syahriah Santri
+                        </span>
+                        <span class="text-amber-300 text-[10px] bg-amber-950/80 px-2.5 py-0.5 rounded-full border border-amber-500/30 font-extrabold flex items-center gap-1">
+                            <i class="fa-solid fa-shield-halved text-[9px]"></i> Portal Mandiri
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between bg-white/5 rounded-2xl p-3 border border-white/10 gap-3">
+                        <div class="min-w-0 space-y-0.5">
+                            <span class="text-[10px] text-emerald-200/80 font-medium block">Pembayaran SPP & Tagihan</span>
+                            <h5 class="text-xs sm:text-sm font-black text-white truncate">Syahriah & Operasional</h5>
+                            <span class="text-[9px] text-slate-300 block">QRIS, VA Bank & Transfer Manual</span>
+                        </div>
+                        <button type="button" onclick="openPortalWaliTagihanModal('${escapeHtml(studentId)}')"
+                            class="px-3.5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl text-xs font-black shadow-md shadow-emerald-950/40 active:scale-95 transition-all flex items-center gap-1.5 shrink-0"
+                            title="Bayar SPP & Tagihan Santri">
+                            <i class="fa-solid fa-wallet text-[11px]"></i>
+                            <span>Bayar SPP</span>
+                        </button>
+                    </div>
+
+                    <div class="flex items-center justify-between text-[10px] text-slate-300 px-1 pt-0.5">
+                        <span class="flex items-center gap-1">
+                            <i class="fa-solid fa-circle-check text-emerald-400 text-[10px]"></i> BSI, Bank Jateng & Midtrans
+                        </span>
+                        <button type="button" onclick="openPortalWaliTagihanModal('${escapeHtml(studentId)}')" class="text-amber-300 hover:text-amber-200 font-bold flex items-center gap-1 hover:underline">
+                            <span>Rincian & Kuitansi</span>
+                            <i class="fa-solid fa-chevron-right text-[8px]"></i>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- 2. KOTAK INDIKATOR TAHFIDZ & BUKU MUTABA'AH (Terpisah Mandiri) -->
                 <div class="relative overflow-hidden rounded-3xl bg-slate-900/95 dark:bg-[#15202d] text-white p-4 sm:p-5 border border-emerald-500/30 shadow-lg space-y-3.5 transition-all">
                     <div class="flex items-center justify-between text-xs font-bold">

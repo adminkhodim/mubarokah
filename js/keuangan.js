@@ -3160,21 +3160,55 @@ function openPortalWaliTagihanModal(targetStudentId) {
     const modal = document.getElementById('modal-portal-wali-tagihan');
     if (!modal) return;
 
-    const students = ASNKeuangan.data.students || [];
-    if (students.length === 0) {
-        // Jika data santri belum ter-load di memori, trigger load
-        loadAdminKeuanganData().then(() => openPortalWaliTagihanModal(targetStudentId));
-        return;
+    // 1. Ambil daftar santri binaan akun wali (dari session/localStorage atau ASNIdentity)
+    let students = [];
+    try {
+        const raw = sessionStorage.getItem('mubarokah_parent_students') || localStorage.getItem('mubarokah_parent_students');
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed) && parsed.length > 0) students = parsed;
+        }
+    } catch (e) {}
+
+    if (students.length === 0 && typeof ASNIdentity !== 'undefined' && Array.isArray(ASNIdentity.students) && ASNIdentity.students.length > 0) {
+        students = ASNIdentity.students;
     }
+
+    if (students.length === 0 && ASNKeuangan.data && Array.isArray(ASNKeuangan.data.students) && ASNKeuangan.data.students.length > 0) {
+        students = ASNKeuangan.data.students;
+    }
+
+    if (students.length === 0 && typeof window !== 'undefined' && Array.isArray(window.adminStudentsData) && window.adminStudentsData.length > 0) {
+        students = window.adminStudentsData;
+    }
+
+    // Normalisasi struktur data santri agar id dan name selalu konsisten
+    const normalizedStudents = students.map(s => ({
+        id: s.studentId || s.student_id || s.id || s.nis,
+        studentId: s.studentId || s.student_id || s.id || s.nis,
+        name: s.name || s.nama || 'Santri',
+        nis: s.nis || s.nisn || '',
+        program: s.program || 'Tahfidz Al-Qur\'an',
+        photoUrl: s.photoUrl || s.photo_url || ''
+    }));
 
     let activeSt = null;
     if (targetStudentId) {
-        activeSt = students.find(s => String(s.id).trim() === String(targetStudentId).trim());
+        activeSt = normalizedStudents.find(s => String(s.id).trim() === String(targetStudentId).trim() || String(s.nis).trim() === String(targetStudentId).trim());
     }
 
-    // Fallback ke santri pertama jika belum dipilih
+    if (!activeSt && normalizedStudents.length > 0) {
+        activeSt = normalizedStudents[0];
+    }
+
     if (!activeSt) {
-        activeSt = students[0];
+        activeSt = {
+            id: targetStudentId || 'STD_001',
+            studentId: targetStudentId || 'STD_001',
+            name: 'Putra/Putri Santri',
+            nis: '-',
+            program: 'Santri Aktif'
+        };
     }
 
     portalActiveStudent = activeSt;
@@ -3185,14 +3219,14 @@ function openPortalWaliTagihanModal(targetStudentId) {
     const nameEl = document.getElementById('portal-wali-student-name');
     const infoEl = document.getElementById('portal-wali-student-info');
     if (nameEl) nameEl.innerText = activeSt.name;
-    if (infoEl) infoEl.innerText = `ID: ${activeSt.id} • Program: ${activeSt.program || 'Santri Aktif'}`;
+    if (infoEl) infoEl.innerText = `NIS: ${activeSt.nis || '-'} • Program: ${activeSt.program || 'Santri Aktif'}`;
 
     // Selector jika banyak santri
     const selWrap = document.getElementById('portal-wali-student-selector-wrap');
     const selEl = document.getElementById('portal-wali-student-select');
-    if (selWrap && selEl && students.length > 1) {
+    if (selWrap && selEl && normalizedStudents.length > 1) {
         selWrap.classList.remove('hidden');
-        selEl.innerHTML = students.map(s => `<option value="${escapeHtml(s.id)}" ${s.id === activeSt.id ? 'selected' : ''}>${escapeHtml(s.name)} (${escapeHtml(s.program || 'Santri')})</option>`).join('');
+        selEl.innerHTML = normalizedStudents.map(s => `<option value="${escapeHtml(s.id)}" ${String(s.id).trim() === String(activeSt.id).trim() ? 'selected' : ''}>${escapeHtml(s.name)} (${escapeHtml(s.program || 'Santri')})</option>`).join('');
     } else if (selWrap) {
         selWrap.classList.add('hidden');
     }
@@ -3250,12 +3284,46 @@ function switchPortalWaliTab(subTab) {
 }
 window.switchPortalWaliTab = switchPortalWaliTab;
 
-function renderPortalWaliTagihanChecklist(studentId) {
+async function renderPortalWaliTagihanChecklist(studentId) {
     const container = document.getElementById('portal-tagihan-checklist-container');
     if (!container) return;
 
-    const allTagihan = ASNKeuangan.data.tagihanList || [];
-    const myTagihan = allTagihan.filter(t => String(t.studentId).trim() === String(studentId).trim() && String(t.status).toUpperCase() !== 'LUNAS');
+    container.innerHTML = `
+        <div class="p-4 text-center text-slate-400 text-xs">
+            <i class="fa-solid fa-circle-notch fa-spin text-emerald-600 mr-1.5"></i>
+            Memuat tagihan ananda...
+        </div>
+    `;
+
+    let myTagihan = [];
+    const allTagihan = (ASNKeuangan.data && ASNKeuangan.data.tagihanList) || [];
+    myTagihan = allTagihan.filter(t => String(t.studentId).trim() === String(studentId).trim() && String(t.status).toUpperCase() !== 'LUNAS');
+
+    // Jika belum ada di memori lokal, panggil API khusus studentBilling langsung
+    if (myTagihan.length === 0) {
+        try {
+            const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : null) || 
+                          sessionStorage.getItem('mubarokah_parent_token') || "";
+            let res;
+            try {
+                res = await apiPost("keuangan.studentBilling", { studentId: studentId, token: token });
+            } catch (ePost) {
+                res = await apiGet("keuangan.studentBilling", { studentId: studentId, token: token });
+            }
+
+            if (res && (res.success || res.status === "success") && Array.isArray(res.tagihanList)) {
+                myTagihan = res.tagihanList.filter(t => String(t.status).toUpperCase() !== 'LUNAS');
+                if (!ASNKeuangan.data) ASNKeuangan.data = {};
+                if (!Array.isArray(ASNKeuangan.data.tagihanList)) ASNKeuangan.data.tagihanList = [];
+                res.tagihanList.forEach(item => {
+                    const exists = ASNKeuangan.data.tagihanList.find(x => x.tagihanId === item.tagihanId);
+                    if (!exists) ASNKeuangan.data.tagihanList.push(item);
+                });
+            }
+        } catch (err) {
+            console.warn("[PORTAL WALI] Fetch student billing:", err);
+        }
+    }
 
     if (myTagihan.length === 0) {
         container.innerHTML = `<div class="p-4 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl text-center text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200/60"><i class="fa-solid fa-circle-check text-base mb-1 block"></i>Alhamdulillah! Tidak ada tunggakan tagihan untuk ananda saat ini.</div>`;
