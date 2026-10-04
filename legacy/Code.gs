@@ -3786,10 +3786,22 @@ class GoogleSheetsProgramAdapter extends ProgramRepository {
 function getServerSecret(key, defaultValue = "") {
   try {
     const props = PropertiesService.getScriptProperties();
-    const val = props ? props.getProperty(key) : null;
-    if (!val && key === "TOKEN_SIGNING_SECRET") {
-      console.warn("[SECURITY ALERT] TOKEN_SIGNING_SECRET belum dikonfigurasi di ScriptProperties!");
+    let val = props ? props.getProperty(key) : null;
+    
+    // Self-healing: jika secret kunci token belum disetel di ScriptProperties,
+    // generate secret kriptografis otomatis dan simpan ke ScriptProperties
+    if (!val) {
+      if (key === "AUTH_TOKEN_SIGNING_SECRET" || key === "TOKEN_SIGNING_SECRET") {
+        val = "sec_auth_" + Utilities.getUuid().replace(/-/g, "") + "_" + new Date().getTime();
+        if (props) {
+          try {
+            props.setProperty(key, val);
+            console.log("[SECURITY] Berhasil menginisialisasi otomatis secret kriptografis untuk " + key);
+          } catch (e) {}
+        }
+      }
     }
+    
     return val || defaultValue;
   } catch (e) {
     return defaultValue;
