@@ -3819,11 +3819,16 @@ function setupScriptSecurityProperties(customSecret, customVersion) {
     const newSecret = customSecret || ("SEC_" + Utilities.getUuid().replace(/-/g, "") + "_" + new Date().getTime());
     const newVersion = customVersion || "1";
     
+    props.setProperty("AUTH_TOKEN_SIGNING_SECRET", newSecret);
     props.setProperty("TOKEN_SIGNING_SECRET", newSecret);
     props.setProperty("TOKEN_VERSION", String(newVersion));
+    props.setProperty("SPREADSHEET_ID", "1cZSRh2rtKpT6E8m3GFJonVbiQG51fh24eN8J5JWtOJY");
+    props.setProperty("OTP_HASH_SECRET", newSecret.substring(0, 32));
+    props.setProperty("IDENTIFIER_HASH_SECRET", newSecret.substring(0, 32));
+    props.setProperty("PASSWORD_SALT", newSecret.substring(0, 32));
     
     Logger.log("✅ Script Security Properties berhasil dikonfigurasi!");
-    Logger.log("TOKEN_SIGNING_SECRET telah disetel (panjang: " + newSecret.length + " karakter).");
+    Logger.log("AUTH_TOKEN_SIGNING_SECRET & TOKEN_SIGNING_SECRET telah disetel.");
     Logger.log("TOKEN_VERSION: " + newVersion);
     
     return {

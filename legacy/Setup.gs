@@ -986,3 +986,20 @@ function initPresensiSheetsDirect() {
 
   return { success: true, message: "Seluruh 3 Sheet Presensi Kegiatan berhasil diinisialisasi." };
 }
+
+/**
+ * Inisialisasi Cepat Khusus Kunci Rahasia Server (Signing Secret)
+ * Jalankan fungsi ini untuk mengonfigurasi Script Properties tanpa menyentuh spreadsheet.
+ */
+function setupSigningSecretOnly() {
+  var props = PropertiesService.getScriptProperties();
+  var secret = "SEC_" + Utilities.getUuid().replace(/-/g, "") + "_" + new Date().getTime();
+  props.setProperty("AUTH_TOKEN_SIGNING_SECRET", secret);
+  props.setProperty("TOKEN_SIGNING_SECRET", secret);
+  props.setProperty("TOKEN_VERSION", "1");
+  props.setProperty("SPREADSHEET_ID", "1cZSRh2rtKpT6E8m3GFJonVbiQG51fh24eN8J5JWtOJY");
+  props.setProperty("OTP_HASH_SECRET", secret.substring(0, 32));
+  props.setProperty("IDENTIFIER_HASH_SECRET", secret.substring(0, 32));
+  props.setProperty("PASSWORD_SALT", secret.substring(0, 32));
+  Logger.log("✅ SUKSES: Seluruh kunci keamanan (Signing Secret) berhasil disimpan!");
+}
