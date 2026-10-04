@@ -388,6 +388,108 @@ window.renderKeuanganSummaryCards = renderKeuanganSummaryCards;
 const KEUANGAN_SANTRI_TABS = ['pos', 'tagihan', 'verifikasi', 'broadcast', 'tabungan', 'kantin'];
 const AKUNTANSI_TABS = ['transaksi', 'pengeluaran', 'tutup-kasir', 'laporan', 'analytics', 'tarif'];
 
+const KEUANGAN_TAB_META = {
+    'pos': { title: 'Kasir Cepat (POS)', subtitle: 'Kasir Pembayaran & Tagihan Santri' },
+    'tagihan': { title: 'Tagihan Santri', subtitle: 'Daftar Tagihan & Generator Tagihan Bulanan' },
+    'verifikasi': { title: 'Verifikasi Transfer', subtitle: 'Validasi Pembayaran Non-Tunai Wali Santri' },
+    'broadcast': { title: 'WhatsApp Billing', subtitle: 'Broadcast & Pengingat Tagihan Santri' },
+    'tabungan': { title: 'Uang Saku & Tabungan', subtitle: 'Tabungan & Dompet Digital Santri' },
+    'kantin': { title: 'Kantin Cashless', subtitle: 'Kasir Transaksi Santri Non-Tunai' }
+};
+
+const AKUNTANSI_TAB_META = {
+    'transaksi': { title: 'Buku Kas Masuk', subtitle: 'Riwayat Pembayaran & Kas Masuk' },
+    'pengeluaran': { title: 'Kas Keluar (Beban)', subtitle: 'Pencatatan Beban & Biaya Operasional' },
+    'tutup-kasir': { title: 'Tutup Kasir Harian', subtitle: 'Rekonsiliasi Kas Shift & Fisik Uang' },
+    'laporan': { title: 'Laporan Arus Kas', subtitle: 'Rekapitulasi Arus Kas, Surplus/Defisit & Neraca' },
+    'analytics': { title: 'Executive Analytics', subtitle: 'Grafik Analitik & Rasio Kepatuhan' },
+    'tarif': { title: 'Master Tarif Biaya', subtitle: 'Master Pos & Tarif Biaya Pesantren' }
+};
+
+function syncKeuanganSidebarAndBreadcrumb(tabName) {
+    const meta = KEUANGAN_TAB_META[tabName] || { title: 'Kasir & Keuangan Santri', subtitle: 'Kasir Pembayaran & Tagihan Santri' };
+    
+    // 1. Sync Sidebar Items
+    document.querySelectorAll('.admin-nav-item[data-view="keuangan"]').forEach(btn => {
+        if (btn.dataset.tab === tabName) {
+            btn.classList.add('active', 'text-brand-700', 'bg-brand-50', 'font-bold');
+            btn.classList.remove('text-slate-500');
+        } else {
+            btn.classList.remove('active', 'text-brand-700', 'bg-brand-50', 'font-bold');
+            btn.classList.add('text-slate-500');
+        }
+    });
+
+    // 2. Sync Breadcrumb Desktop
+    const sep1 = document.getElementById('admin-breadcrumb-sep-1');
+    const catEl = document.getElementById('admin-breadcrumb-category');
+    const sep2 = document.getElementById('admin-breadcrumb-sep-2');
+    const curEl = document.getElementById('admin-breadcrumb-current');
+    if (sep1) sep1.classList.remove('hidden');
+    if (catEl) {
+        catEl.textContent = 'Keuangan & Kasir Santri';
+        catEl.classList.remove('hidden');
+    }
+    if (sep2) sep2.classList.remove('hidden');
+    if (curEl) {
+        curEl.textContent = meta.title;
+        curEl.classList.remove('hidden');
+    }
+
+    // 3. Sync Subview Heading inside Keuangan panel
+    const headEl = document.getElementById('keuangan-subview-heading');
+    if (headEl && meta.subtitle) {
+        headEl.textContent = meta.subtitle;
+    }
+
+    // 4. Sync Mobile Header Badge
+    const mobHeaderBadge = document.getElementById('admin-mobile-header-badge');
+    if (mobHeaderBadge) mobHeaderBadge.textContent = meta.title;
+}
+window.syncKeuanganSidebarAndBreadcrumb = syncKeuanganSidebarAndBreadcrumb;
+
+function syncAkuntansiSidebarAndBreadcrumb(tabName) {
+    const meta = AKUNTANSI_TAB_META[tabName] || { title: 'Akuntansi & Buku Kas', subtitle: 'Akuntansi & Laporan Arus Kas Pesantren' };
+    
+    // 1. Sync Sidebar Items
+    document.querySelectorAll('.admin-nav-item[data-view="akuntansi"]').forEach(btn => {
+        if (btn.dataset.tab === tabName) {
+            btn.classList.add('active', 'text-brand-700', 'bg-brand-50', 'font-bold');
+            btn.classList.remove('text-slate-500');
+        } else {
+            btn.classList.remove('active', 'text-brand-700', 'bg-brand-50', 'font-bold');
+            btn.classList.add('text-slate-500');
+        }
+    });
+
+    // 2. Sync Breadcrumb Desktop
+    const sep1 = document.getElementById('admin-breadcrumb-sep-1');
+    const catEl = document.getElementById('admin-breadcrumb-category');
+    const sep2 = document.getElementById('admin-breadcrumb-sep-2');
+    const curEl = document.getElementById('admin-breadcrumb-current');
+    if (sep1) sep1.classList.remove('hidden');
+    if (catEl) {
+        catEl.textContent = 'Akuntansi & Pembukuan';
+        catEl.classList.remove('hidden');
+    }
+    if (sep2) sep2.classList.remove('hidden');
+    if (curEl) {
+        curEl.textContent = meta.title;
+        curEl.classList.remove('hidden');
+    }
+
+    // 3. Sync Subview Heading inside Akuntansi panel
+    const headEl = document.getElementById('akuntansi-subview-heading');
+    if (headEl && meta.subtitle) {
+        headEl.textContent = meta.subtitle;
+    }
+
+    // 4. Sync Mobile Header Badge
+    const mobHeaderBadge = document.getElementById('admin-mobile-header-badge');
+    if (mobHeaderBadge) mobHeaderBadge.textContent = meta.title;
+}
+window.syncAkuntansiSidebarAndBreadcrumb = syncAkuntansiSidebarAndBreadcrumb;
+
 /**
  * Berpindah Tab di Modul 1: Keuangan & Kasir Santri (Front-Office)
  */
@@ -399,6 +501,7 @@ function switchKeuanganTab(tabName) {
     }
 
     ASNKeuangan.activeTab = tabName;
+    syncKeuanganSidebarAndBreadcrumb(tabName);
 
     KEUANGAN_SANTRI_TABS.forEach(t => {
         const btn = document.getElementById(`tab-btn-keuangan-${t}`);
@@ -444,6 +547,7 @@ function switchAkuntansiTab(tabName) {
     }
 
     ASNKeuangan.activeAkuntansiTab = tabName;
+    syncAkuntansiSidebarAndBreadcrumb(tabName);
 
     AKUNTANSI_TABS.forEach(t => {
         const btn = document.getElementById(`tab-btn-akuntansi-${t}`) || document.getElementById(`tab-btn-keuangan-${t}`);

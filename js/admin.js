@@ -189,7 +189,20 @@
 
             // Update Sidebar Active state
             document.querySelectorAll('.admin-nav-item').forEach(btn => {
+                let isActive = false;
                 if (btn.dataset.view === viewName) {
+                    if (viewName === 'keuangan') {
+                        const targetTab = (typeof ASNKeuangan !== 'undefined' && ASNKeuangan.activeTab) || 'pos';
+                        isActive = (!btn.dataset.tab || btn.dataset.tab === targetTab);
+                    } else if (viewName === 'akuntansi') {
+                        const targetAkunTab = (typeof ASNKeuangan !== 'undefined' && ASNKeuangan.activeAkuntansiTab) || 'transaksi';
+                        isActive = (!btn.dataset.tab || btn.dataset.tab === targetAkunTab);
+                    } else {
+                        isActive = true;
+                    }
+                }
+
+                if (isActive) {
                     btn.classList.add('active', 'text-brand-700', 'bg-brand-50', 'font-bold');
                     btn.classList.remove('text-slate-500');
                 } else {
@@ -354,6 +367,10 @@
                 if (typeof loadAdminKeuanganData === 'function') {
                     loadAdminKeuanganData();
                 }
+                const activeKTab = (window.ASNKeuangan && window.ASNKeuangan.activeTab) || 'pos';
+                if (typeof switchKeuanganTab === 'function') {
+                    switchKeuanganTab(activeKTab);
+                }
             } else if (viewName === 'akuntansi') {
                 if (typeof checkKeuanganRoleAccess === 'function') {
                     const chk = checkKeuanganRoleAccess();
@@ -365,8 +382,9 @@
                 if (typeof loadAdminKeuanganData === 'function') {
                     loadAdminKeuanganData();
                 }
-                if (typeof switchAkuntansiTab === 'function' && (!window.ASNKeuangan || !window.ASNKeuangan.activeAkuntansiTab)) {
-                    switchAkuntansiTab('transaksi');
+                const activeAkTab = (window.ASNKeuangan && window.ASNKeuangan.activeAkuntansiTab) || 'transaksi';
+                if (typeof switchAkuntansiTab === 'function') {
+                    switchAkuntansiTab(activeAkTab);
                 }
             } else if (viewName === 'notifikasi') {
                 if (notifikasiView) notifikasiView.classList.remove('hidden');
