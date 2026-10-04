@@ -6508,7 +6508,7 @@ function sendAdminOtpEmail(email, otpCode) {
     to: email,
     subject: subject,
     body: body,
-    name: "Admin Khodim - Pesantren Mubarokah",
+    name: "Admin Khodim - PPTQ Roudlotul Mubarokah",
     replyTo: "adminkhodim@gmail.com"
   });
   return true;
@@ -6525,7 +6525,7 @@ function sendWaliOtpEmail(email, otpCode, name = "") {
     to: email,
     subject: subject,
     body: body,
-    name: "Admin Khodim - Pesantren Mubarokah",
+    name: "Admin Khodim - PPTQ Roudlotul Mubarokah",
     replyTo: "adminkhodim@gmail.com"
   });
   return true;
@@ -6548,7 +6548,7 @@ function sendWaliActivationOtpEmail(email, otpCode, waliName = "", studentName =
     to: email,
     subject: subject,
     body: body,
-    name: "Admin Khodim - Pesantren Mubarokah",
+    name: "Admin Khodim - PPTQ Roudlotul Mubarokah",
     replyTo: "adminkhodim@gmail.com"
   });
   return true;
