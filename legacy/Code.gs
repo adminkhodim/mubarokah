@@ -6507,7 +6507,9 @@ function sendAdminOtpEmail(email, otpCode) {
   MailApp.sendEmail({
     to: email,
     subject: subject,
-    body: body
+    body: body,
+    name: "Admin Khodim - Pesantren Mubarokah",
+    replyTo: "adminkhodim@gmail.com"
   });
   return true;
 }
@@ -6522,7 +6524,9 @@ function sendWaliOtpEmail(email, otpCode, name = "") {
   MailApp.sendEmail({
     to: email,
     subject: subject,
-    body: body
+    body: body,
+    name: "Admin Khodim - Pesantren Mubarokah",
+    replyTo: "adminkhodim@gmail.com"
   });
   return true;
 }
@@ -6543,7 +6547,9 @@ function sendWaliActivationOtpEmail(email, otpCode, waliName = "", studentName =
   MailApp.sendEmail({
     to: email,
     subject: subject,
-    body: body
+    body: body,
+    name: "Admin Khodim - Pesantren Mubarokah",
+    replyTo: "adminkhodim@gmail.com"
   });
   return true;
 }
