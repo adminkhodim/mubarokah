@@ -3237,6 +3237,25 @@ function openPortalWaliTagihanModal(targetStudentId) {
     // Render Riwayat Kuitansi Santri Aktif
     renderPortalWaliRiwayatKuitansi(activeSt.id);
 
+    // Reset Opsi Top Up Uang Saku & Tabungan
+    portalTopupNominal = 0;
+    const topupToggle = document.getElementById('portal-topup-tabungan-toggle');
+    if (topupToggle) topupToggle.checked = false;
+    const topupPanel = document.getElementById('portal-topup-tabungan-panel');
+    if (topupPanel) topupPanel.classList.add('hidden');
+    const topupInput = document.getElementById('portal-topup-nominal-input');
+    if (topupInput) topupInput.value = '';
+
+    const saldoInfoEl = document.getElementById('portal-wali-saldo-tabungan-info');
+    if (saldoInfoEl) {
+        let curSaldo = 0;
+        if (ASNTabunganData && Array.isArray(ASNTabunganData.accounts)) {
+            const acc = ASNTabunganData.accounts.find(a => String(a.studentId).trim() === String(activeSt.id).trim());
+            if (acc) curSaldo = acc.saldo || 0;
+        }
+        saldoInfoEl.innerText = `Saldo saat ini: ${formatRupiah(curSaldo)}`;
+    }
+
     // Reset Form Upload Bukti
     const fileInp = document.getElementById('portal-transfer-bukti-file');
     const prevWrap = document.getElementById('portal-bukti-preview-wrap');
@@ -3377,21 +3396,72 @@ function selectAllPortalTagihan(selectAll) {
 }
 window.selectAllPortalTagihan = selectAllPortalTagihan;
 
+let portalTopupNominal = 0;
+
+function togglePortalWaliTopup(isChecked) {
+    const panel = document.getElementById('portal-topup-tabungan-panel');
+    const input = document.getElementById('portal-topup-nominal-input');
+    if (isChecked) {
+        if (panel) panel.classList.remove('hidden');
+        if (!portalTopupNominal || portalTopupNominal <= 0) {
+            portalTopupNominal = 50000;
+            if (input) input.value = 50000;
+        }
+    } else {
+        if (panel) panel.classList.add('hidden');
+        portalTopupNominal = 0;
+        if (input) input.value = '';
+    }
+    updatePortalTotalDisplay();
+}
+window.togglePortalWaliTopup = togglePortalWaliTopup;
+
+function setPortalTopupPreset(nominal) {
+    portalTopupNominal = Number(nominal) || 0;
+    const input = document.getElementById('portal-topup-nominal-input');
+    if (input) input.value = nominal;
+    updatePortalTotalDisplay();
+}
+window.setPortalTopupPreset = setPortalTopupPreset;
+
+function onPortalTopupNominalChanged(val) {
+    portalTopupNominal = Math.max(0, Number(val) || 0);
+    updatePortalTotalDisplay();
+}
+window.onPortalTopupNominalChanged = onPortalTopupNominalChanged;
+
 function updatePortalTotalDisplay() {
     const totalEl = document.getElementById('portal-total-bayar-display');
     const countEl = document.getElementById('portal-item-count-display');
+    const breakdownEl = document.getElementById('portal-breakdown-display');
     const midtransBtnLabel = document.getElementById('btn-portal-midtrans-label');
     const keys = Object.keys(portalSelectedTagihan);
-    const sum = keys.reduce((acc, k) => acc + (Number(portalSelectedTagihan[k]) || 0), 0);
+    const tagihanSum = keys.reduce((acc, k) => acc + (Number(portalSelectedTagihan[k]) || 0), 0);
+    const topupSum = Number(portalTopupNominal) || 0;
+    const grandTotal = tagihanSum + topupSum;
 
-    if (totalEl) totalEl.innerText = formatRupiah(sum);
-    if (countEl) countEl.innerText = `${keys.length} pos dipilih`;
+    if (totalEl) totalEl.innerText = formatRupiah(grandTotal);
+
+    let countText = `${keys.length} pos dipilih`;
+    if (topupSum > 0) {
+        countText = keys.length > 0 ? `${keys.length} tagihan + Uang Saku` : `Top Up Uang Saku Saja`;
+    }
+    if (countEl) countEl.innerText = countText;
+
+    if (breakdownEl) {
+        if (topupSum > 0) {
+            breakdownEl.classList.remove('hidden');
+            breakdownEl.innerText = `Tagihan: ${formatRupiah(tagihanSum)} • Uang Saku: ${formatRupiah(topupSum)}`;
+        } else {
+            breakdownEl.classList.add('hidden');
+        }
+    }
 
     if (midtransBtnLabel) {
-        if (sum > 0) {
-            midtransBtnLabel.innerText = `Bayar ${formatRupiah(sum)} via Midtrans`;
+        if (grandTotal > 0) {
+            midtransBtnLabel.innerText = `Bayar ${formatRupiah(grandTotal)} via Midtrans`;
         } else {
-            midtransBtnLabel.innerText = `Pilih Pos Tagihan Terlebih Dahulu`;
+            midtransBtnLabel.innerText = `Pilih Pos Tagihan / Top Up`;
         }
     }
 }
@@ -3403,23 +3473,39 @@ async function payPortalWaliMidtrans() {
     }
 
     const tagihanIds = Object.keys(portalSelectedTagihan);
-    const nominalTotal = tagihanIds.reduce((acc, k) => acc + (Number(portalSelectedTagihan[k]) || 0), 0);
+    const tagihanTotal = tagihanIds.reduce((acc, k) => acc + (Number(portalSelectedTagihan[k]) || 0), 0);
+    const topupTotal = Number(portalTopupNominal) || 0;
+    const grandTotal = tagihanTotal + topupTotal;
 
-    if (nominalTotal <= 0 || tagihanIds.length === 0) {
-        alert("Silakan centang minimal 1 pos tagihan yang ingin dibayar.");
+    if (grandTotal <= 0) {
+        alert("Silakan centang minimal 1 pos tagihan atau tentukan nominal top up uang saku.");
         return;
     }
 
     const allTagihan = (ASNKeuangan.data && ASNKeuangan.data.tagihanList) || [];
-    const items = tagihanIds.map(id => {
+    const items = [];
+
+    tagihanIds.forEach(id => {
         const found = allTagihan.find(t => String(t.tagihanId).trim() === String(id).trim()) || {};
-        return {
-            tagihanId: id,
-            posName: found.namaPos || "Tagihan Pesantren",
-            periode: found.periode || "",
-            bayarNominal: Number(portalSelectedTagihan[id]) || 0
-        };
+        const nom = Number(portalSelectedTagihan[id]) || 0;
+        if (nom > 0) {
+            items.push({
+                tagihanId: id,
+                posName: found.namaPos || "Tagihan Pesantren",
+                periode: found.periode || "",
+                bayarNominal: nom
+            });
+        }
     });
+
+    if (topupTotal > 0) {
+        items.push({
+            tagihanId: "TOPUP_TABUNGAN",
+            posName: `Uang Saku & Tabungan (${portalActiveStudent.name})`,
+            periode: "",
+            bayarNominal: topupTotal
+        });
+    }
 
     let parentEmail = "wali@mubarokah.my.id";
     let parentPhone = "081234567890";
@@ -3465,15 +3551,16 @@ async function payPortalWaliMidtrans() {
                 window.snap.pay(snapRes.token, {
                     onSuccess: function(result) {
                         console.log("[PORTAL MIDTRANS SUCCESS]", result);
-                        alert("Alhamdulillah! Pembayaran berhasil diselesaikan via Midtrans.\nStatus tagihan otomatis lunas dan kuitansi tercatat.");
+                        alert("Alhamdulillah! Pembayaran berhasil diselesaikan via Midtrans.\nStatus tagihan otomatis lunas dan saldo uang saku santri bertambah.");
                         if (typeof loadAdminKeuanganData === 'function') loadAdminKeuanganData(true);
+                        if (typeof loadTabunganDashboardData === 'function') loadTabunganDashboardData(true);
                         renderPortalWaliTagihanChecklist(portalActiveStudent.id);
                         renderPortalWaliRiwayatKuitansi(portalActiveStudent.id);
                         switchPortalWaliTab('riwayat');
                     },
                     onPending: function(result) {
                         console.log("[PORTAL MIDTRANS PENDING]", result);
-                        alert("⏳ Menunggu pembayaran. Silakan selesaikan pembayaran sesuai petunjuk (kode Virtual Account / QRIS yang tertera).\nSetelah pembayaran berhasil, tagihan akan otomatis lunas.");
+                        alert("⏳ Menunggu pembayaran. Silakan selesaikan pembayaran sesuai petunjuk (kode Virtual Account / QRIS yang tertera).\nSetelah pembayaran berhasil, tagihan dan uang saku akan otomatis terproses.");
                     },
                     onError: function(result) {
                         console.error("[PORTAL MIDTRANS ERROR]", result);
@@ -3572,10 +3659,12 @@ async function submitPortalWaliTransfer() {
     }
 
     const tagihanIds = Object.keys(portalSelectedTagihan);
-    const nominalTotal = tagihanIds.reduce((acc, k) => acc + (Number(portalSelectedTagihan[k]) || 0), 0);
+    const tagihanTotal = tagihanIds.reduce((acc, k) => acc + (Number(portalSelectedTagihan[k]) || 0), 0);
+    const topupTotal = Number(portalTopupNominal) || 0;
+    const nominalTotal = tagihanTotal + topupTotal;
 
-    if (nominalTotal <= 0 || tagihanIds.length === 0) {
-        alert("Silakan pilih minimal 1 pos tagihan yang akan dibayar.");
+    if (nominalTotal <= 0) {
+        alert("Silakan pilih minimal 1 pos tagihan atau tentukan nominal top up uang saku.");
         return;
     }
 
@@ -3606,6 +3695,7 @@ async function submitPortalWaliTransfer() {
             studentId: portalActiveStudent.id,
             studentName: portalActiveStudent.name,
             tagihanIds: tagihanIds,
+            topupNominal: topupTotal,
             nominalTransfer: nominalTotal,
             bankTujuan: bankTujuan,
             namaPengirim: namaPengirim,
@@ -3933,6 +4023,54 @@ async function submitTopupTabungan() {
 
     try {
         const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : null) || "";
+
+        // ALUR KHUSUS MIDTRANS PAYMENT GATEWAY
+        if (metode === 'MIDTRANS') {
+            const student = (ASNTabunganData.accounts || []).find(a => String(a.studentId) === String(studentId)) || {};
+            const snapPayload = {
+                token: token,
+                studentId: studentId,
+                studentName: student.studentName || "Santri",
+                nis: student.nis || "",
+                email: "wali@mubarokah.my.id",
+                phone: "081234567890",
+                items: [{
+                    tagihanId: "TOPUP_TABUNGAN",
+                    posName: `Topup Saldo Uang Saku - ${student.studentName || 'Santri'}`,
+                    bayarNominal: nominal
+                }]
+            };
+
+            const snapRes = await apiPost("createMidtransSnapToken", snapPayload);
+            if (snapRes && snapRes.success && snapRes.token) {
+                if (typeof window.snap !== 'undefined' && typeof window.snap.pay === 'function') {
+                    window.snap.pay(snapRes.token, {
+                        onSuccess: function(result) {
+                            alert("✅ Topup tabungan via Midtrans berhasil diselesaikan!");
+                            closeModalTopupTabungan();
+                            loadTabunganDashboardData(true);
+                        },
+                        onPending: function(result) {
+                            alert("⏳ Menunggu pembayaran Midtrans. Saldo akan otomatis bertambah setelah transaksi selesai.");
+                            closeModalTopupTabungan();
+                        },
+                        onError: function(result) {
+                            alert("❌ Pembayaran Midtrans gagal atau dibatalkan.");
+                        }
+                    });
+                } else if (snapRes.redirect_url) {
+                    window.open(snapRes.redirect_url, '_blank');
+                    closeModalTopupTabungan();
+                } else {
+                    alert("Token Midtrans berhasil dibuat: " + snapRes.token);
+                }
+                return;
+            } else {
+                alert("Gagal memanggil Midtrans: " + ((snapRes && snapRes.message) || "Koneksi gateway gagal"));
+                return;
+            }
+        }
+
         const res = await apiPost("keuangan.topupTabungan", {
             token: token,
             studentId: studentId,

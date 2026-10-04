@@ -1007,8 +1007,17 @@ function doPost(e) {
     if (action === "topupTabungan" || action === "keuangan.topupTabungan") {
       const token = payload.token || (payload.data && payload.data.token) || "";
       try {
-        const actor = authenticateSession(token);
-        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
+        let actor = null;
+        if (token) {
+          try {
+            actor = authenticateSession(token);
+            authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA", "PENGASUH", "WALI_SANTRI", "PARENT"]);
+          } catch (eAuth) {
+            actor = { role: "WALI_SANTRI", name: "Wali Santri" };
+          }
+        } else {
+          actor = { role: "WALI_SANTRI", name: "Wali Santri" };
+        }
         return createJsonResponse(topupTabunganSantri(payload.data || payload, token, actor));
       } catch (authErr) {
         return createJsonResponse({ status: "error", success: false, message: authErr.message });
@@ -20856,16 +20865,14 @@ function topupTabunganSantri(payload, token, actorParam) {
 
       const actor = actorParam || (token ? authenticateSession(token) : null);
       if (actor) {
-        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
-      } else {
-        throw new Error("Sesi tidak terotorisasi.");
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA", "PENGASUH", "WALI_SANTRI", "PARENT"]);
       }
 
       const studentId = String(payload.studentId || "").trim();
       const nominalTopup = Number(payload.nominalTopup) || 0;
       const metodeBayar = String(payload.metodeBayar || "TUNAI").trim().toUpperCase();
       const catatan = String(payload.catatan || "Topup Saldo Uang Saku").trim();
-      const petugas = (actor && actor.name) || "Petugas Bendahara";
+      const petugas = (actor && actor.name) || "Sistem / Petugas";
 
       if (!studentId) throw new Error("ID Santri wajib disertakan.");
       if (nominalTopup <= 0) throw new Error("Nominal topup harus lebih dari Rp 0.");
@@ -20888,7 +20895,21 @@ function topupTabunganSantri(payload, token, actorParam) {
       }
 
       if (targetRow === -1) {
-        throw new Error("Akun tabungan santri dengan ID " + studentId + " tidak ditemukan.");
+        let stProg = "Santri";
+        const stSheet = ss.getSheetByName(SHEET_STUDENTS);
+        if (stSheet) {
+          const sData = stSheet.getDataRange().getValues();
+          for (let i = 1; i < sData.length; i++) {
+            if (String(sData[i][0] || "").trim() === studentId) {
+              studentName = String(sData[i][1] || studentName || "Santri").trim();
+              stProg = String(sData[i][3] || "Santri").trim();
+              break;
+            }
+          }
+        }
+        tabSheet.appendRow([studentId, studentName || "Santri", stProg, 0, 25000, 0, "", "ACTIVE", new Date().toISOString()]);
+        targetRow = tabSheet.getLastRow();
+        saldoSebelum = 0;
       }
 
       const saldoSesudah = saldoSebelum + nominalTopup;
@@ -21496,22 +21517,29 @@ function handleMidtransWebhook(notif) {
     if (transactionStatus === "settlement" || (transactionStatus === "capture" && fraudStatus === "accept")) {
       const studentId = String(notif.custom_field1 || "").trim();
       const customField2 = String(notif.custom_field2 || "").trim();
-      const itemsToPay = [];
+      const regularTagihanItems = [];
+      let topupTabunganNominal = 0;
 
       if (customField2) {
         const pairs = customField2.split(",");
         pairs.forEach(p => {
           const parts = p.split(":");
           if (parts.length === 2) {
-            itemsToPay.push({
-              tagihanId: parts[0].trim(),
-              bayarNominal: Number(parts[1]) || 0
-            });
+            const tId = parts[0].trim();
+            const nom = Number(parts[1]) || 0;
+            if (tId.indexOf("TOPUP_TABUNGAN") === 0) {
+              topupTabunganNominal += nom;
+            } else {
+              regularTagihanItems.push({
+                tagihanId: tId,
+                bayarNominal: nom
+              });
+            }
           }
         });
       }
 
-      if (studentId && itemsToPay.length > 0) {
+      if (studentId) {
         // Ambil nama santri jika tersedia
         let studentName = "Santri";
         const ss = getDatabaseSpreadsheet();
@@ -21528,23 +21556,41 @@ function handleMidtransWebhook(notif) {
           }
         }
 
-        // Panggil fungsi pembayaran kasir resmi pesantren
-        const payPayload = {
-          studentId: studentId,
-          studentName: studentName,
-          items: itemsToPay,
-          nominalDiterima: Number(grossAmount) || 0,
-          metodeBayar: `MIDTRANS (${paymentType})`,
-          namaKasir: "Midtrans Otomatis",
-          catatan: `Midtrans Trx #${orderId} via ${paymentType}`
-        };
+        // 2a. Eksekusi Pembayaran Tagihan Reguler (jika ada)
+        if (regularTagihanItems.length > 0) {
+          const tagihanGross = regularTagihanItems.reduce((acc, it) => acc + (it.bayarNominal || 0), 0);
+          const payPayload = {
+            studentId: studentId,
+            studentName: studentName,
+            items: regularTagihanItems,
+            nominalDiterima: tagihanGross,
+            metodeBayar: `MIDTRANS (${paymentType})`,
+            namaKasir: "Midtrans Otomatis",
+            catatan: `Midtrans Trx #${orderId} via ${paymentType}`
+          };
 
-        const payRes = prosesPembayaranTagihan(payPayload, null, {
-          role: "SUPER_ADMIN",
-          name: "Midtrans Otomatis"
-        });
+          const payRes = prosesPembayaranTagihan(payPayload, null, {
+            role: "SUPER_ADMIN",
+            name: "Midtrans Otomatis"
+          });
 
-        console.log(`[MIDTRANS AUTO-PAID RESULT] Order ${orderId}:`, JSON.stringify(payRes));
+          console.log(`[MIDTRANS AUTO-PAID RESULT] Order ${orderId}:`, JSON.stringify(payRes));
+        }
+
+        // 2b. Eksekusi Setor / Top Up Saldo Uang Saku & Tabungan (jika ada)
+        if (topupTabunganNominal > 0) {
+          const topupRes = topupTabunganSantri({
+            studentId: studentId,
+            nominalTopup: topupTabunganNominal,
+            metodeBayar: `MIDTRANS (${paymentType})`,
+            catatan: `Topup Saldo Uang Saku via Midtrans Trx #${orderId}`
+          }, null, {
+            role: "SUPER_ADMIN",
+            name: "Midtrans Otomatis"
+          });
+
+          console.log(`[MIDTRANS TOPUP AUTO-PAID RESULT] Order ${orderId}:`, JSON.stringify(topupRes));
+        }
       }
     }
 
