@@ -258,7 +258,7 @@
         'profil-lembaga': ['profil.manage'],
         'pengaturan': ['system.config'],
         'keuangan': ['keuangan.view', 'keuangan.spp', 'keuangan.tagihan', 'keuangan.verify', 'keuangan.billing'],
-        'akuntansi': ['akuntansi.view', 'akuntansi.transaksi', 'akuntansi.tutupkasir', 'akuntansi.laporan', 'keuangan.view']
+        'akuntansi': ['akuntansi.view', 'akuntansi.transaksi', 'akuntansi.tutupkasir', 'akuntansi.laporan']
     };
 
     // Default Baseline Permissions per Role
@@ -1436,11 +1436,19 @@
         const rolePerms = ROLE_PERMISSIONS_STATE[roleKey] || DEFAULT_ROLE_PERMISSIONS_MAP[roleKey] || [];
         if (rolePerms.includes('*')) return Object.keys(MODULE_TO_PERMISSIONS);
 
-        return Object.keys(MODULE_TO_PERMISSIONS).filter(modKey => {
+        const allowed = Object.keys(MODULE_TO_PERMISSIONS).filter(modKey => {
             const reqPerms = MODULE_TO_PERMISSIONS[modKey];
             if (!reqPerms || reqPerms.length === 0) return true;
             return reqPerms.some(pk => rolePerms.includes(pk));
         });
+
+        // Pastikan role ADMIN dan BENDAHARA selalu memiliki modul keuangan dan akuntansi
+        if (roleKey === 'ADMIN' || roleKey === 'BENDAHARA') {
+            if (!allowed.includes('keuangan')) allowed.push('keuangan');
+            if (!allowed.includes('akuntansi')) allowed.push('akuntansi');
+        }
+
+        return allowed;
     }
 
     /**
@@ -1456,6 +1464,11 @@
         if (roleKey === 'PEGAWAI' || roleKey === 'EDITOR') roleKey = 'ASATIDZ';
         
         if (roleKey === 'SUPER_ADMIN') return true;
+
+        // Role ADMIN dan BENDAHARA secara default dan mutlak diizinkan mengakses modul Keuangan dan Akuntansi
+        if ((roleKey === 'ADMIN' || roleKey === 'BENDAHARA') && (moduleKey === 'keuangan' || moduleKey === 'akuntansi')) {
+            return true;
+        }
 
         const rolePerms = ROLE_PERMISSIONS_STATE[roleKey] || DEFAULT_ROLE_PERMISSIONS_MAP[roleKey] || [];
         if (rolePerms.includes('*')) return true;
