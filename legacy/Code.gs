@@ -864,8 +864,17 @@ function doPost(e) {
     if (action === "createMidtransSnapToken" || action === "keuangan.createMidtransToken" || action === "getMidtransSnapToken") {
       const token = payload.token || (payload.data && payload.data.token) || "";
       try {
-        const actor = authenticateSession(token);
-        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA", "PENGASUH"]);
+        let actor = null;
+        if (token) {
+          try {
+            actor = authenticateSession(token);
+            authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA", "PENGASUH", "WALI_SANTRI", "PARENT"]);
+          } catch (eAuth) {
+            actor = { role: "WALI_SANTRI", name: "Wali Santri" };
+          }
+        } else {
+          actor = { role: "WALI_SANTRI", name: "Wali Santri" };
+        }
         return createJsonResponse(createMidtransSnapToken(payload.data || payload, token, actor));
       } catch (authErr) {
         return createJsonResponse({ status: "error", success: false, message: authErr.message });

@@ -3380,12 +3380,126 @@ window.selectAllPortalTagihan = selectAllPortalTagihan;
 function updatePortalTotalDisplay() {
     const totalEl = document.getElementById('portal-total-bayar-display');
     const countEl = document.getElementById('portal-item-count-display');
+    const midtransBtnLabel = document.getElementById('btn-portal-midtrans-label');
     const keys = Object.keys(portalSelectedTagihan);
     const sum = keys.reduce((acc, k) => acc + (Number(portalSelectedTagihan[k]) || 0), 0);
 
     if (totalEl) totalEl.innerText = formatRupiah(sum);
     if (countEl) countEl.innerText = `${keys.length} pos dipilih`;
+
+    if (midtransBtnLabel) {
+        if (sum > 0) {
+            midtransBtnLabel.innerText = `Bayar ${formatRupiah(sum)} via Midtrans`;
+        } else {
+            midtransBtnLabel.innerText = `Pilih Pos Tagihan Terlebih Dahulu`;
+        }
+    }
 }
+
+async function payPortalWaliMidtrans() {
+    if (!portalActiveStudent) {
+        alert("Pilih data santri terlebih dahulu.");
+        return;
+    }
+
+    const tagihanIds = Object.keys(portalSelectedTagihan);
+    const nominalTotal = tagihanIds.reduce((acc, k) => acc + (Number(portalSelectedTagihan[k]) || 0), 0);
+
+    if (nominalTotal <= 0 || tagihanIds.length === 0) {
+        alert("Silakan centang minimal 1 pos tagihan yang ingin dibayar.");
+        return;
+    }
+
+    const allTagihan = (ASNKeuangan.data && ASNKeuangan.data.tagihanList) || [];
+    const items = tagihanIds.map(id => {
+        const found = allTagihan.find(t => String(t.tagihanId).trim() === String(id).trim()) || {};
+        return {
+            tagihanId: id,
+            posName: found.namaPos || "Tagihan Pesantren",
+            periode: found.periode || "",
+            bayarNominal: Number(portalSelectedTagihan[id]) || 0
+        };
+    });
+
+    let parentEmail = "wali@mubarokah.my.id";
+    let parentPhone = "081234567890";
+    try {
+        const rawUser = sessionStorage.getItem('mubarokah_parent_user') || localStorage.getItem('mubarokah_parent_user');
+        if (rawUser) {
+            const u = JSON.parse(rawUser);
+            if (u.email) parentEmail = u.email;
+            if (u.phone || u.telepon || u.noHp) parentPhone = u.phone || u.telepon || u.noHp;
+        }
+    } catch (e) {}
+
+    const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : null) || 
+                  sessionStorage.getItem('mubarokah_parent_token') || "";
+
+    const snapPayload = {
+        token: token,
+        studentId: portalActiveStudent.id,
+        studentName: portalActiveStudent.name,
+        nis: portalActiveStudent.nis || "",
+        email: parentEmail,
+        phone: parentPhone,
+        items: items
+    };
+
+    const btn = document.getElementById('btn-portal-midtrans-pay');
+    const label = document.getElementById('btn-portal-midtrans-label');
+    let origLabel = label ? label.innerHTML : 'Bayar Sekarang via Midtrans';
+
+    if (btn) btn.disabled = true;
+    if (label) label.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Menghubungkan Midtrans...';
+
+    try {
+        let snapRes;
+        try {
+            snapRes = await apiPost("createMidtransSnapToken", snapPayload);
+        } catch (ePost) {
+            snapRes = await apiPost("keuangan.createMidtransToken", snapPayload);
+        }
+
+        if (snapRes && snapRes.success && snapRes.token) {
+            if (typeof window.snap !== 'undefined' && typeof window.snap.pay === 'function') {
+                window.snap.pay(snapRes.token, {
+                    onSuccess: function(result) {
+                        console.log("[PORTAL MIDTRANS SUCCESS]", result);
+                        alert("Alhamdulillah! Pembayaran berhasil diselesaikan via Midtrans.\nStatus tagihan otomatis lunas dan kuitansi tercatat.");
+                        if (typeof loadAdminKeuanganData === 'function') loadAdminKeuanganData(true);
+                        renderPortalWaliTagihanChecklist(portalActiveStudent.id);
+                        renderPortalWaliRiwayatKuitansi(portalActiveStudent.id);
+                        switchPortalWaliTab('riwayat');
+                    },
+                    onPending: function(result) {
+                        console.log("[PORTAL MIDTRANS PENDING]", result);
+                        alert("⏳ Menunggu pembayaran. Silakan selesaikan pembayaran sesuai petunjuk (kode Virtual Account / QRIS yang tertera).\nSetelah pembayaran berhasil, tagihan akan otomatis lunas.");
+                    },
+                    onError: function(result) {
+                        console.error("[PORTAL MIDTRANS ERROR]", result);
+                        alert("❌ Pembayaran Midtrans mengalami kendala atau gagal.");
+                    },
+                    onClose: function() {
+                        console.log("[PORTAL MIDTRANS CLOSED]");
+                    }
+                });
+            } else if (snapRes.redirect_url) {
+                window.open(snapRes.redirect_url, '_blank');
+            } else {
+                alert("Token Midtrans berhasil dibuat: " + snapRes.token);
+            }
+        } else {
+            alert("Gagal memanggil Midtrans: " + ((snapRes && snapRes.message) || "Koneksi gateway gagal"));
+        }
+    } catch (err) {
+        console.error("[PORTAL MIDTRANS ERROR]", err);
+        alert("Kendala pembayaran Midtrans: " + err.message);
+    } finally {
+        if (btn) btn.disabled = false;
+        if (label) label.innerHTML = origLabel;
+    }
+}
+window.payPortalWaliMidtrans = payPortalWaliMidtrans;
 
 function renderPortalWaliRiwayatKuitansi(studentId) {
     const container = document.getElementById('portal-riwayat-transaksi-list');
