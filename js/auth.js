@@ -1610,91 +1610,12 @@ function togglePasswordVisibility(inputId, iconId) {
     }
 }
 
-// ----- Admin Modal Controllers -----
+// ----- Admin Modal Controllers (Asnawiyyah Passwordless OTP) -----
 function toggleAdminAuthMode(mode) {
-    const formPass = document.getElementById('form-admin-login-password');
-    const formReq = document.getElementById('form-admin-request-otp');
-    const formVer = document.getElementById('form-admin-verify-otp');
-    const alertBox = document.getElementById('admin-auth-alert');
-
-    if (alertBox) alertBox.classList.add('hidden');
-
-    if (mode === 'otp') {
-        if (formPass) formPass.classList.add('hidden');
-        if (formReq) formReq.classList.remove('hidden');
-        if (formVer) formVer.classList.add('hidden');
-        const emailInput = document.getElementById('admin-auth-email');
-        if (emailInput) setTimeout(() => emailInput.focus(), 100);
+    if (mode === 'verify') {
+        switchToAdminVerifyStep();
     } else {
-        // default: password
-        if (formPass) formPass.classList.remove('hidden');
-        if (formReq) formReq.classList.add('hidden');
-        if (formVer) formVer.classList.add('hidden');
-        const passEmail = document.getElementById('admin-auth-login-email');
-        if (passEmail) setTimeout(() => passEmail.focus(), 100);
-    }
-}
-
-async function handleAdminPasswordLogin(e) {
-    if (e && e.preventDefault) e.preventDefault();
-    const emailInput = document.getElementById('admin-auth-login-email');
-    const passwordInput = document.getElementById('admin-auth-login-password');
-    const btn = document.getElementById('btn-admin-login-password');
-    const alertBox = document.getElementById('admin-auth-alert');
-    const alertText = document.getElementById('admin-auth-alert-text');
-
-    if (!emailInput || !passwordInput || !btn) return;
-    const email = emailInput.value.trim().toLowerCase();
-    const password = passwordInput.value;
-
-    if (!email || !password) {
-        if (alertBox && alertText) {
-            alertText.innerText = 'Mohon masukkan email dan password pengelola.';
-            alertBox.classList.remove('hidden');
-        }
-        return;
-    }
-
-    btn.disabled = true;
-    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>Memverifikasi...</span>`;
-    if (alertBox) alertBox.classList.add('hidden');
-
-    try {
-        const result = await ASNAuthAPI.loginAdminWithPassword(email, password);
-        if (result && result.success && result.token) {
-            ASNIdentity.setAdminSession(result.token, result.admin);
-            closeAdminAuthModal();
-            if (typeof showToast === 'function') {
-                showToast('Login Pengelola Berhasil!');
-            }
-            if (window.innerWidth >= 768) {
-                if (typeof switchTab === 'function') switchTab('admin');
-                if (typeof showAdminView === 'function') showAdminView('hub');
-            }
-        } else if (result && result.requireSetup) {
-            if (alertBox && alertText) {
-                alertText.innerText = result.message || 'Akun Anda belum memiliki kata sandi. Mengalihkan ke verifikasi Kode OTP...';
-                alertBox.classList.remove('hidden');
-            }
-            setTimeout(() => {
-                toggleAdminAuthMode('otp');
-                const otpEmail = document.getElementById('admin-auth-email');
-                if (otpEmail) otpEmail.value = email;
-            }, 1200);
-        } else {
-            if (alertBox && alertText) {
-                alertText.innerText = (result && result.message) || 'Email atau kata sandi salah.';
-                alertBox.classList.remove('hidden');
-            }
-        }
-    } catch (err) {
-        if (alertBox && alertText) {
-            alertText.innerText = 'Terjadi kesalahan sistem saat memproses login.';
-            alertBox.classList.remove('hidden');
-        }
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = `<span>Masuk Cepat</span><i class="fa-solid fa-arrow-right"></i>`;
+        resetAdminAuthStep();
     }
 }
 
@@ -1711,11 +1632,10 @@ function openAdminAuthModal() {
     if (!modal || !content) return;
 
     resetAdminAuthStep();
-    toggleAdminAuthMode('password');
     modal.classList.remove('hidden');
     setTimeout(() => {
         content.classList.remove('scale-95', 'opacity-0');
-        const emailInput = document.getElementById('admin-auth-login-email') || document.getElementById('admin-auth-email');
+        const emailInput = document.getElementById('admin-auth-email');
         if (emailInput) emailInput.focus();
         if (typeof initGoogleAuth === 'function') initGoogleAuth();
     }, 50);
@@ -1754,13 +1674,11 @@ function resetAdminAuthStep() {
         cooldownEl.innerHTML = 'Kirim ulang dalam 60s';
     }
 
-    const formPass = document.getElementById('form-admin-login-password');
     const formReq = document.getElementById('form-admin-request-otp');
     const formVer = document.getElementById('form-admin-verify-otp');
     const alertBox = document.getElementById('admin-auth-alert');
 
-    if (formPass) formPass.classList.remove('hidden');
-    if (formReq) formReq.classList.add('hidden');
+    if (formReq) formReq.classList.remove('hidden');
     if (formVer) formVer.classList.add('hidden');
     if (alertBox) alertBox.classList.add('hidden');
 
@@ -1969,86 +1887,12 @@ function switchToAdminVerifyStep() {
 }
 
 // ----- Parent / Wali Santri Modal Controllers -----
+// ----- Parent / Wali Santri Modal Controllers (Asnawiyyah Passwordless OTP) -----
 function toggleParentAuthMode(mode) {
-    const formPass = document.getElementById('form-parent-login-password');
-    const formReq = document.getElementById('form-parent-request-otp');
-    const formVer = document.getElementById('form-parent-verify-otp');
-    const alertBox = document.getElementById('parent-auth-alert');
-
-    if (alertBox) alertBox.classList.add('hidden');
-
-    if (mode === 'otp') {
-        if (formPass) formPass.classList.add('hidden');
-        if (formReq) formReq.classList.remove('hidden');
-        if (formVer) formVer.classList.add('hidden');
-        const emailInput = document.getElementById('parent-auth-email') || document.getElementById('parent-auth-phone');
-        if (emailInput) setTimeout(() => emailInput.focus(), 100);
+    if (mode === 'verify') {
+        switchToParentVerifyStep();
     } else {
-        // default: password
-        if (formPass) formPass.classList.remove('hidden');
-        if (formReq) formReq.classList.add('hidden');
-        if (formVer) formVer.classList.add('hidden');
-        const identInput = document.getElementById('parent-auth-login-identifier');
-        if (identInput) setTimeout(() => identInput.focus(), 100);
-    }
-}
-
-async function handleParentPasswordLogin(e) {
-    if (e && e.preventDefault) e.preventDefault();
-    const identInput = document.getElementById('parent-auth-login-identifier');
-    const passwordInput = document.getElementById('parent-auth-login-password');
-    const btn = document.getElementById('btn-parent-login-password');
-    const alertBox = document.getElementById('parent-auth-alert');
-    const alertText = document.getElementById('parent-auth-alert-text');
-
-    if (!identInput || !passwordInput || !btn) return;
-    const identifier = identInput.value.trim();
-    const password = passwordInput.value;
-
-    if (!identifier || !password) {
-        if (alertBox && alertText) {
-            alertText.innerText = 'Mohon masukkan Email/No. WhatsApp dan Password/PIN.';
-            alertBox.classList.remove('hidden');
-        }
-        return;
-    }
-
-    btn.disabled = true;
-    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>Memverifikasi...</span>`;
-    if (alertBox) alertBox.classList.add('hidden');
-
-    try {
-        const result = await ASNAuthAPI.loginParentWithPassword(identifier, password);
-        if (result && result.success && result.token) {
-            ASNIdentity.setParentSession(result.token, result.parent, result.students);
-            closeParentAuthModal();
-            if (typeof showToast === 'function') {
-                showToast('Login Wali Santri Berhasil!');
-            }
-        } else if (result && result.requireSetup) {
-            if (alertBox && alertText) {
-                alertText.innerText = result.message || 'Akun Anda belum memiliki Password/PIN. Mengalihkan ke opsi OTP...';
-                alertBox.classList.remove('hidden');
-            }
-            setTimeout(() => {
-                toggleParentAuthMode('otp');
-                const otpEmail = document.getElementById('parent-auth-email');
-                if (otpEmail && identifier.includes('@')) otpEmail.value = identifier;
-            }, 1200);
-        } else {
-            if (alertBox && alertText) {
-                alertText.innerText = (result && result.message) || 'Kredensial atau Password/PIN tidak sesuai.';
-                alertBox.classList.remove('hidden');
-            }
-        }
-    } catch (err) {
-        if (alertBox && alertText) {
-            alertText.innerText = 'Terjadi kesalahan sistem saat memproses login.';
-            alertBox.classList.remove('hidden');
-        }
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = `<span>Masuk ke Dashboard Wali</span><i class="fa-solid fa-arrow-right"></i>`;
+        resetParentAuthStep();
     }
 }
 
@@ -2058,11 +1902,10 @@ function openParentAuthModal() {
     if (!modal || !content) return;
 
     resetParentAuthStep();
-    toggleParentAuthMode('password');
     modal.classList.remove('hidden');
     setTimeout(() => {
         content.classList.remove('scale-95', 'opacity-0');
-        const identInput = document.getElementById('parent-auth-login-identifier') || document.getElementById('parent-auth-email');
+        const identInput = document.getElementById('parent-auth-email');
         if (identInput) identInput.focus();
         if (typeof initGoogleAuth === 'function') initGoogleAuth();
     }, 50);
@@ -2096,13 +1939,11 @@ function resetParentAuthStep() {
         cooldownEl.innerHTML = 'Kirim ulang dalam 60s';
     }
 
-    const formPass = document.getElementById('form-parent-login-password');
     const formReq = document.getElementById('form-parent-request-otp');
     const formVer = document.getElementById('form-parent-verify-otp');
     const alertBox = document.getElementById('parent-auth-alert');
 
-    if (formPass) formPass.classList.remove('hidden');
-    if (formReq) formReq.classList.add('hidden');
+    if (formReq) formReq.classList.remove('hidden');
     if (formVer) formVer.classList.add('hidden');
     if (alertBox) alertBox.classList.add('hidden');
 

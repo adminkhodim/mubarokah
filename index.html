@@ -12523,58 +12523,8 @@
                     <span id="admin-auth-alert-text">Pesan error autentikasi</span>
                 </div>
 
-                <!-- FORM LOGIN PASSWORD (DEFAULT) -->
-                <form id="form-admin-login-password" onsubmit="handleAdminPasswordLogin(event)" class="space-y-3">
-                    <div class="relative text-left">
-                        <label
-                            class="block text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase mb-1">Email
-                            Resmi Pengelola</label>
-                        <div class="relative">
-                            <i class="fa-solid fa-envelope absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
-                            <input type="email" id="admin-auth-login-email" required placeholder="admin@domain.id"
-                                class="w-full bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 placeholder:text-slate-400 pl-9 pr-3 py-3 rounded-xl text-xs border border-slate-200 dark:border-[#283a4e] focus:bg-white dark:focus:bg-[#15202d] focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition">
-                        </div>
-                    </div>
-
-                    <div class="relative text-left">
-                        <label
-                            class="block text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase mb-1">Kata Sandi / Password</label>
-                        <div class="relative">
-                            <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
-                            <input type="password" id="admin-auth-login-password" required placeholder="••••••••"
-                                class="w-full bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 placeholder:text-slate-400 pl-9 pr-10 py-3 rounded-xl text-xs border border-slate-200 dark:border-[#283a4e] focus:bg-white dark:focus:bg-[#15202d] focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition">
-                            <button type="button" onclick="togglePasswordVisibility('admin-auth-login-password', 'admin-pass-toggle-icon')"
-                                class="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
-                                <i id="admin-pass-toggle-icon" class="fa-solid fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <button type="submit" id="btn-admin-login-password"
-                        class="w-full bg-brand-700 hover:bg-brand-800 text-white font-bold py-3 rounded-xl text-xs shadow-md transition flex items-center justify-center space-x-2">
-                        <span>Masuk Cepat</span>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-
-                    <div class="text-center pt-1">
-                        <button type="button" onclick="toggleAdminAuthMode('otp')"
-                            class="text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline font-semibold inline-flex items-center space-x-1">
-                            <i class="fa-solid fa-envelope-open-text text-[10px]"></i>
-                            <span>Masuk via Kode OTP (Lupa / Belum Ada Password)</span>
-                        </button>
-                    </div>
-
-                    <div class="relative flex py-1 items-center">
-                        <div class="flex-grow border-t border-slate-200 dark:border-[#253447]"></div>
-                        <span class="flex-shrink mx-3 text-[10px] text-slate-400 uppercase font-semibold">atau</span>
-                        <div class="flex-grow border-t border-slate-200 dark:border-[#253447]"></div>
-                    </div>
-
-                    <div id="google-signin-admin" class="flex justify-center w-full min-h-[40px]"></div>
-                </form>
-
-                <!-- STEP 1 (OTP MODE): REQUEST OTP (EMAIL INPUT) -->
-                <form id="form-admin-request-otp" onsubmit="handleAdminRequestOtp(event)" class="hidden space-y-3">
+                <!-- STEP 1: REQUEST OTP (EMAIL INPUT - ASNAWIYYAH PASSWORDLESS) -->
+                <form id="form-admin-request-otp" onsubmit="handleAdminRequestOtp(event)" class="space-y-3">
                     <div class="relative text-left">
                         <label
                             class="block text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase mb-1">Email
@@ -12592,18 +12542,21 @@
                         <i class="fa-solid fa-arrow-right"></i>
                     </button>
 
-                    <div class="flex flex-col items-center space-y-1 pt-1">
+                    <div class="text-center pt-1">
                         <button type="button" onclick="switchToAdminVerifyStep()"
                             class="text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline font-semibold inline-flex items-center space-x-1">
                             <i class="fa-solid fa-key text-[10px]"></i>
                             <span>Sudah menerima kode OTP di email? Masukkan kode</span>
                         </button>
-                        <button type="button" onclick="toggleAdminAuthMode('password')"
-                            class="text-[11px] text-slate-500 dark:text-slate-400 hover:underline font-medium inline-flex items-center space-x-1">
-                            <i class="fa-solid fa-arrow-left text-[10px]"></i>
-                            <span>Kembali ke Login Kata Sandi</span>
-                        </button>
                     </div>
+
+                    <div class="relative flex py-1 items-center">
+                        <div class="flex-grow border-t border-slate-200 dark:border-[#253447]"></div>
+                        <span class="flex-shrink mx-3 text-[10px] text-slate-400 uppercase font-semibold">atau</span>
+                        <div class="flex-grow border-t border-slate-200 dark:border-[#253447]"></div>
+                    </div>
+
+                    <div id="google-signin-admin" class="flex justify-center w-full min-h-[40px]"></div>
                 </form>
 
                 <!-- STEP 2: VERIFY OTP (6 DIGITS) -->
@@ -12684,59 +12637,21 @@
 
                 <div class="relative flex py-1 items-center">
                     <div class="flex-grow border-t border-slate-200 dark:border-[#253447]"></div>
-                    <span class="flex-shrink mx-3 text-[10px] text-slate-400 uppercase font-semibold">atau Masuk Akun</span>
+                    <span class="flex-shrink mx-3 text-[10px] text-slate-400 uppercase font-semibold">atau Masuk via Kode OTP</span>
                     <div class="flex-grow border-t border-slate-200 dark:border-[#253447]"></div>
                 </div>
 
-                <!-- FORM LOGIN PASSWORD / PIN (DEFAULT) -->
-                <form id="form-parent-login-password" onsubmit="handleParentPasswordLogin(event)" class="space-y-3">
-                    <div class="relative text-left">
-                        <label
-                            class="block text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase mb-1">Email / No. WhatsApp</label>
-                        <div class="relative">
-                            <i class="fa-solid fa-user absolute left-3.5 top-3 text-slate-400 text-xs"></i>
-                            <input type="text" id="parent-auth-login-identifier" required placeholder="nama@gmail.com atau 08xxxxxxxx"
-                                class="w-full bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 placeholder:text-slate-400 pl-9 pr-3 py-2.5 rounded-xl text-xs border border-slate-200 dark:border-[#283a4e] focus:bg-white dark:focus:bg-[#15202d] focus:border-emerald-500 outline-none transition">
-                        </div>
-                    </div>
-
-                    <div class="relative text-left">
-                        <label
-                            class="block text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase mb-1">Kata Sandi / PIN</label>
-                        <div class="relative">
-                            <i class="fa-solid fa-lock absolute left-3.5 top-3 text-slate-400 text-xs"></i>
-                            <input type="password" id="parent-auth-login-password" required placeholder="Masukkan PIN / Password..."
-                                class="w-full bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 placeholder:text-slate-400 pl-9 pr-10 py-2.5 rounded-xl text-xs border border-slate-200 dark:border-[#283a4e] focus:bg-white dark:focus:bg-[#15202d] focus:border-emerald-500 outline-none transition">
-                            <button type="button" onclick="togglePasswordVisibility('parent-auth-login-password', 'parent-pass-toggle-icon')"
-                                class="absolute right-3.5 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
-                                <i id="parent-pass-toggle-icon" class="fa-solid fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <button type="submit" id="btn-parent-login-password"
-                        class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition flex items-center justify-center space-x-2">
-                        <span>Masuk ke Dashboard Wali</span>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-
-                    <div class="text-center pt-1">
-                        <button type="button" onclick="toggleParentAuthMode('otp')"
-                            class="text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline font-semibold inline-flex items-center space-x-1">
-                            <i class="fa-solid fa-envelope-open-text text-[10px]"></i>
-                            <span>Masuk via Kode OTP (Tanpa Password / Lupa)</span>
-                        </button>
-                    </div>
-                </form>
-
-                <!-- STEP 1 (OTP MODE): REQUEST OTP (EMAIL INPUT) -->
-                <form id="form-parent-request-otp" onsubmit="handleParentRequestOtp(event)" class="hidden space-y-3">
+                <!-- STEP 1: REQUEST OTP (EMAIL INPUT - ASNAWIYYAH PASSWORDLESS) -->
+                <form id="form-parent-request-otp" onsubmit="handleParentRequestOtp(event)" class="space-y-3">
                     <div class="relative text-left">
                         <label
                             class="block text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase mb-1">Email
                             Wali Santri Terdaftar</label>
-                        <input type="email" id="parent-auth-email" placeholder="nama@gmail.com"
-                            class="w-full bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 placeholder:text-slate-400 px-3 py-2.5 rounded-xl text-xs border border-slate-200 dark:border-[#283a4e] focus:bg-white dark:focus:bg-[#15202d] focus:border-emerald-500 outline-none transition">
+                        <div class="relative">
+                            <i class="fa-solid fa-envelope absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
+                            <input type="email" id="parent-auth-email" required placeholder="nama@gmail.com"
+                                class="w-full bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 placeholder:text-slate-400 pl-9 pr-3 py-2.5 rounded-xl text-xs border border-slate-200 dark:border-[#283a4e] focus:bg-white dark:focus:bg-[#15202d] focus:border-emerald-500 outline-none transition">
+                        </div>
                     </div>
 
                     <button type="submit" id="btn-parent-request-otp"
@@ -12745,16 +12660,11 @@
                         <i class="fa-solid fa-paper-plane text-xs"></i>
                     </button>
 
-                    <div class="flex flex-col items-center space-y-1 pt-1">
+                    <div class="text-center pt-1">
                         <button type="button" onclick="switchToParentVerifyStep()"
                             class="text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline font-semibold inline-flex items-center space-x-1">
                             <i class="fa-solid fa-key text-[10px]"></i>
                             <span>Sudah menerima kode OTP di email? Masukkan kode</span>
-                        </button>
-                        <button type="button" onclick="toggleParentAuthMode('password')"
-                            class="text-[11px] text-slate-500 dark:text-slate-400 hover:underline font-medium inline-flex items-center space-x-1">
-                            <i class="fa-solid fa-arrow-left text-[10px]"></i>
-                            <span>Kembali ke Login Password / PIN</span>
                         </button>
                     </div>
                 </form>
