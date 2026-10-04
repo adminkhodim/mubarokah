@@ -9687,6 +9687,64 @@
                                                 <div id="keuangan-pos-tagihan-container">
                                                     <p class="text-xs text-slate-400 text-center py-6">Pilih santri terlebih dahulu untuk menampilkan tagihan.</p>
                                                 </div>
+
+                                                <!-- KOTAK OPSIONAL: SETOR / TOP UP UANG SAKU & TABUNGAN SANTRI (LOKET POS) -->
+                                                <div id="keuangan-pos-topup-card" class="hidden mt-4 p-4 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 dark:from-emerald-950/40 dark:via-teal-950/40 dark:to-cyan-950/40 rounded-2xl border border-emerald-500/30 space-y-3">
+                                                    <div class="flex items-center justify-between">
+                                                        <label class="flex items-center space-x-2.5 cursor-pointer">
+                                                            <input type="checkbox" id="keuangan-pos-topup-toggle" onchange="toggleKeuanganPOSTopup(this.checked)"
+                                                                class="w-4 h-4 text-emerald-600 rounded-sm focus:ring-emerald-500 border-slate-300">
+                                                            <div>
+                                                                <span class="font-bold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                                                                    <i class="fa-solid fa-piggy-bank text-amber-500 text-xs"></i>
+                                                                    <span>Setor / Top Up "Uang Saku & Tabungan"</span>
+                                                                </span>
+                                                                <span class="text-[10px] text-slate-400 block">Pilihan Opsional: Masuk dalam 1 transaksi & struk loket</span>
+                                                            </div>
+                                                        </label>
+                                                        <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+                                                            Digital Pocket
+                                                        </span>
+                                                    </div>
+
+                                                    <!-- Panel Input Topup POS (Muncul saat toggle aktif) -->
+                                                    <div id="keuangan-pos-topup-panel" class="hidden space-y-2.5 pt-2 border-t border-emerald-500/20">
+                                                        <div class="flex items-center justify-between text-[11px]">
+                                                            <span class="text-slate-500 dark:text-slate-400 font-semibold">Pilih Nominal Topup:</span>
+                                                            <span id="keuangan-pos-current-saldo-info" class="font-bold text-emerald-600 dark:text-emerald-400 text-[10px]">Saldo saat ini: Rp 0</span>
+                                                        </div>
+
+                                                        <!-- Pilihan Cepat (Quick Chips) -->
+                                                        <div class="grid grid-cols-4 gap-1.5">
+                                                            <button type="button" onclick="setKeuanganPOSTopupPreset(20000)" class="py-1 px-1.5 bg-white dark:bg-[#1c2836] border border-slate-200 dark:border-[#253447] hover:border-emerald-500 text-slate-700 dark:text-slate-200 rounded-lg text-[10px] font-bold text-center transition">
+                                                                +20 rb
+                                                            </button>
+                                                            <button type="button" onclick="setKeuanganPOSTopupPreset(50000)" class="py-1 px-1.5 bg-white dark:bg-[#1c2836] border border-slate-200 dark:border-[#253447] hover:border-emerald-500 text-slate-700 dark:text-slate-200 rounded-lg text-[10px] font-bold text-center transition">
+                                                                +50 rb
+                                                            </button>
+                                                            <button type="button" onclick="setKeuanganPOSTopupPreset(100000)" class="py-1 px-1.5 bg-white dark:bg-[#1c2836] border border-slate-200 dark:border-[#253447] hover:border-emerald-500 text-slate-700 dark:text-slate-200 rounded-lg text-[10px] font-bold text-center transition">
+                                                                +100 rb
+                                                            </button>
+                                                            <button type="button" onclick="setKeuanganPOSTopupPreset(200000)" class="py-1 px-1.5 bg-white dark:bg-[#1c2836] border border-slate-200 dark:border-[#253447] hover:border-emerald-500 text-slate-700 dark:text-slate-200 rounded-lg text-[10px] font-bold text-center transition">
+                                                                +200 rb
+                                                            </button>
+                                                        </div>
+
+                                                        <!-- Input Nominal Bebas -->
+                                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                            <div class="relative">
+                                                                <span class="absolute left-3 top-2 text-xs font-bold text-slate-400">Rp</span>
+                                                                <input type="number" id="keuangan-pos-topup-nominal" placeholder="0" min="5000" step="5000"
+                                                                    oninput="onKeuanganPOSTopupChanged(this.value)"
+                                                                    class="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-white dark:bg-[#1c2836] font-black text-xs text-emerald-600 outline-none">
+                                                            </div>
+                                                            <div>
+                                                                <input type="text" id="keuangan-pos-topup-catatan" placeholder="Catatan titipan (opsional)..."
+                                                                    class="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-white dark:bg-[#1c2836] text-xs text-slate-800 dark:text-slate-100 outline-none">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -9703,6 +9761,7 @@
                                                     <div>
                                                         <span class="text-[10px] text-slate-400 uppercase font-bold block">Total Tagihan Terpilih</span>
                                                         <span class="text-xs text-slate-500">Kewajiban bayar</span>
+                                                        <div id="keuangan-pos-breakdown-display" class="text-[9px] text-emerald-600 dark:text-emerald-400 hidden font-bold mt-0.5">Tagihan: Rp 0 • Uang Saku: Rp 0</div>
                                                     </div>
                                                     <div id="keuangan-pos-total-tagihan" class="text-lg md:text-xl font-black text-slate-800 dark:text-slate-100">
                                                         Rp 0

@@ -660,6 +660,8 @@ function selectKeuanganPOSStudent(studentId) {
     ASNKeuangan.pos.selectedTagihanIds = new Set();
     ASNKeuangan.pos.selectedTagihanMap = {};
     ASNKeuangan.pos.nominalDiterima = 0;
+    ASNKeuangan.pos.topupNominal = 0;
+    ASNKeuangan.pos.topupCatatan = "";
 
     // Render Info Santri
     const cardEl = document.getElementById('keuangan-pos-student-card');
@@ -682,6 +684,29 @@ function selectKeuanganPOSStudent(studentId) {
 
     if (cardEl) cardEl.classList.remove('hidden');
     if (emptyEl) emptyEl.classList.add('hidden');
+
+    // Reset dan tampilkan Kotak Topup Tabungan Loket POS
+    const topupCard = document.getElementById('keuangan-pos-topup-card');
+    const topupToggle = document.getElementById('keuangan-pos-topup-toggle');
+    const topupPanel = document.getElementById('keuangan-pos-topup-panel');
+    const topupInp = document.getElementById('keuangan-pos-topup-nominal');
+    const topupNote = document.getElementById('keuangan-pos-topup-catatan');
+    const saldoInfo = document.getElementById('keuangan-pos-current-saldo-info');
+
+    if (topupCard) topupCard.classList.remove('hidden');
+    if (topupToggle) topupToggle.checked = false;
+    if (topupPanel) topupPanel.classList.add('hidden');
+    if (topupInp) topupInp.value = '';
+    if (topupNote) topupNote.value = '';
+
+    if (saldoInfo) {
+        let curSaldo = 0;
+        if (ASNTabunganData && Array.isArray(ASNTabunganData.accounts)) {
+            const acc = ASNTabunganData.accounts.find(a => String(a.studentId).trim() === String(st.studentId).trim());
+            if (acc) curSaldo = acc.saldoTabungan || acc.saldo || 0;
+        }
+        saldoInfo.innerText = `Saldo saat ini: ${formatRupiah(curSaldo)}`;
+    }
 
     // Ambil tagihan santri ini
     renderKeuanganPOSTagihanList();
@@ -819,24 +844,69 @@ function updateKeuanganPOSBayarNominal(tagihanId, val, maxSisa) {
 }
 window.updateKeuanganPOSBayarNominal = updateKeuanganPOSBayarNominal;
 
+function toggleKeuanganPOSTopup(isChecked) {
+    const panel = document.getElementById('keuangan-pos-topup-panel');
+    const input = document.getElementById('keuangan-pos-topup-nominal');
+    if (isChecked) {
+        if (panel) panel.classList.remove('hidden');
+        if (!ASNKeuangan.pos.topupNominal || ASNKeuangan.pos.topupNominal <= 0) {
+            ASNKeuangan.pos.topupNominal = 50000;
+            if (input) input.value = 50000;
+        }
+    } else {
+        if (panel) panel.classList.add('hidden');
+        ASNKeuangan.pos.topupNominal = 0;
+        if (input) input.value = '';
+    }
+    calcKeuanganPOSTotal();
+}
+window.toggleKeuanganPOSTopup = toggleKeuanganPOSTopup;
+
+function setKeuanganPOSTopupPreset(nom) {
+    ASNKeuangan.pos.topupNominal = Number(nom) || 0;
+    const input = document.getElementById('keuangan-pos-topup-nominal');
+    if (input) input.value = nom;
+    calcKeuanganPOSTotal();
+}
+window.setKeuanganPOSTopupPreset = setKeuanganPOSTopupPreset;
+
+function onKeuanganPOSTopupChanged(val) {
+    ASNKeuangan.pos.topupNominal = Math.max(0, Number(val) || 0);
+    calcKeuanganPOSTotal();
+}
+window.onKeuanganPOSTopupChanged = onKeuanganPOSTopupChanged;
+
 /**
  * Hitung kalkulasi total tagihan, uang diterima, dan kembalian di loket POS
  */
 function calcKeuanganPOSTotal() {
-    let subtotal = 0;
+    let tagihanSubtotal = 0;
     Object.values(ASNKeuangan.pos.selectedTagihanMap).forEach(v => {
-        subtotal += Number(v) || 0;
+        tagihanSubtotal += Number(v) || 0;
     });
 
+    const topupSubtotal = Number(ASNKeuangan.pos.topupNominal) || 0;
+    const subtotal = tagihanSubtotal + topupSubtotal;
+
     const elSubtotal = document.getElementById('keuangan-pos-total-tagihan');
+    const elBreakdown = document.getElementById('keuangan-pos-breakdown-display');
     const elKembalian = document.getElementById('keuangan-pos-kembalian');
     const btnSubmit = document.getElementById('keuangan-pos-btn-submit');
     const inputDiterima = document.getElementById('keuangan-pos-input-diterima');
 
     if (elSubtotal) elSubtotal.innerText = formatRupiah(subtotal);
 
+    if (elBreakdown) {
+        if (topupSubtotal > 0) {
+            elBreakdown.classList.remove('hidden');
+            elBreakdown.innerText = `Tagihan: ${formatRupiah(tagihanSubtotal)} • Uang Saku: ${formatRupiah(topupSubtotal)}`;
+        } else {
+            elBreakdown.classList.add('hidden');
+        }
+    }
+
     let diterima = Number(inputDiterima ? inputDiterima.value : 0) || 0;
-    // Jika metode bukan Tunai (Transfer / QRIS), otomatis nominal diterima = subtotal
+    // Jika metode bukan Tunai (Transfer / QRIS / Midtrans), otomatis nominal diterima = subtotal
     const metode = ASNKeuangan.pos.metodeBayar;
     if (metode !== 'TUNAI') {
         diterima = subtotal;
@@ -871,9 +941,14 @@ function calcKeuanganPOSTotal() {
     const selCount = ASNKeuangan.pos.selectedTagihanIds.size;
 
     if (mobileTotal) mobileTotal.innerText = formatRupiah(subtotal);
-    if (mobileCount) mobileCount.innerText = `${selCount} Tagihan Dipilih`;
+    let countText = `${selCount} Tagihan Dipilih`;
+    if (topupSubtotal > 0) {
+        countText = selCount > 0 ? `${selCount} Tagihan + Uang Saku` : `Topup Uang Saku Saja`;
+    }
+    if (mobileCount) mobileCount.innerText = countText;
+
     if (mobileBar) {
-        if (subtotal > 0 && selCount > 0) {
+        if (subtotal > 0 && (selCount > 0 || topupSubtotal > 0)) {
             mobileBar.classList.remove('hidden');
         } else {
             mobileBar.classList.add('hidden');
@@ -982,8 +1057,12 @@ async function submitKeuanganPOSPayment() {
         }
     });
 
-    if (items.length === 0) {
-        alert("Pilih minimal 1 pos tagihan yang ingin dibayar.");
+    const topupNominal = Number(ASNKeuangan.pos.topupNominal) || 0;
+    const topupNoteInp = document.getElementById('keuangan-pos-topup-catatan');
+    const topupCatatan = (topupNoteInp && topupNoteInp.value.trim()) || "Setor Uang Saku & Tabungan via Loket Kasir POS";
+
+    if (items.length === 0 && topupNominal <= 0) {
+        alert("Pilih minimal 1 pos tagihan atau tentukan nominal setor uang saku.");
         return;
     }
 
@@ -1002,6 +1081,16 @@ async function submitKeuanganPOSPayment() {
 
         // ALUR KHUSUS MIDTRANS PAYMENT GATEWAY
         if (isMidtrans) {
+            if (topupNominal > 0) {
+                items.push({
+                    tagihanId: "TOPUP_TABUNGAN",
+                    posName: `Uang Saku & Tabungan (${st.name})`,
+                    namaPos: "Uang Saku & Tabungan",
+                    periode: "",
+                    bayarNominal: topupNominal
+                });
+            }
+
             const snapPayload = {
                 token: token,
                 studentId: st.studentId,
@@ -1019,13 +1108,14 @@ async function submitKeuanganPOSPayment() {
                     window.snap.pay(snapRes.token, {
                         onSuccess: function(result) {
                             console.log("[MIDTRANS SUCCESS]", result);
-                            alert("✅ Pembayaran berhasil diselesaikan via Midtrans!");
+                            alert("✅ Pembayaran berhasil diselesaikan via Midtrans!\nTagihan lunas dan saldo uang saku santri otomatis bertambah.");
                             resetKeuanganPOS();
                             loadAdminKeuanganData(true);
+                            if (typeof loadTabunganDashboardData === 'function') loadTabunganDashboardData(true);
                         },
                         onPending: function(result) {
                             console.log("[MIDTRANS PENDING]", result);
-                            alert("⏳ Menunggu pembayaran dari wali santri. Tagihan akan otomatis lunas saat transaksi sukses.");
+                            alert("⏳ Menunggu pembayaran dari wali santri. Tagihan dan saldo uang saku akan otomatis terproses saat transaksi sukses.");
                             resetKeuanganPOS();
                         },
                         onError: function(result) {
@@ -1049,35 +1139,58 @@ async function submitKeuanganPOSPayment() {
         }
 
         // ALUR STANDAR (TUNAI / TRANSFER / QRIS)
-        const payload = {
-            token: token,
-            studentId: st.studentId,
-            studentName: st.name,
-            nis: st.nis || "",
-            metodeBayar: ASNKeuangan.pos.metodeBayar,
-            catatan: catatan,
-            items: items
-        };
+        let resTagihan = null;
+        if (items.length > 0) {
+            const payload = {
+                token: token,
+                studentId: st.studentId,
+                studentName: st.name,
+                nis: st.nis || "",
+                metodeBayar: ASNKeuangan.pos.metodeBayar,
+                catatan: catatan,
+                items: items
+            };
+            resTagihan = await apiPost("bayarTagihan", payload);
+        }
 
-        const res = await apiPost("bayarTagihan", payload);
+        let resTopup = null;
+        if (topupNominal > 0) {
+            resTopup = await apiPost("keuangan.topupTabungan", {
+                token: token,
+                studentId: st.studentId,
+                nominalTopup: topupNominal,
+                metodeBayar: ASNKeuangan.pos.metodeBayar,
+                catatan: topupCatatan
+            });
+        }
 
-        if (res && res.success && res.kuitansi) {
-            ASNKeuangan.lastKuitansi = res.kuitansi;
+        const tagihanOk = !items.length || (resTagihan && resTagihan.success);
+        const topupOk = !topupNominal || (resTopup && resTopup.success);
 
-            // Reset form POS
-            resetKeuanganPOS();
-
-            // Refresh data di background
-            loadAdminKeuanganData(true);
-
-            // Buka Modal Kuitansi
-            openKuitansiModal(res.kuitansi);
-
-            if (typeof showToast === 'function') {
-                showToast("✅ Pembayaran berhasil dicatat. Kuitansi diterbitkan.");
+        if (tagihanOk && topupOk) {
+            if (resTagihan && resTagihan.kuitansi) {
+                ASNKeuangan.lastKuitansi = resTagihan.kuitansi;
+                openKuitansiModal(resTagihan.kuitansi);
             }
+
+            resetKeuanganPOS();
+            loadAdminKeuanganData(true);
+            if (typeof loadTabunganDashboardData === 'function') loadTabunganDashboardData(true);
+
+            let msg = "✅ Transaksi kasir loket berhasil diproses.";
+            if (items.length > 0 && topupNominal > 0) {
+                msg = `✅ Pembayaran tagihan & setor uang saku ${formatRupiah(topupNominal)} berhasil diproses!`;
+            } else if (topupNominal > 0) {
+                msg = `✅ Setor uang saku santri sebesar ${formatRupiah(topupNominal)} berhasil!`;
+            }
+
+            if (typeof showToast === 'function') showToast(msg);
+            else alert(msg);
         } else {
-            alert("Gagal memproses pembayaran: " + ((res && res.message) || "Terjadi kesalahan sistem."));
+            const errMsg = (resTagihan && !resTagihan.success ? resTagihan.message : "") ||
+                           (resTopup && !resTopup.success ? resTopup.message : "") ||
+                           "Terjadi kesalahan sistem saat memproses loket kasir.";
+            alert("Gagal memproses pembayaran: " + errMsg);
         }
     } catch (e) {
         alert("Terjadi kendala: " + e.message);
@@ -1097,12 +1210,26 @@ function resetKeuanganPOS() {
     ASNKeuangan.pos.selectedTagihanIds.clear();
     ASNKeuangan.pos.selectedTagihanMap = {};
     ASNKeuangan.pos.metodeBayar = 'TUNAI';
+    ASNKeuangan.pos.topupNominal = 0;
+    ASNKeuangan.pos.topupCatatan = "";
 
     const cardEl = document.getElementById('keuangan-pos-student-card');
     const emptyEl = document.getElementById('keuangan-pos-empty-prompt');
     const searchInput = document.getElementById('keuangan-pos-search-input');
     const inputDiterima = document.getElementById('keuangan-pos-input-diterima');
     const noteInput = document.getElementById('keuangan-pos-catatan');
+
+    // Reset Topup Card
+    const topupCard = document.getElementById('keuangan-pos-topup-card');
+    const topupToggle = document.getElementById('keuangan-pos-topup-toggle');
+    const topupPanel = document.getElementById('keuangan-pos-topup-panel');
+    const topupInp = document.getElementById('keuangan-pos-topup-nominal');
+    const topupNote = document.getElementById('keuangan-pos-topup-catatan');
+    if (topupCard) topupCard.classList.add('hidden');
+    if (topupToggle) topupToggle.checked = false;
+    if (topupPanel) topupPanel.classList.add('hidden');
+    if (topupInp) topupInp.value = '';
+    if (topupNote) topupNote.value = '';
 
     if (cardEl) cardEl.classList.add('hidden');
     if (emptyEl) emptyEl.classList.remove('hidden');
