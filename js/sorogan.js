@@ -286,6 +286,86 @@ function renderSoroganSummaryCards() {
 }
 
 /**
+ * Dapatkan kelompok halaqah Sorogan milik Asatidz/Mu'allim yang sedang aktif login
+ */
+function getHalaqahForActiveMuallim() {
+    let user = (typeof ASNIdentity !== 'undefined' && ASNIdentity.currentUser) || null;
+    if (!user) {
+        try {
+            const raw = sessionStorage.getItem('mubarokah_admin_data') || localStorage.getItem('mubarokah_admin_data');
+            if (raw) user = JSON.parse(raw);
+        } catch (e) {}
+    }
+    if (!user) return null;
+
+    const halaqahs = ASNSorogan.data?.halaqahs || [];
+    if (!Array.isArray(halaqahs) || halaqahs.length === 0) return null;
+
+    const uName = String(user.name || '').trim().toLowerCase();
+    const uEmail = String(user.email || '').trim().toLowerCase();
+    const uNip = String(user.nip || '').trim().toLowerCase();
+    const cleanUName = uName.replace(/^(ustadz|ustadzah|ust\.|ustd\.|kyai|nyai|gus|ning)\s+/i, '').trim();
+
+    // 1. Prioritas 1: Kecocokan persis pada muallim/pembina, email, atau NIP
+    for (const h of halaqahs) {
+        const m = String(h.muallim || h.muallimPengampu || '').trim().toLowerCase();
+        const cleanM = m.replace(/^(ustadz|ustadzah|ust\.|ustd\.|kyai|nyai|gus|ning)\s+/i, '').trim();
+        const hemail = String(h.email || h.muallimEmail || '').trim().toLowerCase();
+        const hNip = String(h.nip || h.muallimNip || '').trim().toLowerCase();
+
+        if (uNip && hNip && uNip === hNip) return h;
+        if (uEmail && hemail && uEmail === hemail) return h;
+        if (cleanUName && cleanM && cleanUName === cleanM) return h;
+        if (uName && m && uName === m) return h;
+    }
+
+    // 2. Prioritas 2: Substring match pada nama Muallim atau Nama Halaqah
+    if (cleanUName && cleanUName.length >= 3) {
+        for (const h of halaqahs) {
+            const m = String(h.muallim || h.muallimPengampu || '').trim().toLowerCase();
+            const hName = String(h.namaHalaqah || '').trim().toLowerCase();
+            const cleanM = m.replace(/^(ustadz|ustadzah|ust\.|ustd\.|kyai|nyai|gus|ning)\s+/i, '').trim();
+
+            if (cleanM && (cleanM.includes(cleanUName) || cleanUName.includes(cleanM))) return h;
+            if (hName.includes(cleanUName)) return h;
+        }
+    }
+
+    // 3. Fallback: jika peran ASATIDZ dan ada daftar halaqah, gunakan halaqah pertama
+    const activeRole = String((typeof ASNIdentity !== 'undefined' && ASNIdentity.currentRole) || 
+                              sessionStorage.getItem('ASN_ADMIN_ROLE') || 
+                              sessionStorage.getItem('mubarokah_admin_role') || '').toUpperCase();
+    if (activeRole === 'ASATIDZ') {
+        return halaqahs[0] || null;
+    }
+
+    return null;
+}
+
+/**
+ * Kontrol Visibilitas Tombol Sorogan Berdasarkan Peran Pengguna (RBAC)
+ * Menyembunyikan tombol ekspor (Excel, Cetak, Inisialisasi Sheet) & manajerial (Kelola Halaqah, Jadwal & Sesi, Target Massal) untuk Akun Asatidz / Pengasuh
+ */
+function applySoroganRolePermissions() {
+    const activeRole = String((typeof ASNIdentity !== 'undefined' && ASNIdentity.currentRole) || 
+                              sessionStorage.getItem('ASN_ADMIN_ROLE') || 
+                              sessionStorage.getItem('mubarokah_admin_role') || 'SUPER_ADMIN').toUpperCase();
+    const isPengasuh = activeRole === 'PENGASUH' || (typeof ASNSorogan !== 'undefined' && ASNSorogan.viewerRole === 'pengasuh');
+    const isAsatidz = activeRole === 'ASATIDZ';
+    const hideAdminActions = isPengasuh || isAsatidz;
+
+    document.querySelectorAll('.sorogan-admin-action').forEach(el => {
+        if (hideAdminActions) {
+            el.classList.add('hidden');
+            el.style.display = 'none';
+        } else {
+            el.classList.remove('hidden');
+            el.style.display = '';
+        }
+    });
+}
+
+/**
  * Isi filter halaqah & juz
  */
 function populateSoroganFilters() {
@@ -300,10 +380,23 @@ function populateSoroganFilters() {
         });
         opt += '<option value="UNASSIGNED">Belum Masuk Halaqah</option>';
         filterHalaqah.innerHTML = opt;
-        if (currentVal && Array.from(filterHalaqah.options).some(o => o.value === currentVal)) {
+
+        const activeRole = String((typeof ASNIdentity !== 'undefined' && ASNIdentity.currentRole) || 
+                                  sessionStorage.getItem('ASN_ADMIN_ROLE') || 
+                                  sessionStorage.getItem('mubarokah_admin_role') || '').toUpperCase();
+        if (activeRole === 'ASATIDZ') {
+            const myHalaqah = getHalaqahForActiveMuallim();
+            if (myHalaqah && myHalaqah.halaqahId) {
+                filterHalaqah.value = myHalaqah.halaqahId;
+            } else if (currentVal && Array.from(filterHalaqah.options).some(o => o.value === currentVal)) {
+                filterHalaqah.value = currentVal;
+            }
+        } else if (currentVal && Array.from(filterHalaqah.options).some(o => o.value === currentVal)) {
             filterHalaqah.value = currentVal;
         }
     }
+
+    applySoroganRolePermissions();
 }
 
 /**
@@ -471,6 +564,7 @@ function renderSoroganTable() {
 
     const selectedSet = ASNSorogan.selectedStudentIds || new Set();
     const targets = (ASNSorogan.data && ASNSorogan.data.targets) || {};
+    const weeklySessions = getSoroganActiveWeeklySessionCounts();
 
     let html = '';
     list.forEach((st, idx) => {
@@ -482,15 +576,20 @@ function renderSoroganTable() {
             ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/50 dark:text-rose-300"><i class="fa-solid fa-rotate-left"></i> Wajib Mengulang</span>`
             : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950/50 dark:text-sky-300"><i class="fa-solid fa-circle-check"></i> Lancar (Lanjut)</span>`;
 
-        // Progress bar per Juz (20 halaman)
-        const hal = Math.min(20, Math.max(1, st.halamanTerakhir || 1));
-        const percentJuz = Math.round((hal / 20) * 100);
+        // Progress bar akumulatif 30 Juz (600 Halaman) & Deteksi Khatam 30 Juz
+        const currentJuz = Number(st.juzAktif) || 1;
+        const hal = Math.min(20, Math.max(1, Number(st.halamanTerakhir) || 1));
+        const totalHalaman600 = ((currentJuz - 1) * 20) + hal;
+        const isKhatam = (currentJuz === 30 && hal >= 20) || (Number(st.totalHalamanKhatam || 0) >= 600);
+        const percent = isKhatam ? 100 : Math.min(100, Math.max(1, Math.round((totalHalaman600 / 600) * 100)));
 
-        // Target Info
+        // Target Info Dinamis sesuai jadwal sesi aktif mingguan
         const tgt = targets[st.studentId] || st.target || {
-            targetJuz: Math.min(30, (st.juzAktif || 1) + 1),
+            targetJuz: Math.min(30, currentJuz + 1),
             targetHalamanSesi: 2
         };
+        const tSesi = Number(tgt.targetHalamanSesi) || 2;
+        const tPekan = Number(tgt.targetHalamanPekan) || (tSesi * weeklySessions);
 
         html += `
             <tr class="hover:bg-slate-50/80 dark:hover:bg-[#1a2636]/60 transition border-b border-slate-100 dark:border-[#202f42] text-xs">
@@ -512,20 +611,19 @@ function renderSoroganTable() {
                 </td>
                 <td class="p-3">
                     <div class="space-y-1">
-                        <div class="flex items-center gap-2">
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-black bg-sky-50 text-sky-800 border border-sky-200 dark:bg-sky-950 dark:text-sky-300">
-                                <i class="fa-solid fa-book-bookmark text-xs"></i>
-                                <span>Juz ${st.juzAktif || 1}</span>
+                        <div class="flex items-center justify-between gap-1 text-xs">
+                            <span class="font-black text-slate-800 dark:text-slate-100">
+                                ${isKhatam 
+                                    ? `<span class="text-amber-500 font-black flex items-center gap-1"><i class="fa-solid fa-crown text-amber-500 text-xs"></i> Khatam 30 Juz</span>` 
+                                    : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-black bg-sky-50 text-sky-800 border border-sky-200 dark:bg-sky-950 dark:text-sky-300"><i class="fa-solid fa-book-bookmark text-xs"></i> Juz ${currentJuz}</span> <span class="text-xs font-bold text-slate-700 dark:text-slate-200">Hlm <strong class="text-sky-600 dark:text-sky-400 font-black">${hal}</strong>/20</span>`}
                             </span>
-                            <span class="text-xs font-bold text-slate-700 dark:text-slate-200">
-                                Halaman <strong class="text-sky-600 dark:text-sky-400 font-black">${hal}</strong> / 20
-                            </span>
+                            <span class="text-[10px] font-extrabold ${isKhatam ? 'text-amber-600 dark:text-amber-400' : 'text-sky-600 dark:text-sky-400'}">${percent}%</span>
                         </div>
                         <div class="text-[10px] text-slate-400 truncate max-w-[200px]" title="${escapeHtml(surahRef)}">
                             ${escapeHtml(surahRef)}
                         </div>
-                        <div class="w-28 bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
-                            <div class="bg-sky-600 h-full rounded-full transition-all" style="width: ${percentJuz}%;"></div>
+                        <div class="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                            <div class="${isKhatam ? 'bg-gradient-to-r from-amber-400 to-amber-500' : 'bg-sky-600'} h-full rounded-full transition-all" style="width: ${percent}%;"></div>
                         </div>
                     </div>
                 </td>
@@ -534,10 +632,10 @@ function renderSoroganTable() {
                         class="text-left group/tgt hover:opacity-80 transition" title="Klik untuk atur target">
                         <div class="flex items-center gap-1 font-bold text-slate-800 dark:text-slate-200">
                             <i class="fa-solid fa-bullseye text-[10px] text-amber-500"></i>
-                            <span>Target Juz ${tgt.targetJuz || Math.min(30, (st.juzAktif || 1) + 1)}</span>
+                            <span>Target Juz ${tgt.targetJuz || Math.min(30, currentJuz + 1)}</span>
                         </div>
                         <div class="text-[10px] text-slate-400 group-hover/tgt:text-sky-600 font-medium">
-                            ${tgt.targetHalamanSesi || 2} Hal/Sesi (${(tgt.targetHalamanSesi || 2) * 6} Hal/Pekan)
+                            ${tSesi} Hal/Sesi (${tPekan} Hal/Pekan)
                         </div>
                     </button>
                 </td>
@@ -579,16 +677,17 @@ function renderSoroganTable() {
             const inHal = !!(st.namaHalaqah && st.namaHalaqah !== 'Belum Ada Halaqah');
             const halaqahName = inHal ? st.namaHalaqah : 'Belum Masuk Halaqah';
             const isUlang = st.statusTerakhir === 'ULANG';
-            const currentJuz = st.juzAktif || 1;
-            const hal = Math.min(20, Math.max(1, st.halamanTerakhir || 1));
+            const currentJuz = Number(st.juzAktif) || 1;
+            const hal = Math.min(20, Math.max(1, Number(st.halamanTerakhir) || 1));
             const totalHalaman600 = ((currentJuz - 1) * 20) + hal;
-            const percent = Math.min(100, Math.max(1, Math.round((totalHalaman600 / 600) * 100)));
+            const isKhatam = (currentJuz === 30 && hal >= 20) || (Number(st.totalHalamanKhatam || 0) >= 600);
+            const percent = isKhatam ? 100 : Math.min(100, Math.max(1, Math.round((totalHalaman600 / 600) * 100)));
             const tgt = targets[st.studentId] || st.target || {
                 targetJuz: Math.min(30, currentJuz + 1),
                 targetHalamanSesi: 2
             };
-            const targetSesi = tgt.targetHalamanSesi || 2;
-            const targetPekan = targetSesi * 6;
+            const targetSesi = Number(tgt.targetHalamanSesi) || 2;
+            const targetPekan = Number(tgt.targetHalamanPekan) || (targetSesi * weeklySessions);
             const isSelected = selectedSet.has(st.studentId);
 
             return `
@@ -625,11 +724,11 @@ function renderSoroganTable() {
                 <!-- Progress Bar -->
                 <div class="space-y-1">
                     <div class="flex justify-between text-xs font-bold">
-                        <span>Capaian: Juz ${currentJuz} / 30 (Hal ${hal}/20)</span>
-                        <span class="text-sky-600">${percent}%</span>
+                        <span>${isKhatam ? `<span class="text-amber-500 font-black flex items-center gap-1"><i class="fa-solid fa-crown text-amber-500 text-xs"></i> Khatam 30 Juz</span>` : `Capaian: Juz ${currentJuz} / 30 (Hal ${hal}/20)`}</span>
+                        <span class="${isKhatam ? 'text-amber-600 dark:text-amber-400' : 'text-sky-600'}">${percent}%</span>
                     </div>
                     <div class="w-full bg-slate-100 dark:bg-[#1c2836] h-1.5 rounded-full overflow-hidden">
-                        <div class="bg-sky-600 h-full rounded-full transition-all" style="width: ${percent}%;"></div>
+                        <div class="${isKhatam ? 'bg-gradient-to-r from-amber-400 to-amber-500' : 'bg-sky-600'} h-full rounded-full transition-all" style="width: ${percent}%;"></div>
                     </div>
                 </div>
 
@@ -2732,7 +2831,8 @@ function renderSoroganEstimasiKhatam() {
         lajuPekanRiil = Number(lancarLogs[0].totalHalaman) || 2;
     }
 
-    const targetPekan = (Number(target.targetHalamanSesi) || 2) * 6;
+    const weeklySessions = getSoroganActiveWeeklySessionCounts();
+    const targetPekan = Number(target.targetHalamanPekan) || ((Number(target.targetHalamanSesi) || 2) * weeklySessions);
     let lajuEfektif = (lajuPekanRiil >= 0.5) ? lajuPekanRiil : targetPekan;
     lajuEfektif = Math.max(0.5, lajuEfektif);
 
@@ -3035,3 +3135,5 @@ window.exportSoroganDataCSV = exportSoroganDataCSV;
 window.cleanSoroganSesiTime = cleanSoroganSesiTime;
 if (!window.cleanSesiTime) window.cleanSesiTime = cleanSoroganSesiTime;
 window.setSoroganRiwayatView = setSoroganRiwayatView;
+window.applySoroganRolePermissions = applySoroganRolePermissions;
+window.getHalaqahForActiveMuallim = getHalaqahForActiveMuallim;

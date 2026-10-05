@@ -638,7 +638,7 @@ function doPost(e) {
       const token = payload.token || (payload.data && payload.data.token) || null;
       try {
         const actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH"]);
+        authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PENGASUH", "ASATIDZ", "MUALLIM", "PEGAWAI", "GURU"]);
       } catch (authErr) {
         return createJsonResponse({ status: "error", message: authErr.message });
       }
@@ -649,7 +649,7 @@ function doPost(e) {
       const token = payload.token || (payload.data && payload.data.token) || null;
       try {
         const actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN"]);
+        authorizeRole(actor, ["ADMIN", "SUPER_ADMIN"]);
       } catch (authErr) {
         return createJsonResponse({ status: "error", message: authErr.message });
       }
@@ -661,7 +661,7 @@ function doPost(e) {
       const token = payload.token || (payload.data && payload.data.token) || null;
       try {
         const actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN", "EDITOR"]);
+        authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PENGASUH", "ASATIDZ", "MUALLIM", "PEGAWAI", "GURU"]);
       } catch (authErr) {
         return createJsonResponse({ status: "error", message: authErr.message });
       }
@@ -700,7 +700,7 @@ function doPost(e) {
       const token = payload.token || (payload.data && payload.data.token) || null;
       try {
         const actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN"]);
+        authorizeRole(actor, ["ADMIN", "SUPER_ADMIN"]);
       } catch (authErr) {
         return createJsonResponse({ status: "error", message: authErr.message });
       }
@@ -722,7 +722,7 @@ function doPost(e) {
       const token = payload.token || (payload.data && payload.data.token) || null;
       try {
         const actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN", "EDITOR"]);
+        authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PENGASUH", "ASATIDZ", "MUALLIM", "PEGAWAI", "GURU"]);
       } catch (authErr) {
         return createJsonResponse({ status: "error", message: authErr.message });
       }
@@ -733,7 +733,7 @@ function doPost(e) {
       const token = payload.token || (payload.data && payload.data.token) || null;
       try {
         const actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH"]);
+        authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PENGASUH", "ASATIDZ", "MUALLIM", "PEGAWAI", "GURU"]);
       } catch (authErr) {
         return createJsonResponse({ status: "error", message: authErr.message });
       }
@@ -17871,17 +17871,35 @@ function saveSoroganLog(data, token) {
 function deleteSoroganLog(logId, token) {
   return withScriptLock(() => {
     try {
+      if (token) {
+        try {
+          const actor = authenticateSession(token);
+          authorizeRole(actor, ["ADMIN", "SUPER_ADMIN"]);
+        } catch (authErr) {
+          verifySessionToken(token);
+        }
+      }
+
       if (!logId) throw new Error("ID Log wajib disertakan.");
       const ss = getDatabaseSpreadsheet();
       const sheet = ss.getSheetByName(SHEET_SOROGAN_LOGS);
       if (!sheet) throw new Error("Sheet Sorogan_Logs tidak ditemukan.");
 
       const data = sheet.getDataRange().getValues();
-      const idIdx = data[0].map(h => String(h).toLowerCase()).indexOf("log_id");
+      const headers = data[0].map(h => String(h || "").toLowerCase().trim());
+      const idIdx = headers.indexOf("log_id");
+      const sIdIdx = headers.indexOf("student_id");
 
       for (let i = 1; i < data.length; i++) {
         if (String(data[i][idIdx] || "").trim() === String(logId).trim()) {
+          const studentId = sIdIdx !== -1 ? String(data[i][sIdIdx] || "").trim() : "";
           sheet.deleteRow(i + 1);
+
+          // Kalibrasi ulang capaian santri setelah log dihapus
+          if (studentId) {
+            recalculateSoroganCapaianForStudent_(ss, studentId);
+          }
+
           return { status: "success", success: true, message: "Log sorogan berhasil dihapus." };
         }
       }
@@ -17890,6 +17908,123 @@ function deleteSoroganLog(logId, token) {
       return { status: "error", success: false, message: "Gagal menghapus log sorogan: " + err.message };
     }
   });
+}
+
+function recalculateSoroganCapaianForStudent_(ss, studentId) {
+  try {
+    if (!studentId) return;
+    const logsSheet = ss.getSheetByName(SHEET_SOROGAN_LOGS);
+    const capaianSheet = ss.getSheetByName(SHEET_SOROGAN_CAPAIAN);
+    if (!capaianSheet) return;
+
+    let studentLogs = [];
+    if (logsSheet) {
+      const lData = logsSheet.getDataRange().getValues();
+      if (lData && lData.length > 1) {
+        const lHeaders = lData[0].map(h => String(h || "").toLowerCase().trim());
+        const sIdIdx = lHeaders.indexOf("student_id");
+        const nisIdx = lHeaders.indexOf("nis");
+        const juzIdx = lHeaders.indexOf("juz");
+        const halListIdx = lHeaders.indexOf("halaman_list");
+        const totHalIdx = lHeaders.indexOf("total_halaman");
+        const statusIdx = lHeaders.indexOf("status_setoran");
+        const dateIdx = lHeaders.indexOf("tanggal");
+        const crIdx = lHeaders.indexOf("created_at");
+
+        for (let i = 1; i < lData.length; i++) {
+          const row = lData[i];
+          const rowSid = sIdIdx !== -1 ? String(row[sIdIdx] || "").trim() : "";
+          const rowNis = nisIdx !== -1 ? String(row[nisIdx] || "").trim() : "";
+          if (rowSid === studentId || (rowNis && rowNis === studentId)) {
+            let parsedHalList = [];
+            try {
+              parsedHalList = JSON.parse(row[halListIdx]);
+            } catch (e) {
+              const num = Number(row[halListIdx]);
+              if (!isNaN(num)) parsedHalList = [num];
+            }
+            studentLogs.push({
+              juz: Number(row[juzIdx]) || 1,
+              halamanList: Array.isArray(parsedHalList) ? parsedHalList : [1],
+              totalHalaman: Number(row[totHalIdx]) || 1,
+              status: String(row[statusIdx] || "").trim().toUpperCase(),
+              tanggal: String(row[dateIdx] || ""),
+              createdAt: String(row[crIdx] || ""),
+              rowOrder: i
+            });
+          }
+        }
+      }
+    }
+
+    // Urutkan riwayat secara kronologis
+    studentLogs.sort((a, b) => {
+      const tA = new Date(a.tanggal || a.createdAt).getTime() || a.rowOrder;
+      const tB = new Date(b.tanggal || b.createdAt).getTime() || b.rowOrder;
+      return tA - tB;
+    });
+
+    let newJuz = 1;
+    let newHalaman = 1;
+    let totalKhatam = 0;
+    let statusTerakhir = "BELUM_MULAI";
+
+    if (studentLogs.length > 0) {
+      for (const log of studentLogs) {
+        if (log.status === "LANJUT") {
+          totalKhatam += (log.totalHalaman || 1);
+        }
+      }
+
+      const latestLog = studentLogs[studentLogs.length - 1];
+      const lastPages = latestLog.halamanList.length > 0 ? latestLog.halamanList : [1];
+      const maxPage = Math.max(...lastPages);
+      statusTerakhir = latestLog.status;
+
+      if (latestLog.status === "LANJUT") {
+        if (maxPage >= 20) {
+          newJuz = Math.min(30, latestLog.juz + 1);
+          newHalaman = (latestLog.juz === 30 && maxPage >= 20) ? 20 : 1;
+        } else {
+          newJuz = latestLog.juz;
+          newHalaman = maxPage + 1;
+        }
+      } else if (latestLog.status === "KHATAM_30JUZ") {
+        newJuz = 30;
+        newHalaman = 20;
+      } else {
+        // ULANG
+        newJuz = latestLog.juz;
+        newHalaman = Math.min(...lastPages);
+      }
+    }
+
+    // Update row di Sorogan_Capaian
+    const cData = capaianSheet.getDataRange().getValues();
+    if (cData && cData.length > 1) {
+      const cHeaders = cData[0].map(h => String(h || "").toLowerCase().trim());
+      const cSidIdx = cHeaders.indexOf("student_id");
+      const cJuzIdx = cHeaders.indexOf("juz_aktif");
+      const cHalIdx = cHeaders.indexOf("halaman_terakhir");
+      const cTotIdx = cHeaders.indexOf("total_halaman_khatam");
+      const cStatIdx = cHeaders.indexOf("status_terakhir");
+      const cUpdIdx = cHeaders.indexOf("updated_at");
+
+      for (let i = 1; i < cData.length; i++) {
+        if (String(cData[i][cSidIdx] || "").trim() === studentId) {
+          const rowNum = i + 1;
+          if (cJuzIdx !== -1) capaianSheet.getRange(rowNum, cJuzIdx + 1).setValue(newJuz);
+          if (cHalIdx !== -1) capaianSheet.getRange(rowNum, cHalIdx + 1).setValue(newHalaman);
+          if (cTotIdx !== -1) capaianSheet.getRange(rowNum, cTotIdx + 1).setValue(totalKhatam);
+          if (cStatIdx !== -1) capaianSheet.getRange(rowNum, cStatIdx + 1).setValue(statusTerakhir);
+          if (cUpdIdx !== -1) capaianSheet.getRange(rowNum, cUpdIdx + 1).setValue(new Date().toISOString());
+          break;
+        }
+      }
+    }
+  } catch (err) {
+    console.error("[RECALCULATE SOROGAN CAPAIAN ERROR]", err);
+  }
 }
 
 function saveSoroganCapaian(data, token) {
@@ -18352,7 +18487,7 @@ function getSoroganSesiList(token) {
     if (token) {
       try {
         actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PENGASUH"]);
+        authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PENGASUH", "ASATIDZ", "MUALLIM", "PEGAWAI", "GURU"]);
       } catch (authErr) {
         verifySessionToken(token);
       }
@@ -18492,7 +18627,7 @@ function getSoroganStudentDetail(studentId, token) {
     if (token) {
       try {
         actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PENGASUH"]);
+        authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PENGASUH", "PEGAWAI", "MUALLIM", "MUHAFIZ", "GURU", "ASATIDZ", "WALI_SANTRI", "PARENT"]);
       } catch (authErr) {
         verifySessionToken(token);
       }
@@ -18500,6 +18635,29 @@ function getSoroganStudentDetail(studentId, token) {
 
     const cleanId = String(studentId || "").trim();
     if (!cleanId) throw new Error("ID Santri wajib disertakan.");
+
+    // Validasi hak akses khusus Wali Santri: hanya boleh melihat santri binaan yang terhubung
+    if (actor && (actor.role === "WALI_SANTRI" || actor.role === "PARENT")) {
+      const linked = (typeof getLinkedStudentsForWali === "function") ? getLinkedStudentsForWali(actor.identityId) : [];
+      const allowedIds = (linked || []).map(s => String(s.studentId || s.student_id || s.id || s.nis || "").trim().toLowerCase());
+      let isAllowed = allowedIds.includes(cleanId.toLowerCase());
+      if (!isAllowed) {
+        const studentsResCheck = (typeof getAllStudentsData === "function") ? getAllStudentsData(token) : null;
+        const allStudentsList = (studentsResCheck && studentsResCheck.data) || [];
+        const targetStudent = allStudentsList.find(s => 
+          String(s.studentId || s.student_id || "").toLowerCase() === cleanId.toLowerCase() ||
+          String(s.nis || "").toLowerCase() === cleanId.toLowerCase()
+        );
+        const targetSid = targetStudent ? String(targetStudent.studentId || "").toLowerCase() : "";
+        const targetNis = targetStudent ? String(targetStudent.nis || "").toLowerCase() : "";
+        if (targetStudent && (allowedIds.includes(targetSid) || allowedIds.includes(targetNis))) {
+          isAllowed = true;
+        }
+      }
+      if (!isAllowed) {
+        throw new Error("Akses ditolak: Anda hanya berhak memantau perkembangan santri yang terhubung dengan akun Wali Anda.");
+      }
+    }
 
     const ss = getDatabaseSpreadsheet();
 

@@ -344,6 +344,9 @@
                 if (typeof loadAdminSoroganData === 'function') {
                     loadAdminSoroganData();
                 }
+                if (typeof applySoroganRolePermissions === 'function') {
+                    applySoroganRolePermissions();
+                }
             } else if (viewName === 'madin') {
                 if (madinView) madinView.classList.remove('hidden');
                 if (typeof loadAdminMadinData === 'function') {
