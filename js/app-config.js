@@ -72,8 +72,8 @@
 
         // E. Infrastructure Pointers (External services - unpopulated until provisioned)
         infrastructure: Object.freeze({
-            apiBaseUrl: "https://script.google.com/macros/s/AKfycbxoaFyXy4OKx4dNwuuaVBf6N4as4M2602DyGRE0ocFKUvY6PXPJCyyUP7BP5RDreDveKw/exec",
-            appsScriptWebAppUrl: "https://script.google.com/macros/s/AKfycbxoaFyXy4OKx4dNwuuaVBf6N4as4M2602DyGRE0ocFKUvY6PXPJCyyUP7BP5RDreDveKw/exec",
+            apiBaseUrl: "https://script.google.com/macros/s/AKfycbz4To49WTzqN2r3M8M3H4_YyAbeMjfTWRgxLrz6-YXuf7oFAVZZ6okh14LTIkZdMj9qGg/exec",
+            appsScriptWebAppUrl: "https://script.google.com/macros/s/AKfycbz4To49WTzqN2r3M8M3H4_YyAbeMjfTWRgxLrz6-YXuf7oFAVZZ6okh14LTIkZdMj9qGg/exec",
             appsScriptProjectId: PENDING,
             spreadsheetId: PENDING,
             driveRootFolderId: PENDING,
@@ -85,7 +85,7 @@
 
         // F. Authentication
         authentication: Object.freeze({
-            authApiUrl: "https://script.google.com/macros/s/AKfycbxoaFyXy4OKx4dNwuuaVBf6N4as4M2602DyGRE0ocFKUvY6PXPJCyyUP7BP5RDreDveKw/exec",
+            authApiUrl: "https://script.google.com/macros/s/AKfycbz4To49WTzqN2r3M8M3H4_YyAbeMjfTWRgxLrz6-YXuf7oFAVZZ6okh14LTIkZdMj9qGg/exec",
             googleClientId: PENDING
         }),
 
