@@ -780,7 +780,7 @@ function doPost(e) {
       if (token) {
         try {
           const actor = authenticateSession(token);
-          authorizeRole(actor, ["ADMIN", "EDITOR", "PEGAWAI", "PENGASUH"]);
+          authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PEGAWAI", "PENGASUH", "ASATIDZ", "GURU", "MUALLIM"]);
         } catch (authErr) {
           try { verifySessionToken(token); } catch (e) {
             return createJsonResponse({ status: "error", message: authErr.message });
@@ -795,7 +795,7 @@ function doPost(e) {
       if (token) {
         try {
           const actor = authenticateSession(token);
-          authorizeRole(actor, ["ADMIN", "EDITOR", "PEGAWAI"]);
+          authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR"]);
         } catch (authErr) {
           try { verifySessionToken(token); } catch (e) {
             return createJsonResponse({ status: "error", message: authErr.message });
@@ -811,7 +811,7 @@ function doPost(e) {
       if (token) {
         try {
           const actor = authenticateSession(token);
-          authorizeRole(actor, ["ADMIN", "EDITOR", "PEGAWAI", "PENGASUH"]);
+          authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PEGAWAI", "PENGASUH", "ASATIDZ", "GURU", "MUALLIM"]);
         } catch (authErr) {
           try { verifySessionToken(token); } catch (e) {
             return createJsonResponse({ status: "error", message: authErr.message });
@@ -832,7 +832,7 @@ function doPost(e) {
       if (token) {
         try {
           const actor = authenticateSession(token);
-          authorizeRole(actor, ["ADMIN", "EDITOR", "PEGAWAI"]);
+          authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR"]);
         } catch (authErr) {
           try { verifySessionToken(token); } catch (e) {
             return createJsonResponse({ status: "error", message: authErr.message });
@@ -14717,7 +14717,7 @@ function saveTahfidzPresensi(payload, token) {
     if (token) {
       try {
         actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PEGAWAI", "PENGASUH", "MUHAFIZ", "GURU"]);
+        authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PEGAWAI", "PENGASUH", "MUHAFIZ", "GURU", "ASATIDZ", "MUALLIM"]);
       } catch (authErr) {
         verifySessionToken(token);
       }
@@ -14856,7 +14856,7 @@ function getTahfidzPresensi(payload, token) {
     if (token) {
       try {
         const actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PEGAWAI", "PENGASUH", "MUHAFIZ", "GURU", "WALI_SANTRI", "PARENT"]);
+        authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PEGAWAI", "PENGASUH", "MUHAFIZ", "GURU", "ASATIDZ", "MUALLIM", "WALI_SANTRI", "PARENT"]);
       } catch (authErr) {
         verifySessionToken(token);
       }

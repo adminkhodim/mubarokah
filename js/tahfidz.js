@@ -523,6 +523,13 @@ async function loadAdminTahfidzData(forceRefresh = false) {
         refreshIcon.classList.add('fa-spin');
     }
 
+    const activeRole = String((typeof ASNIdentity !== 'undefined' && ASNIdentity.currentRole) || 
+                              sessionStorage.getItem('ASN_ADMIN_ROLE') || 
+                              sessionStorage.getItem('mubarokah_admin_role') || 'SUPER_ADMIN').toUpperCase();
+    if (activeRole === 'SUPER_ADMIN' || activeRole === 'ADMIN') {
+        ASNTahfidz.viewerRole = 'admin';
+    }
+
     // 1. Cek cache lokal (Memory, localStorage, atau sessionStorage)
     // Strategi SWR: Jika ada data, LANGSUNG RENDER INSTAN (< 50ms) tanpa menunggu server!
     let hasRenderedFromCache = false;
@@ -721,16 +728,23 @@ function getHalaqahForActiveAsatidz() {
 
 /**
  * Kontrol Visibilitas Tombol Tahfidz Berdasarkan Peran Pengguna (RBAC)
- * Menyembunyikan tombol ekspor (Excel, CSV, Cetak, +Catat Setoran) & manajerial (Kelola Halaqah, Jadwal & Sesi, Target Massal) untuk Akun Asatidz
+ * Memberikan akses penuh bagi Super Admin & Admin untuk manajerial (Kelola Halaqah, Jadwal & Sesi, Target Massal)
+ * dan mengaktifkan Tombol Presensi untuk Super Admin, Admin, dan Asatidz.
  */
 function applyTahfidzRolePermissions() {
     const activeRole = String((typeof ASNIdentity !== 'undefined' && ASNIdentity.currentRole) || 
                               sessionStorage.getItem('ASN_ADMIN_ROLE') || 
                               sessionStorage.getItem('mubarokah_admin_role') || 'SUPER_ADMIN').toUpperCase();
-    const isPengasuh = activeRole === 'PENGASUH' || (typeof ASNTahfidz !== 'undefined' && ASNTahfidz.viewerRole === 'pengasuh');
-    const isAsatidz = activeRole === 'ASATIDZ';
-    const hideAdminActions = isPengasuh || isAsatidz;
+    const isAdminOrSuper = (activeRole === 'SUPER_ADMIN' || activeRole === 'ADMIN');
+    if (isAdminOrSuper && typeof ASNTahfidz !== 'undefined') {
+        ASNTahfidz.viewerRole = 'admin';
+    }
 
+    const isPengasuh = !isAdminOrSuper && (activeRole === 'PENGASUH' || (typeof ASNTahfidz !== 'undefined' && ASNTahfidz.viewerRole === 'pengasuh'));
+    const isAsatidz = !isAdminOrSuper && (activeRole === 'ASATIDZ' || activeRole === 'GURU' || activeRole === 'MUALLIM' || activeRole === 'PEGAWAI');
+    const hideAdminActions = !isAdminOrSuper && (isPengasuh || isAsatidz);
+
+    // Tombol manajerial administratif: Kelola Halaqah, Jadwal & Sesi, Target Massal
     document.querySelectorAll('.tahfidz-admin-action').forEach(el => {
         if (hideAdminActions) {
             el.classList.add('hidden');
@@ -738,6 +752,18 @@ function applyTahfidzRolePermissions() {
         } else {
             el.classList.remove('hidden');
             el.style.display = '';
+        }
+    });
+
+    // Tombol Presensi: Pastikan AKTIF & TAMPIL untuk Super Admin, Admin, dan Asatidz
+    const showPresensi = isAdminOrSuper || isAsatidz;
+    document.querySelectorAll('.tahfidz-presensi-action').forEach(el => {
+        if (showPresensi) {
+            el.classList.remove('hidden');
+            el.style.display = '';
+        } else if (isPengasuh) {
+            el.classList.add('hidden');
+            el.style.display = 'none';
         }
     });
 }

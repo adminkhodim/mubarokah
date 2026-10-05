@@ -330,10 +330,9 @@
                 if (typeof loadAdminTahfidzData === 'function') {
                     loadAdminTahfidzData();
                 }
-                const isPengasuh = typeof ASNTahfidz !== 'undefined' && ASNTahfidz.viewerRole === 'pengasuh';
-                document.querySelectorAll('.tahfidz-admin-action').forEach(el => {
-                    el.style.display = isPengasuh ? 'none' : '';
-                });
+                if (typeof applyTahfidzRolePermissions === 'function') {
+                    applyTahfidzRolePermissions();
+                }
             } else if (viewName === 'tpq') {
                 if (tpqView) tpqView.classList.remove('hidden');
                 if (typeof loadAdminTPQData === 'function') {

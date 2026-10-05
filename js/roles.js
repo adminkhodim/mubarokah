@@ -1448,6 +1448,11 @@
             if (!allowed.includes('akuntansi')) allowed.push('akuntansi');
         }
 
+        // Pastikan role SUPER_ADMIN, ADMIN, dan ASATIDZ selalu memiliki akses ke modul Presensi
+        if (roleKey === 'SUPER_ADMIN' || roleKey === 'ADMIN' || roleKey === 'ASATIDZ') {
+            if (!allowed.includes('presensi')) allowed.push('presensi');
+        }
+
         return allowed;
     }
 
@@ -1467,6 +1472,11 @@
 
         // Role ADMIN dan BENDAHARA secara default dan mutlak diizinkan mengakses modul Keuangan dan Akuntansi
         if ((roleKey === 'ADMIN' || roleKey === 'BENDAHARA') && (moduleKey === 'keuangan' || moduleKey === 'akuntansi')) {
+            return true;
+        }
+
+        // Role SUPER_ADMIN, ADMIN, dan ASATIDZ secara default dan mutlak diizinkan mengakses modul Presensi
+        if ((roleKey === 'SUPER_ADMIN' || roleKey === 'ADMIN' || roleKey === 'ASATIDZ') && moduleKey === 'presensi') {
             return true;
         }
 
