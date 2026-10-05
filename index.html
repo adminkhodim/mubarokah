@@ -7209,6 +7209,12 @@
                                         </div>
                                     </div>
                                     <div class="flex items-center space-x-2">
+                                        <button type="button" onclick="openOnlineUsersModal()"
+                                            class="px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm active:scale-95"
+                                            title="Lihat Sesi Pengguna Online Real-time">
+                                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                            <span class="hidden sm:inline">Sesi Real-time</span>
+                                        </button>
                                         <button type="button" onclick="openAdminUserModal()"
                                             class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm active:scale-95">
                                             <i class="fa-solid fa-user-plus text-xs"></i>
@@ -7280,6 +7286,12 @@
                                         <button type="button" onclick="filterAdminUsers('ALL')" data-role-filter="ALL"
                                             class="admin-user-tab active px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 text-white transition shadow-sm shrink-0">Semua
                                             (<span id="user-tab-count-all">0</span>)</button>
+                                        <button type="button" onclick="filterAdminUsers('ONLINE')"
+                                            data-role-filter="ONLINE"
+                                            class="admin-user-tab px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-100 transition shrink-0 flex items-center gap-1.5">
+                                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                            <span>Online (<span id="user-tab-count-online">0</span>)</span>
+                                        </button>
                                         <button type="button" onclick="filterAdminUsers('WALI_SANTRI')"
                                             data-role-filter="WALI_SANTRI"
                                             class="admin-user-tab px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836] transition shrink-0">Wali
@@ -18990,6 +19002,60 @@
         </div>
     </div>
 
+    <!-- ==================== MODAL: DAFTAR PENGGUNA ONLINE REAL-TIME ==================== -->
+    <div id="modal-online-users" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs hidden transition-opacity duration-300">
+        <div class="bg-white dark:bg-[#15202d] w-full max-w-2xl rounded-3xl shadow-2xl border border-slate-100 dark:border-[#253447] overflow-hidden flex flex-col max-h-[85vh] animate-in fade-in zoom-in-95 duration-200">
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 text-white px-5 py-4 border-b border-emerald-500/30 flex items-center justify-between shrink-0">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg border border-emerald-500/30 shrink-0">
+                        <i class="fa-solid fa-users-viewfinder"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-sm md:text-base font-extrabold text-white tracking-tight">Sesi Pengguna Online</h3>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                <span id="modal-online-count-badge">0 Online</span>
+                            </span>
+                        </div>
+                        <p class="text-[11px] text-slate-300">Daftar akun yang sedang aktif membuka sistem saat ini.</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button type="button" onclick="refreshOnlineUsersModal()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white flex items-center justify-center transition active:scale-95" title="Segarkan Data">
+                        <i class="fa-solid fa-rotate text-xs"></i>
+                    </button>
+                    <button type="button" onclick="closeOnlineUsersModal()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-red-500/80 text-slate-200 hover:text-white flex items-center justify-center transition active:scale-95" title="Tutup">
+                        <i class="fa-solid fa-xmark text-sm"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search & Filter Bar -->
+            <div class="p-3.5 bg-slate-50 dark:bg-[#1a2634] border-b border-slate-100 dark:border-[#253447] flex items-center justify-between gap-3 shrink-0">
+                <div class="relative flex-1">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-400"></i>
+                    <input type="text" id="modal-online-search-input" oninput="filterOnlineUsersModalList(this.value)" placeholder="Cari nama atau email pengguna online..." class="w-full bg-white dark:bg-[#15202d] text-slate-800 dark:text-slate-100 text-xs pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#283a4e] outline-none focus:border-emerald-500 transition">
+                </div>
+                <span class="text-[11px] text-slate-500 dark:text-slate-400 font-medium shrink-0">Batas toleransi: ≤3 menit</span>
+            </div>
+
+            <!-- List of Online Users -->
+            <div id="modal-online-users-container" class="p-4 overflow-y-auto space-y-2.5 flex-1 divide-y divide-slate-100 dark:divide-[#253447]/60">
+                <!-- Rendered dynamically by JavaScript -->
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-5 py-3 bg-slate-50 dark:bg-[#1c2836] border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 shrink-0">
+                <span>Heartbeat otomatis diperbarui setiap 60 detik.</span>
+                <button type="button" onclick="closeOnlineUsersModal()" class="px-4 py-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 rounded-xl font-bold transition active:scale-95">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ==================== APPLICATION SCRIPTS & MODULES ==================== -->
     <!-- Service Worker PWA -->
     <script>
@@ -19022,10 +19088,10 @@
     <script src="/js/ppdb.js"></script>
     <script src="/js/ibadah.js"></script>
     <script src="/js/jadwal-sholat.js"></script>
-    <script src="/js/admin.js?v=13"></script>
+    <script src="/js/admin.js?v=14"></script>
     <script src="/js/roles.js?v=13"></script>
     <script src="/js/alumni.js"></script>
-    <script src="/js/auth.js?v=13"></script>
+    <script src="/js/auth.js?v=14"></script>
     <script src="/js/pegawai.js"></script>
     <script src="/js/tahfidz.js"></script>
     <script src="/js/tpq.js"></script>

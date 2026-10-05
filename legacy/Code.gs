@@ -8033,6 +8033,10 @@ function getAllUsersWithLinkedStudents(token) {
     let createdIdx = uHeaders.indexOf("created_at");
     if (createdIdx === -1) createdIdx = uHeaders.indexOf("dibuat_pada");
     const lastLoginIdx = uHeaders.indexOf("last_login_at");
+    let lastSeenIdx = uHeaders.indexOf("last_seen_at");
+    if (lastSeenIdx === -1) lastSeenIdx = uHeaders.indexOf("last_seen");
+    let devIdx = uHeaders.indexOf("device_info");
+    if (devIdx === -1) devIdx = uHeaders.indexOf("perangkat");
 
     // Ambil mapping santri untuk Wali Santri
     const mapSheet = getAuthSheet(ss, SHEET_WALI_SANTRI_MAP);
@@ -8097,6 +8101,10 @@ function getAllUsersWithLinkedStudents(token) {
         status: statusIdx !== -1 ? String(usersData[i][statusIdx] || "ACTIVE").trim().toUpperCase() : "ACTIVE",
         createdAt: createdIdx !== -1 ? String(usersData[i][createdIdx] || "").trim() : "",
         lastLoginAt: lastLoginIdx !== -1 ? String(usersData[i][lastLoginIdx] || "").trim() : "",
+        lastSeenAt: lastSeenIdx !== -1 ? String(usersData[i][lastSeenIdx] || "").trim() : (lastLoginIdx !== -1 ? String(usersData[i][lastLoginIdx] || "").trim() : ""),
+        last_seen_at: lastSeenIdx !== -1 ? String(usersData[i][lastSeenIdx] || "").trim() : (lastLoginIdx !== -1 ? String(usersData[i][lastLoginIdx] || "").trim() : ""),
+        deviceInfo: devIdx !== -1 ? String(usersData[i][devIdx] || "").trim() : "",
+        device_info: devIdx !== -1 ? String(usersData[i][devIdx] || "").trim() : "",
         linkedStudents: linked
       });
     }
@@ -8125,6 +8133,98 @@ function getAllUsersWithLinkedStudents(token) {
       status: "error",
       message: "Gagal memuat data pengguna: " + err.message
     };
+  }
+}
+
+/**
+ * Memperbarui status kehadiran online (telemetri heartbeat & perangkat pengguna)
+ */
+function handleUserPresenceHeartbeat(payload) {
+  try {
+    const rawPayload = payload || {};
+    const userId = String(rawPayload.userId || rawPayload.user_id || rawPayload.identityId || "").trim();
+    const email = String(rawPayload.email || "").trim().toLowerCase();
+    const phone = String(rawPayload.phone || "").replace(/[^0-9]/g, "");
+    const token = rawPayload.token || "";
+    const deviceInfo = String(rawPayload.deviceInfo || rawPayload.device_info || "").trim();
+    const nowIso = new Date().toISOString();
+
+    let targetId = userId;
+    let targetEmail = email;
+
+    if (token && (!targetId && !targetEmail)) {
+      try {
+        const claims = verifySessionToken(token);
+        if (claims && claims.userId) targetId = claims.userId;
+      } catch (e) {}
+    }
+
+    if (!targetId && !targetEmail && !phone) {
+      return { success: false, message: "User identifier missing" };
+    }
+
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) return { success: false, message: "Database not available" };
+
+    const usersSheet = getAuthSheet(ss, SHEET_USERS);
+    if (!usersSheet) return { success: false, message: "Sheet Users not found" };
+
+    const data = usersSheet.getDataRange().getValues();
+    if (!data || data.length < 1) return { success: false, message: "Sheet empty" };
+
+    const header = data[0].map(h => String(h || "").trim().toLowerCase());
+    let idIdx = header.indexOf("user_id");
+    if (idIdx === -1) idIdx = header.indexOf("id");
+    const emailIdx = header.indexOf("email");
+    let phoneIdx = header.indexOf("phone");
+    if (phoneIdx === -1) phoneIdx = header.indexOf("telepon");
+    if (phoneIdx === -1) phoneIdx = header.indexOf("no_hp");
+
+    let lastSeenIdx = header.indexOf("last_seen_at");
+    if (lastSeenIdx === -1) lastSeenIdx = header.indexOf("last_seen");
+    let devIdx = header.indexOf("device_info");
+    if (devIdx === -1) devIdx = header.indexOf("perangkat");
+
+    if (lastSeenIdx === -1) {
+      lastSeenIdx = header.length;
+      header.push("last_seen_at");
+      usersSheet.getRange(1, lastSeenIdx + 1).setValue("last_seen_at").setFontWeight("bold").setBackground("#e0f2fe");
+    }
+    if (devIdx === -1) {
+      devIdx = header.length;
+      header.push("device_info");
+      usersSheet.getRange(1, devIdx + 1).setValue("device_info").setFontWeight("bold").setBackground("#e0f2fe");
+    }
+
+    let updated = false;
+    for (let i = 1; i < data.length; i++) {
+      const rowId = idIdx !== -1 ? String(data[i][idIdx] || "").trim() : "";
+      const rowEmail = emailIdx !== -1 ? String(data[i][emailIdx] || "").trim().toLowerCase() : "";
+      const rowPhone = phoneIdx !== -1 ? String(data[i][phoneIdx] || "").replace(/[^0-9]/g, "") : "";
+
+      const matchId = targetId && (rowId === targetId);
+      const matchEmail = targetEmail && (rowEmail === targetEmail);
+      const matchPhone = phone && (rowPhone === phone);
+
+      if (matchId || matchEmail || matchPhone) {
+        usersSheet.getRange(i + 1, lastSeenIdx + 1).setValue(nowIso);
+        if (deviceInfo) {
+          usersSheet.getRange(i + 1, devIdx + 1).setValue(deviceInfo);
+        }
+        updated = true;
+        break;
+      }
+    }
+
+    return {
+      success: true,
+      updated: updated,
+      lastSeenAt: nowIso,
+      deviceInfo: deviceInfo
+    };
+  } catch (err) {
+    console.error("[HEARTBEAT ERROR]", err);
+    return { success: false, message: err.message };
   }
 }
 
@@ -11039,8 +11139,12 @@ function handleAuthApiAction(action, payload, e) {
     }
 
     // ----------------------------------------------------
-    // 13c. USER MANAGEMENT (auth.admin.userList, userSave, userToggleStatus)
+    // 13c. USER MANAGEMENT & ONLINE TELEMETRY
     // ----------------------------------------------------
+    if (action === "auth.user.heartbeat" || action === "user.heartbeat") {
+      return createJsonResponse(handleUserPresenceHeartbeat(payload.data || payload));
+    }
+
     if (action === "auth.admin.userList" || action === "admin.users.list" || action === "admin.userList") {
       const token = payload.token || (payload.data && payload.data.token) || "";
       return createJsonResponse(getAllUsersWithLinkedStudents(token));

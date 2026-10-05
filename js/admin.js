@@ -5124,6 +5124,16 @@
                     if (tabAdmin) tabAdmin.innerText = adminCount;
                     if (tabSuperAdmin) tabSuperAdmin.innerText = superAdminCount;
 
+                    // Update Tab Online
+                    const onlineCount = adminUsersList.filter(u => {
+                        const st = typeof calculateUserOnlineStatus === 'function' 
+                            ? calculateUserOnlineStatus(u.last_seen_at || u.lastSeenAt) 
+                            : { isOnline: false };
+                        return st.isOnline;
+                    }).length;
+                    const tabOnline = document.getElementById('user-tab-count-online');
+                    if (tabOnline) tabOnline.innerText = onlineCount;
+
                     renderAdminUsersTable();
                 } else {
                     const msg = (response && response.message) || 'Gagal memuat data pengguna.';
@@ -5149,9 +5159,16 @@
 
             let filtered = adminUsersList.slice();
 
-            // Filter Peran
+            // Filter Peran & Status Online
             if (adminUsersFilterRole && adminUsersFilterRole !== 'ALL') {
-                if (adminUsersFilterRole === 'ASATIDZ' || adminUsersFilterRole === 'PEGAWAI') {
+                if (adminUsersFilterRole === 'ONLINE') {
+                    filtered = filtered.filter(u => {
+                        const presence = typeof calculateUserOnlineStatus === 'function' 
+                            ? calculateUserOnlineStatus(u.last_seen_at || u.lastSeenAt) 
+                            : { isOnline: false };
+                        return presence.isOnline;
+                    });
+                } else if (adminUsersFilterRole === 'ASATIDZ' || adminUsersFilterRole === 'PEGAWAI') {
                     filtered = filtered.filter(u => u.role === 'ASATIDZ' || u.role === 'PEGAWAI' || u.role === 'EDITOR');
                 } else {
                     filtered = filtered.filter(u => u.role === adminUsersFilterRole);
@@ -5248,14 +5265,38 @@
                     </div>
                 ` : `<span class="text-slate-400 text-[10px]">-</span>`;
 
+                // Status Kehadiran Online
+                const presence = typeof calculateUserOnlineStatus === 'function' 
+                    ? calculateUserOnlineStatus(user.last_seen_at || user.lastSeenAt) 
+                    : { status: 'offline', label: 'Offline', color: 'slate', text: 'Offline', isOnline: false };
+
+                const onlineIndicator = presence.isOnline 
+                    ? `<span class="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#15202d] animate-pulse shrink-0 inline-block" title="Online Sekarang (${user.device_info || user.deviceInfo || 'Perangkat'})"></span>`
+                    : (presence.status === 'idle'
+                        ? `<span class="w-2.5 h-2.5 rounded-full bg-amber-400 ring-2 ring-white dark:ring-[#15202d] shrink-0 inline-block" title="Idle (${presence.text})"></span>`
+                        : `<span class="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-600 ring-2 ring-white dark:ring-[#15202d] shrink-0 inline-block" title="${presence.text}"></span>`);
+
+                const presenceBadge = presence.isOnline 
+                    ? `<span class="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-600 dark:text-emerald-400"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Online • ${escapeUserHtml(user.device_info || user.deviceInfo || 'Aktif')}</span>`
+                    : `<span class="text-[9px] text-slate-400 font-medium">${presence.text}</span>`;
+
                 return `
                     <tr class="hover:bg-slate-50/70 dark:hover:bg-[#1c2836]/40 transition">
                         <td class="p-3.5">
                             <div class="flex items-center space-x-3">
-                                ${avatarHtml}
-                                <div>
-                                    <h4 class="font-bold text-slate-800 dark:text-slate-100 text-xs leading-tight">${safeName}</h4>
-                                    <p class="text-[10px] text-slate-400 font-mono mt-0.5">${safeEmail}</p>
+                                <div class="relative shrink-0">
+                                    ${avatarHtml}
+                                    <span class="absolute -bottom-0.5 -right-0.5">${onlineIndicator}</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-1.5">
+                                        <h4 class="font-bold text-slate-800 dark:text-slate-100 text-xs leading-tight truncate">${safeName}</h4>
+                                    </div>
+                                    <div class="flex items-center gap-2 mt-0.5">
+                                        <span class="text-[10px] text-slate-400 font-mono truncate">${safeEmail}</span>
+                                        <span class="text-slate-300 dark:text-slate-700">•</span>
+                                        ${presenceBadge}
+                                    </div>
                                 </div>
                             </div>
                         </td>
@@ -5286,10 +5327,15 @@
             document.querySelectorAll('.admin-user-tab').forEach(btn => {
                 if (btn.dataset.roleFilter === role) {
                     btn.classList.add('active', 'bg-emerald-600', 'text-white');
-                    btn.classList.remove('text-slate-600', 'dark:text-slate-300');
+                    btn.classList.remove('text-slate-600', 'dark:text-slate-300', 'text-emerald-700', 'dark:text-emerald-300', 'bg-emerald-50', 'dark:bg-emerald-950/60');
                 } else {
                     btn.classList.remove('active', 'bg-emerald-600', 'text-white');
-                    btn.classList.add('text-slate-600', 'dark:text-slate-300');
+                    if (btn.dataset.roleFilter === 'ONLINE') {
+                        btn.classList.add('text-emerald-700', 'dark:text-emerald-300', 'bg-emerald-50', 'dark:bg-emerald-950/60');
+                        btn.classList.remove('text-slate-600', 'dark:text-slate-300');
+                    } else {
+                        btn.classList.add('text-slate-600', 'dark:text-slate-300');
+                    }
                 }
             });
             renderAdminUsersTable();
@@ -5494,4 +5540,143 @@
                 console.error('[TOGGLE STATUS ERROR]', err);
                 if (typeof showToast === 'function') showToast('❌ ' + err.message);
             }
+        }
+
+        // =====================================================================
+        // MODAL DAFTAR PENGGUNA ONLINE REAL-TIME
+        // =====================================================================
+        let onlineUsersModalQuery = '';
+
+        function openOnlineUsersModal() {
+            const modal = document.getElementById('modal-online-users');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            refreshOnlineUsersModal();
+        }
+
+        function closeOnlineUsersModal() {
+            const modal = document.getElementById('modal-online-users');
+            if (!modal) return;
+            modal.classList.add('hidden');
+        }
+
+        async function refreshOnlineUsersModal() {
+            const container = document.getElementById('modal-online-users-container');
+            if (container) {
+                container.innerHTML = `
+                    <div class="py-8 text-center text-xs text-slate-400 space-y-2">
+                        <i class="fa-solid fa-spinner fa-spin text-xl text-emerald-600"></i>
+                        <p>Memuat status real-time pengguna...</p>
+                    </div>
+                `;
+            }
+
+            try {
+                if (typeof loadAdminUsersData === 'function') {
+                    await loadAdminUsersData();
+                }
+                const users = (typeof adminUsersList !== 'undefined' && Array.isArray(adminUsersList)) ? adminUsersList : [];
+                renderOnlineUsersModalList(users, onlineUsersModalQuery);
+            } catch (e) {
+                if (container) {
+                    container.innerHTML = `<div class="p-6 text-center text-xs text-rose-500">Gagal memuat status online: ${e.message}</div>`;
+                }
+            }
+        }
+
+        function filterOnlineUsersModalList(query) {
+            onlineUsersModalQuery = (query || '').toLowerCase().trim();
+            const users = (typeof adminUsersList !== 'undefined' && Array.isArray(adminUsersList)) ? adminUsersList : [];
+            renderOnlineUsersModalList(users, onlineUsersModalQuery);
+        }
+
+        function renderOnlineUsersModalList(users, query = '') {
+            const container = document.getElementById('modal-online-users-container');
+            const badge = document.getElementById('modal-online-count-badge');
+            if (!container) return;
+
+            const onlineUsers = users.filter(u => {
+                const presence = typeof calculateUserOnlineStatus === 'function' 
+                    ? calculateUserOnlineStatus(u.last_seen_at || u.lastSeenAt) 
+                    : { isOnline: false };
+                return presence.isOnline;
+            });
+
+            if (badge) badge.innerText = `${onlineUsers.length} Online`;
+
+            let displayList = onlineUsers;
+            if (query) {
+                displayList = onlineUsers.filter(u => 
+                    String(u.name || '').toLowerCase().includes(query) ||
+                    String(u.email || '').toLowerCase().includes(query) ||
+                    String(u.role || '').toLowerCase().includes(query) ||
+                    String(u.device_info || u.deviceInfo || '').toLowerCase().includes(query)
+                );
+            }
+
+            if (displayList.length === 0) {
+                container.innerHTML = `
+                    <div class="py-12 text-center space-y-2">
+                        <div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-[#1c2836] text-slate-400 flex items-center justify-center mx-auto text-lg">
+                            <i class="fa-solid fa-user-clock"></i>
+                        </div>
+                        <h4 class="text-xs font-bold text-slate-700 dark:text-slate-200">Tidak Ada Pengguna Online</h4>
+                        <p class="text-[10px] text-slate-400 max-w-xs mx-auto">
+                            ${query ? 'Tidak ada pengguna online yang cocok dengan pencarian.' : 'Saat ini belum ada sesi pengguna lain yang sedang aktif.'}
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = displayList.map(u => {
+                const presence = typeof calculateUserOnlineStatus === 'function' 
+                    ? calculateUserOnlineStatus(u.last_seen_at || u.lastSeenAt) 
+                    : { text: 'Online' };
+                const safeName = escapeUserHtml(u.name || 'Pengguna');
+                const role = String(u.role || 'WALI_SANTRI').toUpperCase();
+                const photoUrl = u.photoUrl || '';
+                const deviceInfo = u.device_info || u.deviceInfo || 'Perangkat Mobile / Desktop';
+
+                const avatarHtml = photoUrl
+                    ? `<img src="${photoUrl}" alt="${safeName}" class="w-10 h-10 rounded-2xl object-cover border border-slate-200 dark:border-[#253447] shadow-xs shrink-0" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || 'User')}&background=059669&color=fff'">`
+                    : `<div class="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold flex items-center justify-center text-xs shrink-0 shadow-xs">${(u.name || 'U').charAt(0).toUpperCase()}</div>`;
+
+                return `
+                    <div class="pt-2.5 pb-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50 dark:hover:bg-[#1a2634] p-2 rounded-2xl transition">
+                        <div class="flex items-center space-x-3 min-w-0">
+                            <div class="relative shrink-0">
+                                ${avatarHtml}
+                                <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#15202d] animate-pulse"></span>
+                            </div>
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <h4 class="text-xs md:text-sm font-bold text-slate-800 dark:text-slate-100 truncate">${safeName}</h4>
+                                    <span class="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">${role}</span>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-slate-400 mt-0.5">
+                                    <span>${escapeUserHtml(u.email || u.phone || '-')}</span>
+                                    <span>•</span>
+                                    <span class="text-slate-600 dark:text-slate-300 font-medium">${escapeUserHtml(deviceInfo)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2 sm:self-center shrink-0">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span>${presence.text}</span>
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Window exports
+        if (typeof window !== 'undefined') {
+            window.openOnlineUsersModal = openOnlineUsersModal;
+            window.closeOnlineUsersModal = closeOnlineUsersModal;
+            window.refreshOnlineUsersModal = refreshOnlineUsersModal;
+            window.filterOnlineUsersModalList = filterOnlineUsersModalList;
+            window.renderOnlineUsersModalList = renderOnlineUsersModalList;
         }

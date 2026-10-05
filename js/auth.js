@@ -2687,3 +2687,158 @@ async function handleCredentialResponse(response) {
         if (typeof showToast === 'function') showToast('Terjadi kendala memproses Google Sign-In.');
     }
 }
+
+// ====================================================================
+// ONLINE PRESENCE TELEMETRY & HEARTBEAT
+// ====================================================================
+
+let userPresenceTimer = null;
+
+function detectClientDeviceInfo() {
+    if (typeof window === 'undefined') return 'Desktop Browser';
+    const isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+    const ua = (typeof navigator !== 'undefined' && navigator.userAgent) ? navigator.userAgent : '';
+    
+    let os = 'Desktop';
+    if (/Android/i.test(ua)) os = 'Android';
+    else if (/iPhone|iPad|iPod/i.test(ua)) os = 'iOS';
+    else if (/Windows/i.test(ua)) os = 'Windows';
+    else if (/Macintosh|Mac OS X/i.test(ua)) os = 'Mac';
+    else if (/Linux/i.test(ua)) os = 'Linux';
+
+    let browser = 'Browser';
+    if (/Edg/i.test(ua)) browser = 'Edge';
+    else if (/Chrome/i.test(ua)) browser = 'Chrome';
+    else if (/Safari/i.test(ua)) browser = 'Safari';
+    else if (/Firefox/i.test(ua)) browser = 'Firefox';
+
+    if (isStandalone) {
+        return `📱 PWA ${os}`;
+    }
+    if (os === 'Android' || os === 'iOS') {
+        return `📱 Mobile ${browser} (${os})`;
+    }
+    return `💻 ${browser} ${os}`;
+}
+
+function calculateUserOnlineStatus(lastSeenAt) {
+    if (!lastSeenAt) return { status: 'offline', label: 'Offline', color: 'slate', text: 'Belum aktif', isOnline: false };
+    const dateVal = new Date(lastSeenAt);
+    if (isNaN(dateVal.getTime())) return { status: 'offline', label: 'Offline', color: 'slate', text: 'Belum aktif', isOnline: false };
+    
+    const diffMs = Date.now() - dateVal.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins <= 3) return { status: 'online', label: 'Online', color: 'emerald', text: 'Online sekarang', isOnline: true };
+    if (diffMins <= 7) return { status: 'idle', label: 'Idle', color: 'amber', text: `${diffMins} mnt lalu (Idle)`, isOnline: true };
+    if (diffMins < 60) return { status: 'offline', label: 'Offline', color: 'slate', text: `${diffMins} mnt lalu`, isOnline: false };
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return { status: 'offline', label: 'Offline', color: 'slate', text: `${diffHours} jam lalu`, isOnline: false };
+    return { status: 'offline', label: 'Offline', color: 'slate', text: `${Math.floor(diffHours / 24)} hari lalu`, isOnline: false };
+}
+
+async function sendUserPresenceHeartbeat() {
+    let currentId = null;
+    let currentEmail = null;
+    let currentPhone = null;
+    let currentToken = null;
+    let currentRole = null;
+
+    // 1. Cek Admin / Pegawai / Pengurus
+    try {
+        const adminDataStr = sessionStorage.getItem('mubarokah_admin_data') || localStorage.getItem('mubarokah_admin_data');
+        if (adminDataStr) {
+            const admin = JSON.parse(adminDataStr);
+            currentId = admin.userId || admin.user_id || admin.identityId || admin.id;
+            currentEmail = admin.email;
+            currentPhone = admin.phone || admin.telepon;
+            currentRole = admin.role || sessionStorage.getItem('mubarokah_admin_role') || localStorage.getItem('mubarokah_admin_role');
+            currentToken = sessionStorage.getItem('mubarokah_admin_token') || localStorage.getItem('mubarokah_admin_token');
+        }
+    } catch (e) {}
+
+    // 2. Cek Pengasuh
+    if (!currentId && !currentEmail) {
+        try {
+            const pengasuhDataStr = sessionStorage.getItem('mubarokah_pengasuh_data') || localStorage.getItem('mubarokah_pengasuh_data');
+            if (pengasuhDataStr) {
+                const pengasuh = JSON.parse(pengasuhDataStr);
+                currentId = pengasuh.userId || pengasuh.user_id || pengasuh.identityId || pengasuh.id;
+                currentEmail = pengasuh.email;
+                currentPhone = pengasuh.phone;
+                currentRole = 'PENGASUH';
+                currentToken = sessionStorage.getItem('mubarokah_pengasuh_token') || localStorage.getItem('mubarokah_pengasuh_token');
+            }
+        } catch (e) {}
+    }
+
+    // 3. Cek Wali Santri
+    if (!currentId && !currentEmail) {
+        try {
+            const parentDataStr = sessionStorage.getItem('mubarokah_parent_data') || localStorage.getItem('mubarokah_parent_data');
+            if (parentDataStr) {
+                const parent = JSON.parse(parentDataStr);
+                currentId = parent.userId || parent.user_id || parent.identityId || parent.id;
+                currentEmail = parent.email;
+                currentPhone = parent.phone || parent.telepon;
+                currentRole = 'WALI_SANTRI';
+                currentToken = sessionStorage.getItem('mubarokah_parent_token') || localStorage.getItem('mubarokah_parent_token');
+            }
+        } catch (e) {}
+    }
+
+    if (!currentId && !currentEmail && !currentPhone) return;
+
+    try {
+        const deviceInfo = detectClientDeviceInfo();
+        const payload = {
+            action: 'auth.user.heartbeat',
+            userId: currentId,
+            email: currentEmail,
+            phone: currentPhone,
+            role: currentRole,
+            token: currentToken,
+            deviceInfo: deviceInfo
+        };
+
+        if (typeof authApiPost === 'function') {
+            await authApiPost('auth.user.heartbeat', payload);
+        } else if (typeof apiPost === 'function') {
+            await apiPost('auth.user.heartbeat', payload);
+        }
+    } catch (e) {
+        // Silent failover for telemetry
+    }
+}
+
+function startUserPresenceHeartbeat() {
+    sendUserPresenceHeartbeat();
+    if (!userPresenceTimer && typeof setInterval !== 'undefined') {
+        userPresenceTimer = setInterval(sendUserPresenceHeartbeat, 60000);
+    }
+}
+
+if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            sendUserPresenceHeartbeat();
+        }
+    });
+}
+
+// Inisialisasi awal saat auth.js dimuat
+if (typeof window !== 'undefined') {
+    window.detectClientDeviceInfo = detectClientDeviceInfo;
+    window.calculateUserOnlineStatus = calculateUserOnlineStatus;
+    window.sendUserPresenceHeartbeat = sendUserPresenceHeartbeat;
+    window.startUserPresenceHeartbeat = startUserPresenceHeartbeat;
+
+    setTimeout(() => {
+        if (
+            sessionStorage.getItem('mubarokah_admin_token') || localStorage.getItem('mubarokah_admin_token') ||
+            sessionStorage.getItem('mubarokah_pengasuh_token') || localStorage.getItem('mubarokah_pengasuh_token') ||
+            sessionStorage.getItem('mubarokah_parent_token') || localStorage.getItem('mubarokah_parent_token')
+        ) {
+            startUserPresenceHeartbeat();
+        }
+    }, 1500);
+}
