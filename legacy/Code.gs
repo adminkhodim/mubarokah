@@ -230,6 +230,16 @@ function doPost(e) {
       return createJsonResponse(getTahfidzDashboard(token));
     }
 
+    if (action === "saveTahfidzPresensi" || action === "tahfidz.savePresensi") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      return createJsonResponse(saveTahfidzPresensi(payload.data || payload, token));
+    }
+
+    if (action === "getTahfidzPresensi" || action === "tahfidz.getPresensi") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      return createJsonResponse(getTahfidzPresensi(payload.data || payload, token));
+    }
+
     if (action === "saveTahfidzLog" || action === "tahfidz.saveLog") {
       const token = payload.token || (payload.data && payload.data.token) || null;
       try {
@@ -11267,6 +11277,16 @@ function handleAuthApiAction(action, payload, e) {
       return createJsonResponse(getTahfidzDashboard(token));
     }
 
+    if (action === "auth.tahfidz.savePresensi" || action === "tahfidz.savePresensi" || action === "saveTahfidzPresensi") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(saveTahfidzPresensi(payload.data || payload, token));
+    }
+
+    if (action === "auth.tahfidz.getPresensi" || action === "tahfidz.getPresensi" || action === "getTahfidzPresensi") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      return createJsonResponse(getTahfidzPresensi(payload.data || payload, token));
+    }
+
     if (action === "auth.tahfidz.saveLog" || action === "tahfidz.saveLog" || action === "saveTahfidzLog") {
       const token = payload.token || (payload.data && payload.data.token) || "";
       return createJsonResponse(saveTahfidzLog(payload.data || payload, token));
@@ -11469,6 +11489,8 @@ const SHEET_TAHFIDZ_CAPAIAN = "Tahfidz_Capaian";
 const SHEET_TAHFIDZ_TARGET = "Tahfidz_Target";
 const SHEET_TAHFIDZ_HALAQAH = "Tahfidz_Halaqah";
 const SHEET_TAHFIDZ_SESI = "Tahfidz_Jadwal_Sesi";
+const SHEET_TAHFIDZ_PRESENSI = "Tahfidz_Presensi";
+const HEADERS_TAHFIDZ_PRESENSI = ["presensi_id", "tanggal", "sesi", "halaqah_id", "nama_halaqah", "student_id", "nis", "student_name", "status", "keterangan", "muhafiz", "updated_at"];
 
 /**
  * Helper untuk mendapatkan atau membuat sheet tahfidz secara otomatis dengan styling header rapi
@@ -11842,6 +11864,21 @@ function initTahfidzSheets(token) {
       created.push(SHEET_TAHFIDZ_HALAQAH);
     } else {
       existing.push(SHEET_TAHFIDZ_HALAQAH);
+    }
+
+    // 5. Tab: Tahfidz_Presensi (Absensi & Kehadiran Halaqah)
+    let sheetPresensi = ss.getSheetByName(SHEET_TAHFIDZ_PRESENSI);
+    if (!sheetPresensi) {
+      sheetPresensi = ss.insertSheet(SHEET_TAHFIDZ_PRESENSI);
+      sheetPresensi.getRange(1, 1, 1, HEADERS_TAHFIDZ_PRESENSI.length).setValues([HEADERS_TAHFIDZ_PRESENSI]);
+      sheetPresensi.getRange(1, 1, 1, HEADERS_TAHFIDZ_PRESENSI.length)
+        .setFontWeight("bold")
+        .setBackground("#059669")
+        .setFontColor("#ffffff");
+      sheetPresensi.setFrozenRows(1);
+      created.push(SHEET_TAHFIDZ_PRESENSI);
+    } else {
+      existing.push(SHEET_TAHFIDZ_PRESENSI);
     }
 
     // 4. Tab: Tahfidz_Jadwal_Sesi
@@ -18214,7 +18251,8 @@ function getTPQStudentDetail(studentId, token) {
       kelas: studentKelas,
       ustadz: studentUstadz,
       stats: stats,
-      indikator: indikator,
+      indikator: ind,
+      riwayatPresensi: riwayatPresensiikator,
       capaian: {
         jilidAktif: currentJilid,
         halamanAktif: halAktif,
