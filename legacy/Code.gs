@@ -230,6 +230,15 @@ function doPost(e) {
       return createJsonResponse(getTahfidzDashboard(token));
     }
 
+    if (action === "cleanTahfidzCapaianDuplicates" || action === "tahfidz.cleanDuplicates" || action === "syncTahfidzCapaian" || action === "auth.tahfidz.cleanDuplicates") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      return createJsonResponse(cleanTahfidzCapaianDuplicates(token));
+    }
+
+    if (action === "runTahfidzSchemaMigration" || action === "tahfidz.migrateSchema" || action === "auth.tahfidz.migrateSchema") {
+      return createJsonResponse(runTahfidzSchemaMigration());
+    }
+
     if (action === "saveTahfidzPresensi" || action === "tahfidz.savePresensi") {
       const token = payload.token || (payload.data && payload.data.token) || null;
       return createJsonResponse(saveTahfidzPresensi(payload.data || payload, token));
@@ -11491,6 +11500,523 @@ const SHEET_TAHFIDZ_HALAQAH = "Tahfidz_Halaqah";
 const SHEET_TAHFIDZ_SESI = "Tahfidz_Jadwal_Sesi";
 const SHEET_TAHFIDZ_PRESENSI = "Tahfidz_Presensi";
 const HEADERS_TAHFIDZ_PRESENSI = ["presensi_id", "tanggal", "sesi", "halaqah_id", "nama_halaqah", "student_id", "nis", "student_name", "status", "keterangan", "muhafiz", "updated_at"];
+
+// Urutan Kurikulum Tahfidz Pesantren (Mulai Juz 30 s/d 21, lalu Juz 1 s/d 20)
+const TAHFIDZ_CURRICULUM_JUZ_ORDER = [
+  30, 29, 28, 27, 26, 25, 24, 23, 22, 21,
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+  11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+];
+
+function getTahfidzCurriculumRank_(juz) {
+  var idx = TAHFIDZ_CURRICULUM_JUZ_ORDER.indexOf(Number(juz));
+  return idx !== -1 ? idx : 0;
+}
+
+function getTahfidzCurriculumTotalTuntas_(juz, hal) {
+  var rank = getTahfidzCurriculumRank_(juz);
+  var h = Math.min(20, Math.max(1, Number(hal) || 1));
+  return rank * 20 + parseTahfidzLatestPage_(hal);
+}
+
+function parseTahfidzLatestPage_(halVal) {
+  if (halVal === null || halVal === undefined || halVal === "") return 1;
+  if (typeof halVal === "number" && !isNaN(halVal)) {
+    return Math.min(20, Math.max(1, Math.round(halVal)));
+  }
+  var str = String(halVal).trim();
+  var matches = str.match(/\d+/g);
+  if (!matches || matches.length === 0) return 1;
+  var max = 1;
+  for (var i = 0; i < matches.length; i++) {
+    var n = Number(matches[i]);
+    if (!isNaN(n) && n > max) max = n;
+  }
+  return Math.min(20, Math.max(1, max));
+}
+
+function ensureTahfidzLogsAndCapaianSchema_(ss) {
+  try {
+    if (!ss) return;
+
+    // 1. Pastikan kolom status_setoran, satuan, ayat_mulai, ayat_sampai ada di Tahfidz_Logs
+    const logsSheet = ss.getSheetByName(SHEET_TAHFIDZ_LOGS);
+    if (logsSheet) {
+      let lastCol = logsSheet.getLastColumn();
+      if (lastCol > 0) {
+        let headers = logsSheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h || "").trim().toLowerCase());
+        
+        // 1a. Kolom status_setoran
+        const statusIdx = headers.indexOf("status_setoran");
+        if (statusIdx === -1) {
+          const nextCol = lastCol + 1;
+          if (nextCol > logsSheet.getMaxColumns()) {
+            logsSheet.insertColumnAfter(logsSheet.getMaxColumns());
+          }
+          logsSheet.getRange(1, nextCol).setValue("status_setoran")
+            .setFontWeight("bold")
+            .setBackground("#059669")
+            .setFontColor("#ffffff");
+
+          // Backfill nilai default 'LANJUT' untuk baris data yang ada
+          const lastRow = logsSheet.getLastRow();
+          if (lastRow > 1) {
+            const nilaiIdx = headers.indexOf("nilai");
+            const values = [];
+            if (nilaiIdx !== -1) {
+              const nilaiData = logsSheet.getRange(2, nilaiIdx + 1, lastRow - 1, 1).getValues();
+              for (let i = 0; i < nilaiData.length; i++) {
+                const n = String(nilaiData[i][0] || "").trim().toUpperCase();
+                values.push([n === "DHAIF" ? "ULANG" : "LANJUT"]);
+              }
+            } else {
+              for (let i = 0; i < lastRow - 1; i++) {
+                values.push(["LANJUT"]);
+              }
+            }
+            logsSheet.getRange(2, nextCol, values.length, 1).setValues(values);
+          }
+          lastCol = nextCol;
+          headers.push("status_setoran");
+          console.log("[SCHEMA SUCCESS] Kolom status_setoran berhasil ditambahkan ke Tahfidz_Logs.");
+        }
+
+        // 1b. Kolom khusus Setoran Per Ayat (Tahfidz Anak): satuan, ayat_mulai, ayat_sampai
+        const extraColumns = [
+          { name: "satuan", defaultVal: "HALAMAN" },
+          { name: "ayat_mulai", defaultVal: "" },
+          { name: "ayat_sampai", defaultVal: "" }
+        ];
+
+        extraColumns.forEach(colObj => {
+          if (headers.indexOf(colObj.name) === -1) {
+            const nextCol = lastCol + 1;
+            if (nextCol > logsSheet.getMaxColumns()) {
+              logsSheet.insertColumnAfter(logsSheet.getMaxColumns());
+            }
+            logsSheet.getRange(1, nextCol).setValue(colObj.name)
+              .setFontWeight("bold")
+              .setBackground("#059669")
+              .setFontColor("#ffffff");
+
+            const lastRow = logsSheet.getLastRow();
+            if (lastRow > 1) {
+              const defaultVals = [];
+              for (let i = 0; i < lastRow - 1; i++) {
+                defaultVals.push([colObj.defaultVal]);
+              }
+              logsSheet.getRange(2, nextCol, defaultVals.length, 1).setValues(defaultVals);
+            }
+            lastCol = nextCol;
+            headers.push(colObj.name);
+            console.log(`[SCHEMA SUCCESS] Kolom ${colObj.name} berhasil ditambahkan ke Tahfidz_Logs.`);
+          }
+        });
+      }
+    }
+
+    // 2. Pastikan sheet Tahfidz_Capaian sudah ada
+    const headersCapaian = [
+      "student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_tuntas", "status_terakhir", "halaqah_id", "nama_halaqah", "muhafiz_pembina", "updated_at",
+      "sabqi_halaman", "manzil_juz", "manzil_halaman", "manzil_putaran", "total_halaman_murojaah"
+    ];
+    let capaianSheet = ss.getSheetByName(SHEET_TAHFIDZ_CAPAIAN);
+    if (!capaianSheet) {
+      capaianSheet = getOrCreateTahfidzSheet(ss, SHEET_TAHFIDZ_CAPAIAN, headersCapaian, "#059669");
+      console.log("[SCHEMA SUCCESS] Sheet Tahfidz_Capaian berhasil dibuat.");
+    }
+
+    // 3. Sinkronisasikan data jika sheet baru dibuat / kosong
+    if (!capaianSheet || capaianSheet.getLastRow() <= 1) {
+      syncTahfidzCapaianSheet_(ss);
+    }
+  } catch (err) {
+    console.error("[ENSURE TAHFIDZ SCHEMA ERROR]", err);
+  }
+}
+
+function syncTahfidzCapaianSheet_(ss) {
+  try {
+    if (!ss) return;
+
+    const headersCapaian = [
+      "student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_tuntas",
+      "status_terakhir", "halaqah_id", "nama_halaqah", "muhafiz_pembina", "updated_at",
+      "sabqi_halaman", "manzil_juz", "manzil_halaman", "manzil_putaran", "total_halaman_murojaah"
+    ];
+
+    const capaianSheet = getOrCreateTahfidzSheet(ss, SHEET_TAHFIDZ_CAPAIAN, headersCapaian, "#059669");
+    if (!capaianSheet) return;
+
+    // 1. Peta resolusi alias ID -> Canonical ID (STD-xxx) & Master Nama Santri
+    const studentNameMap = {};
+    const aliasToCanonIdMap = {};
+
+    try {
+      const studentSheet = getAuthSheet(ss, SHEET_STUDENTS);
+      if (studentSheet && studentSheet.getLastRow() > 1) {
+        const sData = studentSheet.getDataRange().getValues();
+        const sHeaders = sData[0].map(h => String(h || "").trim().toLowerCase().replace(/\s+/g, "_"));
+        const sIdIdx = sHeaders.indexOf("student_id");
+        const sNisIdx = sHeaders.indexOf("nis") !== -1 ? sHeaders.indexOf("nis") : sHeaders.indexOf("nisn");
+        const sNameIdx = sHeaders.indexOf("name") !== -1 ? sHeaders.indexOf("name") : sHeaders.indexOf("nama");
+        for (let i = 1; i < sData.length; i++) {
+          const sid = sIdIdx !== -1 ? String(sData[i][sIdIdx] || "").trim() : "";
+          const snis = sNisIdx !== -1 ? String(sData[i][sNisIdx] || "").trim() : "";
+          const sname = sNameIdx !== -1 ? String(sData[i][sNameIdx] || "").trim() : "";
+          const canonId = (sid || snis).toUpperCase();
+          if (canonId) {
+            aliasToCanonIdMap[canonId] = canonId;
+            aliasToCanonIdMap[canonId.toLowerCase()] = canonId;
+            if (sid) {
+              aliasToCanonIdMap[sid.toUpperCase()] = canonId;
+              aliasToCanonIdMap[sid.toLowerCase()] = canonId;
+            }
+            if (snis) {
+              aliasToCanonIdMap[snis.toUpperCase()] = canonId;
+              aliasToCanonIdMap[snis.toLowerCase()] = canonId;
+            }
+            if (sname) {
+              studentNameMap[canonId] = sname;
+              const normName = sname.toLowerCase().replace(/[^a-z0-9]/g, "");
+              if (normName) aliasToCanonIdMap[normName] = canonId;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("[SYNC CAPAIAN MASTER STUDENTS WARN]", e);
+    }
+
+    // Helper penyelarasan ke ID Resmi santri
+    const resolveCanonId = function(rawKey, rawName) {
+      if (!rawKey && !rawName) return "";
+      const k = String(rawKey || "").trim();
+      if (k) {
+        const kUpper = k.toUpperCase();
+        if (aliasToCanonIdMap[kUpper]) return aliasToCanonIdMap[kUpper];
+        if (aliasToCanonIdMap[k.toLowerCase()]) return aliasToCanonIdMap[k.toLowerCase()];
+      }
+      if (rawName) {
+        const normName = String(rawName).toLowerCase().replace(/[^a-z0-9]/g, "");
+        if (normName && aliasToCanonIdMap[normName]) return aliasToCanonIdMap[normName];
+      }
+      return k ? k.toUpperCase() : "";
+    };
+
+    // 2. Ambil data halaqah & buat peta santri -> halaqah (ternormalisasi canonical ID)
+    migrateTahfidzHalaqahSheet_(ss);
+    const halaqahSheet = ss.getSheetByName(SHEET_TAHFIDZ_HALAQAH);
+    const studentHalaqahMap = {};
+    if (halaqahSheet && halaqahSheet.getLastRow() > 1) {
+      const hData = halaqahSheet.getDataRange().getValues();
+      const colMap = getHalaqahColumnIndexes(hData[0]);
+      for (let i = 1; i < hData.length; i++) {
+        const r = hData[i];
+        const hId = colMap.id !== -1 ? String(r[colMap.id] || "").trim() : "";
+        const hMuh = colMap.muhafiz !== -1 ? String(r[colMap.muhafiz] || "").trim() : "";
+        if (!hId && !hMuh) continue;
+        const finalHId = hId || ("HLQ-" + (i < 10 ? "0" + i : i));
+        const finalHName = (colMap.nama !== -1 && r[colMap.nama]) ? String(r[colMap.nama]).trim() : (hMuh ? ("Halaqah " + hMuh) : ("Halaqah " + finalHId));
+        const stIds = colMap.studentIds !== -1 ? String(r[colMap.studentIds] || "").split(",").map(x => x.trim()).filter(Boolean) : [];
+        stIds.forEach(stId => {
+          const canonId = resolveCanonId(stId);
+          if (!canonId) return;
+          studentHalaqahMap[canonId] = {
+            halaqahId: finalHId,
+            namaHalaqah: finalHName,
+            muhafiz: hMuh || "Ustadz Pembina"
+          };
+        });
+      }
+    }
+
+    // 3. Ambil seluruh log dari Tahfidz_Logs & kelompokkan per santri (unifikasi ke canonical ID)
+    const logsSheet = ss.getSheetByName(SHEET_TAHFIDZ_LOGS);
+    const studentLogsMap = {};
+    if (logsSheet && logsSheet.getLastRow() > 1) {
+      const lData = logsSheet.getDataRange().getValues();
+      const lHeaders = lData[0].map(h => String(h || "").trim().toLowerCase());
+      const sIdIdx = lHeaders.indexOf("student_id");
+      const nisIdx = lHeaders.indexOf("nis");
+      const nameIdx = lHeaders.indexOf("student_name");
+      const tglIdx = lHeaders.indexOf("tanggal");
+      const tipeIdx = lHeaders.indexOf("tipe");
+      const juzIdx = lHeaders.indexOf("juz");
+      const halIdx = lHeaders.indexOf("halaman_list");
+      const totHalIdx = lHeaders.indexOf("total_halaman");
+      const nilaiIdx = lHeaders.indexOf("nilai");
+      const muhIdx = lHeaders.indexOf("muhafiz");
+      const stIdx = lHeaders.indexOf("status_setoran");
+      const crtIdx = lHeaders.indexOf("created_at");
+
+      for (let i = 1; i < lData.length; i++) {
+        const r = lData[i];
+        const sid = sIdIdx !== -1 ? String(r[sIdIdx] || "").trim() : "";
+        const snis = nisIdx !== -1 ? String(r[nisIdx] || "").trim() : "";
+        const sname = nameIdx !== -1 ? String(r[nameIdx] || "").trim() : "";
+        const canonKey = resolveCanonId(sid || snis, sname);
+        if (!canonKey) continue;
+
+        if (sname && !studentNameMap[canonKey]) {
+          studentNameMap[canonKey] = sname;
+        }
+
+        if (!studentLogsMap[canonKey]) studentLogsMap[canonKey] = [];
+        studentLogsMap[canonKey].push({
+          logId: String(r[lHeaders.indexOf("log_id")] || "").trim(),
+          tanggal: tglIdx !== -1 ? r[tglIdx] : "",
+          createdAt: crtIdx !== -1 ? r[crtIdx] : "",
+          tipe: tipeIdx !== -1 ? String(r[tipeIdx] || "ZIYADAH").trim().toUpperCase() : "ZIYADAH",
+          juz: juzIdx !== -1 ? Number(r[juzIdx] || 1) : 1,
+          halamanList: halIdx !== -1 ? String(r[halIdx] || "1").trim() : "1",
+          totalHalaman: totHalIdx !== -1 ? Number(r[totHalIdx] || 1) : 1,
+          nilai: nilaiIdx !== -1 ? String(r[nilaiIdx] || "").trim().toUpperCase() : "",
+          muhafiz: muhIdx !== -1 ? String(r[muhIdx] || "").trim() : "",
+          statusSetoran: stIdx !== -1 ? String(r[stIdx] || "LANJUT").trim().toUpperCase() : "LANJUT"
+        });
+      }
+    }
+
+    // 4. Baca data eksisting di Tahfidz_Capaian untuk merge & normalisasi jika ada data ganda
+    const capaianData = capaianSheet.getDataRange().getValues();
+    const existingCapaianMap = {};
+    const allStudentIds = new Set();
+
+    if (capaianData && capaianData.length > 1) {
+      const cHeaders = capaianData[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s\-_]+/g, ""));
+      const cIdIdx = cHeaders.findIndex(h => h === "studentid" || h === "id");
+      const cNameIdx = cHeaders.findIndex(h => h.includes("name") || h.includes("nama"));
+      for (let i = 1; i < capaianData.length; i++) {
+        const sid = cIdIdx !== -1 ? String(capaianData[i][cIdIdx] || "").trim() : "";
+        const sname = cNameIdx !== -1 ? String(capaianData[i][cNameIdx] || "").trim() : "";
+        const canonSid = resolveCanonId(sid, sname);
+        if (canonSid) {
+          if (sname && !studentNameMap[canonSid]) {
+            studentNameMap[canonSid] = sname;
+          }
+          if (!existingCapaianMap[canonSid]) {
+            existingCapaianMap[canonSid] = capaianData[i];
+          } else {
+            // MERGE BARIS GANDA EKSISTING: pertahankan data capaian tertinggi
+            const prevTot = Number(existingCapaianMap[canonSid][4]) || 0;
+            const currTot = Number(capaianData[i][4]) || 0;
+            if (currTot >= prevTot) {
+              existingCapaianMap[canonSid] = capaianData[i];
+            }
+          }
+          allStudentIds.add(canonSid);
+        }
+      }
+    }
+
+    // 5. Kumpulkan seluruh ID santri unik (STANDAR UPPERCASE: 1 SANTRI = 1 BARIS)
+    Object.keys(studentHalaqahMap).forEach(id => {
+      const canon = resolveCanonId(id);
+      if (canon) allStudentIds.add(canon);
+    });
+    Object.keys(studentLogsMap).forEach(id => {
+      const canon = resolveCanonId(id);
+      if (canon) allStudentIds.add(canon);
+    });
+    Object.keys(studentNameMap).forEach(id => {
+      const canon = resolveCanonId(id);
+      if (canon) allStudentIds.add(canon);
+    });
+
+    const rowsToSet = [];
+    const nowIso = new Date().toISOString();
+
+    allStudentIds.forEach(sId => {
+      if (!sId) return;
+      const sIdCanon = String(sId).trim().toUpperCase();
+      const sName = studentNameMap[sIdCanon] || sIdCanon;
+      const hlqInfo = studentHalaqahMap[sIdCanon] || null;
+
+      // Ambil seluruh logs untuk santri ini
+      const logs = studentLogsMap[sIdCanon] || [];
+      // Urutkan logs dari yang paling baru
+      logs.sort((a, b) => new Date(b.tanggal || b.createdAt) - new Date(a.tanggal || a.createdAt));
+
+      let juzAktif = 30;
+      let halTerakhir = 1;
+      let totalTuntas = 0;
+      let statusTerakhir = "LANJUT";
+      let muhafizPembina = hlqInfo ? hlqInfo.muhafiz : "";
+      let sabqiHal = "";
+      let manzilJuz = "";
+      let manzilHal = "";
+      let manzilPutaran = 1;
+      let totalMurojaah = 0;
+
+      // Cari Ziyadah dengan capaian kurikulum tertinggi (yang tuntas)
+      let maxRank = -1;
+      let bestZiyadah = null;
+      logs.forEach(l => {
+        if (l.tipe === "ZIYADAH" && l.statusSetoran !== "ULANG") {
+          const j = Number(l.juz) || 30;
+          const r = getTahfidzCurriculumRank_(j);
+          const h = parseTahfidzLatestPage_(l.halamanList);
+          if (r > maxRank || (r === maxRank && (!bestZiyadah || h > bestZiyadah.halaman))) {
+            maxRank = r;
+            bestZiyadah = { juz: j, halaman: h, log: l };
+          }
+        }
+      });
+
+      if (bestZiyadah) {
+        juzAktif = bestZiyadah.juz;
+        halTerakhir = bestZiyadah.halaman;
+        totalTuntas = getTahfidzCurriculumTotalTuntas_(juzAktif, halTerakhir);
+        statusTerakhir = "LANJUT";
+        if (!muhafizPembina && bestZiyadah.log.muhafiz) muhafizPembina = bestZiyadah.log.muhafiz;
+      } else {
+        const lastZiyadah = logs.find(l => l.tipe === "ZIYADAH");
+        if (lastZiyadah) {
+          juzAktif = lastZiyadah.juz || 30;
+          halTerakhir = parseTahfidzLatestPage_(lastZiyadah.halamanList);
+          totalTuntas = getTahfidzCurriculumTotalTuntas_(juzAktif, halTerakhir);
+          statusTerakhir = lastZiyadah.statusSetoran || (lastZiyadah.nilai === "DHAIF" ? "ULANG" : "LANJUT");
+          if (!muhafizPembina && lastZiyadah.muhafiz) muhafizPembina = lastZiyadah.muhafiz;
+        }
+      }
+
+      // Cari Sabqi terakhir
+      const lastSabqi = logs.find(l => l.tipe === "MURAJAAH_SABQI");
+      if (lastSabqi) {
+        sabqiHal = lastSabqi.halamanList;
+        if (!muhafizPembina && lastSabqi.muhafiz) muhafizPembina = lastSabqi.muhafiz;
+      }
+
+      // Cari Manzil terakhir
+      const lastManzil = logs.find(l => l.tipe === "MURAJAAH_MANZIL");
+      if (lastManzil) {
+        manzilJuz = lastManzil.juz || 1;
+        manzilHal = parseTahfidzLatestPage_(lastManzil.halamanList);
+        if (!muhafizPembina && lastManzil.muhafiz) muhafizPembina = lastManzil.muhafiz;
+      }
+
+      // Akumulasi total halaman murojaah
+      logs.forEach(l => {
+        if (l.tipe.indexOf("MURAJAAH") !== -1 || l.tipe === "TASMI") {
+          totalMurojaah += Number(l.totalHalaman || 1);
+        }
+      });
+
+      // Merge dengan data eksisting jika belum ada logs
+      const existingRow = existingCapaianMap[sIdCanon];
+      if (existingRow) {
+        if (logs.length === 0) {
+          juzAktif = Number(existingRow[2]) || 30;
+          halTerakhir = Number(existingRow[3]) || 1;
+          totalTuntas = Number(existingRow[4]) || 0;
+          statusTerakhir = existingRow[5] || "LANJUT";
+          sabqiHal = existingRow[10] || "";
+          manzilJuz = existingRow[11] || "";
+          manzilHal = existingRow[12] || "";
+          manzilPutaran = Number(existingRow[13]) || 1;
+          totalMurojaah = Number(existingRow[14]) || 0;
+          if (!muhafizPembina) muhafizPembina = existingRow[8] || "";
+        } else {
+          // Jika ada putaran manzil yang dicatat manual sebelumnya
+          if (existingRow[13]) manzilPutaran = Number(existingRow[13]) || 1;
+        }
+      }
+
+      rowsToSet.push([
+        sIdCanon,                                           // 0: student_id (HURUF KAPITAL STANDAR RESMI)
+        sName,                                              // 1: student_name
+        juzAktif,                                           // 2: juz_aktif
+        halTerakhir,                                        // 3: halaman_terakhir
+        totalTuntas,                                        // 4: total_halaman_tuntas
+        statusTerakhir,                                     // 5: status_terakhir
+        hlqInfo ? hlqInfo.halaqahId : "",                   // 6: halaqah_id
+        hlqInfo ? hlqInfo.namaHalaqah : "",                 // 7: nama_halaqah
+        muhafizPembina,                                     // 8: muhafiz_pembina
+        nowIso,                                             // 9: updated_at
+        sabqiHal,                                           // 10: sabqi_halaman
+        manzilJuz,                                          // 11: manzil_juz
+        manzilHal,                                          // 12: manzil_halaman
+        manzilPutaran || 1,                                 // 13: manzil_putaran
+        totalMurojaah                                       // 14: total_halaman_murojaah
+      ]);
+    });
+
+    const lastRow = capaianSheet.getLastRow();
+    const lastCol = Math.max(headersCapaian.length, capaianSheet.getLastColumn() || headersCapaian.length);
+
+    if (rowsToSet.length > 0) {
+      // Urutkan berdasarkan kelompok halaqah lalu nama santri
+      rowsToSet.sort((a, b) => (a[6] || "").localeCompare(b[6] || "") || (a[1] || "").localeCompare(b[1] || ""));
+
+      // 1. Bersihkan seluruh baris data eksisting (row 2 ke bawah) agar bersih total dari duplikat
+      if (lastRow > 1) {
+        capaianSheet.getRange(2, 1, lastRow - 1, lastCol).clearContent();
+      }
+
+      // 2. Tulis data baru yang sudah terdeduplikasi murni (1 santri = 1 baris)
+      capaianSheet.getRange(2, 1, rowsToSet.length, headersCapaian.length).setValues(rowsToSet);
+
+      // 3. Hapus baris sisa yang kosong di bawahnya
+      if (lastRow > rowsToSet.length + 1) {
+        try {
+          capaianSheet.deleteRows(rowsToSet.length + 2, lastRow - (rowsToSet.length + 1));
+        } catch (delErr) {
+          console.warn("[CAPAIAN CLEANUP ROWS WARN]", delErr);
+        }
+      }
+      console.log(`[SYNC TAHFIDZ CAPAIAN SUCCESS] Berhasil membersihkan duplikat & menyelaraskan ${rowsToSet.length} data capaian santri (1 baris per santri) ke sheet ${SHEET_TAHFIDZ_CAPAIAN}.`);
+    } else if (lastRow > 1) {
+      capaianSheet.getRange(2, 1, lastRow - 1, lastCol).clearContent();
+    }
+  } catch (err) {
+    console.error("[SYNC TAHFIDZ CAPAIAN ERROR]", err);
+  }
+}
+
+function runTahfidzSchemaMigration() {
+  const ss = getDatabaseSpreadsheet();
+  if (!ss) {
+    throw new Error("Spreadsheet database tidak ditemukan. Pastikan SPREADSHEET_ID sudah diatur di Script Properties atau script terhubung ke Spreadsheet.");
+  }
+  console.log("[SCHEMA MIGRATION] Memulai migrasi skema & sinkronisasi Tahfidz...");
+  migrateTahfidzHalaqahSheet_(ss);
+  ensureTahfidzLogsAndCapaianSchema_(ss);
+  syncTahfidzCapaianSheet_(ss);
+  try {
+    getOrCreateRolesPermissionsSheet();
+  } catch (rErr) {
+    console.warn("[ROLES PERMS INIT WARN]", rErr);
+  }
+  console.log("[SCHEMA MIGRATION SUCCESS] Migrasi skema & sinkronisasi Tahfidz selesai.");
+  return {
+    status: "success",
+    message: "Migrasi skema Tahfidz (Halaqah 5 kolom, Kolom status_setoran, satuan, ayat_mulai, ayat_sampai pada Tahfidz_Logs, Sinkronisasi Sheet Tahfidz_Capaian, & Sheet Roles_Permissions) berhasil."
+  };
+}
+
+function cleanTahfidzCapaianDuplicates(token) {
+  if (token) {
+    try {
+      const actor = authenticateSession(token);
+      authorizeRole(actor, ["ADMIN", "EDITOR"]);
+    } catch (authErr) {
+      verifySessionToken(token);
+    }
+  }
+  const ss = getDatabaseSpreadsheet();
+  if (!ss) {
+    throw new Error("Spreadsheet database tidak ditemukan. Periksa konfigurasi SPREADSHEET_ID.");
+  }
+  console.log("[CLEAN DUPLICATES] Memulai pembersihan data ganda di sheet Tahfidz_Capaian...");
+  syncTahfidzCapaianSheet_(ss);
+  console.log("[CLEAN DUPLICATES SUCCESS] Sheet Tahfidz_Capaian berhasil dibersihkan dari duplikat (1 baris per santri).");
+  return {
+    status: "success",
+    success: true,
+    message: "Sheet Tahfidz_Capaian berhasil dibersihkan dari seluruh data ganda (1 santri = 1 baris)."
+  };
+}
 
 /**
  * Helper untuk mendapatkan atau membuat sheet tahfidz secara otomatis dengan styling header rapi
