@@ -5052,17 +5052,105 @@
                 .replace(/'/g, '&#039;');
         }
 
+        function applyUsersSummaryCounters(usersList, summary = {}) {
+            const myEmail = (
+                (typeof ASNIdentity !== 'undefined' && ASNIdentity.currentUser && ASNIdentity.currentUser.email) ||
+                sessionStorage.getItem('mubarokah_admin_email') ||
+                localStorage.getItem('mubarokah_admin_email') ||
+                ''
+            ).toLowerCase().trim();
+
+            const totalCount = summary.total !== undefined ? summary.total : usersList.length;
+            const waliCount = summary.wali !== undefined ? summary.wali : usersList.filter(u => u.role === 'WALI_SANTRI').length;
+            const pengasuhCount = summary.pengasuh !== undefined ? summary.pengasuh : usersList.filter(u => u.role === 'PENGASUH').length;
+            const asatidzCount = summary.asatidz !== undefined ? summary.asatidz : usersList.filter(u => u.role === 'ASATIDZ' || u.role === 'PEGAWAI' || u.role === 'EDITOR').length;
+            const pengurusCount = summary.pengurus !== undefined ? summary.pengurus : usersList.filter(u => u.role === 'PENGURUS').length;
+            const bendaharaCount = summary.bendahara !== undefined ? summary.bendahara : usersList.filter(u => u.role === 'BENDAHARA').length;
+            const pegawaiCount = asatidzCount;
+            const adminCount = summary.admin !== undefined ? summary.admin : usersList.filter(u => u.role === 'ADMIN').length;
+            const superAdminCount = summary.superAdmin !== undefined ? summary.superAdmin : usersList.filter(u => u.role === 'SUPER_ADMIN').length;
+
+            const totalEl = document.getElementById('user-count-total');
+            const waliEl = document.getElementById('user-count-wali');
+            const pengasuhEl = document.getElementById('user-count-pengasuh');
+            const adminEl = document.getElementById('user-count-admin');
+
+            if (totalEl) totalEl.innerText = totalCount;
+            if (waliEl) waliEl.innerText = waliCount;
+            if (pengasuhEl) pengasuhEl.innerText = pengasuhCount;
+            if (adminEl) adminEl.innerText = adminCount + superAdminCount;
+
+            const hubBadge = document.getElementById('admin-hub-users-count');
+            if (hubBadge) hubBadge.innerText = `${totalCount} Pengguna`;
+
+            const tabAll = document.getElementById('user-tab-count-all');
+            const tabWali = document.getElementById('user-tab-count-wali');
+            const tabAsatidz = document.getElementById('user-tab-count-asatidz');
+            const tabPengurus = document.getElementById('user-tab-count-pengurus');
+            const tabBendahara = document.getElementById('user-tab-count-bendahara');
+            const tabPegawai = document.getElementById('user-tab-count-pegawai');
+            const tabPengasuh = document.getElementById('user-tab-count-pengasuh');
+            const tabAdmin = document.getElementById('user-tab-count-admin');
+            const tabSuperAdmin = document.getElementById('user-tab-count-super-admin');
+
+            if (tabAll) tabAll.innerText = totalCount;
+            if (tabWali) tabWali.innerText = waliCount;
+            if (tabAsatidz) tabAsatidz.innerText = asatidzCount;
+            if (tabPengurus) tabPengurus.innerText = pengurusCount;
+            if (tabBendahara) tabBendahara.innerText = bendaharaCount;
+            if (tabPegawai) tabPegawai.innerText = pegawaiCount;
+            if (tabPengasuh) tabPengasuh.innerText = pengasuhCount;
+            if (tabAdmin) tabAdmin.innerText = adminCount;
+            if (tabSuperAdmin) tabSuperAdmin.innerText = superAdminCount;
+
+            // Online count dengan deteksi akun sendiri yang aktif
+            const onlineCount = usersList.filter(u => {
+                const uEmail = String(u.email || '').toLowerCase().trim();
+                const isSelf = myEmail && (uEmail === myEmail);
+                if (isSelf) return true;
+                const rawSeen = u.last_seen_at || u.lastSeenAt || u.last_login_at || u.lastLoginAt;
+                const st = typeof calculateUserOnlineStatus === 'function' 
+                    ? calculateUserOnlineStatus(rawSeen) 
+                    : { isOnline: false };
+                return st.isOnline;
+            }).length;
+            const tabOnline = document.getElementById('user-tab-count-online');
+            if (tabOnline) tabOnline.innerText = onlineCount;
+        }
+
         /**
-         * Memuat data seluruh pengguna dari sheet Users via API
+         * Memuat data seluruh pengguna dari sheet Users via API (dengan Stale-While-Revalidate untuk performa 0ms)
          */
         async function loadAdminUsersData() {
             const loadingEl = document.getElementById('admin-users-loading');
             const emptyEl = document.getElementById('admin-users-empty');
             const tbody = document.getElementById('admin-users-table-body');
 
-            if (loadingEl) loadingEl.classList.remove('hidden');
-            if (emptyEl) emptyEl.classList.add('hidden');
-            if (tbody) tbody.innerHTML = '';
+            const USERS_CACHE_KEY = 'mubarokah_admin_users_cache';
+            const USERS_SUMMARY_KEY = 'mubarokah_admin_users_summary';
+
+            // 1. STALE-WHILE-REVALIDATE: Render instan dari cache lokal (0ms)
+            let hasCache = false;
+            try {
+                const cachedUsers = localStorage.getItem(USERS_CACHE_KEY);
+                const cachedSummary = localStorage.getItem(USERS_SUMMARY_KEY);
+                if (cachedUsers) {
+                    const parsed = JSON.parse(cachedUsers);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        adminUsersList = parsed;
+                        hasCache = true;
+                        applyUsersSummaryCounters(adminUsersList, cachedSummary ? JSON.parse(cachedSummary) : {});
+                        renderAdminUsersTable();
+                    }
+                }
+            } catch (e) {}
+
+            // Tampilkan spinner hanya jika cache kosong
+            if (!hasCache) {
+                if (loadingEl) loadingEl.classList.remove('hidden');
+                if (emptyEl) emptyEl.classList.add('hidden');
+                if (tbody) tbody.innerHTML = '';
+            }
 
             try {
                 const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(ADMIN_TOKEN_KEY)) || localStorage.getItem(ADMIN_TOKEN_KEY) || "";
@@ -5077,73 +5165,25 @@
                 if (response && (response.success || response.status === 'success')) {
                     adminUsersList = response.users || [];
 
-                    // Update ringkasan metric card
-                    const summary = response.summary || {};
-                    const totalCount = summary.total !== undefined ? summary.total : adminUsersList.length;
-                    const waliCount = summary.wali !== undefined ? summary.wali : adminUsersList.filter(u => u.role === 'WALI_SANTRI').length;
-                    const pengasuhCount = summary.pengasuh !== undefined ? summary.pengasuh : adminUsersList.filter(u => u.role === 'PENGASUH').length;
-                    const asatidzCount = summary.asatidz !== undefined ? summary.asatidz : adminUsersList.filter(u => u.role === 'ASATIDZ' || u.role === 'PEGAWAI' || u.role === 'EDITOR').length;
-                    const pengurusCount = summary.pengurus !== undefined ? summary.pengurus : adminUsersList.filter(u => u.role === 'PENGURUS').length;
-                    const bendaharaCount = summary.bendahara !== undefined ? summary.bendahara : adminUsersList.filter(u => u.role === 'BENDAHARA').length;
-                    const pegawaiCount = asatidzCount;
-                    const adminCount = summary.admin !== undefined ? summary.admin : adminUsersList.filter(u => u.role === 'ADMIN').length;
-                    const superAdminCount = summary.superAdmin !== undefined ? summary.superAdmin : adminUsersList.filter(u => u.role === 'SUPER_ADMIN').length;
+                    // Simpan ke cache lokal untuk load instan berikutnya
+                    try {
+                        localStorage.setItem(USERS_CACHE_KEY, JSON.stringify(adminUsersList));
+                        localStorage.setItem(USERS_SUMMARY_KEY, JSON.stringify(response.summary || {}));
+                    } catch (e) {}
 
-                    const totalEl = document.getElementById('user-count-total');
-                    const waliEl = document.getElementById('user-count-wali');
-                    const pengasuhEl = document.getElementById('user-count-pengasuh');
-                    const adminEl = document.getElementById('user-count-admin');
-
-                    if (totalEl) totalEl.innerText = totalCount;
-                    if (waliEl) waliEl.innerText = waliCount;
-                    if (pengasuhEl) pengasuhEl.innerText = pengasuhCount;
-                    if (adminEl) adminEl.innerText = adminCount + superAdminCount;
-
-                    // Update Hub Badge
-                    const hubBadge = document.getElementById('admin-hub-users-count');
-                    if (hubBadge) hubBadge.innerText = `${totalCount} Pengguna`;
-
-                    // Update Tab Counts
-                    const tabAll = document.getElementById('user-tab-count-all');
-                    const tabWali = document.getElementById('user-tab-count-wali');
-                    const tabAsatidz = document.getElementById('user-tab-count-asatidz');
-                    const tabPengurus = document.getElementById('user-tab-count-pengurus');
-                    const tabBendahara = document.getElementById('user-tab-count-bendahara');
-                    const tabPegawai = document.getElementById('user-tab-count-pegawai');
-                    const tabPengasuh = document.getElementById('user-tab-count-pengasuh');
-                    const tabAdmin = document.getElementById('user-tab-count-admin');
-                    const tabSuperAdmin = document.getElementById('user-tab-count-super-admin');
-
-                    if (tabAll) tabAll.innerText = totalCount;
-                    if (tabWali) tabWali.innerText = waliCount;
-                    if (tabAsatidz) tabAsatidz.innerText = asatidzCount;
-                    if (tabPengurus) tabPengurus.innerText = pengurusCount;
-                    if (tabBendahara) tabBendahara.innerText = bendaharaCount;
-                    if (tabPegawai) tabPegawai.innerText = pegawaiCount;
-                    if (tabPengasuh) tabPengasuh.innerText = pengasuhCount;
-                    if (tabAdmin) tabAdmin.innerText = adminCount;
-                    if (tabSuperAdmin) tabSuperAdmin.innerText = superAdminCount;
-
-                    // Update Tab Online
-                    const onlineCount = adminUsersList.filter(u => {
-                        const st = typeof calculateUserOnlineStatus === 'function' 
-                            ? calculateUserOnlineStatus(u.last_seen_at || u.lastSeenAt) 
-                            : { isOnline: false };
-                        return st.isOnline;
-                    }).length;
-                    const tabOnline = document.getElementById('user-tab-count-online');
-                    if (tabOnline) tabOnline.innerText = onlineCount;
-
+                    applyUsersSummaryCounters(adminUsersList, response.summary || {});
                     renderAdminUsersTable();
-                } else {
+                } else if (!hasCache) {
                     const msg = (response && response.message) || 'Gagal memuat data pengguna.';
                     if (typeof showToast === 'function') showToast('⚠️ ' + msg);
                     if (emptyEl) emptyEl.classList.remove('hidden');
                 }
             } catch (err) {
                 console.error('[LOAD USERS ERROR]', err);
-                if (typeof showToast === 'function') showToast('❌ Gagal memuat pengguna: ' + err.message);
-                if (emptyEl) emptyEl.classList.remove('hidden');
+                if (!hasCache) {
+                    if (typeof showToast === 'function') showToast('❌ Gagal memuat pengguna: ' + err.message);
+                    if (emptyEl) emptyEl.classList.remove('hidden');
+                }
             } finally {
                 if (loadingEl) loadingEl.classList.add('hidden');
             }
@@ -5159,12 +5199,23 @@
 
             let filtered = adminUsersList.slice();
 
+            const myEmail = (
+                (typeof ASNIdentity !== 'undefined' && ASNIdentity.currentUser && ASNIdentity.currentUser.email) ||
+                sessionStorage.getItem('mubarokah_admin_email') ||
+                localStorage.getItem('mubarokah_admin_email') ||
+                ''
+            ).toLowerCase().trim();
+
             // Filter Peran & Status Online
             if (adminUsersFilterRole && adminUsersFilterRole !== 'ALL') {
                 if (adminUsersFilterRole === 'ONLINE') {
                     filtered = filtered.filter(u => {
+                        const uEmail = String(u.email || '').toLowerCase().trim();
+                        const isSelf = myEmail && (uEmail === myEmail);
+                        if (isSelf) return true;
+                        const rawSeen = u.last_seen_at || u.lastSeenAt || u.last_login_at || u.lastLoginAt;
                         const presence = typeof calculateUserOnlineStatus === 'function' 
-                            ? calculateUserOnlineStatus(u.last_seen_at || u.lastSeenAt) 
+                            ? calculateUserOnlineStatus(rawSeen) 
                             : { isOnline: false };
                         return presence.isOnline;
                     });
@@ -5265,19 +5316,32 @@
                     </div>
                 ` : `<span class="text-slate-400 text-[10px]">-</span>`;
 
-                // Status Kehadiran Online
+                // Self check & fallback device
+                const userEmail = String(user.email || '').toLowerCase().trim();
+                const isSelf = myEmail && (userEmail === myEmail);
+                if (isSelf) {
+                    user.last_seen_at = new Date().toISOString();
+                    if (!user.device_info && !user.deviceInfo) {
+                        user.device_info = typeof detectClientDeviceInfo === 'function' ? detectClientDeviceInfo() : 'Desktop';
+                    }
+                }
+
+                // Status Kehadiran Online (Mendukung last_seen_at & fallback ke last_login_at seperti Asnawiyyah)
+                const rawLastSeen = user.last_seen_at || user.lastSeenAt || user.last_login_at || user.lastLoginAt;
                 const presence = typeof calculateUserOnlineStatus === 'function' 
-                    ? calculateUserOnlineStatus(user.last_seen_at || user.lastSeenAt) 
+                    ? calculateUserOnlineStatus(rawLastSeen) 
                     : { status: 'offline', label: 'Offline', color: 'slate', text: 'Offline', isOnline: false };
 
-                const onlineIndicator = presence.isOnline 
+                const isCurrentlyOnline = presence.isOnline || isSelf;
+
+                const onlineIndicator = isCurrentlyOnline
                     ? `<span class="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#15202d] animate-pulse shrink-0 inline-block" title="Online Sekarang (${user.device_info || user.deviceInfo || 'Perangkat'})"></span>`
                     : (presence.status === 'idle'
                         ? `<span class="w-2.5 h-2.5 rounded-full bg-amber-400 ring-2 ring-white dark:ring-[#15202d] shrink-0 inline-block" title="Idle (${presence.text})"></span>`
                         : `<span class="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-600 ring-2 ring-white dark:ring-[#15202d] shrink-0 inline-block" title="${presence.text}"></span>`);
 
-                const presenceBadge = presence.isOnline 
-                    ? `<span class="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-600 dark:text-emerald-400"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Online • ${escapeUserHtml(user.device_info || user.deviceInfo || 'Aktif')}</span>`
+                const presenceBadge = isCurrentlyOnline
+                    ? `<span class="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-600 dark:text-emerald-400"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Online • ${escapeUserHtml(user.device_info || user.deviceInfo || (isSelf ? (typeof detectClientDeviceInfo === 'function' ? detectClientDeviceInfo() : 'Aktif') : 'Aktif'))}</span>`
                     : `<span class="text-[9px] text-slate-400 font-medium">${presence.text}</span>`;
 
                 return `
@@ -5595,9 +5659,20 @@
             const badge = document.getElementById('modal-online-count-badge');
             if (!container) return;
 
+            const myEmail = (
+                (typeof ASNIdentity !== 'undefined' && ASNIdentity.currentUser && ASNIdentity.currentUser.email) ||
+                sessionStorage.getItem('mubarokah_admin_email') ||
+                localStorage.getItem('mubarokah_admin_email') ||
+                ''
+            ).toLowerCase().trim();
+
             const onlineUsers = users.filter(u => {
+                const uEmail = String(u.email || '').toLowerCase().trim();
+                const isSelf = myEmail && (uEmail === myEmail);
+                if (isSelf) return true;
+                const rawSeen = u.last_seen_at || u.lastSeenAt || u.last_login_at || u.lastLoginAt;
                 const presence = typeof calculateUserOnlineStatus === 'function' 
-                    ? calculateUserOnlineStatus(u.last_seen_at || u.lastSeenAt) 
+                    ? calculateUserOnlineStatus(rawSeen) 
                     : { isOnline: false };
                 return presence.isOnline;
             });

@@ -304,17 +304,20 @@ const ASNAuthAPI = {
         }
 
         try {
+            const deviceInfo = typeof detectClientDeviceInfo === 'function' ? detectClientDeviceInfo() : 'Desktop';
             const response = await authApiPost(ASN_AUTH_ACTIONS.ADMIN_VERIFY_OTP, { 
                 email: email.trim(), 
-                otp: otp.trim() 
+                otp: otp.trim(),
+                deviceInfo: deviceInfo
             });
 
             if (response && response.success) {
                 const token = response.token || (response.data && response.data.token);
                 const rawRole = response.role || (response.data && response.data.role) || (response.identity && response.identity.role) || ASN_ROLES.ADMIN;
                 const role = rawRole === 'EDITOR' ? ASN_ROLES.PEGAWAI : (ASN_ROLES[rawRole] || rawRole);
-                const adminData = response.identity || (response.data && response.data.admin) || { email: email, name: 'Administrator' };
+                const adminData = response.admin || response.identity || (response.data && response.data.admin) || { email: email, name: 'Administrator' };
                 adminData.role = role;
+                if (!adminData.email) adminData.email = email.trim();
 
                 if (token) {
                     return {
@@ -1831,7 +1834,16 @@ async function handleAdminVerifyOtp(e) {
     try {
         const result = await ASNAuthAPI.verifyAdminOtp(email, otp);
         if (result.success && result.token) {
-            ASNIdentity.setAdminSession(result.token, result.admin);
+            const adminData = result.admin || { email: email, name: 'Administrator' };
+            if (!adminData.email) adminData.email = email;
+            try {
+                localStorage.setItem('mubarokah_admin_email', email);
+                sessionStorage.setItem('mubarokah_admin_email', email);
+            } catch (e) {}
+            ASNIdentity.setAdminSession(result.token, adminData);
+            if (typeof startUserPresenceHeartbeat === 'function') {
+                startUserPresenceHeartbeat();
+            }
             closeAdminAuthModal();
             if (typeof showToast === 'function') {
                 showToast('Login Admin Berhasil!');
@@ -2732,8 +2744,8 @@ function calculateUserOnlineStatus(lastSeenAt) {
     if (diffMins <= 7) return { status: 'idle', label: 'Idle', color: 'amber', text: `${diffMins} mnt lalu (Idle)`, isOnline: true };
     if (diffMins < 60) return { status: 'offline', label: 'Offline', color: 'slate', text: `${diffMins} mnt lalu`, isOnline: false };
     const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return { status: 'offline', label: 'Offline', color: 'slate', text: `${diffHours} jam lalu`, isOnline: false };
-    return { status: 'offline', label: 'Offline', color: 'slate', text: `${Math.floor(diffHours / 24)} hari lalu`, isOnline: false };
+    if (diffHours < 24) return { status: 'offline', label: 'Offline', color: 'slate', text: `${diffHours}jam lalu`, isOnline: false };
+    return { status: 'offline', label: 'Offline', color: 'slate', text: `${Math.floor(diffHours / 24)}hari lalu`, isOnline: false };
 }
 
 async function sendUserPresenceHeartbeat() {
@@ -2743,18 +2755,32 @@ async function sendUserPresenceHeartbeat() {
     let currentToken = null;
     let currentRole = null;
 
+    // 0. Prioritaskan ASNIdentity aktif di memori
+    if (typeof ASNIdentity !== 'undefined' && ASNIdentity.currentUser) {
+        const u = ASNIdentity.currentUser;
+        currentId = u.userId || u.user_id || u.identityId || u.id;
+        currentEmail = u.email;
+        currentPhone = u.phone || u.telepon;
+        currentRole = ASNIdentity.currentRole;
+    }
+
     // 1. Cek Admin / Pegawai / Pengurus
     try {
         const adminDataStr = sessionStorage.getItem('mubarokah_admin_data') || localStorage.getItem('mubarokah_admin_data');
         if (adminDataStr) {
             const admin = JSON.parse(adminDataStr);
-            currentId = admin.userId || admin.user_id || admin.identityId || admin.id;
-            currentEmail = admin.email;
-            currentPhone = admin.phone || admin.telepon;
-            currentRole = admin.role || sessionStorage.getItem('mubarokah_admin_role') || localStorage.getItem('mubarokah_admin_role');
+            if (!currentId) currentId = admin.userId || admin.user_id || admin.identityId || admin.id;
+            if (!currentEmail) currentEmail = admin.email;
+            if (!currentPhone) currentPhone = admin.phone || admin.telepon;
+            if (!currentRole) currentRole = admin.role || sessionStorage.getItem('mubarokah_admin_role') || localStorage.getItem('mubarokah_admin_role');
             currentToken = sessionStorage.getItem('mubarokah_admin_token') || localStorage.getItem('mubarokah_admin_token');
         }
     } catch (e) {}
+
+    // Fallback email admin jika disimpan terpisah
+    if (!currentEmail) {
+        currentEmail = localStorage.getItem('mubarokah_admin_email') || sessionStorage.getItem('mubarokah_admin_email');
+    }
 
     // 2. Cek Pengasuh
     if (!currentId && !currentEmail) {
@@ -2786,7 +2812,7 @@ async function sendUserPresenceHeartbeat() {
         } catch (e) {}
     }
 
-    if (!currentId && !currentEmail && !currentPhone) return;
+    if (!currentId && !currentEmail && !currentPhone && !currentToken) return;
 
     try {
         const deviceInfo = detectClientDeviceInfo();

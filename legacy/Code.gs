@@ -7986,7 +7986,7 @@ function updateUserPhotoInSheet(role, identifier, photoUrl) {
 /**
  * Mengambil seluruh data pengguna dari sheet Users beserta santri terhubung untuk Manajemen Pengguna
  */
-function getAllUsersWithLinkedStudents(token) {
+function getAllUsersWithLinkedStudents(token, skipCache) {
   try {
     let actor = null;
     if (token) {
@@ -7998,13 +7998,20 @@ function getAllUsersWithLinkedStudents(token) {
       }
     }
 
+    const cacheKey = "CACHE_ALL_USERS_DATA";
+    if (!skipCache) {
+      try {
+        const cached = CacheService.getScriptCache().get(cacheKey);
+        if (cached) {
+          return JSON.parse(cached);
+        }
+      } catch (ce) {}
+    }
+
     const ss = getDatabaseSpreadsheet();
     if (!ss) {
       return { success: false, status: "error", message: "Spreadsheet database tidak dapat diakses." };
     }
-
-    // Pastikan sheet Users diinisialisasi dan termigrasi
-    setupAuthSystemSheets();
 
     const usersSheet = getAuthSheet(ss, SHEET_USERS);
     if (!usersSheet) {
@@ -8109,7 +8116,7 @@ function getAllUsersWithLinkedStudents(token) {
       });
     }
 
-    return {
+    const result = {
       success: true,
       status: "success",
       users: users,
@@ -8126,6 +8133,12 @@ function getAllUsersWithLinkedStudents(token) {
         superAdmin: users.filter(u => u.role === "SUPER_ADMIN").length
       }
     };
+
+    try {
+      CacheService.getScriptCache().put(cacheKey, JSON.stringify(result), 30);
+    } catch (ce) {}
+
+    return result;
   } catch (err) {
     console.error("[GET ALL USERS ERROR]", err);
     return {
@@ -8214,6 +8227,12 @@ function handleUserPresenceHeartbeat(payload) {
         updated = true;
         break;
       }
+    }
+
+    if (updated) {
+      try {
+        CacheService.getScriptCache().remove("CACHE_ALL_USERS_DATA");
+      } catch (ce) {}
     }
 
     return {
@@ -8374,6 +8393,10 @@ function saveAdminUserData(payload, token) {
     } catch (syncErr) {
       console.warn("[SYNC ERROR in saveAdminUserData]", syncErr);
     }
+
+    try {
+      CacheService.getScriptCache().remove("CACHE_ALL_USERS_DATA");
+    } catch (ce) {}
 
     return {
       success: true,
@@ -10293,25 +10316,65 @@ function handleAuthApiAction(action, payload, e) {
         writeAuthAuditLog("OTP_VERIFY_SUCCESS", admin.identityId, session.sessionId, "EMAIL", true, requestId, {});
         writeAuthAuditLog("SESSION_CREATED", admin.identityId, session.sessionId, "EMAIL", true, requestId, { role: admin.role });
 
+        // Update last_login_at & last_seen_at pada sheet Users
+        try {
+          const uSheet = getAuthSheet(ss, SHEET_USERS);
+          if (uSheet) {
+            const uData = uSheet.getDataRange().getValues();
+            if (uData && uData.length > 1) {
+              const uH = uData[0].map(h => String(h || "").trim().toLowerCase());
+              let idCol = uH.indexOf("user_id") !== -1 ? uH.indexOf("user_id") : uH.indexOf("id");
+              let emailCol = uH.indexOf("email");
+              let loginCol = uH.indexOf("last_login_at");
+              let seenCol = uH.indexOf("last_seen_at");
+              let devCol = uH.indexOf("device_info");
+              const nowIsoStr = new Date().toISOString();
+              const devStr = String(payload.deviceInfo || payload.device_info || "Desktop Browser");
+
+              if (seenCol === -1) {
+                seenCol = uH.length;
+                uH.push("last_seen_at");
+                uSheet.getRange(1, seenCol + 1).setValue("last_seen_at").setFontWeight("bold");
+              }
+              if (devCol === -1) {
+                devCol = uH.length;
+                uH.push("device_info");
+                uSheet.getRange(1, devCol + 1).setValue("device_info").setFontWeight("bold");
+              }
+
+              for (let r = 1; r < uData.length; r++) {
+                const rowId = idCol !== -1 ? String(uData[r][idCol] || "").trim() : "";
+                const rowEm = emailCol !== -1 ? String(uData[r][emailCol] || "").trim().toLowerCase() : "";
+                if ((admin.identityId && rowId === admin.identityId) || (admin.email && rowEm === admin.email.toLowerCase())) {
+                  if (loginCol !== -1) uSheet.getRange(r + 1, loginCol + 1).setValue(nowIsoStr);
+                  uSheet.getRange(r + 1, seenCol + 1).setValue(nowIsoStr);
+                  uSheet.getRange(r + 1, devCol + 1).setValue(devStr);
+                  break;
+                }
+              }
+            }
+          }
+          CacheService.getScriptCache().remove("CACHE_ALL_USERS_DATA");
+        } catch (upErr) {}
+
+        const adminObj = {
+          identityId: admin.identityId,
+          userId: admin.identityId,
+          name: admin.name,
+          email: admin.email,
+          role: admin.role
+        };
+
         return createJsonResponse({
           success: true,
           token: tokenData.token,
+          admin: adminObj,
           data: {
             token: tokenData.token,
             role: admin.role,
-            admin: {
-              identityId: admin.identityId,
-              name: admin.name,
-              email: admin.email,
-              role: admin.role
-            }
+            admin: adminObj
           },
-          identity: {
-            identityId: admin.identityId,
-            name: admin.name,
-            email: admin.email,
-            role: admin.role
-          },
+          identity: adminObj,
           requestId: requestId
         });
       });
