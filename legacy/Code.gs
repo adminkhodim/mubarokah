@@ -11501,12 +11501,31 @@ const SHEET_TAHFIDZ_SESI = "Tahfidz_Jadwal_Sesi";
 const SHEET_TAHFIDZ_PRESENSI = "Tahfidz_Presensi";
 const HEADERS_TAHFIDZ_PRESENSI = ["presensi_id", "tanggal", "sesi", "halaqah_id", "nama_halaqah", "student_id", "nis", "student_name", "status", "keterangan", "muhafiz", "updated_at"];
 
-// Urutan Kurikulum Tahfidz Pesantren (Mulai Juz 30 s/d 21, lalu Juz 1 s/d 20)
+// Urutan Kurikulum Tahfidz Pesantren: Juz 30, kemudian Juz 1 s/d 29 (Khatam di Juz 29 Hlm 20)
 const TAHFIDZ_CURRICULUM_JUZ_ORDER = [
-  30, 29, 28, 27, 26, 25, 24, 23, 22, 21,
+  30,
   1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-  11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+  11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+  21, 22, 23, 24, 25, 26, 27, 28, 29
 ];
+
+/**
+ * Mendapatkan posisi juz dan halaman berikutnya berdasarkan kurikulum [30, 1..29]
+ * Pada Juz 29 Halaman 20 -> khatam: true
+ */
+function getNextTahfidzCurriculumPosition_(juz, hal) {
+  var r = getTahfidzCurriculumRank_(juz);
+  var h = parseTahfidzLatestPage_(hal);
+  if (h >= 20) {
+    if (r < TAHFIDZ_CURRICULUM_JUZ_ORDER.length - 1) {
+      return { juz: TAHFIDZ_CURRICULUM_JUZ_ORDER[r + 1], hal: 1, halaman: 1, khatam: false };
+    } else {
+      // Selesai Juz 29 Halaman 20 (Akhir Kurikulum 30 Juz) -> Khatam!
+      return { juz: TAHFIDZ_CURRICULUM_JUZ_ORDER[r], hal: 20, halaman: 20, khatam: true };
+    }
+  }
+  return { juz: TAHFIDZ_CURRICULUM_JUZ_ORDER[r], hal: h + 1, halaman: h + 1, khatam: false };
+}
 
 function getTahfidzCurriculumRank_(juz) {
   var idx = TAHFIDZ_CURRICULUM_JUZ_ORDER.indexOf(Number(juz));
@@ -11838,7 +11857,7 @@ function syncTahfidzCapaianSheet_(ss) {
       // Urutkan logs dari yang paling baru
       logs.sort((a, b) => new Date(b.tanggal || b.createdAt) - new Date(a.tanggal || a.createdAt));
 
-      let juzAktif = 30;
+      let juzAktif = 1;
       let halTerakhir = 1;
       let totalTuntas = 0;
       let statusTerakhir = "LANJUT";
@@ -11854,7 +11873,7 @@ function syncTahfidzCapaianSheet_(ss) {
       let bestZiyadah = null;
       logs.forEach(l => {
         if (l.tipe === "ZIYADAH" && l.statusSetoran !== "ULANG") {
-          const j = Number(l.juz) || 30;
+          const j = Number(l.juz) || 1;
           const r = getTahfidzCurriculumRank_(j);
           const h = parseTahfidzLatestPage_(l.halamanList);
           if (r > maxRank || (r === maxRank && (!bestZiyadah || h > bestZiyadah.halaman))) {
@@ -11873,7 +11892,7 @@ function syncTahfidzCapaianSheet_(ss) {
       } else {
         const lastZiyadah = logs.find(l => l.tipe === "ZIYADAH");
         if (lastZiyadah) {
-          juzAktif = lastZiyadah.juz || 30;
+          juzAktif = lastZiyadah.juz || 1;
           halTerakhir = parseTahfidzLatestPage_(lastZiyadah.halamanList);
           totalTuntas = getTahfidzCurriculumTotalTuntas_(juzAktif, halTerakhir);
           statusTerakhir = lastZiyadah.statusSetoran || (lastZiyadah.nilai === "DHAIF" ? "ULANG" : "LANJUT");
@@ -12675,6 +12694,42 @@ function getTahfidzDashboard(token) {
       }
     }
 
+    // 4b. Baca Data Presensi Terkini dari Sheet Tahfidz_Presensi
+    const presensiMap = {};
+    const presensiSheet = ss.getSheetByName(SHEET_TAHFIDZ_PRESENSI);
+    if (presensiSheet && presensiSheet.getLastRow() > 1) {
+      const pData = presensiSheet.getDataRange().getValues();
+      if (pData && pData.length > 1) {
+        const pHeaders = pData[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s\-_]+/g, ""));
+        const pIdIdx = pHeaders.indexOf("studentid");
+        const pNisIdx = pHeaders.indexOf("nis");
+        const pStatIdx = pHeaders.indexOf("status");
+        const pKetIdx = pHeaders.indexOf("keterangan");
+        const pTglIdx = pHeaders.indexOf("tanggal");
+        const todayStr = Utilities.formatDate(new Date(), "GMT+7", "yyyy-MM-dd");
+
+        for (let i = 1; i < pData.length; i++) {
+          const rowTgl = pTglIdx !== -1 ? normalizeDateString(pData[i][pTglIdx]) : "";
+          const sid = pIdIdx !== -1 ? String(pData[i][pIdIdx] || "").trim() : "";
+          const snis = pNisIdx !== -1 ? String(pData[i][pNisIdx] || "").trim() : "";
+          const stat = pStatIdx !== -1 ? String(pData[i][pStatIdx] || "HADIR").trim() : "HADIR";
+          const ket = pKetIdx !== -1 ? String(pData[i][pKetIdx] || "").trim() : "";
+
+          if (!sid && !snis) continue;
+          const rec = { status: stat, keterangan: ket, tanggal: rowTgl };
+
+          if (sid) {
+            if (!presensiMap[sid] || rowTgl === todayStr) presensiMap[sid] = rec;
+            if (!presensiMap[sid.toLowerCase()] || rowTgl === todayStr) presensiMap[sid.toLowerCase()] = rec;
+          }
+          if (snis) {
+            if (!presensiMap[snis] || rowTgl === todayStr) presensiMap[snis] = rec;
+            if (!presensiMap[snis.toLowerCase()] || rowTgl === todayStr) presensiMap[snis.toLowerCase()] = rec;
+          }
+        }
+      }
+    }
+
     // Auto-heal / Backfill data kosong di Tahfidz_Capaian & Tahfidz_Logs jika ada
     try {
       let needCapaianFlush = false;
@@ -12848,8 +12903,11 @@ function getTahfidzDashboard(token) {
               };
             }
 
-            // Capaian Juz tertinggi (Khusus Ziyadah agar tidak tergeser oleh Muroja'ah)
-            if (tipe === "ZIYADAH" && statusSetoran !== "ULANG" && juz > (maxJuzMap[k] || 0)) {
+            // Capaian kurikulum tertinggi (Khusus Ziyadah agar tidak tergeser oleh Muroja'ah)
+            const curRank = getTahfidzCurriculumRank_(juz);
+            const prevBestJuz = maxJuzMap[k];
+            const prevRank = prevBestJuz !== undefined ? getTahfidzCurriculumRank_(prevBestJuz) : -1;
+            if (tipe === "ZIYADAH" && statusSetoran !== "ULANG" && curRank > prevRank) {
               maxJuzMap[k] = juz;
             }
 
@@ -12877,11 +12935,15 @@ function getTahfidzDashboard(token) {
 
       const cap = capaianMap[sId] || capaianMap[sNis] || null;
       let currentJuz = cap ? cap.juzAktif : (maxJuzMap[sId] || maxJuzMap[sNis] || 0);
+      let curHal = cap ? cap.halamanTerakhir : (latestLog ? Number(String(latestLog.halaman || "1").replace(/\D/g, "")) || 1 : 1);
       if (currentJuz === 0 && st.program && st.program.toLowerCase().includes("tahfidz")) {
-        currentJuz = 1;
+        currentJuz = 30; // Kurikulum diawali dari Juz 30
       }
-      if (currentJuz >= 30) khatam30Count++;
-      totalJuzAllStudents += currentJuz;
+      const curRank = getTahfidzCurriculumRank_(currentJuz);
+      const isKhatam = (currentJuz === 29 && curHal >= 20) || (cap && cap.totalHalamanTuntas >= 600);
+      if (isKhatam) khatam30Count++;
+      const completedJuzCount = isKhatam ? 30 : (curRank + (curHal >= 20 ? 1 : (curHal / 20)));
+      totalJuzAllStudents += completedJuzCount;
 
       const setoranPekanIni = setoranPekanIniMap[sId] || setoranPekanIniMap[sNis] || 0;
       const onTrack = setoranPekanIni >= 2 ? `On-Track (${setoranPekanIni}x Pekan Ini)` : (setoranPekanIni === 1 ? `1x Setor Pekan Ini` : `Belum Setor`);
@@ -12970,13 +13032,23 @@ function getTahfidzDashboard(token) {
         } : null,
         progress: {
           currentJuz: currentJuz,
-          currentHalaman: cap ? cap.halamanTerakhir : (latestLog ? Number(String(latestLog.halaman || "1").replace(/\D/g, "")) || 1 : 1),
+          currentHalaman: curHal,
+          curriculumRank: curRank + 1,
           totalJuz: 30,
-          totalHalamanTuntas: cap ? cap.totalHalamanTuntas : 0,
-          percent: Math.min(100, Math.round((currentJuz / 30) * 100)),
+          totalHalamanTuntas: cap ? cap.totalHalamanTuntas : (curRank * 20 + curHal),
+          percent: isKhatam ? 100 : Math.min(100, Math.max(1, Math.round(((curRank * 20 + curHal) / 600) * 100))),
+          isKhatam: isKhatam,
           onTrackStatus: onTrack
         },
-        totalSetoran: setoranCountMap[sId] || setoranCountMap[sNis] || 0
+        totalSetoran: setoranCountMap[sId] || setoranCountMap[sNis] || 0,
+        presensiStatus: (presensiMap[sId] && presensiMap[sId].status) || 
+                        (presensiMap[sNis] && presensiMap[sNis].status) || 
+                        (presensiMap[sIdLower] && presensiMap[sIdLower].status) || 
+                        (presensiMap[sNisLower] && presensiMap[sNisLower].status) || "HADIR",
+        presensiKeterangan: (presensiMap[sId] && presensiMap[sId].keterangan) || 
+                            (presensiMap[sNis] && presensiMap[sNis].keterangan) || 
+                            (presensiMap[sIdLower] && presensiMap[sIdLower].keterangan) || 
+                            (presensiMap[sNisLower] && presensiMap[sNisLower].keterangan) || ""
       };
     });
 
@@ -12986,9 +13058,12 @@ function getTahfidzDashboard(token) {
     let totalJuzHalaqahStudents = 0;
     let khatam30HalaqahCount = 0;
     halaqahMembers.forEach(st => {
-      const jz = (st.progress && st.progress.currentJuz) || 0;
-      totalJuzHalaqahStudents += jz;
-      if (jz >= 30) khatam30HalaqahCount++;
+      const p = st.progress;
+      if (p) {
+        const jz = p.isKhatam ? 30 : ((p.curriculumRank - 1) + (p.currentHalaman >= 20 ? 1 : (p.currentHalaman / 20)));
+        totalJuzHalaqahStudents += jz;
+        if (p.isKhatam) khatam30HalaqahCount++;
+      }
     });
 
     const avgJuz = (totalJuzHalaqahStudents / activeStudentCount).toFixed(1);
@@ -13102,7 +13177,8 @@ function getTahfidzDashboard(token) {
         });
       })(),
       sesiList: sesiList,
-      muhafizList: ["Semua Muhafiz", ...Array.from(muhafizSet).sort()]
+      muhafizList: ["Semua Muhafiz", ...Array.from(muhafizSet).sort()],
+      todayPresensi: presensiMap
     };
 
   } catch (err) {
@@ -13337,8 +13413,9 @@ function saveTahfidzLog(payload, token) {
         nextStatus = statusSetoran;
         if (statusSetoran === "LANJUT") {
           if (lastPage >= 20) {
-            nextZiyadahJuz = Math.min(30, juz + 1);
-            nextZiyadahHalaman = 1;
+            const nextPos = getNextTahfidzCurriculumPosition_(juz, 20);
+            nextZiyadahJuz = nextPos.juz;
+            nextZiyadahHalaman = nextPos.halaman;
           } else {
             nextZiyadahJuz = juz;
             nextZiyadahHalaman = lastPage + 1;
@@ -13361,18 +13438,22 @@ function saveTahfidzLog(payload, token) {
         // Posisi Ziyadah 100% AMAN tidak berubah
         if (statusSetoran === "LANJUT") {
           nextMurojaahTotal = currMurojaahTotal + totalHalaman;
-          const limitJuz = currZiyadahJuz || 1;
+          const limitJuz = currZiyadahJuz || TAHFIDZ_CURRICULUM_JUZ_ORDER[0];
+          const curManzilRank = getTahfidzCurriculumRank_(juz);
+          const limitRank = getTahfidzCurriculumRank_(limitJuz);
 
           if (lastPage >= 20) {
             // Selesai 1 juz manzil
-            if (juz >= limitJuz) {
-              // Sudah menyelesaikan seluruh juz yang sudah dihafal santri -> Putaran Baru kembali ke Juz 1!
-              nextManzilJuz = 1;
+            if (curManzilRank >= limitRank) {
+              // Sudah menyelesaikan seluruh juz yang sudah dihafal santri -> Putaran Baru kembali ke Juz awal kurikulum!
+              nextManzilJuz = TAHFIDZ_CURRICULUM_JUZ_ORDER[0];
               nextManzilHalaman = 1;
               nextManzilPutaran = currManzilPutaran + 1;
             } else {
-              // Lanjut ke juz manzil berikutnya
-              nextManzilJuz = Math.min(30, juz + 1);
+              // Lanjut ke juz manzil berikutnya sesuai kurikulum
+              nextManzilJuz = (curManzilRank < TAHFIDZ_CURRICULUM_JUZ_ORDER.length - 1)
+                ? TAHFIDZ_CURRICULUM_JUZ_ORDER[curManzilRank + 1]
+                : TAHFIDZ_CURRICULUM_JUZ_ORDER[0];
               nextManzilHalaman = 1;
             }
           } else {
@@ -13542,7 +13623,8 @@ function saveTahfidzCapaian(data, token) {
       }
     }
 
-    const totalHalaman = Number(data.totalHalamanTuntas || data.total_halaman_tuntas) || prevTotal || ((juz - 1) * 20 + halaman);
+    const curRank = getTahfidzCurriculumRank_(juz);
+    const totalHalaman = Number(data.totalHalamanTuntas || data.total_halaman_tuntas) || prevTotal || (curRank * 20 + halaman);
 
     if (rowIndex !== -1) {
       if (nameIdx !== -1) sheet.getRange(rowIndex, nameIdx + 1).setValue(studentName);
@@ -13642,9 +13724,33 @@ function deleteTahfidzLog(logId, token) {
 function getTahfidzStudentDetail(studentId, token) {
   try {
     const actor = authenticateSession(token);
-    authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH"]);
+    authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PENGASUH", "PEGAWAI", "MUHAFIZ", "GURU", "WALI_SANTRI", "PARENT"]);
 
     const cleanId = String(studentId || "").trim();
+    if (!cleanId) throw new Error("ID Santri wajib disertakan.");
+
+    // Validasi hak akses khusus Wali Santri: hanya boleh melihat santri binaan yang terhubung
+    if (actor && (actor.role === "WALI_SANTRI" || actor.role === "PARENT")) {
+      const linked = (typeof getLinkedStudentsForWali === "function") ? getLinkedStudentsForWali(actor.identityId) : [];
+      const allowedIds = (linked || []).map(s => String(s.studentId || s.student_id || s.id || s.nis || "").trim().toLowerCase());
+      let isAllowed = allowedIds.includes(cleanId.toLowerCase());
+      if (!isAllowed) {
+        const studentsResCheck = (typeof getAllStudentsData === "function") ? getAllStudentsData(token) : null;
+        const allStudentsList = (studentsResCheck && studentsResCheck.data) || [];
+        const targetStudent = allStudentsList.find(s => 
+          String(s.studentId || s.student_id || "").toLowerCase() === cleanId.toLowerCase() ||
+          String(s.nis || "").toLowerCase() === cleanId.toLowerCase()
+        );
+        const targetSid = targetStudent ? String(targetStudent.studentId || "").toLowerCase() : "";
+        const targetNis = targetStudent ? String(targetStudent.nis || "").toLowerCase() : "";
+        if (targetStudent && (allowedIds.includes(targetSid) || allowedIds.includes(targetNis))) {
+          isAllowed = true;
+        }
+      }
+      if (!isAllowed) {
+        throw new Error("Akses ditolak: Anda hanya berhak memantau perkembangan santri yang terhubung dengan akun Wali Anda.");
+      }
+    }
     if (!cleanId) throw new Error("ID Santri wajib disertakan.");
 
     const ss = getDatabaseSpreadsheet();
@@ -13782,18 +13888,28 @@ function getTahfidzStudentDetail(studentId, token) {
     riwayat.sort((a, b) => new Date(b.tanggal || b.createdAt) - new Date(a.tanggal || a.createdAt));
 
     // 4. Hitung Capaian Saat Ini & Rata-rata Nilai
-    let currentJuz = 0;
+    let currentJuz = 30;
+    let maxRank = -1;
     let totalScorePoints = 0;
     riwayat.forEach(r => {
-      if (r.statusSetoran !== "ULANG" && r.juz && r.juz > currentJuz) currentJuz = r.juz;
+      if (r.statusSetoran !== "ULANG" && r.juz) {
+        const rk = getTahfidzCurriculumRank_(r.juz);
+        if (rk > maxRank) {
+          maxRank = rk;
+          currentJuz = r.juz;
+        }
+      }
       if (r.nilai === "MUMTAZ") totalScorePoints += 4;
       else if (r.nilai === "JAYYID_JIDDAN") totalScorePoints += 3;
       else if (r.nilai === "JAYYID") totalScorePoints += 2;
       else totalScorePoints += 1;
     });
 
-    if (currentJuz === 0) currentJuz = 1;
-    const percent = Math.min(100, Math.round((currentJuz / 30) * 100));
+    const activeJuz = studentCapaian.juzAktif || currentJuz || 30;
+    const activeHal = studentCapaian.halamanTerakhir || 1;
+    const curRank = getTahfidzCurriculumRank_(activeJuz);
+    const isKhatam = (activeJuz === 29 && activeHal >= 20) || (studentCapaian.totalHalamanZiyadah >= 600);
+    const percent = isKhatam ? 100 : Math.min(100, Math.max(1, Math.round(((curRank * 20 + activeHal) / 600) * 100)));
 
     let avgNilaiText = "-";
     if (riwayat.length > 0) {
@@ -13948,13 +14064,15 @@ function getTahfidzStudentDetail(studentId, token) {
         totalHalamanMurojaah: studentCapaian.totalHalamanMurojaah || 0
       },
       stats: {
-        capaianSaatIni: `Juz ${studentCapaian.juzAktif || currentJuz} (${studentCapaian.persentase || percent}%)`,
+        capaianSaatIni: isKhatam ? "Khatam 30 Juz 🏆 (100%)" : `Juz ${activeJuz} (${percent}%)`,
         targetCapaian: "30 Juz Mutqin",
         totalSetoran: `${riwayat.length} Kali`,
         rataRataNilai: avgNilaiText,
-        progressJuz: studentCapaian.juzAktif || currentJuz,
+        progressJuz: activeJuz,
         progressMax: 30,
-        progressPercent: studentCapaian.persentase || percent
+        progressPercent: percent,
+        isKhatam: isKhatam,
+        khatam: isKhatam
       },
       target: target,
       indikator: {
@@ -14593,6 +14711,222 @@ function deleteTahfidzSesi(sesiId, token) {
     return { status: "error", success: false, message: "Sesi tidak ditemukan." };
   } catch (err) {
     return { status: "error", success: false, message: err.message };
+  }
+}
+
+/**
+ * 12. Simpan / Perbarui Data Presensi Kehadiran Halaqah Tahfidz
+ */
+function saveTahfidzPresensi(payload, token) {
+  try {
+    let actor = null;
+    if (token) {
+      try {
+        actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PEGAWAI", "PENGASUH", "MUHAFIZ", "GURU"]);
+      } catch (authErr) {
+        verifySessionToken(token);
+      }
+    }
+
+    const p = (payload && (payload.payload || payload.data)) ? (payload.payload || payload.data) : (payload || {});
+    const tanggal = p.tanggal ? normalizeDateString(p.tanggal) : Utilities.formatDate(new Date(), "GMT+7", "yyyy-MM-dd");
+    const sesi = String(p.sesi || "Pagi (Ba'da Subuh)").trim();
+    const halaqahId = String(p.halaqahId || p.halaqah_id || "").trim();
+    const namaHalaqah = String(p.namaHalaqah || p.nama_halaqah || "Halaqah").trim();
+    const muhafiz = String(p.muhafiz || "").trim();
+    const rawRecords = p.records || payload.records || [];
+    const records = Array.isArray(rawRecords) ? rawRecords : [];
+
+    if (records.length === 0) {
+      return {
+        status: "success",
+        success: true,
+        message: "Tidak ada data presensi yang perlu disimpan.",
+        savedCount: 0
+      };
+    }
+
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error("Spreadsheet database tidak ditemukan.");
+
+    const sheet = getOrCreateTahfidzSheet(ss, SHEET_TAHFIDZ_PRESENSI, HEADERS_TAHFIDZ_PRESENSI, "#059669");
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s\-_]+/g, ""));
+
+    const idIdx = headers.indexOf("presensiid");
+    const tglIdx = headers.indexOf("tanggal");
+    const sesiIdx = headers.indexOf("sesi");
+    const sIdIdx = headers.indexOf("studentid");
+    const nisIdx = headers.indexOf("nis");
+    const nameIdx = headers.indexOf("studentname");
+    const statusIdx = headers.indexOf("status");
+    const ketIdx = headers.indexOf("keterangan");
+    const hlqIdIdx = headers.indexOf("halaqahid");
+    const hlqNmIdx = headers.indexOf("namahalaqah");
+    const muhIdx = headers.indexOf("muhafiz");
+    const updIdx = headers.indexOf("updatedat");
+
+    // Index existing rows: key = `${tanggal}_${sesi}_${studentId/nis}` -> row index (0-based in data array)
+    const existingRowMap = new Map();
+    for (let i = 1; i < data.length; i++) {
+      const rowTgl = tglIdx !== -1 ? normalizeDateString(data[i][tglIdx]) : "";
+      const rowSesi = sesiIdx !== -1 ? String(data[i][sesiIdx] || "").trim() : "";
+      const rowSid = sIdIdx !== -1 ? String(data[i][sIdIdx] || "").trim().toLowerCase() : "";
+      const rowNis = nisIdx !== -1 ? String(data[i][nisIdx] || "").trim().toLowerCase() : "";
+
+      if (rowTgl && rowSesi) {
+        if (rowSid) existingRowMap.set(`${rowTgl}_${rowSesi}_${rowSid}`, i);
+        if (rowNis) existingRowMap.set(`${rowTgl}_${rowSesi}_${rowNis}`, i);
+      }
+    }
+
+    const newRowsToAppend = [];
+    const nowIso = new Date().toISOString();
+    let savedCount = 0;
+
+    records.forEach(rec => {
+      const sId = String(rec.studentId || rec.student_id || "").trim();
+      const sNis = String(rec.nis || "").trim();
+      const sName = String(rec.studentName || rec.student_name || rec.name || "").trim();
+      const status = String(rec.status || "HADIR").trim().toUpperCase();
+      const keterangan = String(rec.keterangan || "").trim();
+      const recHlqId = String(rec.halaqahId || rec.halaqah_id || halaqahId).trim();
+      const recHlqNm = String(rec.namaHalaqah || rec.nama_halaqah || namaHalaqah).trim();
+      const recMuh = String(rec.muhafiz || muhafiz).trim();
+
+      if (!sId && !sNis && !sName) return;
+
+      const lookupKeySid = `${tanggal}_${sesi}_${sId.toLowerCase()}`;
+      const lookupKeyNis = `${tanggal}_${sesi}_${sNis.toLowerCase()}`;
+      const existingIdx = (sId && existingRowMap.has(lookupKeySid)) 
+        ? existingRowMap.get(lookupKeySid) 
+        : ((sNis && existingRowMap.has(lookupKeyNis)) ? existingRowMap.get(lookupKeyNis) : -1);
+
+      if (existingIdx !== -1) {
+        if (statusIdx !== -1) data[existingIdx][statusIdx] = status;
+        if (ketIdx !== -1) data[existingIdx][ketIdx] = keterangan;
+        if (nameIdx !== -1 && sName) data[existingIdx][nameIdx] = sName;
+        if (hlqIdIdx !== -1 && recHlqId) data[existingIdx][hlqIdIdx] = recHlqId;
+        if (hlqNmIdx !== -1 && recHlqNm) data[existingIdx][hlqNmIdx] = recHlqNm;
+        if (muhIdx !== -1 && recMuh) data[existingIdx][muhIdx] = recMuh;
+        if (updIdx !== -1) data[existingIdx][updIdx] = nowIso;
+        savedCount++;
+      } else {
+        const presensiId = "PRS-" + Utilities.formatDate(new Date(), "GMT+7", "yyyyMMdd-HHmmss") + "-" + Math.floor(1000 + Math.random() * 9000);
+        const newRow = new Array(HEADERS_TAHFIDZ_PRESENSI.length).fill("");
+        if (idIdx !== -1) newRow[idIdx] = presensiId;
+        if (tglIdx !== -1) newRow[tglIdx] = tanggal;
+        if (sesiIdx !== -1) newRow[sesiIdx] = sesi;
+        if (hlqIdIdx !== -1) newRow[hlqIdIdx] = recHlqId;
+        if (hlqNmIdx !== -1) newRow[hlqNmIdx] = recHlqNm;
+        if (sIdIdx !== -1) newRow[sIdIdx] = sId;
+        if (nisIdx !== -1) newRow[nisIdx] = sNis;
+        if (nameIdx !== -1) newRow[nameIdx] = sName;
+        if (statusIdx !== -1) newRow[statusIdx] = status;
+        if (ketIdx !== -1) newRow[ketIdx] = keterangan;
+        if (muhIdx !== -1) newRow[muhIdx] = recMuh;
+        if (updIdx !== -1) newRow[updIdx] = nowIso;
+        newRowsToAppend.push(newRow);
+        savedCount++;
+      }
+    });
+
+    if (data.length > 1) {
+      sheet.getRange(1, 1, data.length, data[0].length).setValues(data);
+    }
+    if (newRowsToAppend.length > 0) {
+      const startRow = sheet.getLastRow() + 1;
+      sheet.getRange(startRow, 1, newRowsToAppend.length, newRowsToAppend[0].length).setValues(newRowsToAppend);
+    }
+
+    return {
+      status: "success",
+      success: true,
+      message: `Presensi tahfidz (${savedCount} santri) berhasil disimpan ke spreadsheet.`,
+      savedCount: savedCount,
+      tanggal: tanggal,
+      sesi: sesi
+    };
+  } catch (err) {
+    console.error("[SAVE TAHFIDZ PRESENSI ERROR]", err);
+    return { status: "error", success: false, message: "Gagal menyimpan presensi: " + err.message };
+  }
+}
+
+/**
+ * 13. Ambil Riwayat Presensi Kehadiran Halaqah Tahfidz
+ */
+function getTahfidzPresensi(payload, token) {
+  try {
+    if (token) {
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PEGAWAI", "PENGASUH", "MUHAFIZ", "GURU", "WALI_SANTRI", "PARENT"]);
+      } catch (authErr) {
+        verifySessionToken(token);
+      }
+    }
+
+    const p = (payload && payload.data) ? payload.data : (payload || {});
+    const targetDate = p.tanggal ? normalizeDateString(p.tanggal) : Utilities.formatDate(new Date(), "GMT+7", "yyyy-MM-dd");
+    const targetSesi = p.sesi ? String(p.sesi).trim() : "";
+    const targetHalaqahId = p.halaqahId || p.halaqah_id ? String(p.halaqahId || p.halaqah_id).trim().toLowerCase() : "";
+
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error("Spreadsheet database tidak ditemukan.");
+
+    const sheet = ss.getSheetByName(SHEET_TAHFIDZ_PRESENSI);
+    if (!sheet || sheet.getLastRow() <= 1) {
+      return {
+        status: "success",
+        success: true,
+        tanggal: targetDate,
+        records: {}
+      };
+    }
+
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s\-_]+/g, ""));
+    const tglIdx = headers.indexOf("tanggal");
+    const sesiIdx = headers.indexOf("sesi");
+    const sIdIdx = headers.indexOf("studentid");
+    const nisIdx = headers.indexOf("nis");
+    const statusIdx = headers.indexOf("status");
+    const ketIdx = headers.indexOf("keterangan");
+    const hlqIdIdx = headers.indexOf("halaqahid");
+
+    const records = {};
+
+    for (let i = 1; i < data.length; i++) {
+      const rowTgl = tglIdx !== -1 ? normalizeDateString(data[i][tglIdx]) : "";
+      if (targetDate && rowTgl !== targetDate) continue;
+
+      const rowSesi = sesiIdx !== -1 ? String(data[i][sesiIdx] || "").trim() : "";
+      if (targetSesi && rowSesi !== targetSesi) continue;
+
+      const rowHlq = hlqIdIdx !== -1 ? String(data[i][hlqIdIdx] || "").trim().toLowerCase() : "";
+      if (targetHalaqahId && targetHalaqahId !== "all" && rowHlq && rowHlq !== targetHalaqahId) continue;
+
+      const sid = sIdIdx !== -1 ? String(data[i][sIdIdx] || "").trim() : "";
+      const snis = nisIdx !== -1 ? String(data[i][nisIdx] || "").trim() : "";
+      const status = statusIdx !== -1 ? String(data[i][statusIdx] || "HADIR").trim() : "HADIR";
+      const ket = ketIdx !== -1 ? String(data[i][ketIdx] || "").trim() : "";
+
+      const recObj = { status: status, keterangan: ket, tanggal: rowTgl, sesi: rowSesi };
+      if (sid) records[sid] = recObj;
+      if (snis) records[snis] = recObj;
+    }
+
+    return {
+      status: "success",
+      success: true,
+      tanggal: targetDate,
+      records: records
+    };
+  } catch (err) {
+    console.error("[GET TAHFIDZ PRESENSI ERROR]", err);
+    return { status: "error", success: false, message: "Gagal mengambil presensi: " + err.message };
   }
 }
 

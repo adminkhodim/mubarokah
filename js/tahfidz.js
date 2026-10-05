@@ -179,11 +179,12 @@ const SURAH_JUZ_REFERENCE = {
     30: "An-Naba' 1 - An-Nas 6 (Juz 'Amma)"
 };
 
-// Urutan Kurikulum Tahfidz Pesantren (Mulai Juz 30 s/d 21, lalu Juz 1 s/d 20)
+// Urutan Kurikulum Tahfidz Pesantren: Juz 30, kemudian Juz 1 s/d 29 (Khatam di Juz 29 Hlm 20)
 const JUZ_CURRICULUM_ORDER = [
-    30, 29, 28, 27, 26, 25, 24, 23, 22, 21,
+    30,
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-    11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+    11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+    21, 22, 23, 24, 25, 26, 27, 28, 29
 ];
 
 // Metadata Lengkap 114 Surah Al-Qur'an (Jumlah Ayat, Halaman Standar Mushaf Pojok, & Pemetaan Juz)
@@ -334,8 +335,9 @@ function getCurriculumProgress(juz, hal) {
     const r = getJuzCurriculumIndex(juz);
     const h = parseTahfidzLatestPage(hal);
     const totalTuntas = r * 20 + h;
-    const percent = Math.min(100, Math.max(1, Math.round((totalTuntas / 600) * 100)));
-    return { rank: r, totalTuntas, percent };
+    const isKhatam = (Number(juz) === 29 && h >= 20) || totalTuntas >= 600;
+    const percent = isKhatam ? 100 : Math.min(100, Math.max(1, Math.round((totalTuntas / 600) * 100)));
+    return { rank: r, totalTuntas, percent, isKhatam };
 }
 
 /**
@@ -344,7 +346,7 @@ function getCurriculumProgress(juz, hal) {
  * Digunakan secara konsisten baik di Kartu Ringkasan Santri (luar) maupun di Buku Mutaba'ah Lengkap (dalam).
  */
 function calculateTahfidzMetricsHelper(options = {}) {
-    const currentJuz = Number(options.currentJuz || 30);
+    const currentJuz = Number(options.currentJuz || 1);
     const currentHal = Number(options.currentHal || 1);
     const stats = options.stats || {};
     const riwayat = options.riwayat || [];
@@ -365,7 +367,7 @@ function calculateTahfidzMetricsHelper(options = {}) {
         let maxRankZiyadah = -1;
         let maxHlmZiyadah = 1;
         ziyadahLogs.forEach(log => {
-            const j = Number(log.juz || 30);
+            const j = Number(log.juz || 1);
             const rk = getJuzCurriculumIndex(j);
             const h = parseTahfidzLatestPage(log.halamanList);
             if (rk > maxRankZiyadah || (rk === maxRankZiyadah && h > maxHlmZiyadah)) {
@@ -446,12 +448,12 @@ function getNextCurriculumPosition(juz, hal) {
     const h = Number(hal) || 1;
     if (h >= 20) {
         if (r < JUZ_CURRICULUM_ORDER.length - 1) {
-            return { juz: JUZ_CURRICULUM_ORDER[r + 1], halaman: 1, khatam: false };
+            return { juz: JUZ_CURRICULUM_ORDER[r + 1], hal: 1, halaman: 1, khatam: false };
         } else {
-            return { juz: JUZ_CURRICULUM_ORDER[r], halaman: 20, khatam: true };
+            return { juz: JUZ_CURRICULUM_ORDER[r], hal: 20, halaman: 20, khatam: true };
         }
     }
-    return { juz: JUZ_CURRICULUM_ORDER[r], halaman: h + 1, khatam: false };
+    return { juz: JUZ_CURRICULUM_ORDER[r], hal: h + 1, halaman: h + 1, khatam: false };
 }
 
 /**
@@ -781,9 +783,14 @@ function renderTahfidzSummaryCards(filterHal = null) {
     let khatamCount = 0;
     targetStudents.forEach(st => {
         const p = st.progress;
-        const jzComp = p ? ((p.curriculumRank - 1) + (p.currentHalaman >= 20 ? 1 : (p.currentHalaman / 20))) : 0;
+        const curJuz = Number(st.capaian?.juzAktif || p?.currentJuz || 30);
+        const curHal = Number(st.capaian?.halamanTerakhir || p?.currentHalaman || 1);
+        const curTot = Number(st.capaian?.totalHalamanTuntas || p?.totalHalamanTuntas || 0);
+        const curProg = getCurriculumProgress(curJuz, curHal);
+        const isKhatam = Boolean(p && p.isKhatam) || curProg.isKhatam || curTot >= 600;
+        const jzComp = isKhatam ? 30 : (curProg.rank + (curHal >= 20 ? 1 : (curHal / 20)));
         totalJuz += jzComp;
-        if (p && p.isKhatam) khatamCount++;
+        if (isKhatam) khatamCount++;
     });
     const avgJuzStr = totalSantri > 0 ? (totalJuz / totalSantri).toFixed(1) : "0.0";
     const elRata = document.getElementById('tahfidz-stat-rata');
@@ -1119,7 +1126,8 @@ function renderTahfidzStudentTable() {
             const currentJuz = Number(cap.juzAktif) || Number(st.progress?.currentJuz) || 30;
             const currentHal = Number(cap.halamanTerakhir) || Number(st.progress?.currentHalaman) || 1;
             const curProg = getCurriculumProgress(currentJuz, currentHal);
-            const percent = curProg.percent;
+            const isKhatam = Boolean(st.progress?.isKhatam) || curProg.isKhatam || (Number(cap.totalHalamanTuntas || st.progress?.totalHalamanTuntas || 0) >= 600);
+            const percent = isKhatam ? 100 : curProg.percent;
             const onTrackStatus = st.progress?.onTrackStatus || 'Belum Setor';
             const isOnTrack = onTrackStatus.includes('On-Track');
 
@@ -1244,8 +1252,10 @@ function renderTahfidzStudentTable() {
                 <td class="px-3.5 py-2.5 w-48">
                     <div class="space-y-1">
                         <div class="flex justify-between items-center text-xs">
-                            <span class="font-black text-slate-800 dark:text-slate-100">Juz ${currentJuz} <span class="text-slate-400 font-normal text-[10px]">/ 30</span></span>
-                            <span class="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400">${percent}%</span>
+                            <span class="font-black text-slate-800 dark:text-slate-100">
+                                ${isKhatam ? `<span class="text-amber-500 font-black flex items-center gap-1"><i class="fa-solid fa-crown text-amber-500 text-xs"></i> Khatam 30 Juz</span>` : `Juz ${currentJuz} <span class="text-slate-400 font-normal text-[10px]">/ 30</span>`}
+                            </span>
+                            <span class="text-[10px] font-extrabold ${isKhatam ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}">${percent}%</span>
                         </div>
                         <div class="w-full bg-slate-100 dark:bg-[#1c2836] h-1.5 rounded-full overflow-hidden">
                             <div class="bg-gradient-to-r from-emerald-500 to-teal-500 h-full rounded-full transition-all duration-500" style="width: ${percent}%;"></div>
@@ -1309,7 +1319,8 @@ function renderTahfidzStudentTable() {
             const currentJuz = Number(cap.juzAktif) || Number(st.progress?.currentJuz) || 30;
             const currentHal = Number(cap.halamanTerakhir) || Number(st.progress?.currentHalaman) || 1;
             const curProg = getCurriculumProgress(currentJuz, currentHal);
-            const percent = curProg.percent;
+            const isKhatam = Boolean(st.progress?.isKhatam) || curProg.isKhatam || (Number(cap.totalHalamanTuntas || st.progress?.totalHalamanTuntas || 0) >= 600);
+            const percent = isKhatam ? 100 : curProg.percent;
             const targetZ = st.target?.ziyadahSesi || 1;
             const targetM = st.target?.murajaahSesi || 2;
             const isSelected = ASNTahfidz.selectedStudentIds && ASNTahfidz.selectedStudentIds.has(st.studentId);
@@ -2517,12 +2528,16 @@ async function submitTahfidzCatat(e) {
                                 const nextPos = getNextCurriculumPosition(juz, 20);
                                 st.progress.currentJuz = nextPos.juz;
                                 st.progress.currentHalaman = nextPos.halaman;
+                                if (nextPos.khatam) {
+                                    st.progress.isKhatam = true;
+                                    st.progress.percent = 100;
+                                }
                             } else {
                                 st.progress.currentJuz = juz;
                                 st.progress.currentHalaman = maxP + 1;
                             }
                             const prog = getCurriculumProgress(st.progress.currentJuz, st.progress.currentHalaman);
-                            st.progress.percent = prog.percent;
+                            st.progress.percent = (st.progress && st.progress.isKhatam) ? 100 : prog.percent;
                         }
                         st.progress.onTrackStatus = "On-Track (Lulus Ziyadah)";
                     } else {
@@ -6008,5 +6023,11 @@ window.setAllTahfidzPresensi = setAllTahfidzPresensi;
 window.saveTahfidzPresensi = saveTahfidzPresensi;
 window.getStudentPresensiStatus = getStudentPresensiStatus;
 window.getStudentPresensiData = getStudentPresensiData;
+
+// Kurikulum Tahfidz [Juz 30, 1..29] & Navigasi Posisi
+window.JUZ_CURRICULUM_ORDER = JUZ_CURRICULUM_ORDER;
+window.getJuzCurriculumIndex = getJuzCurriculumIndex;
+window.getCurriculumProgress = getCurriculumProgress;
+window.getNextCurriculumPosition = getNextCurriculumPosition;
 
 

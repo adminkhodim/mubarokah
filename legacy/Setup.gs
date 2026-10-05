@@ -60,6 +60,7 @@ var AUTHORITATIVE_SCHEMAS_ = {
   "Tahfidz_Target": ["student_id", "student_name", "target_ziyadah_sesi", "target_ziyadah_pekan", "target_murajaah_sesi", "target_murajaah_pekan", "target_juz", "updated_at"],
   "Tahfidz_Halaqah": ["halaqah_id", "muhafiz", "target_kurikulum", "student_ids", "created_at"],
   "Tahfidz_Jadwal_Sesi": ["sesi_id", "nama_sesi", "jenis_sesi", "status", "jam_mulai", "jam_selesai", "hari_list", "created_at"],
+  "Tahfidz_Presensi": ["presensi_id", "tanggal", "sesi", "halaqah_id", "nama_halaqah", "student_id", "nis", "student_name", "status", "keterangan", "muhafiz", "updated_at"],
   "Pegawai": ["employee_id", "nama", "nip", "gender", "jabatan", "spesialisasi", "telepon", "email", "status", "created_at"],
   "Programs": ["id", "name", "badge", "image", "description", "highlights_json", "detail_json", "status", "sort_order", "created_at", "updated_at", "created_by", "updated_by", "published_at", "published_by", "version"],
   "TPQ_Logs": ["log_id", "student_id", "nis", "student_name", "gender", "tanggal", "sesi", "jilid", "halaman", "status_setoran", "nilai", "ustadz", "catatan", "created_at"],

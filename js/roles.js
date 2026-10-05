@@ -1490,13 +1490,19 @@
             return (typeof adminUsersList !== 'undefined' && Array.isArray(adminUsersList)) ? adminUsersList.length + ' Akun' : '0 Akun';
         }
         if (valueKey === 'tahfidz') {
-            return (typeof adminTahfidzList !== 'undefined' && Array.isArray(adminTahfidzList)) ? adminTahfidzList.length + ' Santri' : '30 Juz';
+            const list = (typeof adminTahfidzList !== 'undefined' && Array.isArray(adminTahfidzList))
+                ? adminTahfidzList
+                : ((typeof ASNTahfidz !== 'undefined' && ASNTahfidz.data && Array.isArray(ASNTahfidz.data.students)) ? ASNTahfidz.data.students : null);
+            return list ? list.length + ' Santri' : '30 Juz';
         }
         if (valueKey === 'tpq') {
             return (typeof adminTPQStudents !== 'undefined' && Array.isArray(adminTPQStudents)) ? adminTPQStudents.length + ' Santri' : '8 Jilid';
         }
         if (valueKey === 'tahfidz_tpq') {
-            const t = (typeof adminTahfidzList !== 'undefined' && Array.isArray(adminTahfidzList)) ? adminTahfidzList.length : 0;
+            const tList = (typeof adminTahfidzList !== 'undefined' && Array.isArray(adminTahfidzList))
+                ? adminTahfidzList
+                : ((typeof ASNTahfidz !== 'undefined' && ASNTahfidz.data && Array.isArray(ASNTahfidz.data.students)) ? ASNTahfidz.data.students : []);
+            const t = tList.length;
             const q = (typeof adminTPQStudents !== 'undefined' && Array.isArray(adminTPQStudents)) ? adminTPQStudents.length : 0;
             return (t + q) > 0 ? (t + q) + ' Simakan' : 'Aktif';
         }
