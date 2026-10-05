@@ -438,9 +438,28 @@ const ASNAuthAPI = {
                     identity: response.identity
                 };
             }
-            return { success: false, valid: false, message: (response && response.message) || 'Sesi tidak valid.' };
+            const msg = String((response && response.message) || '').toLowerCase();
+            const isExplicitAuthRejection = msg.includes('expired') || 
+                                            msg.includes('kedaluwarsa') || 
+                                            msg.includes('kadaluarsa') || 
+                                            msg.includes('revoked') || 
+                                            msg.includes('dicabut') || 
+                                            msg.includes('inactive') || 
+                                            msg.includes('tidak aktif') || 
+                                            msg.includes('suspended') || 
+                                            msg.includes('tampered') || 
+                                            msg.includes('invalid authentication token') ||
+                                            msg.includes('unauthorized');
+
+            if (!isExplicitAuthRejection) {
+                // Error non-auth (misal timeout spreadsheet, script lock timeout, server overload) -> anggap unavailable
+                console.warn('[ASNAuthAPI] Response non-auth saat verifikasi sesi (dianggap transien):', response && response.message);
+                return { success: false, valid: false, unavailable: true, message: (response && response.message) || 'Layanan server sedang sibuk.' };
+            }
+
+            return { success: false, valid: false, unavailable: false, message: (response && response.message) || 'Sesi tidak valid.' };
         } catch (err) {
-            console.warn('[ASNAuthAPI] verifySession error:', err);
+            console.warn('[ASNAuthAPI] verifySession network/catch error:', err);
             return { success: false, valid: false, unavailable: true, message: 'Gagal memverifikasi sesi ke server.' };
         }
     },
@@ -611,6 +630,26 @@ const ASNIdentity = {
         }
     },
 
+    /**
+     * Decode token payload dan cek apakah sudah expired secara client-side.
+     * Mengembalikan { expired: boolean, claims: object|null }
+     */
+    _checkTokenExpiryLocally(token) {
+        try {
+            if (!token || typeof token !== 'string' || !token.includes('.')) return { expired: true, claims: null };
+            const payloadStr = token.split('.')[0];
+            const jsonStr = atob(payloadStr);
+            const claims = JSON.parse(jsonStr);
+            if (!claims || !claims.expiresAt) return { expired: false, claims: claims }; // Tidak bisa ditentukan, anggap belum expired
+            const expTime = new Date(claims.expiresAt).getTime();
+            if (isNaN(expTime)) return { expired: false, claims: claims };
+            return { expired: Date.now() >= expTime, claims: claims };
+        } catch (e) {
+            console.warn('[ASNIdentity] Gagal decode token secara lokal:', e);
+            return { expired: false, claims: null }; // Jika gagal parse, anggap belum expired (biarkan server yang memutuskan)
+        }
+    },
+
     async hydrateSession(isSilent = false) {
         if (this.isHydrating) return;
         this.isHydrating = true;
@@ -634,6 +673,20 @@ const ASNIdentity = {
             return;
         }
 
+        // CLIENT-SIDE EXPIRY CHECK: Cek apakah token sudah benar-benar expired
+        // Jika expired secara lokal, langsung clear tanpa perlu tanya server
+        const localCheck = this._checkTokenExpiryLocally(token);
+        if (localCheck.expired) {
+            console.warn('[ASNIdentity] Token sudah expired secara lokal (client-side). Membersihkan sesi.');
+            this.clearLocalSession();
+            this.currentState = ASN_STATES.SESSION_EXPIRED;
+            this.currentRole = ASN_ROLES.PUBLIC;
+            this.currentUser = null;
+            this.isHydrating = false;
+            this.renderAccountCenterUI();
+            return;
+        }
+
         try {
             const verifyRes = await ASNAuthAPI.verifySession(token);
             if (!verifyRes.success || !verifyRes.valid) {
@@ -642,6 +695,7 @@ const ASNIdentity = {
                     this.isHydrating = false;
                     return;
                 }
+                // Server secara eksplisit menolak token (expired/revoked di server)
                 console.warn('[ASNIdentity] Sesi ditolak atau telah dicabut server.');
                 this.clearLocalSession();
                 this.currentState = ASN_STATES.SESSION_EXPIRED;
@@ -725,13 +779,11 @@ const ASNIdentity = {
                 this.renderAccountCenterUI();
             }
         } catch (err) {
-            console.error('[ASNIdentity] Exception saat session hydration:', err);
-            this.clearLocalSession();
-            this.currentState = ASN_STATES.PUBLIC;
-            this.currentRole = ASN_ROLES.PUBLIC;
-            this.currentUser = null;
+            // TOLERAN TERHADAP ERROR TRANSIEN: Jangan hapus sesi jika hanya error jaringan/server
+            // Sesi lokal dipertahankan selama token belum expired (sudah dicek di atas)
+            console.warn('[ASNIdentity] Exception saat session hydration (sesi lokal dipertahankan):', err.message || err);
             this.isHydrating = false;
-            this.renderAccountCenterUI();
+            // Tidak perlu render ulang UI karena state dari init() sudah menampilkan sesi yang benar
         }
     },
 
