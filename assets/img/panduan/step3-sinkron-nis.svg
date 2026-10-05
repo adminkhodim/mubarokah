@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#065f46"/>
+      <stop offset="50%" stop-color="#047857"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="phoneGrad4" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <filter id="shadow4" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="520" rx="24" fill="url(#bgGrad4)"/>
+  <circle cx="120" cy="80" r="160" fill="#10b981" opacity="0.1"/>
+  <circle cx="700" cy="460" r="150" fill="#f59e0b" opacity="0.08"/>
+
+  <!-- Left Info Card -->
+  <g transform="translate(48, 50)">
+    <rect width="320" height="420" rx="20" fill="#ffffff" fill-opacity="0.96" filter="url(#shadow4)"/>
+    
+    <!-- Step Badge -->
+    <rect x="24" y="24" width="96" height="28" rx="8" fill="#ecfdf5"/>
+    <text x="72" y="42" font-family="system-ui, sans-serif" font-size="12" font-weight="bold" fill="#047857" text-anchor="middle">LANGKAH 3</text>
+    
+    <text x="24" y="85" font-family="system-ui, sans-serif" font-size="20" font-weight="800" fill="#0f172a">Sinkronisasi NIS</text>
+    <text x="24" y="108" font-family="system-ui, sans-serif" font-size="12.5" fill="#64748b">Hubungkan akun dengan santri</text>
+
+    <!-- Instruction 1 -->
+    <g transform="translate(24, 130)">
+      <circle cx="14" cy="14" r="14" fill="#047857"/>
+      <text x="14" y="19" font-family="system-ui, sans-serif" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">1</text>
+      <text x="38" y="14" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#1e293b">Pilih Menu Portal Wali</text>
+      <text x="38" y="32" font-family="system-ui, sans-serif" font-size="11" fill="#64748b">Klik "Aktivasi Akun Santri Baru"</text>
+    </g>
+
+    <!-- Instruction 2 -->
+    <g transform="translate(24, 190)">
+      <circle cx="14" cy="14" r="14" fill="#047857"/>
+      <text x="14" y="19" font-family="system-ui, sans-serif" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">2</text>
+      <text x="38" y="14" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#1e293b">Masukkan NIS Santri</text>
+      <text x="38" y="32" font-family="system-ui, sans-serif" font-size="11" fill="#64748b">Contoh nomor NIS: 20240105</text>
+    </g>
+
+    <!-- Instruction 3 -->
+    <g transform="translate(24, 250)">
+      <circle cx="14" cy="14" r="14" fill="#047857"/>
+      <text x="14" y="19" font-family="system-ui, sans-serif" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">3</text>
+      <text x="38" y="14" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#1e293b">Tanggal Lahir Santri</text>
+      <text x="38" y="32" font-family="system-ui, sans-serif" font-size="11" fill="#64748b">Sebagai kunci keamanan keluarga</text>
+    </g>
+
+    <!-- Instruction 4 -->
+    <g transform="translate(24, 310)">
+      <circle cx="14" cy="14" r="14" fill="#047857"/>
+      <text x="14" y="19" font-family="system-ui, sans-serif" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">4</text>
+      <text x="38" y="14" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#1e293b">Periksa Nama Anak</text>
+      <text x="38" y="32" font-family="system-ui, sans-serif" font-size="11" fill="#64748b">Sistem otomatis mendeteksi data santri</text>
+    </g>
+
+    <!-- Help Box -->
+    <rect x="24" y="365" width="272" height="38" rx="10" fill="#fef3c7" stroke="#fde68a"/>
+    <text x="36" y="388" font-family="system-ui, sans-serif" font-size="10.5" font-weight="bold" fill="#92400e">💡 Lupa NIS? Hubungi Sekretariat Pesantren</text>
+  </g>
+
+  <!-- Right Phone Mockup -->
+  <g transform="translate(420, 25)" filter="url(#shadow4)">
+    <rect width="330" height="470" rx="36" fill="url(#phoneGrad4)" stroke="#334155" stroke-width="4"/>
+    <rect x="12" y="14" width="306" height="442" rx="26" fill="#f8fafc"/>
+
+    <!-- App Header Inside Phone -->
+    <rect x="12" y="14" width="306" height="60" rx="26" fill="#047857"/>
+    <text x="165" y="52" font-family="system-ui, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">Aktivasi Data Santri</text>
+
+    <!-- Form Container -->
+    <g transform="translate(26, 85)">
+      <!-- Step Indicator -->
+      <rect width="278" height="26" rx="6" fill="#ecfdf5"/>
+      <text x="139" y="17" font-family="system-ui, sans-serif" font-size="10" font-weight="bold" fill="#065f46" text-anchor="middle">Langkah 1 dari 2: Identifikasi Santri</text>
+
+      <!-- Input 1: NIS -->
+      <g transform="translate(0, 40)">
+        <text x="2" y="0" font-family="system-ui, sans-serif" font-size="10.5" font-weight="bold" fill="#334155">Nomor Induk Santri (NIS)</text>
+        <rect x="0" y="8" width="278" height="36" rx="10" fill="#ffffff" stroke="#10b981" stroke-width="1.5"/>
+        <text x="12" y="31" font-family="monospace" font-size="13" font-weight="bold" fill="#047857">20240105</text>
+        <circle cx="258" cy="26" r="8" fill="#10b981"/>
+        <path d="M254 26 l3 3 l6 -6" stroke="#ffffff" stroke-width="1.5" fill="none"/>
+      </g>
+
+      <!-- Input 2: Tanggal Lahir -->
+      <g transform="translate(0, 95)">
+        <text x="2" y="0" font-family="system-ui, sans-serif" font-size="10.5" font-weight="bold" fill="#334155">Tanggal Lahir Santri</text>
+        <rect x="0" y="8" width="278" height="36" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+        <text x="12" y="31" font-family="system-ui, sans-serif" font-size="12" fill="#1e293b">15 / 08 / 2012</text>
+        <text x="250" y="30" font-size="13">📅</text>
+      </g>
+
+      <!-- Check Button -->
+      <rect x="0" y="150" width="278" height="36" rx="10" fill="#047857"/>
+      <text x="139" y="173" font-family="system-ui, sans-serif" font-size="11.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Periksa Data Santri ✓</text>
+
+      <!-- Verified Student Result Card Simulation -->
+      <g transform="translate(0, 200)" filter="url(#shadow4)">
+        <rect width="278" height="135" rx="14" fill="#ffffff" stroke="#10b981" stroke-width="1.5"/>
+        
+        <!-- Header status -->
+        <rect x="12" y="12" width="130" height="22" rx="6" fill="#dcfce7"/>
+        <text x="77" y="27" font-family="system-ui, sans-serif" font-size="9.5" font-weight="bold" fill="#15803d" text-anchor="middle">✓ Data Ditemukan</text>
+
+        <!-- Student Photo & Info -->
+        <circle cx="36" cy="65" r="22" fill="#047857"/>
+        <text x="36" y="71" font-size="18" text-anchor="middle">👦</text>
+
+        <text x="68" y="58" font-family="system-ui, sans-serif" font-size="12" font-weight="bold" fill="#0f172a">Muhammad Yusuf</text>
+        <text x="68" y="74" font-family="system-ui, sans-serif" font-size="10" fill="#64748b">NIS: 20240105 • Kelas 3 MA</text>
+        <text x="68" y="88" font-family="system-ui, sans-serif" font-size="9.5" fill="#047857">Asrama: Kamar Al-Fatih</text>
+
+        <!-- Lanjut Button -->
+        <rect x="12" y="100" width="254" height="26" rx="8" fill="#f59e0b"/>
+        <text x="139" y="117" font-family="system-ui, sans-serif" font-size="10.5" font-weight="bold" fill="#0f172a" text-anchor="middle">Lanjut ke Verifikasi Akun Wali →</text>
+      </g>
+    </g>
+  </g>
+</svg>

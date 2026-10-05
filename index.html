@@ -2116,6 +2116,24 @@
                                 evaluasi asatidz.</span>
                         </div>
                     </div>
+
+                    <!-- Help & User Guide Banner for Wali Santri -->
+                    <div class="p-4 rounded-2xl bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-[#132333] dark:to-[#172c3d] border border-emerald-200/70 dark:border-teal-500/30 flex items-center justify-between gap-3">
+                        <div class="flex items-center space-x-3 min-w-0">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-lg shadow-sm shrink-0">
+                                <i class="fa-solid fa-book-open"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <h4 class="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">Panduan Penggunaan Aplikasi</h4>
+                                <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">Petunjuk bergambar fitur mutaba'ah, presensi, &amp; syahriyah</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="openPanduanModal(1)"
+                            class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition shadow-sm active:scale-95 shrink-0 flex items-center space-x-1.5 cursor-pointer">
+                            <i class="fa-solid fa-images text-[11px]"></i>
+                            <span>Buka Panduan</span>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- STATE C: AUTHENTICATED ADMIN -->
@@ -2619,6 +2637,39 @@
                             </button>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- ==================== PANDUAN PENGGUNAAN APLIKASI (WALI SANTRI & PENGGUNA) ==================== -->
+            <div
+                class="bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 text-white p-5 rounded-3xl shadow-lg border border-emerald-500/30 space-y-3 relative overflow-hidden">
+                <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-emerald-500/10 rounded-full blur-xl pointer-events-none"></div>
+                <div class="flex items-center justify-between relative z-10">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center text-lg font-black shadow-md">
+                            <i class="fa-solid fa-book-open-reader"></i>
+                        </div>
+                        <div>
+                            <span class="px-2 py-0.5 rounded text-[9px] font-black bg-amber-400 text-slate-950 uppercase tracking-wide">EDISI RESMI WALI SANTRI</span>
+                            <h3 class="text-sm font-extrabold text-white mt-0.5">Panduan Penggunaan Aplikasi</h3>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-xs text-emerald-100/90 leading-relaxed relative z-10">
+                    Petunjuk langkah demi langkah lengkap disertai <strong>gambar petunjuk</strong>: cara instal di Android &amp; iPhone, aktivasi NIS santri, verifikasi OTP, hingga memantau hafalan Al-Qur'an dan syahriyah.
+                </p>
+                <div class="pt-1 flex flex-wrap gap-2 relative z-10">
+                    <button type="button" onclick="openPanduanModal(1)"
+                        class="flex-1 py-2.5 px-4 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs rounded-xl shadow-md transition flex items-center justify-center space-x-1.5 active:scale-95 cursor-pointer">
+                        <i class="fa-solid fa-images text-xs"></i>
+                        <span>Buka Panduan Bergambar</span>
+                    </button>
+                    <button type="button" onclick="sharePanduanWA()"
+                        class="px-3.5 py-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs rounded-xl border border-white/20 transition flex items-center space-x-1.5 active:scale-95 cursor-pointer"
+                        title="Bagikan ke WhatsApp">
+                        <i class="fa-brands fa-whatsapp text-emerald-300 text-sm"></i>
+                        <span class="hidden sm:inline">Bagikan</span>
+                    </button>
                 </div>
             </div>
 
@@ -12735,7 +12786,12 @@
                         <i class="fa-solid fa-user-plus text-xs"></i>
                         <span>Aktivasi Akun Santri Baru</span>
                     </button>
-                    <div class="pt-1">
+                    <div class="pt-1 space-y-1.5">
+                        <button type="button" onclick="closeParentAuthModal(); openPanduanModal(1);"
+                            class="w-full py-2 px-3 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-300 font-bold rounded-xl text-[11px] transition border border-amber-200/80 dark:border-amber-800/40 flex items-center justify-center space-x-1.5 cursor-pointer">
+                            <i class="fa-solid fa-book-open text-xs text-amber-600 dark:text-amber-400"></i>
+                            <span>📖 Panduan Lengkap Wali Santri (Bergambar)</span>
+                        </button>
                         <a href="https://wa.me/6281234567890?text=Assalamu%27alaikum%20Admin%20Pesantren%2C%20saya%20butuh%20bantuan%20login%20Wali%20Santri"
                             target="_blank" rel="noopener noreferrer"
                             class="inline-flex items-center text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold hover:underline">
@@ -12745,6 +12801,448 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL PANDUAN PENGGUNAAN RESMI WALI SANTRI (BERGAMBAR) ==================== -->
+    <div id="modal-panduan-wali"
+        class="fixed inset-0 bg-black/80 backdrop-blur-md z-[999] flex items-center justify-center p-2 sm:p-4 hidden">
+        <div class="bg-white dark:bg-[#111c28] rounded-3xl max-w-3xl w-full max-h-[92vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200 dark:border-teal-500/20 transform transition-all duration-300 relative">
+            
+            <!-- 1. HEADER MODAL (STICKY) -->
+            <div class="p-4 sm:p-5 bg-gradient-to-r from-teal-900 via-emerald-900 to-slate-900 text-white flex items-center justify-between shrink-0 border-b border-teal-700/40">
+                <div class="flex items-center space-x-3 min-w-0">
+                    <div class="w-10 h-10 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center text-lg font-black shadow-md shrink-0">
+                        <i class="fa-solid fa-book-open"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="flex items-center space-x-2">
+                            <h3 class="font-extrabold text-sm sm:text-base text-white truncate">Panduan Mubarokah App</h3>
+                            <span class="px-2 py-0.5 rounded text-[9px] font-black bg-amber-400 text-slate-950 uppercase shrink-0 hidden sm:inline-block">Edisi Wali Santri</span>
+                        </div>
+                        <p class="text-[11px] text-teal-200 truncate">Layanan Digital Terpadu PPTQ Roudlotul Mubarokah</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2 shrink-0">
+                    <button type="button" onclick="sharePanduanWA()"
+                        class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-sm active:scale-95 cursor-pointer"
+                        title="Bagikan Panduan via WhatsApp">
+                        <i class="fa-brands fa-whatsapp text-sm"></i>
+                        <span class="hidden sm:inline">Bagikan</span>
+                    </button>
+                    <button type="button" onclick="closePanduanModal()"
+                        class="w-8 h-8 rounded-full bg-white/10 hover:bg-rose-500/80 text-white flex items-center justify-center transition active:scale-95 cursor-pointer"
+                        title="Tutup Panduan">
+                        <i class="fa-solid fa-xmark text-sm"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2. TAB NAVIGASI LANGKAH (HORIZONTAL SCROLL PILLS) -->
+            <div class="bg-slate-100 dark:bg-[#0c1622] p-2 border-b border-slate-200 dark:border-[#1e2d3d] overflow-x-auto no-scrollbar shrink-0">
+                <div class="flex space-x-1.5 min-w-max px-1" id="panduan-tabs-container">
+                    <button type="button" onclick="switchPanduanTab(1)" id="panduan-btn-step-1"
+                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-emerald-600 text-white shadow-sm flex items-center space-x-1.5 cursor-pointer">
+                        <i class="fa-solid fa-globe text-[11px]"></i>
+                        <span>1. Akses Web</span>
+                    </button>
+                    <button type="button" onclick="switchPanduanTab(2)" id="panduan-btn-step-2"
+                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-white dark:bg-[#172331] text-slate-600 dark:text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-[#1f2f42] flex items-center space-x-1.5 cursor-pointer">
+                        <i class="fa-solid fa-mobile-screen text-[11px]"></i>
+                        <span>2. Pasang di HP</span>
+                    </button>
+                    <button type="button" onclick="switchPanduanTab(3)" id="panduan-btn-step-3"
+                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-white dark:bg-[#172331] text-slate-600 dark:text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-[#1f2f42] flex items-center space-x-1.5 cursor-pointer">
+                        <i class="fa-solid fa-id-card text-[11px]"></i>
+                        <span>3. Sinkron NIS</span>
+                    </button>
+                    <button type="button" onclick="switchPanduanTab(4)" id="panduan-btn-step-4"
+                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-white dark:bg-[#172331] text-slate-600 dark:text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-[#1f2f42] flex items-center space-x-1.5 cursor-pointer">
+                        <i class="fa-solid fa-key text-[11px]"></i>
+                        <span>4. Verifikasi OTP</span>
+                    </button>
+                    <button type="button" onclick="switchPanduanTab(5)" id="panduan-btn-step-5"
+                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-white dark:bg-[#172331] text-slate-600 dark:text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-[#1f2f42] flex items-center space-x-1.5 cursor-pointer">
+                        <i class="fa-solid fa-chart-line text-[11px]"></i>
+                        <span>5. Fitur Utama</span>
+                    </button>
+                    <button type="button" onclick="switchPanduanTab(6)" id="panduan-btn-step-6"
+                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-white dark:bg-[#172331] text-slate-600 dark:text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-[#1f2f42] flex items-center space-x-1.5 cursor-pointer">
+                        <i class="fa-solid fa-circle-question text-[11px]"></i>
+                        <span>6. Bantuan &amp; FAQ</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3. KONTEN MODAL (SCROLLABLE AREA) -->
+            <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 text-slate-800 dark:text-slate-100 text-xs sm:text-sm">
+
+                <!-- STEP 1: AKSES WEB RESMI -->
+                <div id="panduan-content-step-1" class="space-y-4">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-[#1e2d3d]">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Langkah 1</span>
+                            <h4 class="text-base sm:text-lg font-black text-slate-800 dark:text-slate-100">Membuka Website Resmi Pesantren</h4>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">Aman &amp; HTTPS</span>
+                    </div>
+
+                    <!-- Ilustrasi Gambar Petunjuk -->
+                    <div class="rounded-2xl overflow-hidden shadow-md border border-slate-200/80 dark:border-[#1e2d3d] bg-slate-900 group relative">
+                        <img src="/assets/img/panduan/step1-buka-web.svg" alt="Langkah 1: Buka Website Resmi"
+                            class="w-full h-auto object-cover max-h-[380px] transition-transform duration-300 group-hover:scale-[1.01]" />
+                    </div>
+
+                    <!-- Uraian Poin Panduan -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#15202d] border border-slate-100 dark:border-[#253447] space-y-1">
+                            <div class="flex items-center space-x-2 text-emerald-600 dark:text-emerald-400 font-bold text-xs">
+                                <i class="fa-solid fa-mobile-screen-button"></i>
+                                <span>1. Browser HP</span>
+                            </div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300">
+                                Gunakan <strong>Google Chrome</strong> untuk Android, atau <strong>Safari</strong> untuk iPhone / iPad.
+                            </p>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#15202d] border border-slate-100 dark:border-[#253447] space-y-1">
+                            <div class="flex items-center space-x-2 text-emerald-600 dark:text-emerald-400 font-bold text-xs">
+                                <i class="fa-solid fa-link"></i>
+                                <span>2. Alamat URL</span>
+                            </div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300">
+                                Ketik alamat resmi: <strong class="text-emerald-700 dark:text-emerald-400 font-mono">https://mubarokah.my.id</strong>
+                            </p>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#15202d] border border-slate-100 dark:border-[#253447] space-y-1">
+                            <div class="flex items-center space-x-2 text-emerald-600 dark:text-emerald-400 font-bold text-xs">
+                                <i class="fa-solid fa-shield-halved"></i>
+                                <span>3. Cek Gembok</span>
+                            </div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300">
+                                Pastikan terdapat ikon gembok aman pada bilah alamat atas browser Anda.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/40 flex items-start space-x-3 text-xs">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-600 dark:text-amber-400 text-base mt-0.5 shrink-0"></i>
+                        <div class="text-amber-900 dark:text-amber-200">
+                            <strong>Penting:</strong> Jangan pernah memasukkan data NIS santri atau kata sandi di luar situs resmi <strong>mubarokah.my.id</strong> demi keamanan data putra-putri Anda.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 2: PASANG DI HP (ANDROID & IPHONE TOGGLE) -->
+                <div id="panduan-content-step-2" class="hidden space-y-4">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-[#1e2d3d]">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Langkah 2</span>
+                            <h4 class="text-base sm:text-lg font-black text-slate-800 dark:text-slate-100">Memasang Aplikasi di Layar Utama HP</h4>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300">Ringan • Tanpa Kuota Besar</span>
+                    </div>
+
+                    <!-- OS Switcher Pills -->
+                    <div class="flex p-1 bg-slate-100 dark:bg-[#172331] rounded-2xl max-w-sm mx-auto">
+                        <button type="button" onclick="setPanduanOs('android')" id="panduan-os-btn-android"
+                            class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition bg-emerald-600 text-white shadow-sm flex items-center justify-center space-x-1.5 cursor-pointer">
+                            <i class="fa-brands fa-android text-sm"></i>
+                            <span>Pengguna Android</span>
+                        </button>
+                        <button type="button" onclick="setPanduanOs('ios')" id="panduan-os-btn-ios"
+                            class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition text-slate-600 dark:text-slate-300 hover:text-emerald-600 flex items-center justify-center space-x-1.5 cursor-pointer">
+                            <i class="fa-brands fa-apple text-sm"></i>
+                            <span>Pengguna iPhone (iOS)</span>
+                        </button>
+                    </div>
+
+                    <!-- Panel Android -->
+                    <div id="panduan-os-panel-android" class="space-y-4">
+                        <div class="rounded-2xl overflow-hidden shadow-md border border-slate-200/80 dark:border-[#1e2d3d] bg-slate-900 group">
+                            <img src="/assets/img/panduan/step2-install-android.svg" alt="Langkah 2: Instalasi di Android Chrome"
+                                class="w-full h-auto object-cover max-h-[380px] transition-transform duration-300 group-hover:scale-[1.01]" />
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div class="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/40 space-y-2">
+                                <h5 class="font-bold text-emerald-800 dark:text-emerald-300 text-xs flex items-center">
+                                    <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Cara 1: Banner Otomatis
+                                </h5>
+                                <p class="text-xs text-slate-600 dark:text-slate-300">
+                                    Setelah website terbuka di Google Chrome, tunggu 2-3 detik hingga muncul spanduk di bagian bawah layar: <strong>"Pasang Mubarokah App"</strong>. Klik tombol hijau <strong>"Instal Aplikasi"</strong>.
+                                </p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-[#15202d] border border-slate-200 dark:border-[#253447] space-y-2">
+                                <h5 class="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center">
+                                    <i class="fa-solid fa-ellipsis-vertical mr-1.5 text-amber-500"></i> Cara 2: Menu Titik Tiga (⋮)
+                                </h5>
+                                <p class="text-xs text-slate-600 dark:text-slate-300">
+                                    Jika spanduk tidak muncul, klik ikon <strong>Titik Tiga (⋮)</strong> di pojok kanan atas browser Chrome, lalu pilih <strong>"Tambahkan ke Layar Utama"</strong> atau <strong>"Pasang Aplikasi"</strong>.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="text-center pt-1">
+                            <button type="button" onclick="triggerInstallApp()"
+                                class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-md transition inline-flex items-center space-x-2 active:scale-95 cursor-pointer">
+                                <i class="fa-solid fa-cloud-arrow-down"></i>
+                                <span>Klik di Sini untuk Pasang Aplikasi Sekarang</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Panel iPhone (iOS Safari) -->
+                    <div id="panduan-os-panel-ios" class="hidden space-y-4">
+                        <div class="rounded-2xl overflow-hidden shadow-md border border-slate-200/80 dark:border-[#1e2d3d] bg-slate-900 group">
+                            <img src="/assets/img/panduan/step2-install-iphone.svg" alt="Langkah 2: Instalasi di iPhone Safari"
+                                class="w-full h-auto object-cover max-h-[380px] transition-transform duration-300 group-hover:scale-[1.01]" />
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/40 space-y-2">
+                            <h5 class="font-bold text-sky-900 dark:text-sky-300 text-xs flex items-center">
+                                <i class="fa-brands fa-safari mr-1.5 text-sky-600"></i> 4 Langkah Mudah di Browser Safari iPhone:
+                            </h5>
+                            <ol class="list-decimal list-inside space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
+                                <li>Buka link <strong>https://mubarokah.my.id</strong> wajib menggunakan browser <strong>Safari</strong> (bukan Chrome/browser lain).</li>
+                                <li>Klik tombol <strong>Bagikan / Share</strong> (ikon kotak dengan tanda panah mengarah ke atas ⎋) di bagian tengah bawah layar.</li>
+                                <li>Gulir ke bawah pada menu yang muncul, lalu pilih menu: <strong class="text-sky-700 dark:text-sky-300">➕ "Tambahkan ke Layar Utama" (Add to Home Screen)</strong>.</li>
+                                <li>Klik <strong>"Tambah" (Add)</strong> di pojok kanan atas layar Anda. Ikon aplikasi langsung siap digunakan di beranda iPhone!</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 3: SINKRONISASI NIS -->
+                <div id="panduan-content-step-3" class="hidden space-y-4">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-[#1e2d3d]">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Langkah 3</span>
+                            <h4 class="text-base sm:text-lg font-black text-slate-800 dark:text-slate-100">Sinkronisasi &amp; Aktivasi Data Santri</h4>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">Identitas Santri</span>
+                    </div>
+
+                    <div class="rounded-2xl overflow-hidden shadow-md border border-slate-200/80 dark:border-[#1e2d3d] bg-slate-900 group">
+                        <img src="/assets/img/panduan/step3-sinkron-nis.svg" alt="Langkah 3: Sinkronisasi NIS Santri"
+                            class="w-full h-auto object-cover max-h-[380px] transition-transform duration-300 group-hover:scale-[1.01]" />
+                    </div>
+
+                    <div class="space-y-3">
+                        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Bagi Bapak/Ibu yang pertama kali menggunakan aplikasi, lakukan langkah aktivasi untuk menghubungkan akun wali dengan data putra/putri tercinta:
+                        </p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#15202d] border border-slate-100 dark:border-[#253447] space-y-1">
+                                <span class="font-bold text-xs text-emerald-700 dark:text-emerald-400">1. Nomor Induk Santri (NIS)</span>
+                                <p class="text-xs text-slate-600 dark:text-slate-300">
+                                    Masukkan NIS resmi santri (contoh: <code class="font-mono bg-slate-200 dark:bg-slate-800 px-1 rounded">20240105</code>). NIS tercantum di kartu santri atau buku raport madrasah.
+                                </p>
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#15202d] border border-slate-100 dark:border-[#253447] space-y-1">
+                                <span class="font-bold text-xs text-emerald-700 dark:text-emerald-400">2. Tanggal Lahir Santri</span>
+                                <p class="text-xs text-slate-600 dark:text-slate-300">
+                                    Masukkan tanggal lahir santri sebagai verifikasi privasi keluarga agar data santri tidak bisa dibuka oleh sembarang orang.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center pt-2">
+                        <button type="button" onclick="closePanduanModal(); openParentActivationModal();"
+                            class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-md transition inline-flex items-center space-x-2 active:scale-95 cursor-pointer">
+                            <i class="fa-solid fa-user-plus"></i>
+                            <span>Buka Formulir Aktivasi Santri Sekarang</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- STEP 4: VERIFIKASI OTP -->
+                <div id="panduan-content-step-4" class="hidden space-y-4">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-[#1e2d3d]">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Langkah 4</span>
+                            <h4 class="text-base sm:text-lg font-black text-slate-800 dark:text-slate-100">Verifikasi Kode Rahasia OTP</h4>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300">Keamanan Terenkripsi</span>
+                    </div>
+
+                    <div class="rounded-2xl overflow-hidden shadow-md border border-slate-200/80 dark:border-[#1e2d3d] bg-slate-900 group">
+                        <img src="/assets/img/panduan/step4-verifikasi-otp.svg" alt="Langkah 4: Verifikasi OTP WhatsApp"
+                            class="w-full h-auto object-cover max-h-[380px] transition-transform duration-300 group-hover:scale-[1.01]" />
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 space-y-2">
+                            <h5 class="font-bold text-xs text-emerald-800 dark:text-emerald-300 flex items-center">
+                                <i class="fa-solid fa-shield-check mr-1.5"></i> Prosedur Pengiriman Kode OTP Resmi:
+                            </h5>
+                            <ul class="list-disc list-inside space-y-1 text-xs text-slate-600 dark:text-slate-300">
+                                <li>Kode OTP 6 angka dikirimkan via <strong>WhatsApp</strong> atau <strong>Email</strong> dari akun resmi pesantren.</li>
+                                <li>Masa berlaku kode OTP adalah <strong>5 menit</strong>.</li>
+                                <li>Ketikkan 6 angka tersebut ke kolom verifikasi aplikasi, lalu buat kata sandi / PIN yang mudah diingat.</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/40 flex items-start space-x-3 text-xs">
+                            <i class="fa-solid fa-lock text-rose-600 dark:text-rose-400 text-base mt-0.5 shrink-0"></i>
+                            <div class="text-rose-900 dark:text-rose-200">
+                                <strong>Peringatan Keamanan:</strong> Pihak pengurus atau admin pesantren <u>TIDAK PERNAH</u> meminta kode OTP kepada Bapak/Ibu. Jangan berikan kode OTP kepada siapa pun demi keamanan akun Anda.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 5: FITUR UTAMA DASHBOARD WALI -->
+                <div id="panduan-content-step-5" class="hidden space-y-4">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-[#1e2d3d]">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Langkah 5</span>
+                            <h4 class="text-base sm:text-lg font-black text-slate-800 dark:text-slate-100">Mengenal Fitur Utama Wali Santri</h4>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">Dashboard Interaktif</span>
+                    </div>
+
+                    <div class="rounded-2xl overflow-hidden shadow-md border border-slate-200/80 dark:border-[#1e2d3d] bg-slate-900 group">
+                        <img src="/assets/img/panduan/step5-dashboard-wali.svg" alt="Langkah 5: Fitur Utama Portal Wali Santri"
+                            class="w-full h-auto object-cover max-h-[380px] transition-transform duration-300 group-hover:scale-[1.01]" />
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#15202d] border border-slate-200/80 dark:border-[#253447] space-y-1">
+                            <div class="flex items-center space-x-2 text-emerald-600 dark:text-emerald-400 font-bold">
+                                <i class="fa-solid fa-book-quran"></i>
+                                <span>Mutaba'ah &amp; Capaian Tahfidz</span>
+                            </div>
+                            <p class="text-slate-600 dark:text-slate-300">
+                                Pantau juz hafalan terakhir, nilai kelancaran (Jayyid, Mumtaz), dan buka <em>Buku Mutaba'ah Digital</em> lengkap dengan riwayat setoran harian.
+                            </p>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#15202d] border border-slate-200/80 dark:border-[#253447] space-y-1">
+                            <div class="flex items-center space-x-2 text-blue-600 dark:text-blue-400 font-bold">
+                                <i class="fa-solid fa-calendar-check"></i>
+                                <span>Presensi &amp; Sholat Berjamaah</span>
+                            </div>
+                            <p class="text-slate-600 dark:text-slate-300">
+                                Rekap kehadiran harian santri: Sholat Subuh, Maghrib, Isya' berjamaah, serta halaqah Qur'an pagi dan sore hari.
+                            </p>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#15202d] border border-slate-200/80 dark:border-[#253447] space-y-1">
+                            <div class="flex items-center space-x-2 text-amber-600 dark:text-amber-400 font-bold">
+                                <i class="fa-solid fa-cash-register"></i>
+                                <span>Syahriyah (SPP) &amp; Kuitansi</span>
+                            </div>
+                            <p class="text-slate-600 dark:text-slate-300">
+                                Transparansi status pembayaran syahriyah bulanan, arsip setoran resmi, dan unduh kuitansi digital sah dari bendahara pesantren.
+                            </p>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#15202d] border border-slate-200/80 dark:border-[#253447] space-y-1">
+                            <div class="flex items-center space-x-2 text-purple-600 dark:text-purple-400 font-bold">
+                                <i class="fa-solid fa-people-roof"></i>
+                                <span>Multi-Santri (Pindah Akun)</span>
+                            </div>
+                            <p class="text-slate-600 dark:text-slate-300">
+                                Jika memiliki lebih dari 1 putra/putri di pesantren, Anda dapat beralih akun santri cukup dengan satu klik tanpa perlu logout.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 6: BANTUAN & FAQ -->
+                <div id="panduan-content-step-6" class="hidden space-y-4">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-[#1e2d3d]">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Bantuan &amp; FAQ</span>
+                            <h4 class="text-base sm:text-lg font-black text-slate-800 dark:text-slate-100">Pertanyaan yang Sering Diajukan</h4>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300">FAQ Resmi</span>
+                    </div>
+
+                    <div class="space-y-3">
+                        <!-- FAQ 1 -->
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-[#15202d] border border-slate-200 dark:border-[#253447] space-y-1.5">
+                            <h5 class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100 flex items-center">
+                                <i class="fa-solid fa-circle-question mr-2 text-emerald-600"></i> Apakah aplikasi ini memotong pulsa atau berbayar?
+                            </h5>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 pl-6 leading-relaxed">
+                                <strong>Tidak.</strong> Mubarokah App disediakan 100% gratis oleh Pondok Pesantren Tahfidzul Qur'an Roudlotul Mubarokah untuk memfasilitasi seluruh wali santri.
+                            </p>
+                        </div>
+
+                        <!-- FAQ 2 -->
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-[#15202d] border border-slate-200 dark:border-[#253447] space-y-1.5">
+                            <h5 class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100 flex items-center">
+                                <i class="fa-solid fa-circle-question mr-2 text-emerald-600"></i> Mengapa kode OTP WhatsApp tidak kunjung masuk?
+                            </h5>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 pl-6 leading-relaxed">
+                                Pastikan nomor WhatsApp yang dimasukkan sudah benar dan memiliki jaringan internet. Jika dalam 1 menit belum masuk, klik tombol <em>"Kirim Ulang OTP"</em> atau gunakan opsi <em>"Kirim ke Email"</em>.
+                            </p>
+                        </div>
+
+                        <!-- FAQ 3 -->
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-[#15202d] border border-slate-200 dark:border-[#253447] space-y-1.5">
+                            <h5 class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100 flex items-center">
+                                <i class="fa-solid fa-circle-question mr-2 text-emerald-600"></i> Bagaimana jika saya lupa nomor NIS santri?
+                            </h5>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 pl-6 leading-relaxed">
+                                Silakan hubungi Sekretariat Pesantren via WhatsApp. Pengurus akan memeriksa buku induk pendaftaran santri dan menginformasikan NIS resmi putra/putri Anda.
+                            </p>
+                        </div>
+
+                        <!-- FAQ 4 -->
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-[#15202d] border border-slate-200 dark:border-[#253447] space-y-1.5">
+                            <h5 class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100 flex items-center">
+                                <i class="fa-solid fa-circle-question mr-2 text-emerald-600"></i> Apakah Mubarokah App bisa dibuka di laptop atau komputer rumah?
+                            </h5>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 pl-6 leading-relaxed">
+                                <strong>Bisa.</strong> Buka browser Google Chrome atau Microsoft Edge di laptop/komputer Anda, lalu buka <strong>https://mubarokah.my.id</strong>. Seluruh data tersinkronisasi otomatis secara real-time.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Kontak Bantuan Resmi -->
+                    <div class="p-4 rounded-2xl bg-emerald-900 text-white space-y-2">
+                        <div class="flex items-center space-x-2 font-bold text-xs">
+                            <i class="fa-solid fa-headset text-amber-400"></i>
+                            <span>Layanan Pendampingan Teknis Pesantren:</span>
+                        </div>
+                        <p class="text-xs text-emerald-100/90 leading-relaxed">
+                            Jika Bapak/Ibu membutuhkan panduan langsung saat aktivasi atau pemasangan aplikasi, pengurus siap membantu setiap hari pukul 08.00 – 21.00 WIB.
+                        </p>
+                        <div class="pt-1 flex flex-wrap gap-2">
+                            <a href="https://wa.me/6281234567890?text=Assalamu%27alaikum%20Admin%20Khodim%2C%20saya%20Wali%20Santri%20butuh%20bantuan%20panduan%20Mubarokah%20App"
+                                target="_blank" rel="noopener noreferrer"
+                                class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl shadow transition inline-flex items-center space-x-1.5 active:scale-95">
+                                <i class="fa-brands fa-whatsapp text-sm"></i>
+                                <span>Hubungi WhatsApp Admin Khodim</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 4. FOOTER MODAL (STICKY NAVIGATION) -->
+            <div class="p-3 sm:p-4 bg-slate-50 dark:bg-[#0c1622] border-t border-slate-200 dark:border-[#1e2d3d] flex items-center justify-between shrink-0">
+                <button type="button" onclick="prevPanduanStep()" id="panduan-btn-prev"
+                    class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1a2838] transition flex items-center space-x-1.5 opacity-50 cursor-not-allowed">
+                    <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                    <span>Sebelumnya</span>
+                </button>
+
+                <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                    <span id="panduan-current-step-label">Langkah 1 dari 6</span>
+                </div>
+
+                <button type="button" onclick="nextPanduanStep()" id="panduan-btn-next"
+                    class="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center space-x-1.5 shadow-sm active:scale-95 cursor-pointer">
+                    <span>Selanjutnya</span>
+                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </button>
+            </div>
+
         </div>
     </div>
 
@@ -19061,7 +19559,7 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js?v=13').then(registration => {
+                navigator.serviceWorker.register('/sw.js?v=14').then(registration => {
                     if (typeof registration.update === 'function') {
                         registration.update();
                     }
@@ -19100,6 +19598,7 @@
     <script src="/js/presensi.js?v=13"></script>
     <script src="/js/madin.js?v=13"></script>
     <script src="/js/keuangan.js"></script>
+    <script src="/js/panduan.js?v=1"></script>
 
     <!-- Main Controller & Navigation -->
     <script src="/js/main.js"></script>

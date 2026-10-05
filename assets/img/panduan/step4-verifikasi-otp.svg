@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad5" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#047857"/>
+      <stop offset="50%" stop-color="#0f766e"/>
+      <stop offset="100%" stop-color="#092e20"/>
+    </linearGradient>
+    <linearGradient id="phoneGrad5" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <filter id="shadow5" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="520" rx="24" fill="url(#bgGrad5)"/>
+  <circle cx="700" cy="90" r="160" fill="#10b981" opacity="0.1"/>
+  <circle cx="100" cy="460" r="140" fill="#f59e0b" opacity="0.08"/>
+
+  <!-- Left Info Card -->
+  <g transform="translate(48, 50)">
+    <rect width="320" height="420" rx="20" fill="#ffffff" fill-opacity="0.96" filter="url(#shadow5)"/>
+    
+    <!-- Step Badge -->
+    <rect x="24" y="24" width="96" height="28" rx="8" fill="#ecfdf5"/>
+    <text x="72" y="42" font-family="system-ui, sans-serif" font-size="12" font-weight="bold" fill="#047857" text-anchor="middle">LANGKAH 4</text>
+    
+    <text x="24" y="85" font-family="system-ui, sans-serif" font-size="20" font-weight="800" fill="#0f172a">Verifikasi Kode OTP</text>
+    <text x="24" y="108" font-family="system-ui, sans-serif" font-size="12.5" fill="#64748b">Melalui WhatsApp atau Email</text>
+
+    <!-- Instruction 1 -->
+    <g transform="translate(24, 130)">
+      <circle cx="14" cy="14" r="14" fill="#047857"/>
+      <text x="14" y="19" font-family="system-ui, sans-serif" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">1</text>
+      <text x="38" y="14" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#1e293b">Masukkan No. WhatsApp</text>
+      <text x="38" y="32" font-family="system-ui, sans-serif" font-size="11" fill="#64748b">Gunakan nomor aktif diawali 08...</text>
+    </g>
+
+    <!-- Instruction 2 -->
+    <g transform="translate(24, 190)">
+      <circle cx="14" cy="14" r="14" fill="#047857"/>
+      <text x="14" y="19" font-family="system-ui, sans-serif" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">2</text>
+      <text x="38" y="14" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#1e293b">Buka Pesan Masuk</text>
+      <text x="38" y="32" font-family="system-ui, sans-serif" font-size="11" fill="#64748b">Dari Admin Khodim Mubarokah</text>
+    </g>
+
+    <!-- Instruction 3 -->
+    <g transform="translate(24, 250)">
+      <circle cx="14" cy="14" r="14" fill="#047857"/>
+      <text x="14" y="19" font-family="system-ui, sans-serif" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">3</text>
+      <text x="38" y="14" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#1e293b">Ketik 6 Angka Rahasia</text>
+      <text x="38" y="32" font-family="system-ui, sans-serif" font-size="11" fill="#64748b">Kode berlaku selama 5 menit</text>
+    </g>
+
+    <!-- Instruction 4 -->
+    <g transform="translate(24, 310)">
+      <circle cx="14" cy="14" r="14" fill="#047857"/>
+      <text x="14" y="19" font-family="system-ui, sans-serif" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">4</text>
+      <text x="38" y="14" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#1e293b">Akun Siap Digunakan</text>
+      <text x="38" y="32" font-family="system-ui, sans-serif" font-size="11" fill="#64748b">Bisa langsung pantau nilai &amp; setoran</text>
+    </g>
+
+    <!-- Security Warning -->
+    <rect x="24" y="360" width="272" height="42" rx="10" fill="#fee2e2" stroke="#fca5a5"/>
+    <text x="36" y="378" font-family="system-ui, sans-serif" font-size="10.5" font-weight="bold" fill="#991b1b">⚠️ PENTING: JANGAN BERIKAN KODE OTP</text>
+    <text x="36" y="393" font-family="system-ui, sans-serif" font-size="10" fill="#b91c1c">Pengurus tidak pernah meminta kode OTP Anda.</text>
+  </g>
+
+  <!-- Right Phone Mockup -->
+  <g transform="translate(420, 25)" filter="url(#shadow5)">
+    <rect width="330" height="470" rx="36" fill="url(#phoneGrad5)" stroke="#334155" stroke-width="4"/>
+    <rect x="12" y="14" width="306" height="442" rx="26" fill="#f8fafc"/>
+
+    <!-- WhatsApp Simulated Popup Notification -->
+    <g transform="translate(24, 32)" filter="url(#shadow5)">
+      <rect width="282" height="120" rx="16" fill="#ffffff" stroke="#22c55e" stroke-width="1.5"/>
+      
+      <!-- WA Header -->
+      <circle cx="26" cy="24" r="12" fill="#25d366"/>
+      <text x="26" y="28" font-size="12" text-anchor="middle">💬</text>
+      <text x="46" y="20" font-family="system-ui, sans-serif" font-size="11" font-weight="bold" fill="#15803d">Admin Khodim RM</text>
+      <text x="46" y="32" font-family="system-ui, sans-serif" font-size="8.5" fill="#64748b">WhatsApp Resmi Pesantren</text>
+      <text x="235" y="22" font-family="system-ui, sans-serif" font-size="9" fill="#94a3b8">Baru saja</text>
+
+      <line x1="16" y1="42" x2="266" y2="42" stroke="#f1f5f9"/>
+
+      <!-- Message Text -->
+      <text x="16" y="60" font-family="system-ui, sans-serif" font-size="10" fill="#1e293b">Kode OTP Mubarokah App Anda adalah:</text>
+      
+      <!-- OTP Big Display -->
+      <rect x="16" y="70" width="120" height="34" rx="8" fill="#dcfce7"/>
+      <text x="76" y="93" font-family="monospace" font-size="18" font-weight="bold" fill="#15803d" text-anchor="middle">482 915</text>
+      
+      <text x="146" y="84" font-family="system-ui, sans-serif" font-size="9" fill="#64748b">Berlaku 5 menit</text>
+      <text x="146" y="96" font-family="system-ui, sans-serif" font-size="8.5" fill="#ef4444">Rahasiakan kode ini!</text>
+    </g>
+
+    <!-- Form Input OTP in App Screen -->
+    <g transform="translate(24, 175)">
+      <text x="141" y="20" font-family="system-ui, sans-serif" font-size="13" font-weight="bold" fill="#0f172a" text-anchor="middle">Masukkan Kode Verifikasi</text>
+      <text x="141" y="38" font-family="system-ui, sans-serif" font-size="10.5" fill="#64748b" text-anchor="middle">Kode 6 angka dikirim ke WhatsApp Anda</text>
+
+      <!-- 6 OTP Boxes -->
+      <g transform="translate(18, 55)">
+        <!-- Box 1 -->
+        <rect x="0" y="0" width="36" height="46" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+        <text x="18" y="30" font-family="monospace" font-size="18" font-weight="bold" fill="#047857" text-anchor="middle">4</text>
+
+        <!-- Box 2 -->
+        <rect x="42" y="0" width="36" height="46" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+        <text x="60" y="30" font-family="monospace" font-size="18" font-weight="bold" fill="#047857" text-anchor="middle">8</text>
+
+        <!-- Box 3 -->
+        <rect x="84" y="0" width="36" height="46" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+        <text x="102" y="30" font-family="monospace" font-size="18" font-weight="bold" fill="#047857" text-anchor="middle">2</text>
+
+        <!-- Box 4 -->
+        <rect x="126" y="0" width="36" height="46" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+        <text x="144" y="30" font-family="monospace" font-size="18" font-weight="bold" fill="#047857" text-anchor="middle">9</text>
+
+        <!-- Box 5 -->
+        <rect x="168" y="0" width="36" height="46" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+        <text x="186" y="30" font-family="monospace" font-size="18" font-weight="bold" fill="#047857" text-anchor="middle">1</text>
+
+        <!-- Box 6 -->
+        <rect x="210" y="0" width="36" height="46" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+        <text x="228" y="30" font-family="monospace" font-size="18" font-weight="bold" fill="#047857" text-anchor="middle">5</text>
+      </g>
+
+      <!-- Verify Button -->
+      <rect x="18" y="125" width="246" height="42" rx="12" fill="#047857"/>
+      <text x="141" y="151" font-family="system-ui, sans-serif" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">Verifikasi &amp; Masuk Portal ✓</text>
+
+      <!-- Resend Timer -->
+      <text x="141" y="195" font-family="system-ui, sans-serif" font-size="10.5" fill="#64748b" text-anchor="middle">Belum menerima pesan? <tspan font-weight="bold" fill="#047857">Kirim Ulang (01:45)</tspan></text>
+      
+      <!-- Safe Badge -->
+      <g transform="translate(68, 225)">
+        <circle cx="10" cy="10" r="8" fill="#10b981"/>
+        <path d="M7 10 l2 2 l4 -4" stroke="#ffffff" stroke-width="1.5" fill="none"/>
+        <text x="24" y="14" font-family="system-ui, sans-serif" font-size="10" font-weight="bold" fill="#065f46">Sistem Terenkripsi Resmi Pesantren</text>
+      </g>
+    </g>
+  </g>
+</svg>
