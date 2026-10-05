@@ -339,6 +339,9 @@
                 if (typeof loadAdminTPQData === 'function') {
                     loadAdminTPQData();
                 }
+                if (typeof applyTPQRolePermissions === 'function') {
+                    applyTPQRolePermissions();
+                }
             } else if (viewName === 'sorogan') {
                 if (soroganView) soroganView.classList.remove('hidden');
                 if (typeof loadAdminSoroganData === 'function') {

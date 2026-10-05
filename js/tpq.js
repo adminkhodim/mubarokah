@@ -398,6 +398,86 @@ function renderTPQSummaryCards() {
 }
 
 /**
+ * Dapatkan kelompok kelas TPQ milik Asatidz/Ustadz yang sedang aktif login
+ */
+function getKelasForActiveUstadz() {
+    let user = (typeof ASNIdentity !== 'undefined' && ASNIdentity.currentUser) || null;
+    if (!user) {
+        try {
+            const raw = sessionStorage.getItem('mubarokah_admin_data') || localStorage.getItem('mubarokah_admin_data');
+            if (raw) user = JSON.parse(raw);
+        } catch (e) {}
+    }
+    if (!user) return null;
+
+    const kelasList = (ASNTPQ.data && ASNTPQ.data.kelasList) || [];
+    if (!Array.isArray(kelasList) || kelasList.length === 0) return null;
+
+    const uName = String(user.name || '').trim().toLowerCase();
+    const uEmail = String(user.email || '').trim().toLowerCase();
+    const uNip = String(user.nip || '').trim().toLowerCase();
+    const cleanUName = uName.replace(/^(ustadz|ustadzah|ust\.|ustd\.|kyai|nyai|gus|ning)\s+/i, '').trim();
+
+    // 1. Prioritas 1: Kecocokan persis pada ustadz/pengampu, email, atau NIP
+    for (const k of kelasList) {
+        const u = String(k.ustadz || k.ustadzPengampu || '').trim().toLowerCase();
+        const cleanU = u.replace(/^(ustadz|ustadzah|ust\.|ustd\.|kyai|nyai|gus|ning)\s+/i, '').trim();
+        const kEmail = String(k.email || k.ustadzEmail || '').trim().toLowerCase();
+        const kNip = String(k.nip || k.ustadzNip || '').trim().toLowerCase();
+
+        if (uNip && kNip && uNip === kNip) return k;
+        if (uEmail && kEmail && uEmail === kEmail) return k;
+        if (cleanUName && cleanU && cleanUName === cleanU) return k;
+        if (uName && u && uName === u) return k;
+    }
+
+    // 2. Prioritas 2: Substring match pada nama Ustadz atau Nama Kelas
+    if (cleanUName && cleanUName.length >= 3) {
+        for (const k of kelasList) {
+            const u = String(k.ustadz || k.ustadzPengampu || '').trim().toLowerCase();
+            const kName = String(k.namaKelas || '').trim().toLowerCase();
+            const cleanU = u.replace(/^(ustadz|ustadzah|ust\.|ustd\.|kyai|nyai|gus|ning)\s+/i, '').trim();
+
+            if (cleanU && (cleanU.includes(cleanUName) || cleanUName.includes(cleanU))) return k;
+            if (kName.includes(cleanUName)) return k;
+        }
+    }
+
+    // 3. Fallback: jika peran ASATIDZ / GURU dan ada daftar kelas, gunakan kelas pertama
+    const activeRole = String((typeof ASNIdentity !== 'undefined' && ASNIdentity.currentRole) || 
+                              sessionStorage.getItem('ASN_ADMIN_ROLE') || 
+                              sessionStorage.getItem('mubarokah_admin_role') || '').toUpperCase();
+    if (activeRole === 'ASATIDZ' || activeRole === 'GURU' || activeRole === 'MUALLIM') {
+        return kelasList[0] || null;
+    }
+
+    return null;
+}
+
+/**
+ * Kontrol Visibilitas Tombol TPQ Berdasarkan Peran Pengguna (RBAC)
+ * Menyembunyikan tombol ekspor (Excel, Cetak, Inisialisasi Sheet) & manajerial (Kelola Kelas, Jadwal & Sesi, Target Massal) untuk Akun Asatidz / Pengasuh
+ */
+function applyTPQRolePermissions() {
+    const activeRole = String((typeof ASNIdentity !== 'undefined' && ASNIdentity.currentRole) || 
+                              sessionStorage.getItem('ASN_ADMIN_ROLE') || 
+                              sessionStorage.getItem('mubarokah_admin_role') || 'SUPER_ADMIN').toUpperCase();
+    const isPengasuh = activeRole === 'PENGASUH' || (typeof ASNTPQ !== 'undefined' && ASNTPQ.viewerRole === 'pengasuh');
+    const isTeacher = activeRole === 'ASATIDZ' || activeRole === 'GURU' || activeRole === 'MUALLIM' || activeRole === 'PEGAWAI';
+    const hideAdminActions = isPengasuh || isTeacher;
+
+    document.querySelectorAll('.tpq-admin-action').forEach(el => {
+        if (hideAdminActions) {
+            el.classList.add('hidden');
+            el.style.display = 'none';
+        } else {
+            el.classList.remove('hidden');
+            el.style.display = '';
+        }
+    });
+}
+
+/**
  * Isi dropdown filter kelas & jilid
  */
 function populateTPQFilters() {
@@ -412,10 +492,23 @@ function populateTPQFilters() {
         });
         opt += '<option value="UNASSIGNED">Belum Masuk Kelas</option>';
         filterKelas.innerHTML = opt;
-        if (currentVal && Array.from(filterKelas.options).some(o => o.value === currentVal)) {
+
+        const activeRole = String((typeof ASNIdentity !== 'undefined' && ASNIdentity.currentRole) || 
+                                  sessionStorage.getItem('ASN_ADMIN_ROLE') || 
+                                  sessionStorage.getItem('mubarokah_admin_role') || '').toUpperCase();
+        if (activeRole === 'ASATIDZ' || activeRole === 'GURU' || activeRole === 'MUALLIM') {
+            const myKelas = getKelasForActiveUstadz();
+            if (myKelas && myKelas.kelasId) {
+                filterKelas.value = myKelas.kelasId;
+            } else if (currentVal && Array.from(filterKelas.options).some(o => o.value === currentVal)) {
+                filterKelas.value = currentVal;
+            }
+        } else if (currentVal && Array.from(filterKelas.options).some(o => o.value === currentVal)) {
             filterKelas.value = currentVal;
         }
     }
+
+    applyTPQRolePermissions();
 }
 
 /**
@@ -593,12 +686,15 @@ function renderTPQTable() {
     let html = '';
     list.forEach((st, idx) => {
         const jInfo = YANBUA_JILID_INFO[st.jilidAktif] || { name: `Jilid ${st.jilidAktif}`, badge: "bg-slate-50 text-slate-700 border-slate-200" };
+        const isKhatam = (st.jilidAktif === 7 && Number(st.halamanAktif) >= 39) || st.statusTerakhir === 'KHATAM_YANBUA' || st.statusTerakhir === 'KHATAM';
         const isUlang = st.statusTerakhir === 'ULANG';
         const isChecked = selectedSet.has(st.studentId);
 
-        const statusBadge = isUlang
-            ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/50 dark:text-rose-300"><i class="fa-solid fa-rotate-left"></i> Wajib Mengulang</span>`
-            : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300"><i class="fa-solid fa-circle-check"></i> Lancar (Lanjut)</span>`;
+        const statusBadge = isKhatam
+            ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-black bg-gradient-to-r from-amber-500 to-yellow-400 text-white shadow-sm border border-amber-300"><i class="fa-solid fa-crown text-amber-100"></i> Khatam Yanbu'a 🏆</span>`
+            : (isUlang
+                ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/50 dark:text-rose-300"><i class="fa-solid fa-rotate-left"></i> Wajib Mengulang</span>`
+                : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300"><i class="fa-solid fa-circle-check"></i> Lancar (Lanjut)</span>`);
 
         // Target Info
         const tgt = targets[st.studentId] || st.target || {
@@ -684,6 +780,7 @@ function renderTPQTable() {
             const initials = (st.name || 'Santri').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'SN';
             const inKls = !!(st.namaKelas && st.namaKelas !== 'Belum Ada Kelas' && st.namaKelas !== 'Belum Ditentukan');
             const klsName = inKls ? st.namaKelas : 'Belum Masuk Kelas';
+            const isKhatam = (st.jilidAktif === 7 && Number(st.halamanAktif) >= 39) || st.statusTerakhir === 'KHATAM_YANBUA' || st.statusTerakhir === 'KHATAM';
             const isUlang = st.statusTerakhir === 'ULANG';
             const jInfo = YANBUA_JILID_INFO[st.jilidAktif] || { name: (st.jilidAktif === 0 ? 'Pemula' : `Jilid ${st.jilidAktif}`), totalHalaman: 44, badge: "bg-slate-50 text-slate-700 border-slate-200" };
             const tgt = targets[st.studentId] || st.target || {
@@ -695,9 +792,11 @@ function renderTPQTable() {
             const targetPekan = Math.round(targetSesi * weeklySessions * 10) / 10;
             const isSelected = selectedSet.has(st.studentId);
 
-            const statusBadge = isUlang
-                ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/50 dark:text-rose-300"><i class="fa-solid fa-rotate-left"></i> Mengulang</span>`
-                : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300"><i class="fa-solid fa-circle-check"></i> Lancar</span>`;
+            const statusBadge = isKhatam
+                ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-gradient-to-r from-amber-500 to-yellow-400 text-white shadow-sm"><i class="fa-solid fa-crown text-amber-100 text-[10px]"></i> Khatam 🏆</span>`
+                : (isUlang
+                    ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/50 dark:text-rose-300"><i class="fa-solid fa-rotate-left"></i> Mengulang</span>`
+                    : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300"><i class="fa-solid fa-circle-check"></i> Lancar</span>`);
 
             return `
             <div class="p-3.5 bg-white dark:bg-[#15202d] rounded-2xl border ${isSelected ? 'border-amber-400 dark:border-amber-600 bg-amber-50/20' : 'border-slate-100 dark:border-[#253447]'} shadow-sm space-y-2.5">
@@ -2457,16 +2556,23 @@ function renderTPQStudentDetailView() {
         const initials = (st.name || 'Santri').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
         elAvatar.innerHTML = st.photoUrl ? `<img src="${escapeHtml(st.photoUrl)}" class="w-full h-full object-cover rounded-2xl">` : initials;
     }
-    if (elBadge) {
-        elBadge.innerText = (st.status === 'ACTIVE' || !st.status) ? "TPQ Aktif" : st.status;
-    }
-
     const curJilid = (capaian.jilidAktif === 0 || String(capaian.jilidAktif).toLowerCase() === "pemula") ? 0 : Number(capaian.jilidAktif || 1);
     const halTerakhir = Number(capaian.halamanAktif || 1);
     const jInfo = YANBUA_JILID_INFO[curJilid] || { name: (curJilid === 0 ? "Pemula" : `Jilid ${curJilid}`), totalHalaman: 44 };
     const jName = jInfo.name;
     const halamanTuntas = getYanbuaCumulativePages(curJilid, halTerakhir);
     const percentOverall = Math.min(100, Math.round((halamanTuntas / TOTAL_YANBUA_PAGES) * 100));
+    const isKhatam = Boolean(stats.isKhatam || capaian.isKhatam || (curJilid === 7 && halTerakhir >= 39) || capaian.statusTerakhir === 'KHATAM_YANBUA' || capaian.statusTerakhir === 'KHATAM' || percentOverall >= 100);
+
+    if (elBadge) {
+        if (isKhatam) {
+            elBadge.innerHTML = `<i class="fa-solid fa-crown text-amber-300 mr-1"></i> Khatam Yanbu'a 🏆`;
+            elBadge.className = "px-2.5 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-amber-500 to-yellow-500 text-white shadow-sm";
+        } else {
+            elBadge.innerText = (st.status === 'ACTIVE' || !st.status) ? "TPQ Aktif" : st.status;
+            elBadge.className = "px-2 py-0.5 rounded-full text-[10px] font-black bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300";
+        }
+    }
 
     // 4 Stat Strip Cards
     const elStatCapaian = document.getElementById('tpq-detail-stat-capaian');
@@ -2475,11 +2581,19 @@ function renderTPQStudentDetailView() {
     const elStatNilai = document.getElementById('tpq-detail-stat-nilai');
 
     if (elStatCapaian) {
-        elStatCapaian.innerHTML = `${jName} Hal ${halTerakhir} <span class="text-xs font-bold text-slate-400">(${percentOverall}%)</span>`;
+        if (isKhatam) {
+            elStatCapaian.innerHTML = `<span class="text-amber-600 dark:text-amber-400 font-black">Khatam Yanbu'a 🏆</span> <span class="text-xs font-bold text-slate-400">(100%)</span>`;
+        } else {
+            elStatCapaian.innerHTML = `${jName} Hal ${halTerakhir} <span class="text-xs font-bold text-slate-400">(${percentOverall}%)</span>`;
+        }
     }
     if (elStatTarget) {
-        const tgtJilid = target.targetJilid !== undefined ? target.targetJilid : 7;
-        elStatTarget.innerText = (tgtJilid === 0 || String(tgtJilid).toLowerCase() === 'pemula') ? "Pemula" : `Jilid ${tgtJilid}`;
+        if (isKhatam) {
+            elStatTarget.innerHTML = `<span class="text-amber-600 dark:text-amber-400 font-black">Khatam 🏆</span>`;
+        } else {
+            const tgtJilid = target.targetJilid !== undefined ? target.targetJilid : 7;
+            elStatTarget.innerText = (tgtJilid === 0 || String(tgtJilid).toLowerCase() === 'pemula') ? "Pemula" : `Jilid ${tgtJilid}`;
+        }
     }
     if (elStatTotal) {
         elStatTotal.innerText = `${riwayat.length} Kali`;
@@ -2492,10 +2606,17 @@ function renderTPQStudentDetailView() {
     const elProgText = document.getElementById('tpq-detail-progress-text');
     const elProgBar = document.getElementById('tpq-detail-progress-bar');
     if (elProgText) {
-        elProgText.innerText = `${jName} (Hal ${halTerakhir}/${jInfo.totalHalaman}) • ${halamanTuntas} / ${TOTAL_YANBUA_PAGES} Halaman (${percentOverall}%)`;
+        if (isKhatam) {
+            elProgText.innerText = `Khatam Seluruh Jenjang Yanbu'a 🏆 • ${TOTAL_YANBUA_PAGES} / ${TOTAL_YANBUA_PAGES} Halaman (100%)`;
+        } else {
+            elProgText.innerText = `${jName} (Hal ${halTerakhir}/${jInfo.totalHalaman}) • ${halamanTuntas} / ${TOTAL_YANBUA_PAGES} Halaman (${percentOverall}%)`;
+        }
     }
     if (elProgBar) {
-        elProgBar.style.width = `${percentOverall}%`;
+        elProgBar.style.width = `${isKhatam ? 100 : percentOverall}%`;
+        if (isKhatam) {
+            elProgBar.className = elProgBar.className.replace(/bg-teal-\d+/g, '') + " bg-gradient-to-r from-amber-500 to-yellow-400";
+        }
     }
 
     // Tab 1 Indikator Harian, Pekanan, Bulanan
@@ -2551,12 +2672,15 @@ function renderTPQStudentDetailView() {
         let gridHtml = '';
         for (let j = 0; j <= 7; j++) {
             const jItem = YANBUA_JILID_INFO[j] || { name: (j === 0 ? "Pemula" : `Jilid ${j}`), totalHalaman: 44 };
-            const isCompleted = j < curJilid;
-            const isCurrent = j === curJilid;
+            const isCompleted = isKhatam || (j < curJilid);
+            const isCurrent = !isKhatam && (j === curJilid);
 
             let cardClass = "";
             let badgeText = "";
-            if (isCompleted) {
+            if (isKhatam && j === 7) {
+                cardClass = "bg-gradient-to-r from-amber-500 to-yellow-500 text-white border-amber-400 shadow-md font-bold";
+                badgeText = `<span class="text-[9px] font-black inline-flex items-center gap-0.5"><i class="fa-solid fa-crown text-amber-200"></i> Khatam</span>`;
+            } else if (isCompleted) {
                 cardClass = "bg-teal-600 text-white border-teal-700 shadow-sm";
                 badgeText = `<i class="fa-solid fa-check text-[10px]"></i>`;
             } else if (isCurrent) {
@@ -2960,6 +3084,151 @@ function printTPQStudentMutabaah() {
     printWin.document.close();
 }
 
+// ====================================================================
+// EXPORT & PRINT TPQ
+// ====================================================================
+
+/**
+ * Cetak Rekapitulasi Data TPQ Yanbu'a
+ */
+function printTPQRekap() {
+    window.print();
+}
+
+/**
+ * Ekspor Data TPQ Yanbu'a ke Excel (.xlsx) menggunakan SheetJS
+ */
+function exportTPQDataXLSX() {
+    const students = ASNTPQ.filteredStudents || (ASNTPQ.data && ASNTPQ.data.students) || [];
+    if (students.length === 0) {
+        if (typeof showToast === 'function') showToast("⚠️ Tidak ada data TPQ untuk diekspor.");
+        else alert("Tidak ada data TPQ untuk diekspor.");
+        return;
+    }
+
+    const doExport = () => {
+        try {
+            const headers = [
+                "No", "NIS", "Nama Santri", "Gender", "Program",
+                "Kelas TPQ", "Ustadz Pengampu", "Jilid Aktif", "Halaman Aktif",
+                "Target Jilid", "Target Hal/Sesi", "Target Hal/Pekan",
+                "Status Terakhir", "Terakhir Diperbarui"
+            ];
+
+            const weeklySessions = getTPQActiveWeeklySessionCounts();
+            const rows = students.map((st, idx) => {
+                const tgt = (ASNTPQ.data.targets && ASNTPQ.data.targets[st.studentId]) || st.target || {};
+                const tSesi = tgt.targetHalamanSesi || 1;
+                const tPekan = tgt.targetHalamanPekan || (tSesi * weeklySessions);
+                const isKhatam = (st.jilidAktif === 7 && Number(st.halamanAktif) >= 39) || st.statusTerakhir === 'KHATAM_YANBUA' || st.statusTerakhir === 'KHATAM';
+                const statusStr = isKhatam ? "Khatam Yanbu'a 🏆" : (st.statusTerakhir === 'ULANG' ? "Wajib Mengulang" : "Lancar (Lanjut)");
+                const jName = (st.jilidAktif === 0 || String(st.jilidAktif).toLowerCase() === 'pemula') ? "Pemula" : `Jilid ${st.jilidAktif}`;
+                const tgtJilidName = (tgt.targetJilid === 0 || String(tgt.targetJilid).toLowerCase() === 'pemula') ? "Pemula" : (isKhatam ? "Khatam Yanbu'a" : `Jilid ${tgt.targetJilid || 7}`);
+
+                return [
+                    idx + 1,
+                    st.nis || "-",
+                    st.name || "-",
+                    st.gender === "P" ? "Perempuan" : "Laki-laki",
+                    "TPQ Yanbu'a (Pemula - Jilid 7)",
+                    st.namaKelas || "Belum Masuk Kelas",
+                    st.ustadzPengampu || "-",
+                    jName,
+                    st.halamanAktif || 1,
+                    tgtJilidName,
+                    tSesi,
+                    tPekan,
+                    statusStr,
+                    st.updatedAt ? st.updatedAt.substring(0, 10) : "-"
+                ];
+            });
+
+            const wsData = [headers, ...rows];
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+            ws['!cols'] = [
+                { wch: 5 },  // No
+                { wch: 14 }, // NIS
+                { wch: 28 }, // Nama
+                { wch: 12 }, // Gender
+                { wch: 30 }, // Program
+                { wch: 24 }, // Kelas
+                { wch: 24 }, // Ustadz
+                { wch: 14 }, // Jilid
+                { wch: 14 }, // Halaman
+                { wch: 16 }, // Target Jilid
+                { wch: 16 }, // Target Sesi
+                { wch: 16 }, // Target Pekan
+                { wch: 20 }, // Status Terakhir
+                { wch: 18 }  // Update
+            ];
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Rekap TPQ Yanbua");
+
+            const dateStr = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(wb, `Rekap_TPQ_Yanbua_Mubarokah_${dateStr}.xlsx`);
+            if (typeof showToast === 'function') showToast("📥 Rekap TPQ (.xlsx) berhasil diunduh!");
+        } catch (err) {
+            console.error("Gagal export XLSX:", err);
+            exportTPQDataCSVFallback();
+        }
+    };
+
+    if (typeof XLSX !== 'undefined') {
+        doExport();
+    } else {
+        const script = document.createElement('script');
+        script.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
+        script.onload = () => doExport();
+        script.onerror = () => {
+            console.warn("Gagal memuat SheetJS CDN, beralih ke format CSV...");
+            exportTPQDataCSVFallback();
+        };
+        document.head.appendChild(script);
+    }
+}
+
+/**
+ * Fallback Ekspor CSV
+ */
+function exportTPQDataCSVFallback() {
+    const students = ASNTPQ.filteredStudents || (ASNTPQ.data && ASNTPQ.data.students) || [];
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "No,NIS,Nama Santri,Gender,Kelas TPQ,Ustadz,Jilid Aktif,Halaman Aktif,Status Terakhir\n";
+
+    students.forEach((st, idx) => {
+        const isKhatam = (st.jilidAktif === 7 && Number(st.halamanAktif) >= 39) || st.statusTerakhir === 'KHATAM_YANBUA' || st.statusTerakhir === 'KHATAM';
+        const statusStr = isKhatam ? "Khatam Yanbu'a" : (st.statusTerakhir === 'ULANG' ? "Wajib Mengulang" : "Lancar (Lanjut)");
+        const jName = (st.jilidAktif === 0 || String(st.jilidAktif).toLowerCase() === 'pemula') ? "Pemula" : `Jilid ${st.jilidAktif}`;
+        const row = [
+            idx + 1,
+            `"${st.nis || ''}"`,
+            `"${st.name || ''}"`,
+            `"${st.gender || 'L'}"`,
+            `"${st.namaKelas || ''}"`,
+            `"${st.ustadzPengampu || ''}"`,
+            `"${jName}"`,
+            st.halamanAktif || 1,
+            `"${statusStr}"`
+        ].join(",");
+        csvContent += row + "\n";
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Rekap_TPQ_Yanbua_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    if (typeof showToast === 'function') showToast("📥 Rekap TPQ (.csv) berhasil diunduh.");
+}
+
+function exportTPQDataCSV() {
+    exportTPQDataXLSX();
+}
+
 window.openTPQStudentDetail = openTPQStudentDetail;
 window.closeTPQStudentDetail = closeTPQStudentDetail;
 window.switchTPQDetailTab = switchTPQDetailTab;
@@ -2970,5 +3239,10 @@ window.onChangeTPQIndikatorDate = onChangeTPQIndikatorDate;
 window.setTPQIndikatorPreset = setTPQIndikatorPreset;
 window.deleteTPQSimakanLog = deleteTPQSimakanLog;
 window.printTPQStudentMutabaah = printTPQStudentMutabaah;
+window.printTPQRekap = printTPQRekap;
+window.exportTPQDataXLSX = exportTPQDataXLSX;
+window.exportTPQDataCSV = exportTPQDataCSV;
+window.applyTPQRolePermissions = applyTPQRolePermissions;
+window.getKelasForActiveUstadz = getKelasForActiveUstadz;
 
 

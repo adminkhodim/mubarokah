@@ -402,7 +402,7 @@ function doPost(e) {
       if (token) {
         try {
           const actor = authenticateSession(token);
-          authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH", "PEGAWAI"]);
+          authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PENGASUH", "ASATIDZ", "MUALLIM", "PEGAWAI", "GURU"]);
         } catch (authErr) {
           try { verifySessionToken(token); } catch (e) {
             return createJsonResponse({ status: "error", message: authErr.message });
@@ -417,7 +417,7 @@ function doPost(e) {
       if (token) {
         try {
           const actor = authenticateSession(token);
-          authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH", "PEGAWAI"]);
+          authorizeRole(actor, ["ADMIN", "SUPER_ADMIN"]);
         } catch (authErr) {
           try { verifySessionToken(token); } catch (e) {
             return createJsonResponse({ status: "error", message: authErr.message });
@@ -433,7 +433,7 @@ function doPost(e) {
       if (token) {
         try {
           const actor = authenticateSession(token);
-          authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH", "PEGAWAI"]);
+          authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PENGASUH", "ASATIDZ", "MUALLIM", "PEGAWAI", "GURU"]);
         } catch (authErr) {
           try { verifySessionToken(token); } catch (e) {
             return createJsonResponse({ status: "error", message: authErr.message });
@@ -453,7 +453,7 @@ function doPost(e) {
       if (token) {
         try {
           const actor = authenticateSession(token);
-          authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH", "PEGAWAI"]);
+          authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR"]);
         } catch (authErr) {
           try { verifySessionToken(token); } catch (e) {
             return createJsonResponse({ status: "error", message: authErr.message });
@@ -468,7 +468,7 @@ function doPost(e) {
       if (token) {
         try {
           const actor = authenticateSession(token);
-          authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH", "PEGAWAI"]);
+          authorizeRole(actor, ["ADMIN", "SUPER_ADMIN"]);
         } catch (authErr) {
           try { verifySessionToken(token); } catch (e) {
             return createJsonResponse({ status: "error", message: authErr.message });
@@ -484,7 +484,7 @@ function doPost(e) {
       if (token) {
         try {
           const actor = authenticateSession(token);
-          authorizeRole(actor, ["ADMIN", "EDITOR"]);
+          authorizeRole(actor, ["ADMIN", "SUPER_ADMIN"]);
         } catch (authErr) {
           try { verifySessionToken(token); } catch (e) {
             return createJsonResponse({ status: "error", message: authErr.message });
@@ -499,7 +499,7 @@ function doPost(e) {
       if (token) {
         try {
           const actor = authenticateSession(token);
-          authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH", "PEGAWAI"]);
+          authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR"]);
         } catch (authErr) {
           try { verifySessionToken(token); } catch (e) {
             return createJsonResponse({ status: "error", message: authErr.message });
@@ -514,7 +514,7 @@ function doPost(e) {
       if (token) {
         try {
           const actor = authenticateSession(token);
-          authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH", "PEGAWAI"]);
+          authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PENGASUH", "ASATIDZ", "MUALLIM", "PEGAWAI", "GURU"]);
         } catch (authErr) {
           try { verifySessionToken(token); } catch (e) {
             return createJsonResponse({ status: "error", message: authErr.message });
@@ -529,7 +529,7 @@ function doPost(e) {
       if (token) {
         try {
           const actor = authenticateSession(token);
-          authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH", "PEGAWAI"]);
+          authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PENGASUH", "ASATIDZ", "MUALLIM", "PEGAWAI", "GURU"]);
         } catch (authErr) {
           try { verifySessionToken(token); } catch (e) {
             return createJsonResponse({ status: "error", message: authErr.message });
@@ -544,7 +544,7 @@ function doPost(e) {
       if (token) {
         try {
           const actor = authenticateSession(token);
-          authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH", "PEGAWAI"]);
+          authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR"]);
         } catch (authErr) {
           try { verifySessionToken(token); } catch (e) {
             return createJsonResponse({ status: "error", message: authErr.message });
@@ -559,7 +559,7 @@ function doPost(e) {
       if (token) {
         try {
           const actor = authenticateSession(token);
-          authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH", "PEGAWAI"]);
+          authorizeRole(actor, ["ADMIN", "SUPER_ADMIN"]);
         } catch (authErr) {
           try { verifySessionToken(token); } catch (e) {
             return createJsonResponse({ status: "error", message: authErr.message });
@@ -574,12 +574,6 @@ function doPost(e) {
       const token = payload.token || (payload.data && payload.data.token) || "";
       const studentId = payload.studentId || payload.student_id || (payload.data && (payload.data.studentId || payload.data.student_id));
       return createJsonResponse(getTPQStudentDetail(studentId, token));
-    }
-
-    if (action === "deleteTPQLog" || action === "tpq.deleteLog") {
-      const token = payload.token || (payload.data && payload.data.token) || "";
-      const logId = payload.logId || payload.log_id || (payload.data && (payload.data.logId || payload.data.log_id)) || "";
-      return createJsonResponse(deleteTPQLog(logId, token));
     }
 
     // ========================================================
@@ -15865,24 +15859,146 @@ function saveTPQLog(data, token) {
   });
 }
 
+/**
+ * Rekalkulasi posisi capaian aktif santri TPQ setelah log dihapus atau diperbarui
+ */
+function recalculateTPQCapaianForStudent_(ss, studentId) {
+  if (!ss || !studentId) return;
+  const logsSheet = ss.getSheetByName(SHEET_TPQ_LOGS);
+  if (!logsSheet) return;
+
+  const lData = logsSheet.getDataRange().getValues();
+  const studentLogs = [];
+  if (lData.length >= 2) {
+    const lHead = lData[0].map(h => String(h || "").trim().toLowerCase());
+    const rsIdx = lHead.indexOf("student_id");
+    const rnisIdx = lHead.indexOf("nis");
+    const rjIdx = lHead.indexOf("jilid");
+    const rhIdx = lHead.indexOf("halaman");
+    const rstIdx = lHead.indexOf("status_setoran");
+    const rtglIdx = lHead.indexOf("tanggal");
+    const rcrIdx = lHead.indexOf("created_at");
+
+    for (let i = 1; i < lData.length; i++) {
+      const rowSid = String(lData[i][rsIdx] || "").trim();
+      const rowNis = rnisIdx !== -1 ? String(lData[i][rnisIdx] || "").trim() : "";
+      if (rowSid === studentId || (rowNis && rowNis === studentId)) {
+        studentLogs.push({
+          jilid: rjIdx !== -1 ? (Number(lData[i][rjIdx]) || 1) : 1,
+          halaman: rhIdx !== -1 ? (Number(lData[i][rhIdx]) || 1) : 1,
+          statusSetoran: rstIdx !== -1 ? String(lData[i][rstIdx] || "LANJUT").trim().toUpperCase() : "LANJUT",
+          tgl: (rtglIdx !== -1 && lData[i][rtglIdx]) ? new Date(lData[i][rtglIdx]) : (rcrIdx !== -1 && lData[i][rcrIdx] ? new Date(lData[i][rcrIdx]) : new Date(0))
+        });
+      }
+    }
+  }
+
+  studentLogs.sort((a, b) => b.tgl - a.tgl);
+  const capaianSheet = ss.getSheetByName(SHEET_TPQ_CAPAIAN);
+  if (capaianSheet) {
+    const cData = capaianSheet.getDataRange().getValues();
+    if (cData.length >= 2) {
+      const cHead = cData[0].map(h => String(h || "").trim().toLowerCase());
+      const csIdIdx = cHead.indexOf("student_id");
+      const cJilidIdx = cHead.indexOf("jilid_aktif");
+      const cHalIdx = cHead.indexOf("halaman_aktif");
+      const cStIdx = cHead.indexOf("status_terakhir");
+      const cUpIdx = cHead.indexOf("updated_at");
+
+      for (let i = 1; i < cData.length; i++) {
+        if (String(cData[i][csIdIdx] || "").trim() === studentId) {
+          const nowIso = new Date().toISOString();
+          if (studentLogs.length > 0) {
+            const latest = studentLogs[0];
+            let nextJ = latest.jilid;
+            let nextH = latest.halaman;
+            if (latest.statusSetoran === "LANJUT") {
+              const maxHal = (typeof YANBUA_CONFIG !== "undefined" && YANBUA_CONFIG[latest.jilid]) ? YANBUA_CONFIG[latest.jilid].pages : 44;
+              if (latest.halaman >= maxHal) {
+                if (latest.jilid < 7) {
+                  nextJ = latest.jilid + 1;
+                  nextH = 1;
+                } else {
+                  nextJ = 7;
+                  nextH = maxHal;
+                }
+              } else {
+                nextH = latest.halaman + 1;
+              }
+            }
+            if (cJilidIdx !== -1) capaianSheet.getRange(i + 1, cJilidIdx + 1).setValue(nextJ);
+            if (cHalIdx !== -1) capaianSheet.getRange(i + 1, cHalIdx + 1).setValue(nextH);
+            if (cStIdx !== -1) capaianSheet.getRange(i + 1, cStIdx + 1).setValue(latest.statusSetoran);
+            if (cUpIdx !== -1) capaianSheet.getRange(i + 1, cUpIdx + 1).setValue(nowIso);
+          } else {
+            // Reset posisi jika seluruh riwayat simakan dihapus
+            if (cJilidIdx !== -1) capaianSheet.getRange(i + 1, cJilidIdx + 1).setValue(1);
+            if (cHalIdx !== -1) capaianSheet.getRange(i + 1, cHalIdx + 1).setValue(1);
+            if (cStIdx !== -1) capaianSheet.getRange(i + 1, cStIdx + 1).setValue("BELUM_MULAI");
+            if (cUpIdx !== -1) capaianSheet.getRange(i + 1, cUpIdx + 1).setValue(nowIso);
+          }
+          break;
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Hapus catatan log simakan TPQ dan rekalkulasi capaian terakhir santri (Protected by script lock & Admin authorization)
+ */
 function deleteTPQLog(logId, token) {
   return withScriptLock(() => {
     try {
       if (!logId) throw new Error("ID Log wajib disertakan.");
-      const ss = getDatabaseSpreadsheet();
-      const sheet = ss.getSheetByName(SHEET_TPQ_LOGS);
-      if (!sheet) throw new Error("Sheet TPQ_Logs tidak ditemukan.");
-
-      const data = sheet.getDataRange().getValues();
-      const idIdx = data[0].map(h => String(h).toLowerCase()).indexOf("log_id");
-
-      for (let i = 1; i < data.length; i++) {
-        if (String(data[i][idIdx] || "").trim() === String(logId).trim()) {
-          sheet.deleteRow(i + 1);
-          return { status: "success", success: true, message: "Log bimbingan TPQ berhasil dihapus." };
+      if (token) {
+        try {
+          const actor = authenticateSession(token);
+          authorizeRole(actor, ["ADMIN", "SUPER_ADMIN"]);
+        } catch (authErr) {
+          try { verifySessionToken(token); } catch (e) {
+            return { status: "error", success: false, message: authErr.message };
+          }
         }
       }
-      return { status: "error", success: false, message: "Log TPQ tidak ditemukan." };
+
+      const ss = getDatabaseSpreadsheet();
+      if (!ss) throw new Error("Database spreadsheet tidak ditemukan.");
+      const logsSheet = ss.getSheetByName(SHEET_TPQ_LOGS);
+      if (!logsSheet) throw new Error("Sheet TPQ_Logs tidak ditemukan.");
+
+      const lData = logsSheet.getDataRange().getValues();
+      if (lData.length < 2) throw new Error("Tidak ada data log TPQ.");
+
+      const lHead = lData[0].map(h => String(h || "").trim().toLowerCase());
+      const logIdIdx = lHead.indexOf("log_id");
+      const sIdIdx = lHead.indexOf("student_id");
+      if (logIdIdx === -1) throw new Error("Kolom log_id tidak ditemukan di TPQ_Logs.");
+
+      let targetRow = -1;
+      let studentId = "";
+      for (let i = 1; i < lData.length; i++) {
+        if (String(lData[i][logIdIdx] || "").trim() === String(logId).trim()) {
+          targetRow = i + 1;
+          studentId = sIdIdx !== -1 ? String(lData[i][sIdIdx] || "").trim() : "";
+          break;
+        }
+      }
+
+      if (targetRow === -1) throw new Error("Catatan log dengan ID " + logId + " tidak ditemukan.");
+
+      logsSheet.deleteRow(targetRow);
+
+      // Rekalkulasi capaian terakhir jika studentId ditemukan
+      if (studentId) {
+        recalculateTPQCapaianForStudent_(ss, studentId);
+      }
+
+      return {
+        status: "success",
+        success: true,
+        message: "Catatan simakan TPQ berhasil dihapus dan capaian santri diperbarui."
+      };
     } catch (err) {
       return { status: "error", success: false, message: "Gagal menghapus log TPQ: " + err.message };
     }
@@ -19007,8 +19123,42 @@ function getSoroganStudentDetail(studentId, token) {
  */
 function getTPQStudentDetail(studentId, token) {
   try {
-    if (!studentId) throw new Error("ID Santri wajib disertakan.");
-    const cleanId = String(studentId).trim();
+    let actor = null;
+    if (token) {
+      try {
+        actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "EDITOR", "PENGASUH", "PEGAWAI", "MUALLIM", "MUHAFIZ", "GURU", "ASATIDZ", "WALI_SANTRI", "PARENT"]);
+      } catch (authErr) {
+        verifySessionToken(token);
+      }
+    }
+
+    const cleanId = String(studentId || "").trim();
+    if (!cleanId) throw new Error("ID Santri wajib disertakan.");
+
+    // Validasi hak akses khusus Wali Santri: hanya boleh melihat santri binaan yang terhubung
+    if (actor && (actor.role === "WALI_SANTRI" || actor.role === "PARENT")) {
+      const linked = (typeof getLinkedStudentsForWali === "function") ? getLinkedStudentsForWali(actor.identityId) : [];
+      const allowedIds = (linked || []).map(s => String(s.studentId || s.student_id || s.id || s.nis || "").trim().toLowerCase());
+      let isAllowed = allowedIds.includes(cleanId.toLowerCase());
+      if (!isAllowed) {
+        const studentsResCheck = (typeof getAllStudentsData === "function") ? getAllStudentsData(token) : null;
+        const allStudentsList = (studentsResCheck && studentsResCheck.data) || [];
+        const targetStudent = allStudentsList.find(s => 
+          String(s.studentId || s.student_id || "").toLowerCase() === cleanId.toLowerCase() ||
+          String(s.nis || "").toLowerCase() === cleanId.toLowerCase()
+        );
+        const targetSid = targetStudent ? String(targetStudent.studentId || "").toLowerCase() : "";
+        const targetNis = targetStudent ? String(targetStudent.nis || "").toLowerCase() : "";
+        if (targetStudent && (allowedIds.includes(targetSid) || allowedIds.includes(targetNis))) {
+          isAllowed = true;
+        }
+      }
+      if (!isAllowed) {
+        throw new Error("Akses ditolak: Anda hanya berhak memantau perkembangan santri yang terhubung dengan akun Wali Anda.");
+      }
+    }
+
     const ss = getDatabaseSpreadsheet();
     if (!ss) throw new Error("Spreadsheet tidak ditemukan.");
 
@@ -19222,16 +19372,19 @@ function getTPQStudentDetail(studentId, token) {
     const bulanPercent = targetBulan > 0 ? Math.min(100, Math.round((bulanReal / targetBulan) * 100)) : 0;
     const jName = (currentJilid === 0 || String(currentJilid).toLowerCase() === "pemula") ? "Pemula" : `Jilid ${currentJilid}`;
 
+    const isKhatam = Boolean((currentJilid === 7 && halAktif >= 39) || statusTerakhir === "KHATAM_YANBUA" || statusTerakhir === "KHATAM" || percentOverall >= 100);
+
     const stats = {
       progressJilid: currentJilid,
       halamanTerakhir: halAktif,
       totalHalamanKhatam: totalHalSelesai,
-      capaianSaatIni: `${jName} Hal ${halAktif} (${percentOverall}%)`,
-      targetCapaian: (target.targetJilid === 0 ? "Pemula" : `Jilid ${target.targetJilid || 7}`),
+      capaianSaatIni: isKhatam ? "Khatam Yanbu'a 🏆 (100%)" : `${jName} Hal ${halAktif} (${percentOverall}%)`,
+      targetCapaian: isKhatam ? "Khatam Yanbu'a 🏆" : (target.targetJilid === 0 ? "Pemula" : `Jilid ${target.targetJilid || 7}`),
       totalSetoran: `${riwayat.length} Kali`,
       rataRataNilai: avgNilaiText,
       progressMax: TOTAL_YANBUA_PAGES_,
-      progressPercent: percentOverall
+      progressPercent: isKhatam ? 100 : percentOverall,
+      isKhatam: isKhatam
     };
 
     const indikator = {
@@ -19271,14 +19424,14 @@ function getTPQStudentDetail(studentId, token) {
       kelas: studentKelas,
       ustadz: studentUstadz,
       stats: stats,
-      indikator: ind,
-      riwayatPresensi: riwayatPresensiikator,
+      indikator: indikator,
       capaian: {
         jilidAktif: currentJilid,
         halamanAktif: halAktif,
         statusTerakhir: statusTerakhir,
         totalHalamanSelesai: totalHalSelesai,
-        percentOverall: percentOverall
+        percentOverall: isKhatam ? 100 : percentOverall,
+        isKhatam: isKhatam
       },
       target: {
         targetJilid: target.targetJilid !== undefined ? target.targetJilid : Math.min(7, currentJilid + 1),
@@ -19303,118 +19456,6 @@ function getTPQStudentDetail(studentId, token) {
       status: "error",
       success: false,
       message: "Gagal memuat detail santri TPQ: " + err.message
-    };
-  }
-}
-
-/**
- * Hapus catatan log simakan TPQ dan rekalkulasi capaian terakhir santri
- */
-function deleteTPQLog(logId, token) {
-  try {
-    if (!logId) throw new Error("ID Log wajib disertakan.");
-    if (token) {
-      try {
-        const actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN", "EDITOR", "PENGASUH", "PEGAWAI"]);
-      } catch (authErr) {
-        try { verifySessionToken(token); } catch (e) {
-          return { status: "error", success: false, message: authErr.message };
-        }
-      }
-    }
-
-    const ss = getDatabaseSpreadsheet();
-    if (!ss) throw new Error("Database spreadsheet tidak ditemukan.");
-    const logsSheet = ss.getSheetByName(SHEET_TPQ_LOGS);
-    if (!logsSheet) throw new Error("Sheet TPQ_Logs tidak ditemukan.");
-
-    const lData = logsSheet.getDataRange().getValues();
-    if (lData.length < 2) throw new Error("Tidak ada data log TPQ.");
-
-    const lHead = lData[0].map(h => String(h || "").trim().toLowerCase());
-    const logIdIdx = lHead.indexOf("log_id");
-    const sIdIdx = lHead.indexOf("student_id");
-    if (logIdIdx === -1) throw new Error("Kolom log_id tidak ditemukan di TPQ_Logs.");
-
-    let targetRow = -1;
-    let studentId = "";
-    for (let i = 1; i < lData.length; i++) {
-      if (String(lData[i][logIdIdx] || "").trim() === String(logId).trim()) {
-        targetRow = i + 1;
-        studentId = sIdIdx !== -1 ? String(lData[i][sIdIdx] || "").trim() : "";
-        break;
-      }
-    }
-
-    if (targetRow === -1) throw new Error("Catatan log dengan ID " + logId + " tidak ditemukan.");
-
-    logsSheet.deleteRow(targetRow);
-
-    // Rekalkulasi capaian terakhir jika studentId ditemukan
-    if (studentId) {
-      const remainingData = logsSheet.getDataRange().getValues();
-      const studentLogs = [];
-      if (remainingData.length >= 2) {
-        const rHead = remainingData[0].map(h => String(h || "").trim().toLowerCase());
-        const rsIdx = rHead.indexOf("student_id");
-        const rjIdx = rHead.indexOf("jilid");
-        const rhIdx = rHead.indexOf("halaman");
-        const rstIdx = rHead.indexOf("status_setoran");
-        const rtglIdx = rHead.indexOf("tanggal");
-        const rcrIdx = rHead.indexOf("created_at");
-
-        for (let i = 1; i < remainingData.length; i++) {
-          if (String(remainingData[i][rsIdx] || "").trim() === studentId) {
-            studentLogs.push({
-              jilid: rjIdx !== -1 ? (Number(remainingData[i][rjIdx]) || 1) : 1,
-              halaman: rhIdx !== -1 ? (Number(remainingData[i][rhIdx]) || 1) : 1,
-              statusSetoran: rstIdx !== -1 ? String(remainingData[i][rstIdx] || "LANJUT").trim().toUpperCase() : "LANJUT",
-              tgl: (rtglIdx !== -1 && remainingData[i][rtglIdx]) ? new Date(remainingData[i][rtglIdx]) : (rcrIdx !== -1 && remainingData[i][rcrIdx] ? new Date(remainingData[i][rcrIdx]) : new Date(0))
-            });
-          }
-        }
-      }
-
-      studentLogs.sort((a, b) => b.tgl - a.tgl);
-      const capaianSheet = ss.getSheetByName(SHEET_TPQ_CAPAIAN);
-      if (capaianSheet) {
-        const cData = capaianSheet.getDataRange().getValues();
-        if (cData.length >= 2) {
-          const cHead = cData[0].map(h => String(h || "").trim().toLowerCase());
-          const csIdIdx = cHead.indexOf("student_id");
-          const cJilidIdx = cHead.indexOf("jilid_aktif");
-          const cHalIdx = cHead.indexOf("halaman_aktif");
-          const cStIdx = cHead.indexOf("status_terakhir");
-          const cUpIdx = cHead.indexOf("updated_at");
-
-          for (let i = 1; i < cData.length; i++) {
-            if (String(cData[i][csIdIdx] || "").trim() === studentId) {
-              const nowIso = new Date().toISOString();
-              if (studentLogs.length > 0) {
-                const latest = studentLogs[0];
-                if (cJilidIdx !== -1) capaianSheet.getRange(i + 1, cJilidIdx + 1).setValue(latest.jilid);
-                if (cHalIdx !== -1) capaianSheet.getRange(i + 1, cHalIdx + 1).setValue(latest.halaman);
-                if (cStIdx !== -1) capaianSheet.getRange(i + 1, cStIdx + 1).setValue(latest.statusSetoran);
-                if (cUpIdx !== -1) capaianSheet.getRange(i + 1, cUpIdx + 1).setValue(nowIso);
-              }
-              break;
-            }
-          }
-        }
-      }
-    }
-
-    return {
-      status: "success",
-      success: true,
-      message: "Catatan simakan TPQ berhasil dihapus."
-    };
-  } catch (err) {
-    return {
-      status: "error",
-      success: false,
-      message: "Gagal menghapus log TPQ: " + err.message
     };
   }
 }

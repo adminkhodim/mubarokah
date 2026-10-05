@@ -8241,8 +8241,20 @@
                                             <i id="btn-refresh-tpq-icon" class="fa-solid fa-arrows-rotate text-xs"></i>
                                             <span class="hidden sm:inline">Refresh</span>
                                         </button>
+                                        <button type="button" onclick="exportTPQDataXLSX()"
+                                            class="tpq-admin-action px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 dark:text-emerald-300 font-bold rounded-xl text-[11px] transition flex items-center space-x-1 border border-emerald-200 dark:border-emerald-800/60 active:scale-95"
+                                            title="Ekspor Data TPQ ke Excel (.xlsx)">
+                                            <i class="fa-solid fa-file-excel text-xs text-emerald-600"></i>
+                                            <span class="hidden sm:inline">Export Excel</span>
+                                        </button>
+                                        <button type="button" onclick="printTPQRekap()"
+                                            class="tpq-admin-action px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-200 font-bold rounded-xl text-[11px] transition flex items-center space-x-1 border border-slate-200 dark:border-[#283a4e] active:scale-95"
+                                            title="Cetak Rekapitulasi Data TPQ">
+                                            <i class="fa-solid fa-print text-xs"></i>
+                                            <span class="hidden sm:inline">Cetak Rekap</span>
+                                        </button>
                                         <button type="button" onclick="initTPQDatabaseSheets()"
-                                            class="px-2.5 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 dark:bg-teal-950/60 dark:hover:bg-teal-900/60 dark:text-teal-300 font-bold rounded-xl text-[11px] transition flex items-center space-x-1 border border-teal-200 dark:border-teal-800/60 active:scale-95"
+                                            class="tpq-admin-action px-2.5 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 dark:bg-teal-950/60 dark:hover:bg-teal-900/60 dark:text-teal-300 font-bold rounded-xl text-[11px] transition flex items-center space-x-1 border border-teal-200 dark:border-teal-800/60 active:scale-95"
                                             title="Inisialisasi Tabel TPQ di Spreadsheet">
                                             <i class="fa-solid fa-table-cells text-xs"></i>
                                             <span class="hidden sm:inline">Inisialisasi Sheet</span>
@@ -8345,19 +8357,19 @@
                                         </select>
 
                                         <button type="button" onclick="openTPQKelasModal(1)"
-                                            class="px-2.5 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 dark:bg-teal-950/60 dark:hover:bg-teal-900/60 dark:text-teal-300 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 border border-teal-200 dark:border-teal-800/60 active:scale-95"
+                                            class="tpq-admin-action px-2.5 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 dark:bg-teal-950/60 dark:hover:bg-teal-900/60 dark:text-teal-300 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 border border-teal-200 dark:border-teal-800/60 active:scale-95"
                                             title="Kelola Kelas & Plotting Santri TPQ">
                                             <i class="fa-solid fa-users-gear text-xs"></i>
                                             <span>Kelola Kelas</span>
                                         </button>
                                         <button type="button" onclick="openTPQKelasModal(4)"
-                                            class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-200 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 border border-slate-200 dark:border-[#283a4e] active:scale-95"
+                                            class="tpq-admin-action px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-200 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 border border-slate-200 dark:border-[#283a4e] active:scale-95"
                                             title="Jadwal Sesi Bimbingan TPQ">
                                             <i class="fa-regular fa-clock text-xs"></i>
                                             <span>Jadwal & Sesi</span>
                                         </button>
                                         <button type="button" onclick="openTPQBulkTargetModal()"
-                                            class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 dark:text-amber-300 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 border border-amber-200 dark:border-amber-800/60 active:scale-95"
+                                            class="tpq-admin-action px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 dark:text-amber-300 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 border border-amber-200 dark:border-amber-800/60 active:scale-95"
                                             title="Atur Target Capaian TPQ Massal">
                                             <i class="fa-solid fa-bullseye text-xs text-amber-600"></i>
                                             <span>Target Massal</span>
