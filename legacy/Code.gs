@@ -18938,7 +18938,8 @@ function getSoroganStudentDetail(studentId, token) {
     if (!studentMuallim) studentMuallim = "Asatidz Sorogan";
 
     const halamanTuntas = Math.min(600, Math.max(1, ((currentJuz - 1) * 20) + halTerakhir));
-    const percentOverall = Math.min(100, Math.round((halamanTuntas / 600) * 100));
+    const isKhatam = (currentJuz === 30 && halTerakhir >= 20) || (halamanTuntas >= 600) || statusTerakhir === "KHATAM_30JUZ";
+    const percentOverall = isKhatam ? 100 : Math.min(100, Math.round((halamanTuntas / 600) * 100));
 
     return {
       status: "success",
@@ -18960,12 +18961,13 @@ function getSoroganStudentDetail(studentId, token) {
         progressJuz: currentJuz,
         halamanTerakhir: halTerakhir,
         totalHalamanKhatam: halamanTuntas,
-        capaianSaatIni: `Juz ${currentJuz} Hal ${halTerakhir} (${percentOverall}%)`,
+        isKhatam: isKhatam,
+        capaianSaatIni: isKhatam ? "Khatam 30 Juz (100%)" : `Juz ${currentJuz} Hal ${halTerakhir} (${percentOverall}%)`,
         targetCapaian: "30 Juz Mushaf Pojok",
         totalSetoran: `${riwayat.length} Kali`,
         rataRataNilai: avgNilaiText,
         progressMax: 30,
-        progressPercent: percentOverall
+        progressPercent: isKhatam ? 100 : percentOverall
       },
       target: target,
       indikator: {

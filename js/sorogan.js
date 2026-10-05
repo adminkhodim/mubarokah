@@ -2570,10 +2570,13 @@ function renderSoroganStudentDetailView() {
     const progressJuz = Number(stats.progressJuz || 1);
     const halTerakhir = Number(stats.halamanTerakhir || 1);
     const halamanTuntas = Math.max(1, ((progressJuz - 1) * 20) + halTerakhir);
-    const percentMilestone = Math.min(100, Math.round((halamanTuntas / 600) * 100));
+    const isKhatam = (progressJuz === 30 && halTerakhir >= 20) || halamanTuntas >= 600 || !!(stats && stats.isKhatam);
+    const percentMilestone = isKhatam ? 100 : Math.min(100, Math.round((halamanTuntas / 600) * 100));
 
     if (elStatCapaian) {
-        elStatCapaian.innerHTML = `Juz ${progressJuz} Hal ${halTerakhir} <span class="text-xs font-bold text-slate-400">(${percentMilestone}%)</span>`;
+        elStatCapaian.innerHTML = isKhatam
+            ? `<span class="text-amber-500 font-black flex items-center gap-1"><i class="fa-solid fa-crown text-amber-500 text-xs"></i> Khatam 30 Juz (100%)</span>`
+            : `Juz ${progressJuz} Hal ${halTerakhir} <span class="text-xs font-bold text-slate-400">(${percentMilestone}%)</span>`;
     }
     if (elStatTarget) {
         elStatTarget.innerText = `Juz ${target.targetJuz || 30}`;
@@ -2589,10 +2592,17 @@ function renderSoroganStudentDetailView() {
     const elProgText = document.getElementById('sorogan-detail-progress-text');
     const elProgBar = document.getElementById('sorogan-detail-progress-bar');
     if (elProgText) {
-        elProgText.innerText = `Juz ${progressJuz} (Hal ${halTerakhir}/20) • ${halamanTuntas} / 600 Halaman (${percentMilestone}%)`;
+        elProgText.innerText = isKhatam
+            ? `Khatam 30 Juz Mushaf Pojok • 600 / 600 Halaman (100%)`
+            : `Juz ${progressJuz} (Hal ${halTerakhir}/20) • ${halamanTuntas} / 600 Halaman (${percentMilestone}%)`;
     }
     if (elProgBar) {
         elProgBar.style.width = `${percentMilestone}%`;
+        if (isKhatam) {
+            elProgBar.className = "h-full rounded-full transition-all bg-gradient-to-r from-amber-400 to-amber-500";
+        } else {
+            elProgBar.className = "bg-sky-600 h-full rounded-full transition-all";
+        }
     }
 
     // Tab 1 Indikator Harian, Pekanan, Bulanan
@@ -2647,12 +2657,15 @@ function renderSoroganStudentDetailView() {
     if (elJuzGrid) {
         let gridHtml = '';
         for (let j = 1; j <= 30; j++) {
-            const isCompleted = j < progressJuz;
-            const isCurrent = j === progressJuz;
+            const isCompleted = isKhatam || (j < progressJuz);
+            const isCurrent = !isKhatam && (j === progressJuz);
 
             let cardClass = "";
             let badgeText = "";
-            if (isCompleted) {
+            if (isKhatam && j === 30) {
+                cardClass = "bg-gradient-to-br from-amber-500 to-amber-600 text-white border-amber-600 shadow-sm";
+                badgeText = `<span class="text-[9px] font-black flex items-center gap-0.5"><i class="fa-solid fa-crown text-[8px]"></i> Khatam</span>`;
+            } else if (isCompleted) {
                 cardClass = "bg-sky-600 text-white border-sky-700 shadow-sm";
                 badgeText = `<i class="fa-solid fa-check text-[10px]"></i>`;
             } else if (isCurrent) {
