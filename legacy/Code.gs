@@ -15097,7 +15097,7 @@ function getOrCreateTPQSheet(ss, sheetName, headers, bgHeaderColor) {
 /**
  * Menyelesaikan (resolve) kelas_id, nama_kelas, dan ustadz pengampu untuk santri TPQ
  */
-function resolveTPQKelas_(ss, studentId, nis, customKelasId, customNamaKelas, customUstadz) {
+function resolveTPQKelas_(ss, studentId, nis, customKelasId, customNamaKelas, customUstadz, skipWrite, preloadedKData) {
   let resolvedKelasId = String(customKelasId || "").trim();
   let resolvedNamaKelas = String(customNamaKelas || "").trim();
   let resolvedUstadz = String(customUstadz || "").trim();
@@ -15111,8 +15111,10 @@ function resolveTPQKelas_(ss, studentId, nis, customKelasId, customNamaKelas, cu
     if (ss) {
       const kSheet = ss.getSheetByName(SHEET_TPQ_KELAS);
       if (kSheet) {
-        migrateTPQKelasSheetIfNeeded(kSheet);
-        const kData = kSheet.getDataRange().getValues();
+        if (!skipWrite) {
+          migrateTPQKelasSheetIfNeeded(kSheet);
+        }
+        const kData = preloadedKData || kSheet.getDataRange().getValues();
         if (kData.length >= 2) {
           const kHead = kData[0].map(h => String(h || "").trim().toLowerCase());
           const idIdx = kHead.indexOf("kelas_id");
@@ -15179,8 +15181,8 @@ function resolveTPQKelas_(ss, studentId, nis, customKelasId, customNamaKelas, cu
               if (uIdx !== -1 && matchedRow[uIdx]) resolvedUstadz = String(matchedRow[uIdx]).trim();
               if (!resolvedNamaKelas && resolvedUstadz) resolvedNamaKelas = "Kelas " + resolvedUstadz;
 
-              // Otomatis daftarkan sId ke student_ids kelas ini jika belum ada
-              if (sId && sidsIdx !== -1 && matchedRowIndex > 0) {
+              // Otomatis daftarkan sId ke student_ids kelas ini jika belum ada (hanya jika bukan mode read-only)
+              if (!skipWrite && sId && sidsIdx !== -1 && matchedRowIndex > 0) {
                 try {
                   const rawSids = matchedRow[sidsIdx] || "";
                   let curSids = [];
@@ -17138,7 +17140,7 @@ function migrateSoroganHalaqahSheet_(ss) {
  * Menyelesaikan (resolve) halaqah_id, nama_halaqah, dan muallim pengampu untuk santri Sorogan
  * Berdasarkan plotting di Sorogan_Halaqah, fallback ke muallim yang cocok, atau default.
  */
-function resolveSoroganHalaqah_(ss, studentId, nis, customHalaqahId, customNamaHalaqah, customMuallim) {
+function resolveSoroganHalaqah_(ss, studentId, nis, customHalaqahId, customNamaHalaqah, customMuallim, skipWrite, preloadedHData) {
   let resolvedHalaqahId = String(customHalaqahId || "").trim();
   let resolvedNamaHalaqah = String(customNamaHalaqah || "").trim();
   let resolvedMuallim = String(customMuallim || "").trim();
@@ -17152,8 +17154,10 @@ function resolveSoroganHalaqah_(ss, studentId, nis, customHalaqahId, customNamaH
     if (ss) {
       const hSheet = ss.getSheetByName(SHEET_SOROGAN_HALAQAH);
       if (hSheet) {
-        migrateSoroganHalaqahSheetIfNeeded(hSheet);
-        const hData = hSheet.getDataRange().getValues();
+        if (!skipWrite) {
+          migrateSoroganHalaqahSheetIfNeeded(hSheet);
+        }
+        const hData = preloadedHData || hSheet.getDataRange().getValues();
         if (hData.length >= 2) {
           const colMap = getSoroganHalaqahColumnIndexes(hData[0]);
           if (colMap.id !== -1) {
@@ -17218,8 +17222,8 @@ function resolveSoroganHalaqah_(ss, studentId, nis, customHalaqahId, customNamaH
               else if (!hName && resolvedHalaqahId) hName = "Halaqah " + resolvedHalaqahId;
               resolvedNamaHalaqah = hName;
 
-              // Jika santri belum terdaftar di daftar student_ids pada halaqah ini, daftarkan otomatis
-              if (sId && colMap.studentIds !== -1 && matchedRowIndex > 0) {
+              // Jika santri belum terdaftar di daftar student_ids pada halaqah ini, daftarkan otomatis (hanya jika bukan mode read-only)
+              if (!skipWrite && sId && colMap.studentIds !== -1 && matchedRowIndex > 0) {
                 try {
                   const rawSids = matchedRow[colMap.studentIds] || "";
                   const sids = String(rawSids).split(",").map(s => s.trim()).filter(Boolean);
@@ -17716,23 +17720,12 @@ function getSoroganDashboard(token) {
       if (needsHealing) {
         const stObj = students.find(s => s.studentId === sid);
         const stNis = stObj ? stObj.nis : "";
-        const resolved = resolveSoroganHalaqah_(ss, sid, stNis, cp.halaqahId, cp.namaHalaqah, cp.muallimPengampu);
+        const resolved = resolveSoroganHalaqah_(ss, sid, stNis, cp.halaqahId, cp.namaHalaqah, cp.muallimPengampu, true, hData);
 
         if (resolved.halaqahId || (resolved.namaHalaqah && resolved.namaHalaqah !== "Belum Ditentukan")) {
           cp.halaqahId = resolved.halaqahId || cp.halaqahId;
           cp.namaHalaqah = resolved.namaHalaqah || cp.namaHalaqah;
           if (resolved.muallim && resolved.muallim !== "-") cp.muallimPengampu = resolved.muallim;
-
-          if (cp.rowNumber && cp.rowNumber >= 2) {
-            try {
-              if (hIdIdx !== -1 && cp.halaqahId) capaianSheet.getRange(cp.rowNumber, hIdIdx + 1).setValue(cp.halaqahId);
-              if (hNameIdx !== -1 && cp.namaHalaqah) capaianSheet.getRange(cp.rowNumber, hNameIdx + 1).setValue(cp.namaHalaqah);
-              if (mIdx !== -1 && cp.muallimPengampu && cp.muallimPengampu !== "-") capaianSheet.getRange(cp.rowNumber, mIdx + 1).setValue(cp.muallimPengampu);
-              if (upIdx !== -1) capaianSheet.getRange(cp.rowNumber, upIdx + 1).setValue(nowIso);
-            } catch (healErr) {
-              Logger.log("Auto-heal Sorogan_Capaian error for " + sid + ": " + healErr.message);
-            }
-          }
         }
       }
     });
@@ -17757,7 +17750,7 @@ function getSoroganDashboard(token) {
       };
 
       if (!cp.halaqahId || !cp.namaHalaqah || cp.namaHalaqah === "Belum Ditentukan") {
-        const resolved = resolveSoroganHalaqah_(ss, st.studentId, st.nis, cp.halaqahId, cp.namaHalaqah, cp.muallimPengampu);
+        const resolved = resolveSoroganHalaqah_(ss, st.studentId, st.nis, cp.halaqahId, cp.namaHalaqah, cp.muallimPengampu, true, hData);
         if (resolved.halaqahId) cp.halaqahId = resolved.halaqahId;
         if (resolved.namaHalaqah && resolved.namaHalaqah !== "Belum Ditentukan") cp.namaHalaqah = resolved.namaHalaqah;
         if (resolved.muallim && resolved.muallim !== "-") cp.muallimPengampu = resolved.muallim;
