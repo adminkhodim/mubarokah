@@ -78,17 +78,24 @@ if (typeof window !== 'undefined' && typeof window.escapeHtml !== 'function') {
 const TAHFIDZ_CACHE_KEY = 'mubarokah_tahfidz_dashboard_cache';
 const TAHFIDZ_CACHE_TTL_MS = 5 * 60 * 1000; // 5 menit
 const TAHFIDZ_PRESENSI_STORAGE_KEY = 'mubarokah_tahfidz_presensi_cache';
+let _tahfidzPresensiMemoryCache = null;
 
 function getTahfidzPresensiRecords() {
+    if (_tahfidzPresensiMemoryCache !== null) {
+        return _tahfidzPresensiMemoryCache;
+    }
     try {
         const raw = localStorage.getItem(TAHFIDZ_PRESENSI_STORAGE_KEY);
-        return raw ? JSON.parse(raw) : {};
+        _tahfidzPresensiMemoryCache = raw ? JSON.parse(raw) : {};
+        return _tahfidzPresensiMemoryCache;
     } catch (e) {
-        return {};
+        _tahfidzPresensiMemoryCache = {};
+        return _tahfidzPresensiMemoryCache;
     }
 }
 
 function saveTahfidzPresensiRecords(records) {
+    _tahfidzPresensiMemoryCache = records || {};
     try {
         localStorage.setItem(TAHFIDZ_PRESENSI_STORAGE_KEY, JSON.stringify(records));
     } catch (e) {
@@ -583,12 +590,18 @@ async function loadAdminTahfidzData(forceRefresh = false) {
         return ASNTahfidz._fetchPromise;
     }
 
+    // Jika data sudah berhasil dirender dari cache dan masih segar (< 90 detik), lewati fetch server
+    if (!forceRefresh && hasRenderedFromCache && ASNTahfidz.lastFetched && (Date.now() - ASNTahfidz.lastFetched < 90000)) {
+        return Promise.resolve(ASNTahfidz.data);
+    }
+
     ASNTahfidz._fetchPromise = (async () => {
         try {
             const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : (sessionStorage.getItem(TAHFIDZ_STORAGE_KEYS.adminToken) || localStorage.getItem(TAHFIDZ_STORAGE_KEYS.adminToken))) || "";
             const response = await apiPost("getTahfidzDashboard", token ? { token } : {});
 
             if (response && (response.success || response.status === "success")) {
+                ASNTahfidz.lastFetched = Date.now();
                 // Gabungkan halaqah lokal jika ada halaqah baru yang belum terangkum
                 if (Array.isArray(response.halaqahs)) {
                     const currentHalaqahs = ASNTahfidz.data?.halaqahs || [];
@@ -5601,6 +5614,46 @@ function openTahfidzPresensiModal(optionalHalaqahId = null) {
     // Pastikan modal langsung tampil di layar secara absolut
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
+
+    // 0. Sinkronisasi instan dari cache lokal jika memory state belum siap
+    if (!ASNTahfidz.data || !Array.isArray(ASNTahfidz.data.students) || ASNTahfidz.data.students.length === 0) {
+        try {
+            const stored = localStorage.getItem(TAHFIDZ_CACHE_KEY) || sessionStorage.getItem(TAHFIDZ_CACHE_KEY);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                const cachedData = parsed.data || parsed;
+                if (cachedData && Array.isArray(cachedData.students) && cachedData.students.length > 0) {
+                    ASNTahfidz.data = cachedData;
+                    ASNTahfidz.cache = cachedData;
+                    if (typeof buildTahfidzHalaqahIndex === 'function') buildTahfidzHalaqahIndex();
+                }
+            }
+        } catch (e) {
+            console.warn("Gagal membaca cache Tahfidz saat membuka presensi:", e);
+        }
+    }
+
+    // Jika data masih benar-benar kosong (misal login pertama kali), tampilkan loader elegan di dalam modal
+    const presensiListContainer = document.getElementById('tahfidz-presensi-list');
+    if ((!ASNTahfidz.data || !Array.isArray(ASNTahfidz.data.students) || ASNTahfidz.data.students.length === 0)) {
+        if (presensiListContainer) {
+            presensiListContainer.innerHTML = `
+                <div class="py-12 text-center text-slate-500 space-y-2">
+                    <i class="fa-solid fa-spinner fa-spin text-3xl text-emerald-600 mb-2"></i>
+                    <p class="font-bold text-sm text-slate-700 dark:text-slate-200">Memuat Data Halaqah & Santri...</p>
+                    <p class="text-xs text-slate-400">Sedang mengambil daftar halaqah terkini dari server</p>
+                </div>
+            `;
+        }
+        if (typeof loadAdminTahfidzData === 'function') {
+            loadAdminTahfidzData().then(() => {
+                if (modal && !modal.classList.contains('hidden')) {
+                    openTahfidzPresensiModal(optionalHalaqahId);
+                }
+            });
+        }
+        return;
+    }
 
     try {
         const halList = ASNTahfidz.data?.halaqahs || [];

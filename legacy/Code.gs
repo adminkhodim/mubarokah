@@ -12493,7 +12493,6 @@ function getTahfidzDashboard(token) {
     if (!ss) throw new Error("Spreadsheet database tidak ditemukan.");
 
     // 1. Dapatkan referensi sheet langsung tanpa remote RPC auto-schema check
-    migrateTahfidzHalaqahSheet_(ss);
     const logsSheet = ss.getSheetByName(SHEET_TAHFIDZ_LOGS);
     const headersCapaian = [
       "student_id", "student_name", "juz_aktif", "halaman_terakhir", "total_halaman_tuntas", "status_terakhir", "halaqah_id", "nama_halaqah", "muhafiz_pembina", "updated_at",
@@ -12601,8 +12600,9 @@ function getTahfidzDashboard(token) {
 
     // 3b. Baca Data Capaian Santri dari Tahfidz_Capaian (Ziyadah & Muroja'ah Terpisah)
     const capaianMap = {};
+    let cData = null;
     if (capaianSheet) {
-      const cData = capaianSheet.getDataRange().getValues();
+      cData = capaianSheet.getDataRange().getValues();
       if (cData && cData.length > 1) {
         const hCap = cData[0].map(h => String(h || "").trim().toLowerCase().replace(/[\s\-_]+/g, ""));
         const sIdIdx = hCap.findIndex(h => h === "studentid" || h === "id");
@@ -12731,16 +12731,13 @@ function getTahfidzDashboard(token) {
       }
     }
 
-    // Auto-heal / Backfill data kosong di Tahfidz_Capaian & Tahfidz_Logs jika ada
+    // 4c. In-memory fallback data jika ada field nama/halaqah kosong di Tahfidz_Capaian
     try {
-      let needCapaianFlush = false;
-      if (capaianSheet && cData && cData.length > 1) {
+      if (cData && cData.length > 1) {
         const hCap = cData[0].map(h => String(h || "").trim().toLowerCase());
         const sIdIdx = hCap.indexOf("student_id");
         const sNmIdx = hCap.indexOf("student_name");
         const hlqIdIdx = hCap.indexOf("halaqah_id");
-        const hlqNmIdx = hCap.indexOf("nama_halaqah");
-        const muhIdx = hCap.indexOf("muhafiz_pembina");
 
         for (let i = 1; i < cData.length; i++) {
           const sId = sIdIdx !== -1 ? String(cData[i][sIdIdx] || "").trim() : "";
@@ -12748,45 +12745,22 @@ function getTahfidzDashboard(token) {
           const currName = sNmIdx !== -1 ? String(cData[i][sNmIdx] || "").trim() : "";
           const currHlq = hlqIdIdx !== -1 ? String(cData[i][hlqIdIdx] || "").trim() : "";
 
-          if (!currName || !currHlq) {
+          if ((!currName || !currHlq) && capaianMap[sId]) {
             const foundSt = allStudents.find(s => 
               String(s.studentId).toLowerCase() === sId.toLowerCase() || 
               String(s.nis).toLowerCase() === sId.toLowerCase()
             );
             const foundHlq = studentHalaqahMap[sId] || studentHalaqahMap[sId.toLowerCase()] || (foundSt && (studentHalaqahMap[foundSt.studentId] || studentHalaqahMap[foundSt.nis])) || null;
 
-            if (!currName && foundSt && foundSt.name && sNmIdx !== -1) {
-              capaianSheet.getRange(i + 1, sNmIdx + 1).setValue(foundSt.name);
-              cData[i][sNmIdx] = foundSt.name;
-              needCapaianFlush = true;
-            }
-            if (!currHlq && foundHlq && hlqIdIdx !== -1) {
-              if (foundHlq.halaqahId) {
-                capaianSheet.getRange(i + 1, hlqIdIdx + 1).setValue(foundHlq.halaqahId);
-                cData[i][hlqIdIdx] = foundHlq.halaqahId;
-              }
-              if (foundHlq.namaHalaqah && hlqNmIdx !== -1) {
-                capaianSheet.getRange(i + 1, hlqNmIdx + 1).setValue(foundHlq.namaHalaqah);
-                cData[i][hlqNmIdx] = foundHlq.namaHalaqah;
-              }
-              if (foundHlq.muhafiz && muhIdx !== -1) {
-                capaianSheet.getRange(i + 1, muhIdx + 1).setValue(foundHlq.muhafiz);
-                cData[i][muhIdx] = foundHlq.muhafiz;
-              }
-              needCapaianFlush = true;
-            }
-            if (capaianMap[sId]) {
-              if (foundSt && foundSt.name) capaianMap[sId].studentName = foundSt.name;
-              if (foundHlq && foundHlq.halaqahId) capaianMap[sId].halaqahId = foundHlq.halaqahId;
-              if (foundHlq && foundHlq.namaHalaqah) capaianMap[sId].namaHalaqah = foundHlq.namaHalaqah;
-              if (foundHlq && foundHlq.muhafiz) capaianMap[sId].muhafiz = foundHlq.muhafiz;
-            }
+            if (foundSt && foundSt.name && !capaianMap[sId].studentName) capaianMap[sId].studentName = foundSt.name;
+            if (foundHlq && foundHlq.halaqahId && !capaianMap[sId].halaqahId) capaianMap[sId].halaqahId = foundHlq.halaqahId;
+            if (foundHlq && foundHlq.namaHalaqah && !capaianMap[sId].namaHalaqah) capaianMap[sId].namaHalaqah = foundHlq.namaHalaqah;
+            if (foundHlq && foundHlq.muhafiz && !capaianMap[sId].muhafiz) capaianMap[sId].muhafiz = foundHlq.muhafiz;
           }
         }
       }
-      if (needCapaianFlush) SpreadsheetApp.flush();
     } catch (healErr) {
-      console.warn("[AUTO-HEAL TAHFIDZ CAPAIAN WARN]", healErr);
+      console.warn("[IN-MEMORY TAHFIDZ CAPAIAN WARN]", healErr);
     }
 
     // 5. Agregasi Riwayat Logs Super Cepat (Single-pass O(N) Reverse Scan)
@@ -12824,33 +12798,12 @@ function getTahfidzDashboard(token) {
         const totHalIdx = hLogs.indexOf("total_halaman");
         const sesiIdx = hLogs.indexOf("sesi");
         const muhIdx = hLogs.indexOf("muhafiz");
-        let needLogsFlush = false;
-
         // Scan dari baris paling bawah ke atas (log terbaru ada di baris bawah)
         for (let i = logsData.length - 1; i >= 1; i--) {
           const r = logsData[i];
           const sId = idIdx !== -1 ? String(r[idIdx] || "").trim() : "";
           const sNis = nisIdx !== -1 ? String(r[nisIdx] || "").trim() : "";
           if (!sId && !sNis) continue;
-
-          // Auto-heal baris log jika nis atau student_name kosong
-          const currLogName = sNmLogsIdx !== -1 ? String(r[sNmLogsIdx] || "").trim() : "";
-          if (!currLogName || !sNis) {
-            const foundSt = allStudents.find(s => 
-              (sId && (String(s.studentId).toLowerCase() === sId.toLowerCase() || String(s.nis).toLowerCase() === sId.toLowerCase())) ||
-              (sNis && (String(s.nis).toLowerCase() === sNis.toLowerCase() || String(s.studentId).toLowerCase() === sNis.toLowerCase()))
-            );
-            if (foundSt) {
-              if (!currLogName && foundSt.name && sNmLogsIdx !== -1) {
-                logsSheet.getRange(i + 1, sNmLogsIdx + 1).setValue(foundSt.name);
-                needLogsFlush = true;
-              }
-              if (!sNis && foundSt.nis && nisIdx !== -1) {
-                logsSheet.getRange(i + 1, nisIdx + 1).setValue(foundSt.nis);
-                needLogsFlush = true;
-              }
-            }
-          }
 
           const sKeys = [sId, sNis].filter(Boolean);
           const nilai = nilaiIdx !== -1 ? String(r[nilaiIdx] || "MUMTAZ").trim().toUpperCase() : "MUMTAZ";
