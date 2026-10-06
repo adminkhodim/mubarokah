@@ -755,13 +755,22 @@ function applyTahfidzRolePermissions() {
         }
     });
 
-    // Tombol Presensi: Pastikan AKTIF & TAMPIL untuk Super Admin, Admin, dan Asatidz
-    const showPresensi = isAdminOrSuper || isAsatidz;
+    // Tombol Presensi: Dikontrol secara dinamis dari Konfigurasi Izin (RBAC)
+    let showPresensi = false;
+    if (typeof window.hasRolePermission === 'function') {
+        showPresensi = window.hasRolePermission('tahfidz.presensi', activeRole);
+    } else {
+        showPresensi = isAdminOrSuper || isAsatidz;
+    }
+    if (isPengasuh) {
+        showPresensi = false;
+    }
+
     document.querySelectorAll('.tahfidz-presensi-action').forEach(el => {
         if (showPresensi) {
             el.classList.remove('hidden');
             el.style.display = '';
-        } else if (isPengasuh) {
+        } else {
             el.classList.add('hidden');
             el.style.display = 'none';
         }

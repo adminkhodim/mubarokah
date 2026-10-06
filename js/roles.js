@@ -173,6 +173,7 @@
                 { key: 'tahfidz.view', label: 'Melihat Mutaba\'ah Tahfidz', desc: 'Akses melihat rekapitulasi setoran & capaian hafalan 30 juz' },
                 { key: 'tahfidz.entry', label: 'Entri Setoran Tahfidz', desc: 'Izin menginput setoran ziyadah & muraja\'ah santri' },
                 { key: 'tahfidz.target', label: 'Mengatur Target Tahfidz', desc: 'Izin menentukan target capaian juz santri' },
+                { key: 'tahfidz.presensi', label: 'Presensi Halaqah Khusus Tahfidz', desc: 'Izin membuka & mencatat presensi kehadiran santri halaqah Tahfidz per sesi' },
                 { key: 'tpq.view', label: 'Melihat Mutaba\'ah TPQ', desc: 'Akses melihat capaian 8 jilid Kitab Yanbu\'a santri' },
                 { key: 'tpq.entry', label: 'Entri Simakan TPQ Yanbu\'a', desc: 'Izin menginput setoran jilid & halaman santri' },
                 { key: 'sorogan.view', label: 'Melihat Mutaba\'ah Sorogan', desc: 'Akses melihat riwayat sorogan binnazhar & kitab kuning' },
@@ -240,7 +241,7 @@
     // Pemetaan Modul Sistem ke Izin Terkait
     const MODULE_TO_PERMISSIONS = {
         'santri': ['santri.view', 'santri.create', 'santri.edit'],
-        'tahfidz': ['tahfidz.view', 'tahfidz.entry'],
+        'tahfidz': ['tahfidz.view', 'tahfidz.entry', 'tahfidz.target', 'tahfidz.presensi'],
         'tpq': ['tpq.view', 'tpq.entry'],
         'sorogan': ['sorogan.view', 'sorogan.entry'],
         'madin': ['madin.view', 'madin.entry', 'madin.manage'],
@@ -266,7 +267,7 @@
         'SUPER_ADMIN': ['*'],
         'ADMIN': [
             'santri.view', 'santri.create', 'santri.edit', 'santri.export', 'unit.manage',
-            'tahfidz.view', 'tahfidz.entry', 'tahfidz.target', 'tpq.view', 'tpq.entry', 'sorogan.view', 'sorogan.entry',
+            'tahfidz.view', 'tahfidz.entry', 'tahfidz.target', 'tahfidz.presensi', 'tpq.view', 'tpq.entry', 'sorogan.view', 'sorogan.entry',
             'madin.view', 'madin.entry', 'madin.manage', 'presensi.view', 'presensi.entry',
             'keuangan.view', 'keuangan.spp', 'keuangan.tagihan', 'keuangan.verify', 'keuangan.billing',
             'akuntansi.view', 'akuntansi.transaksi', 'akuntansi.tutupkasir', 'akuntansi.laporan',
@@ -276,7 +277,7 @@
         ],
         'ASATIDZ': [
             'santri.view',
-            'tahfidz.view', 'tahfidz.entry', 'tahfidz.target', 'tpq.view', 'tpq.entry', 'sorogan.view', 'sorogan.entry',
+            'tahfidz.view', 'tahfidz.entry', 'tahfidz.target', 'tahfidz.presensi', 'tpq.view', 'tpq.entry', 'sorogan.view', 'sorogan.entry',
             'madin.view', 'madin.entry', 'madin.manage', 'presensi.view', 'presensi.entry',
             'pegawai.manage', 'profil.manage'
         ],
@@ -339,6 +340,21 @@
                 ADMIN: 'full',
                 PENGASUH: 'read',
                 ASATIDZ: 'write',
+                PENGURUS: 'read',
+                BENDAHARA: 'none',
+                WALI_SANTRI: 'read_own'
+            }
+        },
+        {
+            category: 'Kesiswaan & Akademik',
+            module: 'Presensi Halaqah Tahfidz',
+            icon: 'fa-clipboard-user',
+            desc: 'Pencatatan presensi kehadiran santri halaqah Tahfidz per sesi pertemuan (Subuh, Ashar, Malam).',
+            permissions: {
+                SUPER_ADMIN: 'full',
+                ADMIN: 'full',
+                PENGASUH: 'read',
+                ASATIDZ: 'full',
                 PENGURUS: 'read',
                 BENDAHARA: 'none',
                 WALI_SANTRI: 'read_own'
@@ -1171,6 +1187,9 @@
                                      sessionStorage.getItem('ASN_ADMIN_ROLE') || 
                                      sessionStorage.getItem('mubarokah_admin_role') || 'SUPER_ADMIN';
             applyAdminRoleVisibility(currentActiveRole);
+            if (typeof applyTahfidzRolePermissions === 'function') {
+                applyTahfidzRolePermissions();
+            }
 
             // Tutup modal
             closeRolePermissionsModal();
@@ -1490,6 +1509,30 @@
     }
 
     /**
+     * Cek apakah sebuah hak akses spesifik (misal: tahfidz.presensi) aktif untuk peran tertentu
+     */
+    function hasRolePermission(permKey, roleKey) {
+        if (!roleKey) {
+            roleKey = (typeof ASNIdentity !== 'undefined' && ASNIdentity.currentRole) || 
+                      sessionStorage.getItem('ASN_ADMIN_ROLE') || 
+                      sessionStorage.getItem('mubarokah_admin_role') || 'SUPER_ADMIN';
+        }
+        roleKey = String(roleKey).toUpperCase();
+        if (roleKey === 'PEGAWAI' || roleKey === 'EDITOR' || roleKey === 'MUALLIM' || roleKey === 'GURU') roleKey = 'ASATIDZ';
+        if (roleKey === 'SUPER_ADMIN') return true;
+
+        const rolePerms = ROLE_PERMISSIONS_STATE[roleKey] || DEFAULT_ROLE_PERMISSIONS_MAP[roleKey] || [];
+        if (rolePerms.includes('*') || rolePerms.includes(permKey)) return true;
+
+        // Fallback default untuk Asatidz dan Admin pada presensi halaqah
+        if ((roleKey === 'ADMIN' || roleKey === 'ASATIDZ') && permKey === 'tahfidz.presensi') {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Dapatkan nilai metrik dinamis untuk KPI
      */
     function getKpiMetricValue(valueKey) {
@@ -1777,6 +1820,7 @@
     window.ROLE_ALLOWED_MODULES = ROLE_ALLOWED_MODULES;
     window.ROLE_DASHBOARD_PROFILES = ROLE_DASHBOARD_PROFILES;
     window.isModuleAllowedForRole = isModuleAllowedForRole;
+    window.hasRolePermission = hasRolePermission;
     window.applyAdminRoleVisibility = applyAdminRoleVisibility;
     window.switchActiveRolePreview = switchActiveRolePreview;
 
