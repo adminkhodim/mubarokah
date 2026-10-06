@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mubarokah-cache-v23';
+const CACHE_NAME = 'mubarokah-cache-v24';
 
 const PRECACHE_URLS = [
   '/',
@@ -20,6 +20,11 @@ const PRECACHE_URLS = [
   '/js/alumni.js',
   '/js/auth.js',
   '/js/roles.js',
+  '/js/pegawai.js',
+  '/js/tahfidz.js',
+  '/js/tpq.js',
+  '/js/sorogan.js',
+  '/js/presensi.js',
   '/js/keuangan.js',
   '/js/madin.js',
   '/js/panduan.js',

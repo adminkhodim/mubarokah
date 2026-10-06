@@ -5589,6 +5589,10 @@ function openTahfidzPresensiModal(optionalHalaqahId = null) {
         return;
     }
 
+    // Pastikan modal langsung tampil di layar secara absolut
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+
     try {
         const halList = ASNTahfidz.data?.halaqahs || [];
         const dashboardVal = document.getElementById('tahfidz-filter-halaqah')?.value;
@@ -5641,6 +5645,16 @@ function openTahfidzPresensiModal(optionalHalaqahId = null) {
             }
         }
 
+        if (!ASNTahfidz.presensiState) {
+            ASNTahfidz.presensiState = {
+                activeHalaqahId: '',
+                date: todayStr,
+                sesi: "Pagi (Ba'da Subuh)",
+                records: {},
+                query: ''
+            };
+        }
+
         ASNTahfidz.presensiState.activeHalaqahId = (halSelect && halSelect.value) ? halSelect.value : activeHalVal;
         ASNTahfidz.presensiState.date = todayStr;
         ASNTahfidz.presensiState.sesi = document.getElementById('tahfidz-presensi-sesi')?.value || "Pagi (Ba'da Subuh)";
@@ -5656,13 +5670,14 @@ function openTahfidzPresensiModal(optionalHalaqahId = null) {
     } catch (err) {
         console.error('Error saat mempersiapkan presensi halaqah:', err);
     }
-
-    modal.classList.remove('hidden');
 }
 
 function closeTahfidzPresensiModal() {
     const modal = document.getElementById('modal-tahfidz-presensi');
-    if (modal) modal.classList.add('hidden');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
 }
 
 function onTahfidzPresensiHalaqahChange() {
