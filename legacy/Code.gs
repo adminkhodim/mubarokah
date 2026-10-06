@@ -354,7 +354,7 @@ function doPost(e) {
       const token = payload.token || (payload.data && payload.data.token) || null;
       try {
         const actor = authenticateSession(token);
-        authorizeRole(actor, ["ADMIN"]);
+        authorizeRole(actor, ["ADMIN", "SUPER_ADMIN"]);
       } catch (authErr) {
         return createJsonResponse({ status: "error", message: authErr.message });
       }
@@ -12307,7 +12307,7 @@ function resolveStudentHalaqah_(ss, studentId, nis, customHalaqahId, customNamaH
 function initTahfidzSheets(token) {
   try {
     const actor = authenticateSession(token);
-    authorizeRole(actor, ["ADMIN"]);
+    authorizeRole(actor, ["ADMIN", "SUPER_ADMIN"]);
 
     const ss = getDatabaseSpreadsheet();
     if (!ss) {
@@ -12688,9 +12688,16 @@ function getTahfidzDashboard(token) {
       }
     }
 
-    // 4b. Baca Data Presensi Terkini dari Sheet Tahfidz_Presensi
+    // 4b. Baca Data Presensi Terkini dari Sheet Tahfidz_Presensi (Auto-create jika belum ada)
     const presensiMap = {};
-    const presensiSheet = ss.getSheetByName(SHEET_TAHFIDZ_PRESENSI);
+    let presensiSheet = ss.getSheetByName(SHEET_TAHFIDZ_PRESENSI);
+    if (!presensiSheet) {
+      try {
+        presensiSheet = getOrCreateTahfidzSheet(ss, SHEET_TAHFIDZ_PRESENSI, HEADERS_TAHFIDZ_PRESENSI, "#059669");
+      } catch (e) {
+        console.warn("[TAHFIDZ_PRESENSI AUTO-CREATE WARNING]", e);
+      }
+    }
     if (presensiSheet && presensiSheet.getLastRow() > 1) {
       const pData = presensiSheet.getDataRange().getValues();
       if (pData && pData.length > 1) {

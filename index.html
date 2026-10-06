@@ -61,7 +61,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <!-- Compiled & Minified Tailwind CSS -->
-    <link rel="stylesheet" href="/css/styles.min.css?v=24">
+    <link rel="stylesheet" href="/css/styles.min.css?v=25">
 
 
 
@@ -7981,6 +7981,12 @@
                                             <i class="fa-solid fa-print text-xs"></i>
                                             <span class="hidden sm:inline">Cetak</span>
                                         </button>
+                                        <button type="button" onclick="triggerInitTahfidzSheets()"
+                                            class="tahfidz-admin-action px-2.5 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 dark:bg-teal-950/60 dark:hover:bg-teal-900/60 dark:text-teal-300 font-bold rounded-xl text-[11px] transition flex items-center space-x-1 border border-teal-200 dark:border-teal-800/60 active:scale-95"
+                                            title="Inisialisasi Tabel Sheet Tahfidz di Spreadsheet">
+                                            <i class="fa-solid fa-table-cells text-xs"></i>
+                                            <span class="hidden sm:inline">Inisialisasi Sheet</span>
+                                        </button>
                                         <button type="button" onclick="openTahfidzPresensiModal()"
                                             class="tahfidz-presensi-action px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 dark:text-emerald-300 font-bold rounded-xl text-[11px] transition flex items-center space-x-1 border border-emerald-200 dark:border-emerald-800/60 active:scale-95 shrink-0"
                                             title="Buka Presensi Kehadiran Halaqah">
@@ -15199,7 +15205,7 @@
     </div>
 
     <!-- ==================== MODAL PRESENSI CEPAT HALAQAH ==================== -->
-    <div id="modal-tahfidz-presensi" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 hidden">
+    <div id="modal-tahfidz-presensi" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-2 sm:p-4 hidden">
         <div class="bg-white dark:bg-[#15202d] w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-[#253447] flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200">
             <!-- Modal Header -->
             <div class="px-5 py-3.5 bg-slate-50 dark:bg-[#1c2836] border-b border-slate-100 dark:border-[#253447] flex justify-between items-center shrink-0">
@@ -19836,7 +19842,7 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js?v=24').then(registration => {
+                navigator.serviceWorker.register('/sw.js?v=25').then(registration => {
                     if (typeof registration.update === 'function') {
                         registration.update();
                     }
@@ -19868,7 +19874,7 @@
     <script src="/js/alumni.js"></script>
     <script src="/js/auth.js?v=16"></script>
     <script src="/js/pegawai.js"></script>
-    <script src="/js/tahfidz.js?v=16"></script>
+    <script src="/js/tahfidz.js?v=17"></script>
     <script src="/js/tpq.js?v=16"></script>
     <script src="/js/sorogan.js?v=16"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>

@@ -6071,4 +6071,7 @@ window.getJuzCurriculumIndex = getJuzCurriculumIndex;
 window.getCurriculumProgress = getCurriculumProgress;
 window.getNextCurriculumPosition = getNextCurriculumPosition;
 
+// Inisialisasi Database Sheets
+window.triggerInitTahfidzSheets = triggerInitTahfidzSheets;
+
 
