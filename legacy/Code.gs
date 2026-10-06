@@ -17291,15 +17291,21 @@ function syncSoroganPlottingToCapaian_(ss, halaqahId, studentIds, muallim) {
     for (let i = 1; i < cData.length; i++) {
       const rowSid = String(cData[i][sIdIdx] || "").trim();
       const currentHId = String(cData[i][hIdIdx] || "").trim();
+      const rowNumber = i + 1;
 
       if (cleanSids.includes(rowSid)) {
-        const rowNumber = i + 1;
         if (currentHId !== halaqahId || String(cData[i][hNameIdx] || "").trim() === "Belum Ditentukan" || !cData[i][hNameIdx]) {
           cSheet.getRange(rowNumber, hIdIdx + 1).setValue(halaqahId);
           if (hNameIdx !== -1) cSheet.getRange(rowNumber, hNameIdx + 1).setValue(namaHalaqah);
           if (mIdx !== -1 && muallim && muallim !== "-") cSheet.getRange(rowNumber, mIdx + 1).setValue(muallim);
           if (upIdx !== -1) cSheet.getRange(rowNumber, upIdx + 1).setValue(nowIso);
         }
+      } else if (currentHId === halaqahId) {
+        // Santri yang sebelumnya ada di halaqah ini namun sekarang dikeluarkan (unplotted)
+        cSheet.getRange(rowNumber, hIdIdx + 1).setValue("");
+        if (hNameIdx !== -1) cSheet.getRange(rowNumber, hNameIdx + 1).setValue("Belum Masuk Halaqah");
+        if (mIdx !== -1) cSheet.getRange(rowNumber, mIdx + 1).setValue("-");
+        if (upIdx !== -1) cSheet.getRange(rowNumber, upIdx + 1).setValue(nowIso);
       }
     }
   } catch (err) {
@@ -17730,6 +17736,19 @@ function getSoroganDashboard(token) {
       }
     });
 
+    // 3b. Bangun studentHalaqahMap dari Sorogan_Halaqah sebagai Single Source of Truth
+    const studentHalaqahMap = {};
+    halaqahs.forEach(h => {
+      const sids = Array.isArray(h.studentIds) ? h.studentIds : [];
+      sids.forEach(id => {
+        const idClean = String(id || "").trim();
+        if (idClean) {
+          studentHalaqahMap[idClean] = h;
+          studentHalaqahMap[idClean.toLowerCase()] = h;
+        }
+      });
+    });
+
     // Gabungkan data capaian & hitung ringkasan
     let totalJuzSum = 0;
     let khatam30Juz = 0;
@@ -17738,22 +17757,34 @@ function getSoroganDashboard(token) {
     const muallimSet = new Set();
 
     const enrichedStudents = students.map(st => {
-      const cp = capaianMap[st.studentId] || {
+      const sId = String(st.studentId || "").trim();
+      const sNis = String(st.nis || "").trim();
+      const cp = capaianMap[sId] || capaianMap[sNis] || {
         juzAktif: 1,
         halamanTerakhir: 1,
         totalHalamanKhatam: 0,
         statusTerakhir: "LANJUT",
         halaqahId: "",
-        namaHalaqah: "Belum Ditentukan",
+        namaHalaqah: "Belum Masuk Halaqah",
         muallimPengampu: "-",
         updatedAt: ""
       };
 
-      if (!cp.halaqahId || !cp.namaHalaqah || cp.namaHalaqah === "Belum Ditentukan") {
-        const resolved = resolveSoroganHalaqah_(ss, st.studentId, st.nis, cp.halaqahId, cp.namaHalaqah, cp.muallimPengampu, true, hData);
-        if (resolved.halaqahId) cp.halaqahId = resolved.halaqahId;
-        if (resolved.namaHalaqah && resolved.namaHalaqah !== "Belum Ditentukan") cp.namaHalaqah = resolved.namaHalaqah;
-        if (resolved.muallim && resolved.muallim !== "-") cp.muallimPengampu = resolved.muallim;
+      // Source of Truth mutlak: plotting resmi di Sorogan_Halaqah
+      const assignedHalaqah = studentHalaqahMap[sId] || 
+                              studentHalaqahMap[sNis] || 
+                              studentHalaqahMap[sId.toLowerCase()] || 
+                              studentHalaqahMap[sNis.toLowerCase()] || 
+                              null;
+
+      let finalHalaqahId = "";
+      let finalNamaHalaqah = "Belum Masuk Halaqah";
+      let finalMuallim = "-";
+
+      if (assignedHalaqah) {
+        finalHalaqahId = assignedHalaqah.halaqahId || "";
+        finalNamaHalaqah = assignedHalaqah.namaHalaqah || ("Halaqah " + (assignedHalaqah.muallim || finalHalaqahId));
+        finalMuallim = assignedHalaqah.muallim || assignedHalaqah.muallimPengampu || "-";
       }
 
       const juz = Math.max(1, Math.min(30, cp.juzAktif));
@@ -17763,11 +17794,11 @@ function getSoroganDashboard(token) {
       if (cp.statusTerakhir === "ULANG") totalUlang++;
       else totalLanjut++;
 
-      if (cp.muallimPengampu && cp.muallimPengampu !== "-") {
-        muallimSet.add(cp.muallimPengampu);
+      if (finalMuallim && finalMuallim !== "-") {
+        muallimSet.add(finalMuallim);
       }
 
-      const tgt = targetMap[st.studentId] || {
+      const tgt = targetMap[sId] || targetMap[sNis] || {
         targetJuz: 30,
         targetHalamanSesi: 2,
         targetHalamanPekan: 2 * soroganWeeklySessions
@@ -17779,9 +17810,9 @@ function getSoroganDashboard(token) {
         halamanTerakhir: cp.halamanTerakhir,
         totalHalamanKhatam: cp.totalHalamanKhatam,
         statusTerakhir: cp.statusTerakhir,
-        halaqahId: cp.halaqahId,
-        namaHalaqah: cp.namaHalaqah,
-        muallimPengampu: cp.muallimPengampu,
+        halaqahId: finalHalaqahId,
+        namaHalaqah: finalNamaHalaqah,
+        muallimPengampu: finalMuallim,
         updatedAt: cp.updatedAt,
         target: tgt
       };

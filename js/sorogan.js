@@ -153,6 +153,7 @@ async function loadAdminSoroganData(forceRefresh = false) {
         }
 
         if (cached && (cached.success || cached.status === "success") && Array.isArray(cached.students)) {
+            syncSoroganStudentsWithHalaqahs(cached);
             ASNSorogan.data = cached;
             renderSoroganSummaryCards();
             populateSoroganFilters();
@@ -189,6 +190,7 @@ async function loadAdminSoroganData(forceRefresh = false) {
             }
 
             if (response && (response.success || response.status === "success")) {
+                syncSoroganStudentsWithHalaqahs(response);
                 ASNSorogan.data = response;
                 ASNSorogan.cache = response;
                 try {
@@ -222,6 +224,42 @@ async function loadAdminSoroganData(forceRefresh = false) {
 }
 
 /**
+ * Sinkronisasi data santri Sorogan dengan Plotting resmi di Sorogan_Halaqah
+ * Sorogan_Halaqah.studentIds adalah Single Source of Truth
+ */
+function syncSoroganStudentsWithHalaqahs(data) {
+    if (!data || !Array.isArray(data.students) || !Array.isArray(data.halaqahs)) return;
+    const studentHalaqahMap = {};
+    data.halaqahs.forEach(h => {
+        const sids = Array.isArray(h.studentIds) ? h.studentIds : [];
+        sids.forEach(id => {
+            const idClean = String(id || "").trim();
+            if (idClean) {
+                studentHalaqahMap[idClean] = h;
+                studentHalaqahMap[idClean.toLowerCase()] = h;
+            }
+        });
+    });
+
+    data.students.forEach(st => {
+        const sId = String(st.studentId || "").trim();
+        const sNis = String(st.nis || "").trim();
+        const assignedH = studentHalaqahMap[sId] || studentHalaqahMap[sNis] || 
+                          studentHalaqahMap[sId.toLowerCase()] || studentHalaqahMap[sNis.toLowerCase()] || null;
+        if (assignedH) {
+            st.halaqahId = assignedH.halaqahId || "";
+            st.namaHalaqah = assignedH.namaHalaqah || ("Halaqah " + (assignedH.muallim || assignedH.halaqahId));
+            st.muallimPengampu = assignedH.muallim || assignedH.muallimPengampu || "-";
+        } else {
+            st.halaqahId = "";
+            st.namaHalaqah = "Belum Masuk Halaqah";
+            st.muallimPengampu = "-";
+        }
+    });
+}
+window.syncSoroganStudentsWithHalaqahs = syncSoroganStudentsWithHalaqahs;
+
+/**
  * Cek apakah seorang santri telah dimasukkan ke dalam plotting kelompok halaqah Sorogan
  */
 function isStudentInSoroganHalaqah(st) {
@@ -230,18 +268,21 @@ function isStudentInSoroganHalaqah(st) {
     const sId = String(st.studentId || "").trim();
     const sNis = String(st.nis || "").trim();
 
-    // 1. Cek jika ID atau NIS santri ada di dalam list studentIds salah satu halaqah
+    // 1. Cek jika ID atau NIS santri ada di dalam list studentIds salah satu halaqah (Prioritas Utama)
     const inHalaqahList = halaqahs.some(h => {
         const sids = Array.isArray(h.studentIds) ? h.studentIds.map(x => String(x).trim()) : [];
         return (sId && sids.includes(sId)) || (sNis && sids.includes(sNis));
     });
     if (inHalaqahList) return true;
 
-    // 2. Cek jika properti halaqahId atau namaHalaqah terisi valid
-    const hId = String(st.halaqahId || "").trim();
-    const hName = String(st.namaHalaqah || "").trim();
-    if (hId && hName && hName !== "Belum Ditentukan" && hName !== "Belum Ada Halaqah") {
-        return true;
+    // 2. Cek jika properti halaqahId atau namaHalaqah terisi valid (fallback bila plotting belum disetup sama sekali)
+    const hasAnyPlotting = halaqahs.some(h => Array.isArray(h.studentIds) && h.studentIds.length > 0);
+    if (!hasAnyPlotting) {
+        const hId = String(st.halaqahId || "").trim();
+        const hName = String(st.namaHalaqah || "").trim();
+        if (hId && hName && hName !== "Belum Ditentukan" && hName !== "Belum Ada Halaqah" && hName !== "Belum Masuk Halaqah") {
+            return true;
+        }
     }
 
     return false;
@@ -451,10 +492,10 @@ function filterSoroganList() {
             // Filter per halaqah tertentu
             const halaqahs = (ASNSorogan.data && ASNSorogan.data.halaqahs) || [];
             const curH = halaqahs.find(h => h.halaqahId === selHalaqah || h.namaHalaqah === selHalaqah);
-            const inCurHalaqah = (st.halaqahId === selHalaqah) || 
-                (st.namaHalaqah === selHalaqah) || 
-                (curH && (curH.halaqahId === st.halaqahId || curH.namaHalaqah === st.namaHalaqah)) || 
-                (curH && Array.isArray(curH.studentIds) && (curH.studentIds.includes(st.studentId) || curH.studentIds.includes(st.nis)));
+            const curSids = (curH && Array.isArray(curH.studentIds)) ? curH.studentIds.map(x => String(x).trim()) : null;
+            const inCurHalaqah = (curSids && curH.studentIds.length > 0)
+                ? (curSids.includes(String(st.studentId || '').trim()) || curSids.includes(String(st.nis || '').trim()))
+                : (st.halaqahId === selHalaqah || st.namaHalaqah === selHalaqah);
             if (!inCurHalaqah) return false;
         }
 
@@ -1397,8 +1438,11 @@ async function deleteSoroganHalaqahConfirm(halaqahId, namaHalaqah) {
         if (res && (res.success || res.status === "success")) {
             if (typeof showToast === 'function') showToast("Halaqah Sorogan berhasil dihapus!");
             ASNSorogan.data.halaqahs = (ASNSorogan.data.halaqahs || []).filter(h => h.halaqahId !== halaqahId);
+            syncSoroganStudentsWithHalaqahs(ASNSorogan.data);
+            renderSoroganSummaryCards();
             renderSoroganHalaqahCards();
             populateSoroganFilters();
+            filterSoroganList();
             loadAdminSoroganData(true);
         } else {
             if (typeof showToast === "function") showToast("❌ Gagal menghapus: " + ((res && res.message) || "Error")); else if (typeof showToast === "function") showToast("❌ Gagal menghapus: " + ((res && res.message) || "Error")); else alert("Gagal menghapus: " + ((res && res.message) || "Error"));
@@ -1464,7 +1508,7 @@ function onSelectPlottingSoroganHalaqah(halaqahId) {
     }
 
     let currentIds = [];
-    if (Array.isArray(halaqah.studentIds) && halaqah.studentIds.length > 0) {
+    if (Array.isArray(halaqah.studentIds)) {
         currentIds = [...halaqah.studentIds];
     } else if (Array.isArray(ASNSorogan.data.students)) {
         currentIds = ASNSorogan.data.students
@@ -1644,8 +1688,16 @@ async function submitSoroganPlotting() {
             if (ASNSorogan.activePlottingHalaqah) {
                 ASNSorogan.activePlottingHalaqah.studentIds = studentIds;
             }
+            if (ASNSorogan.data && Array.isArray(ASNSorogan.data.halaqahs)) {
+                const targetH = ASNSorogan.data.halaqahs.find(h => h.halaqahId === halaqahId);
+                if (targetH) targetH.studentIds = studentIds;
+            }
+            syncSoroganStudentsWithHalaqahs(ASNSorogan.data);
+            renderSoroganSummaryCards();
+            populateSoroganFilters();
             renderSoroganHalaqahCards();
             renderSoroganMatriksBeban();
+            filterSoroganList();
             loadAdminSoroganData(true);
         } else {
             const msg = ((res && res.message) || "Kesalahan server saat menyimpan plotting.");
