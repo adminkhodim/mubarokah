@@ -18012,7 +18012,7 @@
 
     <!-- ==================== MODAL SOROGAN: TARGET INDIVIDUAL ==================== -->
     <div id="modal-sorogan-target"
-        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 md:p-4 hidden">
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-3 md:p-4 hidden">
         <div class="bg-white dark:bg-[#15202d] w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-[#253447] flex flex-col max-h-[92vh] transform transition-all">
             <div class="px-5 py-4 bg-slate-50 dark:bg-[#1c2836] border-b border-slate-100 dark:border-[#253447] flex justify-between items-center shrink-0">
                 <div class="flex items-center space-x-2.5">
@@ -18075,7 +18075,7 @@
                     </div>
                     <div class="p-3 bg-slate-50 dark:bg-[#1c2836] rounded-xl border border-slate-200 dark:border-[#283a4e]">
                         <span class="text-[10px] font-bold text-slate-400 block mb-0.5">Estimasi Target Bulanan (4 Pekan):</span>
-                        <input type="text" id="input-sorogan-target-bulan" readonly value="88 Halaman (~4.4 Juz)" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#283a4e] text-xs font-bold bg-white/80 dark:bg-[#15202d] text-slate-700 dark:text-slate-200">
+                        <input type="text" id="input-sorogan-target-bulan" readonly value="88 Halaman (~4.4 Juz)" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#253447] text-xs font-bold bg-white/80 dark:bg-[#15202d] text-slate-700 dark:text-slate-200">
                     </div>
                 </div>
             </div>
@@ -18097,7 +18097,7 @@
 
     <!-- ==================== MODAL SOROGAN: TARGET MASSAL (BULK TARGET) ==================== -->
     <div id="modal-sorogan-target-bulk"
-        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 md:p-4 hidden">
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-3 md:p-4 hidden">
         <div class="bg-white dark:bg-[#15202d] w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-[#253447] flex flex-col max-h-[92vh] transform transition-all">
             <div class="px-5 py-4 bg-slate-50 dark:bg-[#1c2836] border-b border-slate-100 dark:border-[#253447] flex justify-between items-center shrink-0">
                 <div class="flex items-center space-x-2.5">
@@ -18226,7 +18226,7 @@
 
     <!-- ==================== MODAL SOROGAN: KELOLA HALAQAH & PLOTTING (4 TAB LENGKAP) ==================== -->
     <div id="modal-sorogan-halaqah"
-        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 hidden">
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-2 sm:p-4 hidden">
         <div class="bg-white dark:bg-[#15202d] w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-[#253447] flex flex-col max-h-[94vh] transform transition-all">
             <div class="px-5 py-4 bg-slate-50 dark:bg-[#1c2836] border-b border-slate-100 dark:border-[#253447] flex justify-between items-center shrink-0">
                 <div class="flex items-center space-x-2.5">
@@ -19865,7 +19865,7 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js?v=31').then(registration => {
+                navigator.serviceWorker.register('/sw.js?v=32').then(registration => {
                     if (typeof registration.update === 'function') {
                         registration.update();
                     }
@@ -19899,7 +19899,7 @@
     <script src="/js/pegawai.js"></script>
     <script src="/js/tahfidz.js?v=22"></script>
     <script src="/js/tpq.js?v=16"></script>
-    <script src="/js/sorogan.js?v=17"></script>
+    <script src="/js/sorogan.js?v=18"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="/js/presensi.js?v=14"></script>
     <script src="/js/madin.js?v=14"></script>

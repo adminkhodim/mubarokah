@@ -21,6 +21,19 @@ const SOROGAN_STORAGE_KEYS = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.st
         pengasuhToken: 'mubarokah_pengasuh_token'
     };
 
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+if (typeof window !== 'undefined' && !window.escapeHtml) {
+    window.escapeHtml = escapeHtml;
+}
+
 const ASNSorogan = {
     data: {
         summary: {
