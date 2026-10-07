@@ -61,7 +61,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <!-- Compiled & Minified Tailwind CSS -->
-    <link rel="stylesheet" href="/css/styles.min.css?v=26">
+    <link rel="stylesheet" href="/css/styles.min.css?v=27">
 
 
 
@@ -5304,325 +5304,243 @@
             <div class="flex h-screen w-full bg-slate-50 overflow-hidden text-slate-800 font-sans">
 
                 <!-- Sidebar (Desktop Drawer, Hidden on Mobile) -->
-                <aside id="admin-sidebar"
-                    class="hidden lg:flex bg-white border-r border-slate-200 flex-col transition-all duration-300 flex-shrink-0 relative w-64 z-30 h-full">
+                <aside id="admin-sidebar" class="hidden lg:flex flex-col transition-all duration-300 flex-shrink-0 relative w-64 z-30 h-full shadow-lg">
 
                     <!-- Toggle Button (Desktop) -->
-                    <button id="admin-sidebar-toggle" onclick="toggleAdminSidebar()"
-                        class="flex absolute -right-3 top-6 bg-brand-600 text-white w-6 h-6 rounded-full items-center justify-center shadow-md hover:bg-brand-700 z-10 transition">
+                    <button id="admin-sidebar-toggle" onclick="toggleAdminSidebar()" class="flex absolute -right-3 top-6 bg-white dark:bg-[#1a293b] text-emerald-700 dark:text-emerald-400 w-6 h-6 rounded-full items-center justify-center shadow-md hover:bg-slate-50 dark:hover:bg-slate-700 z-40 transition active:scale-95 border border-slate-200/40 dark:border-slate-700">
                         <i class="fa-solid fa-chevron-left text-xs transition-transform" id="admin-sidebar-icon"></i>
                     </button>
 
-                    <!-- Brand / Header -->
-                    <div class="h-16 flex items-center justify-between px-4 border-b border-slate-100 shrink-0">
-                        <div class="flex items-center overflow-hidden">
-                            <div
-                                class="w-8 h-8 bg-gradient-to-tr from-brand-900 to-emerald-700 text-amber-400 rounded-lg flex items-center justify-center text-sm font-bold shadow-sm shrink-0">
-                                <i class="fa-solid fa-user-shield"></i>
+                    <!-- Brand & Profil Administrator Header (Menyatu Mewah dengan Latar Solid) -->
+                    <div class="p-4 border-b border-white/10 dark:border-white/5 shrink-0">
+                        <div class="sidebar-text mb-3 px-1 flex items-center justify-between">
+                            <span class="text-[11px] font-extrabold tracking-widest text-emerald-100/90 dark:text-emerald-300 uppercase">PPTQ MUBAROKAH</span>
+                            <span class="text-[9px] bg-white/20 text-white px-1.5 py-0.5 rounded font-mono font-bold tracking-wide">ADMIN</span>
+                        </div>
+                        
+                        <div class="flex items-center gap-3 overflow-hidden">
+                            <!-- User Avatar with Online Dot -->
+                            <div class="relative shrink-0">
+                                <div class="w-10 h-10 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-md ring-2 ring-white/30">
+                                    <span id="admin-sidebar-avatar-initial">AU</span>
+                                </div>
+                                <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-emerald-700 dark:border-[#132232] rounded-full shadow-xs" title="Online Active"></span>
                             </div>
-                            <div class="ml-3 sidebar-text whitespace-nowrap transition-opacity duration-300">
-                                <span
-                                    class="text-[9px] font-extrabold text-amber-600 uppercase tracking-widest block">Administrator</span>
-                                <h2 class="text-xs font-bold text-slate-800 dark:text-slate-100">Panel PPTQ</h2>
+
+                            <!-- User Identity & Role Badge -->
+                            <div class="sidebar-text min-w-0 transition-opacity duration-300">
+                                <div class="flex items-center gap-1.5">
+                                    <h2 id="admin-sidebar-user-name" class="text-xs font-bold text-white truncate leading-tight">Admin Utama</h2>
+                                    <i class="fa-solid fa-circle-check text-[10px] text-emerald-300 shrink-0" title="Terverifikasi"></i>
+                                </div>
+                                <span id="admin-sidebar-role-badge" class="inline-block mt-0.5 text-[9px] font-semibold text-emerald-100 bg-white/15 px-1.5 py-0.5 rounded tracking-wide leading-none border border-white/20">
+                                    Super Admin
+                                </span>
+                                <div class="text-[9px] text-emerald-200/80 dark:text-slate-400 truncate mt-0.5">ID: EMP-ADM-001</div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Menu Navigation (Grouped by Category, Pl-3 Pr-0 untuk Flush Protruding Tabs) -->
+                    <div class="flex-1 overflow-y-auto py-3 pl-3 pr-0 custom-scrollbar space-y-4" id="admin-sidebar-menu">
+
+                        <!-- Grup 1: Ringkasan & Overview -->
+                        <div class="admin-menu-group">
+                            <div class="px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 dark:text-slate-400 sidebar-text flex items-center gap-1.5">
+                                <i class="fa-solid fa-gauge text-[9px] text-emerald-300/80"></i>
+                                <span>Ringkasan & Overview</span>
+                            </div>
+                            <ul class="space-y-1">
+                                <li>
+                                    <button onclick="showAdminView('hub')" data-view="hub" class="admin-nav-item active flex items-center px-3.5 py-2.5 font-bold transition group relative" title="Dashboard Utama">
+                                        <i class="fa-solid fa-gauge-high w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Dashboard Utama</span>
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Grup 2: Kesantrian & Tahfidz -->
+                        <div class="admin-menu-group pt-2 border-t border-white/10 dark:border-white/5">
+                            <div class="px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 dark:text-slate-400 sidebar-text flex items-center gap-1.5">
+                                <i class="fa-solid fa-graduation-cap text-[9px] text-emerald-300/80"></i>
+                                <span>Kesantrian & Akademik</span>
+                            </div>
+                            <ul class="space-y-1">
+                                <li>
+                                    <button onclick="showAdminView('tahfidz')" data-view="tahfidz" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Tahfidz Al-Qur'an">
+                                        <i class="fa-solid fa-book-quran w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Tahfidz Qur'an</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('tpq')" data-view="tpq" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="TPQ Yanbu'a">
+                                        <i class="fa-solid fa-book-open-reader w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">TPQ Yanbu'a</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('sorogan')" data-view="sorogan" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Sorogan Al-Qur'an">
+                                        <i class="fa-solid fa-book-bookmark w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Sorogan Al-Qur'an</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('madin')" data-view="madin" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Madrasah Diniyah">
+                                        <i class="fa-solid fa-graduation-cap w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Madrasah Diniyah</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('presensi')" data-view="presensi" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Presensi Kegiatan">
+                                        <i class="fa-solid fa-clipboard-user w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Presensi Kegiatan</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('santri')" data-view="santri" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Data Santri">
+                                        <i class="fa-solid fa-id-card-clip w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Data Santri</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('ppdb')" data-view="ppdb" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Data Pendaftar PPDB">
+                                        <i class="fa-solid fa-user-graduate w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Data Pendaftar PPDB</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('unit-kegiatan')" data-view="unit-kegiatan" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Unit Kegiatan Santri">
+                                        <i class="fa-solid fa-people-roof w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Unit Kegiatan (UKS)</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('program')" data-view="program" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Manajemen Program">
+                                        <i class="fa-solid fa-shapes w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Manajemen Program</span>
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Grup 3: Keuangan & Akuntansi -->
+                        <div class="admin-menu-group pt-2 border-t border-white/10 dark:border-white/5">
+                            <div class="px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 dark:text-slate-400 sidebar-text flex items-center gap-1.5">
+                                <i class="fa-solid fa-cash-register text-[9px] text-emerald-300/80"></i>
+                                <span>Keuangan & Akuntansi</span>
+                            </div>
+                            <ul class="space-y-1">
+                                <li>
+                                    <button onclick="showAdminView('keuangan')" data-view="keuangan" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Kasir & Keuangan Santri">
+                                        <i class="fa-solid fa-cash-register w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Keuangan Santri</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('akuntansi')" data-view="akuntansi" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Akuntansi & Buku Kas">
+                                        <i class="fa-solid fa-scale-balanced w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Akuntansi & Buku Kas</span>
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Grup 4: Kepegawaian & SDM -->
+                        <div class="admin-menu-group pt-2 border-t border-white/10 dark:border-white/5">
+                            <div class="px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 dark:text-slate-400 sidebar-text flex items-center gap-1.5">
+                                <i class="fa-solid fa-user-tie text-[9px] text-emerald-300/80"></i>
+                                <span>Kepegawaian & SDM</span>
+                            </div>
+                            <ul class="space-y-1">
+                                <li>
+                                    <button onclick="showAdminView('pegawai')" data-view="pegawai" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Data Pegawai & Asatidz">
+                                        <i class="fa-solid fa-user-tie w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Data Pegawai</span>
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Grup 5: Portal & Publikasi -->
+                        <div class="admin-menu-group pt-2 border-t border-white/10 dark:border-white/5">
+                            <div class="px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 dark:text-slate-400 sidebar-text flex items-center gap-1.5">
+                                <i class="fa-solid fa-bullhorn text-[9px] text-emerald-300/80"></i>
+                                <span>Portal & Publikasi</span>
+                            </div>
+                            <ul class="space-y-1">
+                                <li>
+                                    <button onclick="showAdminView('berita')" data-view="berita" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Manajemen Berita">
+                                        <i class="fa-solid fa-newspaper w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Manajemen Berita</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('banner')" data-view="banner" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Banner Slider">
+                                        <i class="fa-solid fa-images w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Banner Slider</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('galeri')" data-view="galeri" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Manajemen Galeri">
+                                        <i class="fa-solid fa-camera-retro w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Manajemen Galeri</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('profil-lembaga')" data-view="profil-lembaga" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Profil & Kepengurusan">
+                                        <i class="fa-solid fa-building-columns w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Profil & Kepengurusan</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('pengaturan')" data-view="pengaturan" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Tautan & Sosmed">
+                                        <i class="fa-solid fa-share-nodes w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Tautan & Sosmed</span>
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Grup 6: Sistem & Hak Akses -->
+                        <div class="admin-menu-group pt-2 border-t border-white/10 dark:border-white/5">
+                            <div class="px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 dark:text-slate-400 sidebar-text flex items-center gap-1.5">
+                                <i class="fa-solid fa-sliders text-[9px] text-emerald-300/80"></i>
+                                <span>Sistem & Hak Akses</span>
+                            </div>
+                            <ul class="space-y-1">
+                                <li>
+                                    <button onclick="showAdminView('users')" data-view="users" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Manajemen Pengguna">
+                                        <i class="fa-solid fa-users-gear w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Manajemen Pengguna</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('roles')" data-view="roles" id="admin-menu-roles" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Manajemen Peran">
+                                        <i class="fa-solid fa-shield-halved w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Manajemen Peran</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('notifikasi')" data-view="notifikasi" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Notifikasi Broadcast">
+                                        <i class="fa-solid fa-bell w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Notifikasi Broadcast</span>
+                                    </button>
+                                </li>
+                            </ul>
                         </div>
 
                     </div>
 
-                    <!-- Menu Navigation -->
-                    <div class="flex-1 overflow-y-auto py-4 custom-scrollbar">
-                        <ul class="space-y-1.5 px-2" id="admin-sidebar-menu">
-                            <!-- 1. Menu Tunggal: Dashboard Utama -->
-                            <li>
-                                <button onclick="showAdminView('hub')" data-view="hub"
-                                    class="admin-nav-item active w-full flex items-center px-3 py-2.5 rounded-xl text-brand-700 bg-brand-50 font-bold transition group relative"
-                                    title="Dashboard Utama">
-                                    <i class="fa-solid fa-gauge-high w-5 text-center text-sm"></i>
-                                    <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Dashboard Utama</span>
-                                </button>
-                            </li>
-
-                            <!-- 2. Accordion Group: Kesiswaan & Akademik -->
-                            <li class="admin-menu-group pt-1">
-                                <button type="button" id="admin-accordion-header-kesiswaan" onclick="toggleAdminAccordion('kesiswaan')"
-                                    class="admin-accordion-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-slate-600 hover:text-cyan-700 hover:bg-cyan-50/60 font-semibold transition group"
-                                    title="Kesiswaan & Akademik">
-                                    <div class="flex items-center overflow-hidden">
-                                        <i class="fa-solid fa-graduation-cap w-5 text-center text-sm text-cyan-600 group-hover:text-cyan-700 transition-colors shrink-0"></i>
-                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Kesiswaan & Akademik</span>
-                                    </div>
-                                    <i id="admin-chevron-kesiswaan" class="admin-chevron fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-cyan-700 transition-transform duration-300 sidebar-text shrink-0"></i>
-                                </button>
-                                <div id="admin-submenu-kesiswaan" class="admin-submenu hidden pl-3 pr-1 py-1 space-y-1 my-1 border-l-2 border-slate-100 ml-5">
-                                    <button onclick="showAdminView('santri')" data-view="santri"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-cyan-700 text-xs font-medium transition group"
-                                        title="Data Santri">
-                                        <i class="fa-solid fa-id-card-clip w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-cyan-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Data Santri</span>
-                                    </button>
-                                    <button onclick="showAdminView('tahfidz')" data-view="tahfidz"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-emerald-700 text-xs font-medium transition group"
-                                        title="Tahfidz Al-Qur'an">
-                                        <i class="fa-solid fa-book-quran w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-emerald-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Tahfidz Al-Qur'an</span>
-                                    </button>
-                                    <button onclick="showAdminView('tpq')" data-view="tpq"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-teal-700 text-xs font-medium transition group"
-                                        title="TPQ Yanbu'a">
-                                        <i class="fa-solid fa-book-open-reader w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-teal-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">TPQ Yanbu'a</span>
-                                    </button>
-                                    <button onclick="showAdminView('sorogan')" data-view="sorogan"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-sky-700 text-xs font-medium transition group"
-                                        title="Sorogan Al-Qur'an">
-                                        <i class="fa-solid fa-book-bookmark w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-sky-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Sorogan Al-Qur'an</span>
-                                    </button>
-                                    <button onclick="showAdminView('madin')" data-view="madin"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-indigo-700 text-xs font-medium transition group"
-                                        title="Madrasah Diniyah">
-                                        <i class="fa-solid fa-graduation-cap w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-indigo-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Madrasah Diniyah</span>
-                                    </button>
-                                    <button onclick="showAdminView('presensi')" data-view="presensi"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-emerald-700 text-xs font-medium transition group"
-                                        title="Presensi Kegiatan">
-                                        <i class="fa-solid fa-clipboard-user w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-emerald-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Presensi Kegiatan</span>
-                                    </button>
-                                    <button onclick="showAdminView('ppdb')" data-view="ppdb"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-blue-700 text-xs font-medium transition group"
-                                        title="Data Pendaftar PPDB">
-                                        <i class="fa-solid fa-user-graduate w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-blue-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Pendaftar PPDB</span>
-                                    </button>
-                                    <button onclick="showAdminView('program')" data-view="program"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-emerald-700 text-xs font-medium transition group"
-                                        title="Manajemen Program">
-                                        <i class="fa-solid fa-shapes w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-emerald-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Program Pesantren</span>
-                                    </button>
-                                    <button onclick="showAdminView('unit-kegiatan')" data-view="unit-kegiatan"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-teal-700 text-xs font-medium transition group"
-                                        title="Unit Kegiatan Santri">
-                                        <i class="fa-solid fa-people-roof w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-teal-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Unit Kegiatan (UKS)</span>
-                                    </button>
-                                </div>
-                            </li>
-
-                            <!-- Accordion Group: Keuangan & Kasir -->
-                            <li class="admin-menu-group pt-1">
-                                <button type="button" id="admin-accordion-header-keuangan" onclick="toggleAdminAccordion('keuangan')"
-                                    class="admin-accordion-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-slate-600 hover:text-emerald-700 hover:bg-emerald-50/60 font-semibold transition group"
-                                    title="Keuangan & Kasir Santri">
-                                    <div class="flex items-center overflow-hidden">
-                                        <i class="fa-solid fa-cash-register w-5 text-center text-sm text-emerald-600 group-hover:text-emerald-700 transition-colors shrink-0"></i>
-                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Keuangan Santri</span>
-                                    </div>
-                                    <i id="admin-chevron-keuangan" class="admin-chevron fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-emerald-700 transition-transform duration-300 sidebar-text shrink-0"></i>
-                                </button>
-                                <div id="admin-submenu-keuangan" class="admin-submenu hidden pl-3 pr-1 py-1 space-y-1 my-1 border-l-2 border-slate-100 ml-5">
-                                    <button onclick="showAdminView('keuangan'); switchKeuanganTab('pos');" data-view="keuangan" data-tab="pos" id="admin-sidebar-keuangan-pos"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-emerald-700 text-xs font-medium transition group"
-                                        title="Kasir Cepat (POS)">
-                                        <i class="fa-solid fa-receipt w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-emerald-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Kasir Cepat (POS)</span>
-                                    </button>
-                                    <button onclick="showAdminView('keuangan'); switchKeuanganTab('tagihan');" data-view="keuangan" data-tab="tagihan" id="admin-sidebar-keuangan-tagihan"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-amber-700 text-xs font-medium transition group"
-                                        title="Daftar Tagihan Santri">
-                                        <i class="fa-solid fa-file-invoice-dollar w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-amber-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Tagihan Santri</span>
-                                    </button>
-                                    <button onclick="showAdminView('keuangan'); switchKeuanganTab('verifikasi');" data-view="keuangan" data-tab="verifikasi" id="admin-sidebar-keuangan-verifikasi"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-cyan-700 text-xs font-medium transition group"
-                                        title="Verifikasi Transfer">
-                                        <i class="fa-solid fa-credit-card w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-cyan-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Verifikasi Transfer</span>
-                                    </button>
-                                    <button onclick="showAdminView('keuangan'); switchKeuanganTab('broadcast');" data-view="keuangan" data-tab="broadcast" id="admin-sidebar-keuangan-broadcast"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-emerald-700 text-xs font-medium transition group"
-                                        title="WhatsApp Billing">
-                                        <i class="fa-brands fa-whatsapp w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-emerald-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">WhatsApp Billing</span>
-                                    </button>
-                                    <button onclick="showAdminView('keuangan'); switchKeuanganTab('tabungan');" data-view="keuangan" data-tab="tabungan" id="admin-sidebar-keuangan-tabungan"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-amber-700 text-xs font-medium transition group"
-                                        title="Tabungan & Uang Saku">
-                                        <i class="fa-solid fa-piggy-bank w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-amber-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Uang Saku & Tabungan</span>
-                                    </button>
-                                    <button onclick="showAdminView('keuangan'); switchKeuanganTab('kantin');" data-view="keuangan" data-tab="kantin" id="admin-sidebar-keuangan-kantin"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-indigo-700 text-xs font-medium transition group"
-                                        title="Kantin Cashless">
-                                        <i class="fa-solid fa-store w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-indigo-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Kantin Cashless</span>
-                                    </button>
-                                </div>
-                            </li>
-
-                            <!-- 2B. Accordion Group: Akuntansi & Pembukuan -->
-                            <li class="admin-menu-group pt-1">
-                                <button type="button" id="admin-accordion-header-akuntansi" onclick="toggleAdminAccordion('akuntansi')"
-                                    class="admin-accordion-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-slate-600 hover:text-teal-700 hover:bg-teal-50/60 font-semibold transition group"
-                                    title="Akuntansi & Pembukuan">
-                                    <div class="flex items-center overflow-hidden">
-                                        <i class="fa-solid fa-scale-balanced w-5 text-center text-sm text-teal-600 group-hover:text-teal-700 transition-colors shrink-0"></i>
-                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Akuntansi & Buku Kas</span>
-                                    </div>
-                                    <i id="admin-chevron-akuntansi" class="admin-chevron fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-teal-700 transition-transform duration-300 sidebar-text shrink-0"></i>
-                                </button>
-                                <div id="admin-submenu-akuntansi" class="admin-submenu hidden pl-3 pr-1 py-1 space-y-1 my-1 border-l-2 border-slate-100 ml-5">
-                                    <button onclick="showAdminView('akuntansi'); switchAkuntansiTab('transaksi');" data-view="akuntansi" data-tab="transaksi" id="admin-sidebar-akuntansi-transaksi"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-blue-700 text-xs font-medium transition group"
-                                        title="Buku Kas Masuk">
-                                        <i class="fa-solid fa-book-journal-whills w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-blue-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Buku Kas Masuk</span>
-                                    </button>
-                                    <button onclick="showAdminView('akuntansi'); switchAkuntansiTab('pengeluaran');" data-view="akuntansi" data-tab="pengeluaran" id="admin-sidebar-akuntansi-pengeluaran"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-rose-700 text-xs font-medium transition group"
-                                        title="Kas Keluar (Beban)">
-                                        <i class="fa-solid fa-money-bill-transfer w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-rose-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Kas Keluar (Beban)</span>
-                                    </button>
-                                    <button onclick="showAdminView('akuntansi'); switchAkuntansiTab('tutup-kasir');" data-view="akuntansi" data-tab="tutup-kasir" id="admin-sidebar-akuntansi-tutup-kasir"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-amber-700 text-xs font-medium transition group"
-                                        title="Tutup Kasir Harian">
-                                        <i class="fa-solid fa-vault w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-amber-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Tutup Kasir Harian</span>
-                                    </button>
-                                    <button onclick="showAdminView('akuntansi'); switchAkuntansiTab('laporan');" data-view="akuntansi" data-tab="laporan" id="admin-sidebar-akuntansi-laporan"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-indigo-700 text-xs font-medium transition group"
-                                        title="Laporan Arus Kas & Neraca">
-                                        <i class="fa-solid fa-chart-pie w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-indigo-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Laporan Arus Kas</span>
-                                    </button>
-                                    <button onclick="showAdminView('akuntansi'); switchAkuntansiTab('analytics');" data-view="akuntansi" data-tab="analytics" id="admin-sidebar-akuntansi-analytics"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-purple-700 text-xs font-medium transition group"
-                                        title="Executive Analytics">
-                                        <i class="fa-solid fa-chart-line w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-purple-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Executive Analytics</span>
-                                    </button>
-                                    <button onclick="showAdminView('akuntansi'); switchAkuntansiTab('tarif');" data-view="akuntansi" data-tab="tarif" id="admin-sidebar-akuntansi-tarif"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-teal-700 text-xs font-medium transition group"
-                                        title="Master Tarif Biaya">
-                                        <i class="fa-solid fa-tags w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-teal-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Master Tarif Biaya</span>
-                                    </button>
-                                </div>
-                            </li>
-
-                            <!-- 3. Accordion Group: Pengguna & SDM -->
-                            <li class="admin-menu-group pt-1">
-                                <button type="button" id="admin-accordion-header-sdm" onclick="toggleAdminAccordion('sdm')"
-                                    class="admin-accordion-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-slate-600 hover:text-emerald-700 hover:bg-emerald-50/60 font-semibold transition group"
-                                    title="Pengguna & SDM">
-                                    <div class="flex items-center overflow-hidden">
-                                        <i class="fa-solid fa-users-gear w-5 text-center text-sm text-emerald-600 group-hover:text-emerald-700 transition-colors shrink-0"></i>
-                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Pengguna & SDM</span>
-                                    </div>
-                                    <i id="admin-chevron-sdm" class="admin-chevron fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-emerald-700 transition-transform duration-300 sidebar-text shrink-0"></i>
-                                </button>
-                                <div id="admin-submenu-sdm" class="admin-submenu hidden pl-3 pr-1 py-1 space-y-1 my-1 border-l-2 border-slate-100 ml-5">
-                                    <button onclick="showAdminView('users')" data-view="users"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-emerald-700 text-xs font-medium transition group"
-                                        title="Manajemen Pengguna">
-                                        <i class="fa-solid fa-user-gear w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-emerald-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Manajemen Pengguna</span>
-                                    </button>
-                                    <button onclick="showAdminView('roles')" data-view="roles" id="admin-menu-roles"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-purple-700 text-xs font-medium transition group"
-                                        title="Manajemen Peran (Role)">
-                                        <i class="fa-solid fa-shield-halved w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-purple-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Manajemen Peran (Role)</span>
-                                    </button>
-                                    <button onclick="showAdminView('pegawai')" data-view="pegawai"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-indigo-700 text-xs font-medium transition group"
-                                        title="Data Asatidz & Pegawai">
-                                        <i class="fa-solid fa-user-tie w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-indigo-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Data Asatidz</span>
-                                    </button>
-                                </div>
-                            </li>
-
-                            <!-- 4. Accordion Group: Konten & Publikasi -->
-                            <li class="admin-menu-group pt-1">
-                                <button type="button" id="admin-accordion-header-konten" onclick="toggleAdminAccordion('konten')"
-                                    class="admin-accordion-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-slate-600 hover:text-purple-700 hover:bg-purple-50/60 font-semibold transition group"
-                                    title="Konten & Publikasi">
-                                    <div class="flex items-center overflow-hidden">
-                                        <i class="fa-solid fa-newspaper w-5 text-center text-sm text-purple-600 group-hover:text-purple-700 transition-colors shrink-0"></i>
-                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Konten & Publikasi</span>
-                                    </div>
-                                    <i id="admin-chevron-konten" class="admin-chevron fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-purple-700 transition-transform duration-300 sidebar-text shrink-0"></i>
-                                </button>
-                                <div id="admin-submenu-konten" class="admin-submenu hidden pl-3 pr-1 py-1 space-y-1 my-1 border-l-2 border-slate-100 ml-5">
-                                    <button onclick="showAdminView('berita')" data-view="berita"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-brand-700 text-xs font-medium transition group"
-                                        title="Manajemen Berita">
-                                        <i class="fa-solid fa-newspaper w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-brand-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Manajemen Berita</span>
-                                    </button>
-                                    <button onclick="showAdminView('banner')" data-view="banner"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-amber-700 text-xs font-medium transition group"
-                                        title="Banner Slider">
-                                        <i class="fa-solid fa-images w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-amber-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Banner Slider</span>
-                                    </button>
-                                    <button onclick="showAdminView('galeri')" data-view="galeri"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-purple-700 text-xs font-medium transition group"
-                                        title="Manajemen Galeri">
-                                        <i class="fa-solid fa-camera-retro w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-purple-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Manajemen Galeri</span>
-                                    </button>
-                                    <button onclick="showAdminView('notifikasi')" data-view="notifikasi"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-rose-700 text-xs font-medium transition group"
-                                        title="Manajemen Notifikasi">
-                                        <i class="fa-solid fa-bell w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-rose-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Notifikasi Broadcast</span>
-                                    </button>
-                                </div>
-                            </li>
-
-                            <!-- 5. Accordion Group: Kelembagaan & Pengaturan -->
-                            <li class="admin-menu-group pt-1">
-                                <button type="button" id="admin-accordion-header-kelembagaan" onclick="toggleAdminAccordion('kelembagaan')"
-                                    class="admin-accordion-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-slate-600 hover:text-indigo-700 hover:bg-indigo-50/60 font-semibold transition group"
-                                    title="Kelembagaan & Pengaturan">
-                                    <div class="flex items-center overflow-hidden">
-                                        <i class="fa-solid fa-building-columns w-5 text-center text-sm text-indigo-600 group-hover:text-indigo-700 transition-colors shrink-0"></i>
-                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Kelembagaan & Pengaturan</span>
-                                    </div>
-                                    <i id="admin-chevron-kelembagaan" class="admin-chevron fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-indigo-700 transition-transform duration-300 sidebar-text shrink-0"></i>
-                                </button>
-                                <div id="admin-submenu-kelembagaan" class="admin-submenu hidden pl-3 pr-1 py-1 space-y-1 my-1 border-l-2 border-slate-100 ml-5">
-                                    <button onclick="showAdminView('profil-lembaga')" data-view="profil-lembaga"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-indigo-700 text-xs font-medium transition group"
-                                        title="Profil & Kepengurusan">
-                                        <i class="fa-solid fa-sitemap w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-indigo-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Profil & Kepengurusan</span>
-                                    </button>
-                                    <button onclick="showAdminView('pengaturan')" data-view="pengaturan"
-                                        class="admin-nav-item w-full flex items-center px-2.5 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 text-xs font-medium transition group"
-                                        title="Tautan & Sosmed">
-                                        <i class="fa-solid fa-share-nodes w-4 text-center text-xs mr-2 text-slate-400 group-hover:text-slate-600"></i>
-                                        <span class="sidebar-text whitespace-nowrap">Tautan & Sosmed</span>
-                                    </button>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <!-- Bottom Footer (Logout) -->
-                    <div class="p-4 border-t border-slate-100 shrink-0">
-                        <button onclick="logoutAdmin()"
-                            class="w-full flex items-center justify-center px-3 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg transition overflow-hidden"
-                            title="Keluar">
-                            <i class="fa-solid fa-right-from-bracket text-sm shrink-0"></i>
-                            <span
-                                class="ml-2 text-xs font-bold sidebar-text whitespace-nowrap transition-opacity duration-300">Keluar</span>
+                    <!-- Bottom Footer (Session Status & Logout) -->
+                    <div class="p-3 border-t border-white/10 dark:border-white/5 shrink-0 bg-black/10 dark:bg-black/20">
+                        <button onclick="logoutAdmin()" class="w-full flex items-center justify-center px-3 py-2.5 bg-white/15 hover:bg-rose-600 text-white rounded-xl transition overflow-hidden border border-white/20 font-bold text-xs group active:scale-98" title="Keluar dari Panel Admin">
+                            <i class="fa-solid fa-power-off text-sm shrink-0 group-hover:-translate-x-0.5 transition-transform"></i>
+                            <span class="ml-2 sidebar-text whitespace-nowrap transition-opacity duration-300">LOGOUT</span>
                         </button>
+                        <div class="sidebar-text text-center mt-2 transition-opacity duration-300">
+                            <span class="text-[10px] text-white/60 font-medium">© 2026 PPTQ Roudlotul Mubarokah</span>
+                        </div>
                     </div>
                 </aside>
 
@@ -5633,7 +5551,7 @@
 
                     <!-- Mobile Admin Header Bar (Back to Pengaturan) -->
                     <div id="admin-mobile-nav-bar"
-                        class="hidden px-4 py-3 bg-white dark:bg-[#15202d] border-b border-slate-200 dark:border-[#253447] flex items-center justify-between z-20 shrink-0 shadow-sm">
+                        class="lg:hidden flex px-4 py-3 bg-white dark:bg-[#15202d] border-b border-slate-200 dark:border-[#253447] items-center justify-between z-20 shrink-0 shadow-sm">
                         <button type="button" id="admin-mobile-back-btn" onclick="backFromAdminMobileNav()"
                             class="flex items-center space-x-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-emerald-600 transition active:scale-95">
                             <i id="admin-mobile-back-icon" class="fa-solid fa-arrow-left text-emerald-600 dark:text-emerald-400"></i>
@@ -5644,30 +5562,91 @@
                             Kontrol</span>
                     </div>
 
-                    <!-- Desktop Admin Topbar / Breadcrumb Navigation -->
-                    <div id="admin-topbar-breadcrumb"
-                        class="hidden lg:flex items-center justify-between px-6 py-3 bg-white/90 dark:bg-[#15202d]/90 backdrop-blur border-b border-slate-100 dark:border-slate-800 shrink-0 z-20 shadow-xs">
-                        <nav aria-label="Breadcrumb" class="flex items-center space-x-2 text-xs">
-                            <button type="button" onclick="showAdminView('hub')" class="text-slate-500 hover:text-brand-700 font-semibold flex items-center space-x-1.5 transition">
-                                <i class="fa-solid fa-gauge-high text-brand-600"></i>
-                                <span>Dashboard</span>
-                            </button>
-                            <span id="admin-breadcrumb-sep-1" class="text-slate-300 font-light hidden">/</span>
-                            <span id="admin-breadcrumb-category" class="text-slate-500 font-medium hidden"></span>
-                            <span id="admin-breadcrumb-sep-2" class="text-slate-300 font-light hidden">/</span>
-                            <span id="admin-breadcrumb-current" class="text-brand-700 font-bold hidden"></span>
-                        </nav>
-                        <div class="flex items-center space-x-3">
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-xs">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
-                                Mode Administrator
-                            </span>
+                    <!-- ================= TOP HEADER BAR DESKTOP (STICKY & ELEGAN) ================= -->
+                    <header id="admin-desktop-topbar" class="hidden lg:flex items-center justify-between px-6 py-3 bg-white/85 dark:bg-[#15202d]/85 backdrop-blur-md border-b border-slate-200/80 dark:border-[#253447] z-20 shrink-0 sticky top-0 shadow-xs transition-colors">
+                        
+                        <!-- Sisi Kiri: Breadcrumb & Quick Menu Search Finder -->
+                        <div class="flex items-center gap-4">
+                            <!-- Breadcrumbs -->
+                            <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                <button type="button" onclick="showAdminView('hub')" class="hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-1.5 transition">
+                                    <i class="fa-solid fa-gauge-high text-emerald-600 dark:text-emerald-400"></i>
+                                    <span>Admin</span>
+                                </button>
+                                <i class="fa-solid fa-chevron-right text-[10px] text-slate-300 dark:text-slate-600"></i>
+                                <span id="admin-topbar-breadcrumb-title" class="font-bold text-slate-800 dark:text-slate-100 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-200/50 dark:border-slate-700/50">Dashboard Utama</span>
+                                <span id="admin-breadcrumb-sep-1" class="text-slate-300 dark:text-slate-600 hidden"><i class="fa-solid fa-chevron-right text-[10px]"></i></span>
+                                <span id="admin-breadcrumb-category" class="text-slate-500 dark:text-slate-400 hidden"></span>
+                                <span id="admin-breadcrumb-sep-2" class="text-slate-300 dark:text-slate-600 hidden"><i class="fa-solid fa-chevron-right text-[10px]"></i></span>
+                                <span id="admin-breadcrumb-current" class="text-emerald-700 dark:text-emerald-400 font-bold hidden"></span>
+                            </nav>
+
+                            <!-- Quick Menu Search Finder (Alt+F / Ctrl+K) -->
+                            <div class="relative hidden xl:block w-72">
+                                <div class="relative">
+                                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                                    <input type="text" id="admin-quick-search-input" oninput="handleAdminQuickSearch(this.value)" onfocus="handleAdminQuickSearch(this.value)" placeholder="Cari menu & modul... (Alt+F)" class="w-full bg-slate-100/90 dark:bg-[#1e2c3d] text-xs rounded-xl pl-9 pr-14 py-2 border border-slate-200/80 dark:border-slate-700/70 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 text-slate-800 dark:text-slate-100 placeholder-slate-400 transition" autocomplete="off">
+                                    <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] font-mono font-bold text-slate-400 bg-white dark:bg-slate-700 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-600 pointer-events-none">Alt+F</span>
+                                </div>
+                                <div id="admin-quick-search-dropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-[#1a2634] rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden z-50 max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
+                                </div>
+                            </div>
                         </div>
-                    </div>
+
+                        <!-- Sisi Kanan: Live Telemetry, Actions & Profile Bar -->
+                        <div class="flex items-center gap-3">
+                            <!-- Cloud Status Pill -->
+                            <div class="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 text-[11px] text-emerald-700 dark:text-emerald-400 font-medium">
+                                <span class="relative flex h-2 w-2">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                </span>
+                                <span class="font-bold">Cloud Server</span>
+                                <span id="admin-topbar-latency" class="font-mono text-[10px] text-emerald-600 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/60 px-1.5 py-0.2 rounded">Online</span>
+                            </div>
+
+                            <!-- Live Real-Time Clock -->
+                            <div class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-[11px] font-mono font-semibold text-slate-600 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700">
+                                <i class="fa-regular fa-clock text-emerald-500"></i>
+                                <span id="admin-topbar-clock">--:--:-- WIB</span>
+                            </div>
+
+                            <!-- Vertical Separator -->
+                            <div class="h-5 w-px bg-slate-200 dark:bg-slate-700"></div>
+
+                            <!-- Quick Button: Visit Public Web -->
+                            <button type="button" onclick="switchTab('beranda')" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 text-xs font-semibold transition active:scale-95" title="Lihat Tampilan Website Publik">
+                                <i class="fa-solid fa-arrow-up-right-from-square text-emerald-600 dark:text-emerald-400 text-xs"></i>
+                                <span class="hidden xl:inline">Web Publik</span>
+                            </button>
+
+                            <!-- Quick Button: Dark Mode Toggle -->
+                            <button type="button" onclick="toggleDarkMode(!document.documentElement.classList.contains('dark'))" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 flex items-center justify-center text-slate-600 dark:text-slate-300 text-xs transition active:scale-95" title="Ganti Mode Terang / Gelap">
+                                <i class="fa-solid fa-circle-half-stroke text-amber-500 dark:text-indigo-400"></i>
+                            </button>
+
+                            <!-- Quick Button: Notification Shortcut -->
+                            <button type="button" onclick="showAdminView('notifikasi')" class="relative w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 flex items-center justify-center text-slate-600 dark:text-slate-300 text-xs transition active:scale-95" title="Broadcast & Notifikasi">
+                                <i class="fa-solid fa-bell"></i>
+                                <span class="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white dark:ring-[#15202d]"></span>
+                            </button>
+
+                            <!-- Mini Profile Avatar & Badge -->
+                            <div class="flex items-center gap-2 pl-1 border-l border-slate-200 dark:border-slate-700">
+                                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-700 to-teal-500 text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                                    <span id="admin-topbar-avatar-initial">AU</span>
+                                </div>
+                                <div class="hidden 2xl:block text-left leading-tight">
+                                    <div id="admin-topbar-username" class="text-xs font-bold text-slate-800 dark:text-slate-100">Admin Utama</div>
+                                    <div id="admin-topbar-role" class="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold">Super Admin</div>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
 
                     <!-- Scrollable Views Container -->
-                    <div class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-                        <div class="max-w-6xl mx-auto">
+                    <div class="flex-1 overflow-y-auto p-3 md:p-5 lg:p-6 bg-slate-50/70 dark:bg-[#0b131e] custom-scrollbar">
+                        <div class="max-w-6xl mx-auto space-y-4">
 
                             <!-- ================= VIEW 1: MENU HUB ADMIN (ICON GRID) ================= -->
                             <div id="admin-menu-hub" class="space-y-4">
@@ -5721,38 +5700,249 @@
                                     </div>
                                 </div>
 
-                                <!-- Banner Selamat Datang Admin (Dinamis Per Peran) -->
-                                <section id="admin-hub-welcome-banner"
-                                    class="bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950 text-white p-5 md:p-6 rounded-3xl shadow-sm border border-purple-500/30 relative overflow-hidden space-y-1.5 transition-all duration-300">
-                                    <div class="absolute -right-6 -bottom-6 text-white/5 text-8xl pointer-events-none">
-                                        <i id="admin-hub-banner-bg-icon" class="fa-solid fa-crown"></i>
+                                <!-- Minimalist Executive Greeting Bar (Benchmark Hadirin Analysis) -->
+                                <div id="admin-hub-greeting-section" class="flex items-center justify-between pb-0.5 animate-fade-in-up stagger-1">
+                                    <div class="flex items-center gap-2">
+                                        <h2 class="text-sm md:text-base font-black text-slate-800 dark:text-slate-100 tracking-tight">Selamat Datang, Administrator</h2>
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-400 border border-emerald-300/60 dark:border-emerald-800">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                            Live System
+                                        </span>
                                     </div>
-                                    <div class="flex items-center space-x-2">
-                                        <span id="admin-hub-welcome-badge"
-                                            class="bg-purple-500 text-white text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase inline-block shadow-sm">Super Admin</span>
-                                        <span id="admin-hub-role-tier-badge"
-                                            class="text-[9px] text-purple-200/80 font-mono">Tier 1 - Root Controller</span>
-                                    </div>
-                                    <h3 id="admin-hub-welcome-title" class="text-base md:text-xl font-bold text-white">Selamat Datang di Pusat Kendali Tertinggi</h3>
-                                    <p id="admin-hub-welcome-desc" class="text-xs text-purple-200/90 leading-relaxed max-w-3xl">Akses tanpa batas ke seluruh basis data, konfigurasi teknis, akun pengguna, dan arsitektur sistem.</p>
-                                </section>
+                                    <p id="admin-hub-live-timestamp" class="text-[11px] text-slate-400 dark:text-slate-500 hidden sm:block">WIB (UTC+7) • Live Telemetry</p>
+                                </div>
+
+                                <!-- Hidden elements for backward compatibility with roles.js & telemetry -->
+                                <div id="admin-hub-welcome-banner" class="hidden" style="display: none !important;">
+                                    <span id="admin-hub-welcome-badge"></span>
+                                    <span id="admin-hub-role-tier-badge"></span>
+                                    <span id="admin-hub-notice-count-badge"></span>
+                                    <h3 id="admin-hub-welcome-title"></h3>
+                                    <span id="super-admin-db-status"></span>
+                                    <span id="super-admin-db-latency"></span>
+                                    <span id="super-admin-live-clock"></span>
+                                    <i id="admin-hub-banner-bg-icon"></i>
+                                    <p id="admin-hub-welcome-desc"></p>
+                                    <div id="super-admin-quick-toolbar"></div>
+                                </div>
 
                                 <!-- Role Scope Notice Bar (Menjelaskan Hak Akses & Batasan) -->
                                 <div id="admin-hub-role-scope-notice"
-                                    class="p-3.5 rounded-2xl border text-xs flex items-start space-x-3 transition-all duration-300 bg-purple-50/70 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800/40 text-purple-900 dark:text-purple-200">
+                                    class="hidden p-3.5 rounded-2xl border text-xs items-start space-x-3 transition-all duration-300 bg-purple-50/70 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800/40 text-purple-900 dark:text-purple-200">
                                     <i id="admin-hub-notice-icon" class="fa-solid fa-shield-halved mt-0.5 shrink-0 text-sm text-purple-600 dark:text-purple-400"></i>
                                     <div class="flex-1">
                                         <div class="flex items-center space-x-2">
                                             <span id="admin-hub-notice-title" class="font-extrabold text-xs">Otoritas Hak Akses Peran</span>
-                                            <span id="admin-hub-notice-count-badge" class="px-2 py-0.2 rounded-full text-[9px] font-bold bg-purple-200/70 text-purple-800 dark:bg-purple-900 dark:text-purple-200">17 Modul Boleh Diakses</span>
+                                            <span id="admin-hub-notice-count-badge" class="px-2 py-0.2 rounded-full text-[9px] font-bold bg-purple-200/70 text-purple-800 dark:bg-purple-900 dark:text-purple-200">21 Modul Boleh Diakses</span>
                                         </div>
-                                        <p id="admin-hub-notice-text" class="text-[11px] text-purple-800/80 dark:text-purple-300/80 mt-0.5 leading-relaxed">Akses 100% tanpa batasan ke seluruh modul kesiswaan, akademik, publikasi, pengaturan sistem, dan akun pengguna.</p>
+                                        <p id="admin-hub-notice-text" class="text-[11px] text-purple-800/80 dark:text-purple-300/80 mt-0.5 leading-relaxed">Akses penuh ke seluruh basis data pesantren, TPQ Yanbu'a, Sorogan, Madin, Tahfidz, Keuangan, dan Sistem.</p>
+                                    </div>
+                                </div>
+
+                                <!-- ================= OVERALL DATA & TIME RANGE CONTROLS (1-TO-1 HADIRIN BENCHMARK) ================= -->
+                                <div id="admin-hub-overall-header-section" class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-0.5 animate-fade-in-up stagger-2">
+                                    <!-- Sisi Kiri: Judul "Overall Data" & Filter Pills yang Menyatu Sejajar -->
+                                    <div class="flex flex-wrap items-center gap-2.5 md:gap-3.5">
+                                        <h3 class="text-lg md:text-xl font-black text-slate-900 dark:text-white tracking-tight">Overall Data</h3>
+                                        
+                                        <!-- Filter Pills Minimalis Persis Referensi -->
+                                        <div class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                                            <button type="button" data-range="today" onclick="setAdminAnalyticsTimeRange(this, 'today')" class="admin-time-pill px-2.5 py-1 rounded-lg hover:text-slate-900 dark:hover:text-white transition-all">Today</button>
+                                            <button type="button" data-range="7d" onclick="setAdminAnalyticsTimeRange(this, '7d')" class="admin-time-pill active px-3 py-1 rounded-lg bg-sky-500 text-white font-bold shadow-xs transition-all">Last 7 days</button>
+                                            <button type="button" data-range="30d" onclick="setAdminAnalyticsTimeRange(this, '30d')" class="admin-time-pill px-2.5 py-1 rounded-lg hover:text-slate-900 dark:hover:text-white transition-all">Last 30 days</button>
+                                            <button type="button" data-range="90d" onclick="setAdminAnalyticsTimeRange(this, '90d')" class="admin-time-pill px-2.5 py-1 rounded-lg hover:text-slate-900 dark:hover:text-white transition-all">Last 90 days</button>
+                                            <button type="button" data-range="all" onclick="setAdminAnalyticsTimeRange(this, 'all')" class="admin-time-pill px-2.5 py-1 rounded-lg hover:text-slate-900 dark:hover:text-white transition-all">All time</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Sisi Kanan: Action Button Refresh -->
+                                    <div class="flex items-center gap-1.5">
+                                        <button type="button" id="admin-analytics-refresh-btn" onclick="refreshAdminAnalyticsData()" title="Segarkan Data Analitik"
+                                            class="w-7 h-7 rounded-xl bg-white dark:bg-[#1a2634] text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-200/80 dark:border-[#2b3b4f] flex items-center justify-center text-xs transition-all shadow-xs active:scale-95 cursor-pointer">
+                                            <i class="fa-solid fa-rotate-right"></i>
+                                        </button>
                                     </div>
                                 </div>
 
                                 <!-- Dynamic Role KPI Stat Cards Grid -->
-                                <div id="admin-hub-kpi-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                                <div id="admin-hub-kpi-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 md:gap-3.5 animate-fade-in-up stagger-3">
                                     <!-- Populated dynamically by applyAdminRoleVisibility -->
+                                </div>
+
+                                <!-- ================= BIOMETRIC ANALYTICS & ATTENDANCE CHARTS (BENCHMARK HADIRIN) ================= -->
+                                <div id="admin-hub-charts-section" class="grid grid-cols-1 lg:grid-cols-12 gap-2.5 md:gap-3.5 animate-fade-in-up stagger-4">
+                                    
+                                    <!-- KOLOM KIRI: STACKED ROUNDED BAR CHART (AKTIVITAS KEHADIRAN) -->
+                                    <div class="lg:col-span-7 xl:col-span-8 bg-white dark:bg-[#15202d] rounded-2xl p-3 md:p-3.5 border border-slate-200/80 dark:border-[#253447] shadow-xs flex flex-col justify-between space-y-2">
+                                        <!-- Chart Header -->
+                                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-1.5 border-b border-slate-100 dark:border-slate-800/80">
+                                            <div>
+                                                <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100">Aktivitas Kehadiran Harian</h4>
+                                                <p class="text-[10px] text-slate-400 dark:text-slate-500">Volume presensi santri & asatidz terverifikasi</p>
+                                            </div>
+                                            <!-- Legend & Dropdown Filter Badge -->
+                                            <div class="flex items-center gap-2.5 text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                                                <span class="flex items-center gap-1">
+                                                    <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                                                    <span>Asatidz</span>
+                                                </span>
+                                                <span class="flex items-center gap-1">
+                                                    <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+                                                    <span>Santri</span>
+                                                </span>
+                                                <span id="admin-analytics-chart-range-label" class="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-[#1c2836] border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold">
+                                                    Last 7 days
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Chart Canvas (SVG Stacked Rounded Bar) -->
+                                        <div class="w-full overflow-x-auto py-0.5">
+                                            <div class="min-w-[440px] h-36 relative flex items-end">
+                                                <svg class="w-full h-full" viewBox="0 0 540 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <!-- Grid lines -->
+                                                    <line x1="40" y1="15" x2="520" y2="15" stroke="currentColor" class="text-slate-100 dark:text-slate-800/60" stroke-width="1" stroke-dasharray="3 3"/>
+                                                    <text x="32" y="19" text-anchor="end" class="text-[9px] fill-slate-300 dark:fill-slate-600 font-medium">400</text>
+
+                                                    <line x1="40" y1="45" x2="520" y2="45" stroke="currentColor" class="text-slate-100 dark:text-slate-800/60" stroke-width="1" stroke-dasharray="3 3"/>
+                                                    <text x="32" y="49" text-anchor="end" class="text-[9px] fill-slate-300 dark:fill-slate-600 font-medium">300</text>
+
+                                                    <line x1="40" y1="75" x2="520" y2="75" stroke="currentColor" class="text-slate-100 dark:text-slate-800/60" stroke-width="1" stroke-dasharray="3 3"/>
+                                                    <text x="32" y="79" text-anchor="end" class="text-[9px] fill-slate-300 dark:fill-slate-600 font-medium">200</text>
+
+                                                    <line x1="40" y1="105" x2="520" y2="105" stroke="currentColor" class="text-slate-100 dark:text-slate-800/60" stroke-width="1" stroke-dasharray="3 3"/>
+                                                    <text x="32" y="109" text-anchor="end" class="text-[9px] fill-slate-300 dark:fill-slate-600 font-medium">100</text>
+
+                                                    <line x1="40" y1="135" x2="520" y2="135" stroke="currentColor" class="text-slate-200 dark:text-slate-700" stroke-width="1"/>
+                                                    <text x="32" y="139" text-anchor="end" class="text-[9px] fill-slate-300 dark:fill-slate-600 font-medium">0</text>
+
+                                                    <!-- BARS GROUP (Rendered dynamically by renderAdminAnalyticsChart) -->
+                                                    <g id="admin-attendance-bars-group">
+                                                        <!-- Default initial: 7 Days -->
+                                                        <g class="cursor-pointer group">
+                                                            <title>05-18: 180 Santri, 35 Asatidz</title>
+                                                            <rect x="72" y="65" width="20" height="70" rx="6" fill="#38bdf8" class="group-hover:opacity-90 transition-opacity"/>
+                                                            <rect x="72" y="42" width="20" height="26" rx="6" fill="#fb923c" class="group-hover:opacity-90 transition-opacity"/>
+                                                            <text x="82" y="152" text-anchor="middle" class="text-[10px] font-medium fill-slate-400 group-hover:fill-sky-500">05-18</text>
+                                                        </g>
+                                                        <g class="cursor-pointer group">
+                                                            <title>05-19: 210 Santri, 40 Asatidz</title>
+                                                            <rect x="142" y="55" width="20" height="80" rx="6" fill="#38bdf8" class="group-hover:opacity-90 transition-opacity"/>
+                                                            <rect x="142" y="32" width="20" height="26" rx="6" fill="#fb923c" class="group-hover:opacity-90 transition-opacity"/>
+                                                            <text x="152" y="152" text-anchor="middle" class="text-[10px] font-medium fill-slate-400 group-hover:fill-sky-500">05-19</text>
+                                                        </g>
+                                                        <g class="cursor-pointer group">
+                                                            <title>05-20: 200 Santri, 38 Asatidz</title>
+                                                            <rect x="212" y="60" width="20" height="75" rx="6" fill="#38bdf8" class="group-hover:opacity-90 transition-opacity"/>
+                                                            <rect x="212" y="36" width="20" height="26" rx="6" fill="#fb923c" class="group-hover:opacity-90 transition-opacity"/>
+                                                            <text x="222" y="152" text-anchor="middle" class="text-[10px] font-medium fill-slate-400 group-hover:fill-sky-500">05-20</text>
+                                                        </g>
+                                                        <g class="cursor-pointer group">
+                                                            <title>05-21: 260 Santri, 48 Asatidz (Puncak Kehadiran)</title>
+                                                            <rect x="282" y="42" width="20" height="93" rx="6" fill="#38bdf8" class="group-hover:opacity-90 transition-opacity"/>
+                                                            <rect x="282" y="16" width="20" height="30" rx="6" fill="#fb923c" class="group-hover:opacity-90 transition-opacity"/>
+                                                            <text x="292" y="152" text-anchor="middle" class="text-[10px] font-bold fill-sky-600 dark:fill-sky-400">05-21</text>
+                                                        </g>
+                                                        <g class="cursor-pointer group">
+                                                            <title>05-22: 215 Santri, 42 Asatidz</title>
+                                                            <rect x="352" y="55" width="20" height="80" rx="6" fill="#38bdf8" class="group-hover:opacity-90 transition-opacity"/>
+                                                            <rect x="352" y="34" width="20" height="24" rx="6" fill="#fb923c" class="group-hover:opacity-90 transition-opacity"/>
+                                                            <text x="362" y="152" text-anchor="middle" class="text-[10px] font-medium fill-slate-400 group-hover:fill-sky-500">05-22</text>
+                                                        </g>
+                                                        <g class="cursor-pointer group">
+                                                            <title>05-23: 190 Santri, 36 Asatidz</title>
+                                                            <rect x="422" y="65" width="20" height="70" rx="6" fill="#38bdf8" class="group-hover:opacity-90 transition-opacity"/>
+                                                            <rect x="422" y="44" width="20" height="24" rx="6" fill="#fb923c" class="group-hover:opacity-90 transition-opacity"/>
+                                                            <text x="432" y="152" text-anchor="middle" class="text-[10px] font-medium fill-slate-400 group-hover:fill-sky-500">05-23</text>
+                                                        </g>
+                                                        <g class="cursor-pointer group">
+                                                            <title>05-24: 170 Santri, 32 Asatidz</title>
+                                                            <rect x="492" y="75" width="20" height="60" rx="6" fill="#38bdf8" class="group-hover:opacity-90 transition-opacity"/>
+                                                            <rect x="492" y="52" width="20" height="25" rx="6" fill="#fb923c" class="group-hover:opacity-90 transition-opacity"/>
+                                                            <text x="502" y="152" text-anchor="middle" class="text-[10px] font-medium fill-slate-400 group-hover:fill-sky-500">05-24</text>
+                                                        </g>
+                                                    </g>
+                                                </svg>
+                                            </div>
+                                        </div>
+
+                                        <!-- Footer Tipis Rata-rata -->
+                                        <div class="flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-slate-800/80 text-[10px] text-slate-400 dark:text-slate-500">
+                                            <span class="flex items-center gap-1.5">
+                                                <i class="fa-solid fa-circle-info text-[9px]"></i>
+                                                <span>Data presensi terverifikasi harian PPTQ Mubarokah</span>
+                                            </span>
+                                            <span id="admin-attendance-avg-label" class="font-bold text-slate-700 dark:text-slate-300">
+                                                Rata-rata 317 Presensi/Hari
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- KOLOM KANAN: DONUT RING CHART (RASIO KETEPATAN & DISIPLIN) -->
+                                    <div class="lg:col-span-5 xl:col-span-4 bg-white dark:bg-[#15202d] rounded-2xl p-3 md:p-3.5 border border-slate-200/80 dark:border-[#253447] shadow-xs flex flex-col justify-between space-y-2">
+                                        <!-- Card Header -->
+                                        <div class="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800/80">
+                                            <div>
+                                                <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100">Rasio Disiplin & Akurasi</h4>
+                                                <p class="text-[10px] text-slate-400 dark:text-slate-500">Distribusi Rasio Ketepatan & Udzur</p>
+                                            </div>
+                                            <span class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer text-xs">
+                                                <i class="fa-solid fa-ellipsis"></i>
+                                            </span>
+                                        </div>
+
+                                        <!-- Donut Graphic Container -->
+                                        <div class="relative flex items-center justify-center py-1">
+                                            <svg class="w-32 h-32 md:w-36 md:h-36 -rotate-90" viewBox="0 0 160 160">
+                                                <!-- Background Track -->
+                                                <circle cx="80" cy="80" r="60" stroke="currentColor" class="text-slate-100 dark:text-[#1e2a38]" stroke-width="18" fill="transparent"/>
+                                                
+                                                <!-- Segment 1: Tepat Waktu (Sky Blue) -->
+                                                <circle id="admin-donut-segment-tepat" cx="80" cy="80" r="60" stroke="#38bdf8" stroke-width="18" fill="transparent"
+                                                    stroke-dasharray="174.5 376.99" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-700"/>
+                                                
+                                                <!-- Segment 2: Lembur/Ekstra (Warm Amber) -->
+                                                <circle id="admin-donut-segment-lembur" cx="80" cy="80" r="60" stroke="#fb923c" stroke-width="18" fill="transparent"
+                                                    stroke-dasharray="122.9 376.99" stroke-dashoffset="-180" stroke-linecap="round" class="transition-all duration-700"/>
+
+                                                <!-- Segment 3: Cuti/Izin (Green/Emerald) -->
+                                                <circle id="admin-donut-segment-cuti" cx="80" cy="80" r="60" stroke="#22c55e" stroke-width="18" fill="transparent"
+                                                    stroke-dasharray="75.0 376.99" stroke-dashoffset="-305" stroke-linecap="round" class="transition-all duration-700"/>
+                                            </svg>
+
+                                            <!-- Centered Summary Text inside Donut -->
+                                            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                                <span id="admin-donut-percent-text" class="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">98.5%</span>
+                                                <span class="text-[9px] font-semibold text-slate-400 dark:text-slate-500">Kehadiran</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Breakdown Horizontal -->
+                                        <div class="flex items-center justify-around pt-1.5 border-t border-slate-100 dark:border-slate-800/80 text-[10px] font-semibold">
+                                            <!-- Tepat -->
+                                            <div class="flex items-center gap-1">
+                                                <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+                                                <span class="text-slate-500 dark:text-slate-400">Tepat:</span>
+                                                <span id="admin-donut-breakdown-tepat" class="font-bold text-slate-800 dark:text-slate-200">46.3%</span>
+                                            </div>
+
+                                            <!-- Lembur / Ekstra -->
+                                            <div class="flex items-center gap-1">
+                                                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                                                <span class="text-slate-500 dark:text-slate-400">Lembur:</span>
+                                                <span id="admin-donut-breakdown-lembur" class="font-bold text-slate-800 dark:text-slate-200">32.6%</span>
+                                            </div>
+
+                                            <!-- Cuti / Izin -->
+                                            <div class="flex items-center gap-1">
+                                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                                <span class="text-slate-500 dark:text-slate-400">Cuti:</span>
+                                                <span id="admin-donut-breakdown-cuti" class="font-bold text-slate-800 dark:text-slate-200">22.1%</span>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
                                 </div>
 
                                 <!-- WIDGET KHUSUS WALI SANTRI (MUNCUL JIKA ROLE WALI_SANTRI) -->
@@ -19892,10 +20082,10 @@
     <script src="/js/ppdb.js"></script>
     <script src="/js/ibadah.js"></script>
     <script src="/js/jadwal-sholat.js"></script>
-    <script src="/js/admin.js?v=16"></script>
-    <script src="/js/roles.js?v=15"></script>
+    <script src="/js/admin.js?v=17"></script>
+    <script src="/js/roles.js?v=16"></script>
     <script src="/js/alumni.js"></script>
-    <script src="/js/auth.js?v=16"></script>
+    <script src="/js/auth.js?v=17"></script>
     <script src="/js/pegawai.js"></script>
     <script src="/js/tahfidz.js?v=23"></script>
     <script src="/js/tpq.js?v=16"></script>
