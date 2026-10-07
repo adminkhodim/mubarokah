@@ -61,7 +61,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <!-- Compiled & Minified Tailwind CSS -->
-    <link rel="stylesheet" href="/css/styles.min.css?v=27">
+    <link rel="stylesheet" href="/css/styles.min.css?v=28">
 
 
 
@@ -128,7 +128,7 @@
     </script>
 
     <!-- ==================== HEADER DESKTOP (2-TIER INSTITUTIONAL NAV) ==================== -->
-    <div class="hidden md:block sticky top-0 z-50 shadow-md">
+    <div id="main-desktop-header" class="hidden md:block sticky top-0 z-50 shadow-md">
 
         <!-- MAIN NAVIGATION BAR WITH STRUCTURED DROPDOWNS -->
         <header
@@ -328,7 +328,7 @@
     </div>
 
     <!-- ==================== HEADER MOBILE (Sembunyi di PC) ==================== -->
-    <header
+    <header id="main-mobile-header"
         class="md:hidden bg-teal-900 dark:bg-[#042020] dark:border-b dark:border-teal-500/20 text-white px-4 py-3 sticky top-0 z-50 flex justify-between items-center shadow-md">
         <!-- Logo & Nama Pesantren -->
         <div class="flex items-center cursor-pointer" onclick="switchTab('beranda'); closeMobileMenu();">
@@ -5539,7 +5539,7 @@
                             <span class="ml-2 sidebar-text whitespace-nowrap transition-opacity duration-300">LOGOUT</span>
                         </button>
                         <div class="sidebar-text text-center mt-2 transition-opacity duration-300">
-                            <span class="text-[10px] text-white/60 font-medium">© 2026 PPTQ Roudlotul Mubarokah</span>
+                            <span class="text-[10px] text-white/60 font-medium">© 2026 PPTQ Mubarokah</span>
                         </div>
                     </div>
                 </aside>
@@ -5870,7 +5870,7 @@
                                         <div class="flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-slate-800/80 text-[10px] text-slate-400 dark:text-slate-500">
                                             <span class="flex items-center gap-1.5">
                                                 <i class="fa-solid fa-circle-info text-[9px]"></i>
-                                                <span>Data presensi terverifikasi harian PPTQ Mubarokah</span>
+                                                <span>Data diperbarui setiap 15 menit melalui biometrik sync</span>
                                             </span>
                                             <span id="admin-attendance-avg-label" class="font-bold text-slate-700 dark:text-slate-300">
                                                 Rata-rata 317 Presensi/Hari
@@ -20082,8 +20082,8 @@
     <script src="/js/ppdb.js"></script>
     <script src="/js/ibadah.js"></script>
     <script src="/js/jadwal-sholat.js"></script>
-    <script src="/js/admin.js?v=17"></script>
-    <script src="/js/roles.js?v=16"></script>
+    <script src="/js/admin.js?v=18"></script>
+    <script src="/js/roles.js?v=17"></script>
     <script src="/js/alumni.js"></script>
     <script src="/js/auth.js?v=17"></script>
     <script src="/js/pegawai.js"></script>
@@ -20097,7 +20097,7 @@
     <script src="/js/panduan.js?v=1"></script>
 
     <!-- Main Controller & Navigation -->
-    <script src="/js/main.js?v=16"></script>
+    <script src="/js/main.js?v=17"></script>
 </body>
 
 </html>

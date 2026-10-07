@@ -1000,16 +1000,41 @@ const ASNIdentity = {
             const nameEl = document.getElementById('admin-display-name');
             const emailEl = document.getElementById('admin-display-email');
             const roleBadgeEl = document.getElementById('admin-display-role-badge');
-            if (nameEl) nameEl.innerText = (this.currentUser && this.currentUser.name) || 'Administrator';
+            const currentName = (this.currentUser && this.currentUser.name) || 'Administrator';
+            if (nameEl) nameEl.innerText = currentName;
             if (emailEl) emailEl.innerHTML = `<i class="fa-regular fa-envelope mr-1"></i> ${escapeHtml((this.currentUser && this.currentUser.email) || '')}`;
-            if (roleBadgeEl) {
-                let displayRole = 'Admin';
-                if (this.currentRole === ASN_ROLES.SUPER_ADMIN) displayRole = 'Super Admin';
-                else if (this.currentRole === 'BENDAHARA') displayRole = 'Bendahara';
-                else if (this.currentRole === 'PENGURUS') displayRole = 'Pengurus';
-                else if (this.currentRole === 'ASATIDZ' || this.currentRole === 'PEGAWAI') displayRole = 'Asatidz';
-                roleBadgeEl.innerText = displayRole;
+            
+            let displayRole = 'Admin';
+            if (this.currentRole === ASN_ROLES.SUPER_ADMIN) displayRole = 'Super Admin';
+            else if (this.currentRole === 'BENDAHARA') displayRole = 'Bendahara';
+            else if (this.currentRole === 'PENGURUS') displayRole = 'Pengurus';
+            else if (this.currentRole === 'ASATIDZ' || this.currentRole === 'PEGAWAI') displayRole = 'Asatidz';
+            
+            if (roleBadgeEl) roleBadgeEl.innerText = displayRole;
+
+            // Sinkronkan juga info identitas di sidebar admin baru
+            const sidebarNameEl = document.getElementById('admin-sidebar-user-name');
+            if (sidebarNameEl) sidebarNameEl.innerText = currentName;
+            const sidebarBadgeEl = document.getElementById('admin-sidebar-role-badge');
+            if (sidebarBadgeEl) sidebarBadgeEl.innerText = displayRole;
+            const sidebarInitialEl = document.getElementById('admin-sidebar-avatar-initial');
+            let initial = 'AU';
+            if (currentName) {
+                const words = currentName.trim().split(/\s+/);
+                initial = words.length >= 2 ? (words[0][0] + words[1][0]).toUpperCase() : words[0].substring(0, 2).toUpperCase();
             }
+            if (sidebarInitialEl) {
+                sidebarInitialEl.innerText = initial;
+            }
+
+            // Sinkronkan juga info identitas di desktop topbar
+            const topbarNameEl = document.getElementById('admin-topbar-username');
+            if (topbarNameEl) topbarNameEl.innerText = currentName;
+            const topbarRoleEl = document.getElementById('admin-topbar-role');
+            if (topbarRoleEl) topbarRoleEl.innerText = displayRole;
+            const topbarInitialEl = document.getElementById('admin-topbar-avatar-initial');
+            if (topbarInitialEl) topbarInitialEl.innerText = initial;
+
             this.updateAvatarUI(this.currentRole, (this.currentUser && (this.currentUser.photoUrl || this.currentUser.photo_url)) || '');
 
             // Terapkan penyaringan menu Pusat Kontrol & Hub sesuai wewenang peran aktif

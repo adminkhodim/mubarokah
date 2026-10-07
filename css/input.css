@@ -350,3 +350,10 @@ html.dark #admin-sidebar-menu::-webkit-scrollbar-thumb:hover {
 .stagger-7 { animation-delay: 0.50s; }
 .stagger-8 { animation-delay: 0.58s; }
 
+/* Sembunyikan header publik & footer website saat dashboard admin aktif (Edge-to-Edge 100vh) */
+body:has(#page-admin:not(.hidden)) #main-desktop-header,
+body:has(#page-admin:not(.hidden)) #main-mobile-header,
+body:has(#page-admin:not(.hidden)) footer {
+  display: none !important;
+}
+

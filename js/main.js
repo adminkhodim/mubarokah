@@ -460,16 +460,26 @@
             }
 
             // Hide menus for Admin layout
+            // Sembunyikan header publik dan menu navigasi khusus saat membuka Dashboard Admin (Edge-to-Edge 100vh)
+            const mainDesktopHeader = document.getElementById('main-desktop-header');
+            const mainMobileHeader = document.getElementById('main-mobile-header');
             const deskNavMenu = document.getElementById('desk-nav-menu');
             const deskActionMenu = document.getElementById('desk-action-menu');
             const mobileBottomNav = document.getElementById('mobile-bottom-nav');
             const mainFooter = document.querySelector('footer');
 
             if (tabId === 'admin') {
-                if (deskNavMenu) deskNavMenu.classList.add('hidden');
-                if (deskActionMenu) deskActionMenu.classList.add('hidden');
-                if (mobileBottomNav) mobileBottomNav.classList.add('hidden');
-                if (mainFooter) mainFooter.classList.add('hidden');
+                if (mainDesktopHeader) mainDesktopHeader.style.display = 'none';
+                if (mainMobileHeader) mainMobileHeader.style.display = 'none';
+                if (deskNavMenu) deskNavMenu.style.display = 'none';
+                if (deskActionMenu) deskActionMenu.style.display = 'none';
+                if (mobileBottomNav) mobileBottomNav.style.display = 'none';
+                if (mainFooter) mainFooter.style.display = 'none';
+
+                // Pastikan Live Clock & Telemetri Admin langsung menyala
+                if (typeof initAdminTopbarClock === 'function') {
+                    initAdminTopbarClock();
+                }
 
                 const isUserAdmin = (typeof checkIsAdminLoggedIn === 'function')
                     ? checkIsAdminLoggedIn()
@@ -492,10 +502,12 @@
                     if (typeof isAdminLoggedIn !== 'undefined') isAdminLoggedIn = true;
                 }
             } else {
-                if (deskNavMenu) deskNavMenu.classList.remove('hidden');
-                if (deskActionMenu) deskActionMenu.classList.remove('hidden');
-                if (mobileBottomNav) mobileBottomNav.classList.remove('hidden');
-                if (mainFooter) mainFooter.classList.remove('hidden');
+                if (mainDesktopHeader) mainDesktopHeader.style.removeProperty('display');
+                if (mainMobileHeader) mainMobileHeader.style.removeProperty('display');
+                if (deskNavMenu) deskNavMenu.style.removeProperty('display');
+                if (deskActionMenu) deskActionMenu.style.removeProperty('display');
+                if (mobileBottomNav) mobileBottomNav.style.removeProperty('display');
+                if (mainFooter) mainFooter.style.removeProperty('display');
             }
 
             if (tabId === 'alumni') {

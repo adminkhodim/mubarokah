@@ -76,6 +76,7 @@
                 });
             }
         }
+        window.toggleAdminSidebar = toggleAdminSidebar;
 
         // ==================== DASHBOARD ADMIN: ACCORDION NAVIGATION ====================
         const ADMIN_VIEW_META = {
@@ -102,7 +103,378 @@
             'akuntansi': { group: 'akuntansi', category: 'Akuntansi & Pembukuan', title: 'Akuntansi & Buku Kas' }
         };
 
-        
+        // ==================== ADMIN QUICK SEARCH FINDER & SHORTCUT (Alt+F / Ctrl+K) ====================
+        const ADMIN_SEARCH_MODULES = [
+            { view: 'hub', name: 'Dashboard Utama', category: 'Ringkasan', icon: 'fa-gauge-high' },
+            { view: 'santri', name: 'Data Santri', category: 'Kesantrian & Akademik', icon: 'fa-id-card-clip' },
+            { view: 'tahfidz', name: 'Tahfidz Al-Qur\'an', category: 'Kesantrian & Akademik', icon: 'fa-book-quran' },
+            { view: 'tpq', name: 'TPQ Yanbu\'a', category: 'Kesantrian & Akademik', icon: 'fa-book-open-reader' },
+            { view: 'sorogan', name: 'Sorogan Al-Qur\'an', category: 'Kesantrian & Akademik', icon: 'fa-book-bookmark' },
+            { view: 'madin', name: 'Madrasah Diniyah', category: 'Kesantrian & Akademik', icon: 'fa-school' },
+            { view: 'presensi', name: 'Presensi Kegiatan', category: 'Kesantrian & Akademik', icon: 'fa-clipboard-user' },
+            { view: 'ppdb', name: 'Data Pendaftar PPDB', category: 'Kesantrian & Akademik', icon: 'fa-user-graduate' },
+            { view: 'program', name: 'Manajemen Program', category: 'Kesantrian & Akademik', icon: 'fa-graduation-cap' },
+            { view: 'unit-kegiatan', name: 'Unit Kegiatan (UKS)', category: 'Kesantrian & Akademik', icon: 'fa-people-roof' },
+            { view: 'keuangan', name: 'Kasir & Keuangan Santri', category: 'Keuangan & Akuntansi', icon: 'fa-cash-register' },
+            { view: 'akuntansi', name: 'Akuntansi & Buku Kas', category: 'Keuangan & Akuntansi', icon: 'fa-scale-balanced' },
+            { view: 'pegawai', name: 'Data Pegawai & Asatidz', category: 'Kepegawaian & SDM', icon: 'fa-user-tie' },
+            { view: 'berita', name: 'Manajemen Berita', category: 'Portal & Publikasi', icon: 'fa-newspaper' },
+            { view: 'banner', name: 'Banner Slider', category: 'Portal & Publikasi', icon: 'fa-images' },
+            { view: 'galeri', name: 'Manajemen Galeri', category: 'Portal & Publikasi', icon: 'fa-camera-retro' },
+            { view: 'notifikasi', name: 'Notifikasi Broadcast', category: 'Portal & Publikasi', icon: 'fa-bell' },
+            { view: 'profil-lembaga', name: 'Profil & Kepengurusan', category: 'Sistem & Hak Akses', icon: 'fa-building-columns' },
+            { view: 'pengaturan', name: 'Tautan & Sosmed', category: 'Sistem & Hak Akses', icon: 'fa-share-nodes' },
+            { view: 'users', name: 'Manajemen Pengguna', category: 'Sistem & Hak Akses', icon: 'fa-users-gear' },
+            { view: 'roles', name: 'Manajemen Peran (RBAC)', category: 'Sistem & Hak Akses', icon: 'fa-shield-halved' }
+        ];
+
+        function handleAdminQuickSearch(query) {
+            const dropdown = document.getElementById('admin-quick-search-dropdown');
+            if (!dropdown) return;
+            
+            const q = (query || '').trim().toLowerCase();
+            const currentRole = (typeof ASNIdentity !== 'undefined' && ASNIdentity.currentRole) || 
+                                sessionStorage.getItem('mubarokah_admin_role') || 'SUPER_ADMIN';
+            
+            const filtered = ADMIN_SEARCH_MODULES.filter(item => {
+                if (item.view !== 'hub' && typeof isModuleAllowedForRole === 'function') {
+                    if (!isModuleAllowedForRole(item.view, currentRole)) return false;
+                }
+                if (!q) return true;
+                return item.name.toLowerCase().includes(q) || item.category.toLowerCase().includes(q);
+            });
+
+            if (filtered.length === 0) {
+                dropdown.innerHTML = `<div class="p-3 text-xs text-slate-400 dark:text-slate-500 text-center">Tidak ada modul yang cocok</div>`;
+                dropdown.classList.remove('hidden');
+                return;
+            }
+
+            dropdown.innerHTML = filtered.map(item => `
+                <button type="button" onclick="selectAdminQuickSearchResult('${item.view}')" class="w-full flex items-center justify-between px-3.5 py-2.5 hover:bg-emerald-50/70 dark:hover:bg-slate-750 text-left transition group">
+                    <div class="flex items-center gap-2.5">
+                        <i class="fa-solid ${item.icon} text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 text-xs w-4 text-center"></i>
+                        <span class="text-xs font-semibold text-slate-700 dark:text-slate-200 group-hover:text-emerald-700 dark:group-hover:text-emerald-300">${item.name}</span>
+                    </div>
+                    <span class="text-[10px] text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">${item.category}</span>
+                </button>
+            `).join('');
+            dropdown.classList.remove('hidden');
+        }
+
+        function selectAdminQuickSearchResult(viewName) {
+            const dropdown = document.getElementById('admin-quick-search-dropdown');
+            const input = document.getElementById('admin-quick-search-input');
+            if (dropdown) dropdown.classList.add('hidden');
+            if (input) input.value = '';
+            showAdminView(viewName);
+        }
+
+        // Event listener klik di luar untuk menutup dropdown search
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('admin-quick-search-dropdown');
+            const searchInput = document.getElementById('admin-quick-search-input');
+            if (dropdown && !dropdown.contains(e.target) && e.target !== searchInput) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // Shortcut keyboard Alt+F atau Ctrl+K untuk focus search input
+        document.addEventListener('keydown', function(e) {
+            if ((e.altKey && (e.key === 'f' || e.key === 'F')) || ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K'))) {
+                const searchInput = document.getElementById('admin-quick-search-input');
+                const pageAdmin = document.getElementById('page-admin');
+                if (searchInput && pageAdmin && !pageAdmin.classList.contains('hidden')) {
+                    e.preventDefault();
+                    searchInput.focus();
+                    handleAdminQuickSearch(searchInput.value);
+                }
+            }
+        });
+
+        // Live Real-Time Clock (WIB) & Live Timestamp
+        let adminTopbarClockTimer = null;
+        function updateAdminTopbarClock() {
+            const clockEl = document.getElementById('admin-topbar-clock');
+            const liveTimestampEl = document.getElementById('admin-hub-live-timestamp');
+            const now = new Date();
+            const pad = (n) => String(n).padStart(2, '0');
+            const timeStr = `${pad(now.getHours())}.${pad(now.getMinutes())}.${pad(now.getSeconds())}`;
+            
+            if (clockEl) {
+                clockEl.textContent = `${timeStr} WIB`;
+            }
+            if (liveTimestampEl) {
+                const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+                const dayName = days[now.getDay()];
+                const monthName = months[now.getMonth()];
+                liveTimestampEl.textContent = `WIB (UTC+7) • ${dayName}, ${now.getDate()} ${monthName} ${now.getFullYear()} • ${timeStr}`;
+            }
+        }
+
+        function initAdminTopbarClock() {
+            updateAdminTopbarClock();
+            if (!adminTopbarClockTimer) {
+                adminTopbarClockTimer = setInterval(updateAdminTopbarClock, 1000);
+            }
+        }
+        window.initAdminTopbarClock = initAdminTopbarClock;
+        window.updateAdminTopbarClock = updateAdminTopbarClock;
+
+        // Auto-run immediately and on DOM events
+        initAdminTopbarClock();
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initAdminTopbarClock);
+        }
+        window.addEventListener('load', initAdminTopbarClock);
+
+        // ==================== OVERALL DATA & BIOMETRIC ANALYTICS CONTROLS ====================
+        let currentAdminAnalyticsRange = '7d';
+
+        const ADMIN_ANALYTICS_DATASETS = {
+            'today': {
+                label: 'Hari Ini',
+                badge: 'Today',
+                avgLabel: 'Total 204 Presensi Terverifikasi Hari Ini',
+                overallRate: '99.2%',
+                breakdown: { tepat: '52.4%', lembur: '30.1%', cuti: '17.5%' },
+                donut: { tepat: 197.5, lembur: 113.4, cuti: 66.0, offsetLembur: -200, offsetCuti: -315 },
+                columns: [
+                    { label: 'Subuh 04:30', santri: 138, asatidz: 21, total: 159 },
+                    { label: 'Dhuha 07:30', santri: 140, asatidz: 20, total: 160 },
+                    { label: 'Dzuhur 12:00', santri: 139, asatidz: 21, total: 160 },
+                    { label: 'Ashar 15:30', santri: 140, asatidz: 21, total: 161, peak: true },
+                    { label: 'Maghrib 18:00', santri: 140, asatidz: 21, total: 161 },
+                    { label: 'Isya 19:30', santri: 139, asatidz: 20, total: 159 }
+                ]
+            },
+            '7d': {
+                label: '7 Hari Terakhir',
+                badge: 'Last 7 days',
+                avgLabel: 'Rata-rata 317 Presensi/Hari',
+                overallRate: '98.5%',
+                breakdown: { tepat: '46.3%', lembur: '32.6%', cuti: '22.1%' },
+                donut: { tepat: 174.5, lembur: 122.9, cuti: 75.0, offsetLembur: -180, offsetCuti: -305 },
+                columns: [
+                    { label: '05-18', santri: 180, asatidz: 35, total: 215 },
+                    { label: '05-19', santri: 210, asatidz: 40, total: 250 },
+                    { label: '05-20', santri: 200, asatidz: 38, total: 238 },
+                    { label: '05-21', santri: 260, asatidz: 48, total: 308, peak: true },
+                    { label: '05-22', santri: 215, asatidz: 42, total: 257 },
+                    { label: '05-23', santri: 190, asatidz: 36, total: 226 },
+                    { label: '05-24', santri: 170, asatidz: 32, total: 202 }
+                ]
+            },
+            '30d': {
+                label: '30 Hari Terakhir',
+                badge: 'Last 30 days',
+                avgLabel: 'Rata-rata 331 Presensi/Hari',
+                overallRate: '98.8%',
+                breakdown: { tepat: '48.7%', lembur: '31.2%', cuti: '20.1%' },
+                donut: { tepat: 183.5, lembur: 117.6, cuti: 75.8, offsetLembur: -185, offsetCuti: -305 },
+                columns: [
+                    { label: 'Pekan 1', santri: 285, asatidz: 44, total: 329 },
+                    { label: 'Pekan 2', santri: 310, asatidz: 46, total: 356 },
+                    { label: 'Pekan 3', santri: 335, asatidz: 49, total: 384, peak: true },
+                    { label: 'Pekan 4', santri: 320, asatidz: 45, total: 365 },
+                    { label: 'Pekan 5', santri: 305, asatidz: 43, total: 348 }
+                ]
+            },
+            '90d': {
+                label: '90 Hari Terakhir',
+                badge: 'Last 90 days',
+                avgLabel: 'Rata-rata 324 Presensi/Hari',
+                overallRate: '97.9%',
+                breakdown: { tepat: '45.8%', lembur: '33.5%', cuti: '20.7%' },
+                donut: { tepat: 172.6, lembur: 126.2, cuti: 78.0, offsetLembur: -175, offsetCuti: -303 },
+                columns: [
+                    { label: 'Bulan ke-1', santri: 290, asatidz: 42, total: 332 },
+                    { label: 'Bulan ke-2', santri: 330, asatidz: 48, total: 378, peak: true },
+                    { label: 'Bulan ke-3', santri: 315, asatidz: 45, total: 360 }
+                ]
+            },
+            'all': {
+                label: 'Semua Periode',
+                badge: 'All time',
+                avgLabel: 'Rata-rata 328 Presensi/Hari (Akumulatif)',
+                overallRate: '98.4%',
+                breakdown: { tepat: '47.2%', lembur: '32.1%', cuti: '20.7%' },
+                donut: { tepat: 177.9, lembur: 121.0, cuti: 78.0, offsetLembur: -180, offsetCuti: -302 },
+                columns: [
+                    { label: 'Semester 1', santri: 310, asatidz: 44, total: 354 },
+                    { label: 'Semester 2', santri: 335, asatidz: 48, total: 383, peak: true },
+                    { label: 'Semester 3', santri: 325, asatidz: 46, total: 371 },
+                    { label: 'Semester 4', santri: 340, asatidz: 49, total: 389 }
+                ]
+            }
+        };
+
+        function renderAdminAnalyticsChart(rangeKey) {
+            const data = ADMIN_ANALYTICS_DATASETS[rangeKey] || ADMIN_ANALYTICS_DATASETS['7d'];
+            
+            // 1. Update Range Badge Label di Header Grafik
+            const rangeBadge = document.getElementById('admin-analytics-chart-range-label');
+            if (rangeBadge) {
+                rangeBadge.textContent = data.badge;
+            }
+
+            // 2. Update Footer Average Label
+            const avgLabel = document.getElementById('admin-attendance-avg-label');
+            if (avgLabel) {
+                avgLabel.textContent = data.avgLabel;
+            }
+
+            // 3. Update SVG Stacked Rounded Bars
+            const barsGroup = document.getElementById('admin-attendance-bars-group');
+            if (barsGroup && Array.isArray(data.columns)) {
+                const totalBars = data.columns.length;
+                const plotStartX = 50;
+                const plotEndX = 510;
+                const availableWidth = plotEndX - plotStartX;
+                const colWidth = 20;
+                const step = totalBars > 1 ? availableWidth / totalBars : availableWidth / 2;
+                
+                // SVG coordinate reference: y=135 is baseline (0), max reference 400
+                const baseLineY = 135;
+                const maxHeightPx = 115;
+                const scaleUnit = maxHeightPx / 400;
+
+                let barsHtml = '';
+                data.columns.forEach((col, idx) => {
+                    const cx = plotStartX + (idx * step) + (step / 2);
+                    const barX = Math.round(cx - (colWidth / 2));
+                    const textX = Math.round(cx);
+
+                    // Height calculation
+                    const santriH = Math.max(14, Math.round(col.santri * scaleUnit));
+                    const asatidzH = Math.max(8, Math.round(col.asatidz * scaleUnit));
+                    const santriY = baseLineY - santriH;
+                    const asatidzY = santriY - asatidzH;
+
+                    const isPeak = !!col.peak;
+                    const labelColorClass = isPeak ? 'fill-sky-600 dark:fill-sky-400 font-bold' : 'fill-slate-400 group-hover:fill-sky-500 font-medium';
+
+                    barsHtml += `
+                        <g class="cursor-pointer group">
+                            <title>${col.label}: ${col.santri} Santri, ${col.asatidz} Asatidz (Total: ${col.total || (col.santri + col.asatidz)})${isPeak ? ' [Puncak]' : ''}</title>
+                            <rect x="${barX}" y="${santriY}" width="${colWidth}" height="${santriH}" rx="6" fill="#38bdf8" class="group-hover:opacity-90 transition-all duration-300"/>
+                            <rect x="${barX}" y="${asatidzY}" width="${colWidth}" height="${asatidzH}" rx="6" fill="#fb923c" class="group-hover:opacity-90 transition-all duration-300"/>
+                            <text x="${textX}" y="152" text-anchor="middle" class="text-[10px] ${labelColorClass} transition-colors">${col.label}</text>
+                        </g>
+                    `;
+                });
+                barsGroup.innerHTML = barsHtml;
+            }
+
+            // 4. Update Donut Ring Chart & Metrics
+            const donutCircleTepat = document.getElementById('admin-donut-segment-tepat');
+            const donutCircleLembur = document.getElementById('admin-donut-segment-lembur');
+            const donutCircleCuti = document.getElementById('admin-donut-segment-cuti');
+            const donutPercentText = document.getElementById('admin-donut-percent-text');
+            const donutBkTepat = document.getElementById('admin-donut-breakdown-tepat');
+            const donutBkLembur = document.getElementById('admin-donut-breakdown-lembur');
+            const donutBkCuti = document.getElementById('admin-donut-breakdown-cuti');
+
+            if (donutPercentText) donutPercentText.textContent = data.overallRate;
+            if (donutBkTepat) donutBkTepat.textContent = data.breakdown.tepat;
+            if (donutBkLembur) donutBkLembur.textContent = data.breakdown.lembur;
+            if (donutBkCuti) donutBkCuti.textContent = data.breakdown.cuti;
+
+            if (data.donut) {
+                if (donutCircleTepat) {
+                    donutCircleTepat.setAttribute('stroke-dasharray', `${data.donut.tepat} 376.99`);
+                }
+                if (donutCircleLembur) {
+                    donutCircleLembur.setAttribute('stroke-dasharray', `${data.donut.lembur} 376.99`);
+                    donutCircleLembur.setAttribute('stroke-dashoffset', String(data.donut.offsetLembur || -180));
+                }
+                if (donutCircleCuti) {
+                    donutCircleCuti.setAttribute('stroke-dasharray', `${data.donut.cuti} 376.99`);
+                    donutCircleCuti.setAttribute('stroke-dashoffset', String(data.donut.offsetCuti || -305));
+                }
+            }
+        }
+
+        function setAdminAnalyticsTimeRange(btnEl, rangeKey) {
+            currentAdminAnalyticsRange = rangeKey;
+            
+            // Update active pill UI styling
+            const pills = document.querySelectorAll('.admin-time-pill');
+            pills.forEach(p => {
+                p.classList.remove('active', 'bg-sky-500', 'text-white', 'font-bold', 'shadow-xs');
+                p.classList.add('text-slate-500', 'dark:text-slate-400');
+            });
+
+            const targetBtn = btnEl || document.querySelector(`.admin-time-pill[data-range="${rangeKey}"]`);
+            if (targetBtn) {
+                targetBtn.classList.add('active', 'bg-sky-500', 'text-white', 'font-bold', 'shadow-xs');
+                targetBtn.classList.remove('text-slate-500', 'dark:text-slate-400');
+            }
+
+            renderAdminAnalyticsChart(rangeKey);
+
+            const data = ADMIN_ANALYTICS_DATASETS[rangeKey];
+            const label = data ? data.label : rangeKey;
+            if (typeof showToast === 'function') {
+                showToast(`Rentang analitik disesuaikan: ${label}`);
+            }
+        }
+
+        function refreshAdminAnalyticsData() {
+            const refreshBtn = document.getElementById('admin-analytics-refresh-btn');
+            const icon = refreshBtn ? refreshBtn.querySelector('i') : null;
+
+            if (icon) {
+                icon.classList.add('animate-spin');
+            }
+
+            setTimeout(() => {
+                if (icon) {
+                    icon.classList.remove('animate-spin');
+                }
+                if (typeof applyAdminRoleVisibility === 'function') {
+                    const currentRole = (typeof ASNIdentity !== 'undefined' && ASNIdentity.currentRole) || 
+                                        sessionStorage.getItem('mubarokah_admin_role') || 'SUPER_ADMIN';
+                    applyAdminRoleVisibility(currentRole);
+                }
+                renderAdminAnalyticsChart(currentAdminAnalyticsRange || '7d');
+                triggerAdminHubStaggerAnimation();
+                if (typeof showToast === 'function') {
+                    showToast('Data analitik biometrik & KPI telah diperbarui realtime.');
+                }
+            }, 600);
+        }
+
+        function triggerAdminHubStaggerAnimation() {
+            const hub = document.getElementById('admin-menu-hub');
+            if (!hub) return;
+            const animatedElements = hub.querySelectorAll('.animate-fade-in-up');
+            animatedElements.forEach(el => {
+                el.classList.remove('animate-fade-in-up');
+                void el.offsetWidth;
+                el.classList.add('animate-fade-in-up');
+            });
+        }
+
+        // Inisialisasi render grafik default
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                renderAdminAnalyticsChart('7d');
+            });
+        } else {
+            renderAdminAnalyticsChart('7d');
+        }
+
+        window.handleAdminQuickSearch = handleAdminQuickSearch;
+        window.selectAdminQuickSearchResult = selectAdminQuickSearchResult;
+        window.initAdminTopbarClock = initAdminTopbarClock;
+        window.setAdminAnalyticsTimeRange = setAdminAnalyticsTimeRange;
+        window.renderAdminAnalyticsChart = renderAdminAnalyticsChart;
+        window.refreshAdminAnalyticsData = refreshAdminAnalyticsData;
+        window.triggerAdminHubStaggerAnimation = triggerAdminHubStaggerAnimation;
+        window.ADMIN_ANALYTICS_DATASETS = ADMIN_ANALYTICS_DATASETS;
+
         /**
          * Navigasi Kembali Cerdas untuk Header Mobile Admin
          */
@@ -203,11 +575,10 @@
                 }
 
                 if (isActive) {
-                    btn.classList.add('active', 'text-brand-700', 'bg-brand-50', 'font-bold');
-                    btn.classList.remove('text-slate-500');
+                    btn.classList.add('active');
+                    btn.classList.remove('text-brand-700', 'bg-brand-50', 'text-slate-500');
                 } else {
-                    btn.classList.remove('active', 'text-brand-700', 'bg-brand-50', 'font-bold');
-                    btn.classList.add('text-slate-500');
+                    btn.classList.remove('active', 'text-brand-700', 'bg-brand-50');
                 }
             });
 
@@ -232,6 +603,10 @@
             }
 
             // Update Breadcrumb Desktop
+            const topbarTitleEl = document.getElementById('admin-topbar-breadcrumb-title');
+            if (topbarTitleEl) {
+                topbarTitleEl.textContent = (viewName === 'hub') ? 'Dashboard Utama' : (meta.title || 'Panel Layanan');
+            }
             const sep1 = document.getElementById('admin-breadcrumb-sep-1');
             const catEl = document.getElementById('admin-breadcrumb-category');
             const sep2 = document.getElementById('admin-breadcrumb-sep-2');
@@ -416,6 +791,12 @@
                 hubView.classList.remove('hidden');
                 if (typeof applyAdminRoleVisibility === 'function') {
                     applyAdminRoleVisibility();
+                }
+                if (typeof renderAdminAnalyticsChart === 'function') {
+                    renderAdminAnalyticsChart(currentAdminAnalyticsRange || '7d');
+                }
+                if (typeof triggerAdminHubStaggerAnimation === 'function') {
+                    triggerAdminHubStaggerAnimation();
                 }
                 // Idle background pre-fetching agar modul Tahfidz, Sorogan, dan TPQ instan saat dibuka
                 scheduleAdminDataPrefetch();
