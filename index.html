@@ -61,7 +61,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <!-- Compiled & Minified Tailwind CSS -->
-    <link rel="stylesheet" href="/css/styles.min.css?v=36">
+    <link rel="stylesheet" href="/css/styles.min.css?v=37">
 
 
 
@@ -5360,11 +5360,51 @@
                             </ul>
                         </div>
 
-                        <!-- Grup 2: Kesantrian & Tahfidz -->
+                        <!-- Grup 2: Kesantrian -->
                         <div class="admin-menu-group pt-2 border-t border-white/10 dark:border-white/5">
                             <div class="px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 dark:text-slate-400 sidebar-text flex items-center gap-1.5">
-                                <i class="fa-solid fa-graduation-cap text-[9px] text-emerald-300/80"></i>
-                                <span>Kesantrian & Akademik</span>
+                                <i class="fa-solid fa-users text-[9px] text-emerald-300/80"></i>
+                                <span>Kesantrian</span>
+                            </div>
+                            <ul class="space-y-1">
+                                <li>
+                                    <button onclick="showAdminView('santri')" data-view="santri" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Data Santri">
+                                        <i class="fa-solid fa-id-card-clip w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Data Santri</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('presensi')" data-view="presensi" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Presensi Kegiatan">
+                                        <i class="fa-solid fa-clipboard-user w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Presensi Kegiatan</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('ppdb')" data-view="ppdb" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Data Pendaftar PPDB">
+                                        <i class="fa-solid fa-user-graduate w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Data Pendaftar PPDB</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('unit-kegiatan')" data-view="unit-kegiatan" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Unit Kegiatan Santri">
+                                        <i class="fa-solid fa-people-roof w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Unit Kegiatan (UKS)</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('program')" data-view="program" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Manajemen Program">
+                                        <i class="fa-solid fa-shapes w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Manajemen Program</span>
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Grup 3: Akademik -->
+                        <div class="admin-menu-group pt-2 border-t border-white/10 dark:border-white/5">
+                            <div class="px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 dark:text-slate-400 sidebar-text flex items-center gap-1.5">
+                                <i class="fa-solid fa-book-open text-[9px] text-emerald-300/80"></i>
+                                <span>Akademik</span>
                             </div>
                             <ul class="space-y-1">
                                 <li>
@@ -5391,40 +5431,10 @@
                                         <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Madrasah Diniyah</span>
                                     </button>
                                 </li>
-                                <li>
-                                    <button onclick="showAdminView('presensi')" data-view="presensi" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Presensi Kegiatan">
-                                        <i class="fa-solid fa-clipboard-user w-5 text-center text-sm"></i>
-                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Presensi Kegiatan</span>
-                                    </button>
-                                </li>
-                                <li>
-                                    <button onclick="showAdminView('santri')" data-view="santri" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Data Santri">
-                                        <i class="fa-solid fa-id-card-clip w-5 text-center text-sm"></i>
-                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Data Santri</span>
-                                    </button>
-                                </li>
-                                <li>
-                                    <button onclick="showAdminView('ppdb')" data-view="ppdb" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Data Pendaftar PPDB">
-                                        <i class="fa-solid fa-user-graduate w-5 text-center text-sm"></i>
-                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Data Pendaftar PPDB</span>
-                                    </button>
-                                </li>
-                                <li>
-                                    <button onclick="showAdminView('unit-kegiatan')" data-view="unit-kegiatan" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Unit Kegiatan Santri">
-                                        <i class="fa-solid fa-people-roof w-5 text-center text-sm"></i>
-                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Unit Kegiatan (UKS)</span>
-                                    </button>
-                                </li>
-                                <li>
-                                    <button onclick="showAdminView('program')" data-view="program" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Manajemen Program">
-                                        <i class="fa-solid fa-shapes w-5 text-center text-sm"></i>
-                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Manajemen Program</span>
-                                    </button>
-                                </li>
                             </ul>
                         </div>
 
-                        <!-- Grup 3: Keuangan & Akuntansi -->
+                        <!-- Grup 4: Keuangan & Akuntansi -->
                         <div class="admin-menu-group pt-2 border-t border-white/10 dark:border-white/5">
                             <div class="px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 dark:text-slate-400 sidebar-text flex items-center gap-1.5">
                                 <i class="fa-solid fa-cash-register text-[9px] text-emerald-300/80"></i>
@@ -5446,7 +5456,7 @@
                             </ul>
                         </div>
 
-                        <!-- Grup 4: Kepegawaian & SDM -->
+                        <!-- Grup 5: Kepegawaian & SDM -->
                         <div class="admin-menu-group pt-2 border-t border-white/10 dark:border-white/5">
                             <div class="px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 dark:text-slate-400 sidebar-text flex items-center gap-1.5">
                                 <i class="fa-solid fa-user-tie text-[9px] text-emerald-300/80"></i>
@@ -5462,7 +5472,7 @@
                             </ul>
                         </div>
 
-                        <!-- Grup 5: Portal & Publikasi -->
+                        <!-- Grup 6: Portal & Publikasi -->
                         <div class="admin-menu-group pt-2 border-t border-white/10 dark:border-white/5">
                             <div class="px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 dark:text-slate-400 sidebar-text flex items-center gap-1.5">
                                 <i class="fa-solid fa-bullhorn text-[9px] text-emerald-300/80"></i>
@@ -5502,7 +5512,7 @@
                             </ul>
                         </div>
 
-                        <!-- Grup 6: Sistem & Hak Akses -->
+                        <!-- Grup 7: Sistem & Hak Akses -->
                         <div class="admin-menu-group pt-2 border-t border-white/10 dark:border-white/5">
                             <div class="px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 dark:text-slate-400 sidebar-text flex items-center gap-1.5">
                                 <i class="fa-solid fa-sliders text-[9px] text-emerald-300/80"></i>
@@ -20356,7 +20366,7 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js?v=35').then(registration => {
+                navigator.serviceWorker.register('/sw.js?v=36').then(registration => {
                     if (typeof registration.update === 'function') {
                         registration.update();
                     }
@@ -20383,7 +20393,7 @@
     <script src="/js/ppdb.js"></script>
     <script src="/js/ibadah.js"></script>
     <script src="/js/jadwal-sholat.js"></script>
-    <script src="/js/admin.js?v=23"></script>
+    <script src="/js/admin.js?v=24"></script>
     <script src="/js/roles.js?v=21"></script>
     <script src="/js/alumni.js"></script>
     <script src="/js/auth.js?v=18"></script>
