@@ -5324,7 +5324,6 @@
                             <!-- Nama Pesantren & Identitas Lembaga -->
                             <div class="sidebar-text min-w-0 transition-opacity duration-300">
                                 <h2 class="text-xs font-black tracking-wide text-white truncate leading-tight uppercase">PPTQ MUBAROKAH</h2>
-                                <p class="text-[10px] text-emerald-100/90 truncate font-medium mt-0.5">Asnawiyyah Pilangwetan</p>
                                 <span class="inline-block mt-1 text-[8.5px] font-bold text-white bg-white/20 px-1.5 py-0.5 rounded tracking-wider leading-none border border-white/25">
                                     PORTAL ADMINISTRASI
                                 </span>
@@ -5337,10 +5336,13 @@
 
                         <!-- Grup 1: Ringkasan & Overview -->
                         <div class="admin-menu-group">
-                            <div class="px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 dark:text-slate-400 sidebar-text flex items-center gap-1.5">
-                                <i class="fa-solid fa-gauge text-[9px] text-emerald-300/80"></i>
-                                <span>Ringkasan & Overview</span>
-                            </div>
+                            <button type="button" onclick="toggleAdminMenuGroup(this)" class="w-full px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 hover:text-white dark:text-slate-400 dark:hover:text-slate-200 sidebar-text flex items-center justify-between transition-colors group/header focus:outline-none select-none" title="Sembunyikan / Tampilkan Ringkasan & Overview">
+                                <div class="flex items-center gap-1.5 truncate">
+                                    <i class="fa-solid fa-gauge text-[9px] text-emerald-300/80"></i>
+                                    <span>Ringkasan & Overview</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-[8px] text-emerald-200/60 group-hover/header:text-white transition-transform duration-200 menu-group-arrow"></i>
+                            </button>
                             <ul class="space-y-1">
                                 <li>
                                     <button onclick="showAdminView('hub')" data-view="hub" class="admin-nav-item active flex items-center px-3.5 py-2.5 font-bold transition group relative" title="Dashboard Utama">
@@ -5353,10 +5355,13 @@
 
                         <!-- Grup 2: Kesantrian -->
                         <div class="admin-menu-group pt-2 border-t border-white/10 dark:border-white/5">
-                            <div class="px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 dark:text-slate-400 sidebar-text flex items-center gap-1.5">
-                                <i class="fa-solid fa-users text-[9px] text-emerald-300/80"></i>
-                                <span>Kesantrian</span>
-                            </div>
+                            <button type="button" onclick="toggleAdminMenuGroup(this)" class="w-full px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 hover:text-white dark:text-slate-400 dark:hover:text-slate-200 sidebar-text flex items-center justify-between transition-colors group/header focus:outline-none select-none" title="Sembunyikan / Tampilkan Kesantrian">
+                                <div class="flex items-center gap-1.5 truncate">
+                                    <i class="fa-solid fa-users text-[9px] text-emerald-300/80"></i>
+                                    <span>Kesantrian</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-[8px] text-emerald-200/60 group-hover/header:text-white transition-transform duration-200 menu-group-arrow"></i>
+                            </button>
                             <ul class="space-y-1">
                                 <li>
                                     <button onclick="showAdminView('santri')" data-view="santri" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Data Santri">
@@ -5393,10 +5398,13 @@
 
                         <!-- Grup 3: Kepegawaian -->
                         <div class="admin-menu-group pt-2 border-t border-white/10 dark:border-white/5">
-                            <div class="px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 dark:text-slate-400 sidebar-text flex items-center gap-1.5">
-                                <i class="fa-solid fa-user-tie text-[9px] text-emerald-300/80"></i>
-                                <span>Kepegawaian</span>
-                            </div>
+                            <button type="button" onclick="toggleAdminMenuGroup(this)" class="w-full px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 hover:text-white dark:text-slate-400 dark:hover:text-slate-200 sidebar-text flex items-center justify-between transition-colors group/header focus:outline-none select-none" title="Sembunyikan / Tampilkan Kepegawaian">
+                                <div class="flex items-center gap-1.5 truncate">
+                                    <i class="fa-solid fa-user-tie text-[9px] text-emerald-300/80"></i>
+                                    <span>Kepegawaian</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-[8px] text-emerald-200/60 group-hover/header:text-white transition-transform duration-200 menu-group-arrow"></i>
+                            </button>
                             <ul class="space-y-1">
                                 <li>
                                     <button onclick="showAdminView('pegawai')" data-view="pegawai" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Data Pegawai & Asatidz">
@@ -5409,10 +5417,13 @@
 
                         <!-- Grup 4: Akademik -->
                         <div class="admin-menu-group pt-2 border-t border-white/10 dark:border-white/5">
-                            <div class="px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 dark:text-slate-400 sidebar-text flex items-center gap-1.5">
-                                <i class="fa-solid fa-book-open text-[9px] text-emerald-300/80"></i>
-                                <span>Akademik</span>
-                            </div>
+                            <button type="button" onclick="toggleAdminMenuGroup(this)" class="w-full px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 hover:text-white dark:text-slate-400 dark:hover:text-slate-200 sidebar-text flex items-center justify-between transition-colors group/header focus:outline-none select-none" title="Sembunyikan / Tampilkan Akademik">
+                                <div class="flex items-center gap-1.5 truncate">
+                                    <i class="fa-solid fa-book-open text-[9px] text-emerald-300/80"></i>
+                                    <span>Akademik</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-[8px] text-emerald-200/60 group-hover/header:text-white transition-transform duration-200 menu-group-arrow"></i>
+                            </button>
                             <ul class="space-y-1">
                                 <li>
                                     <button onclick="showAdminView('tahfidz')" data-view="tahfidz" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Tahfidz Al-Qur'an">
@@ -5443,10 +5454,13 @@
 
                         <!-- Grup 5: Keuangan & Akuntansi -->
                         <div class="admin-menu-group pt-2 border-t border-white/10 dark:border-white/5">
-                            <div class="px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 dark:text-slate-400 sidebar-text flex items-center gap-1.5">
-                                <i class="fa-solid fa-cash-register text-[9px] text-emerald-300/80"></i>
-                                <span>Keuangan & Akuntansi</span>
-                            </div>
+                            <button type="button" onclick="toggleAdminMenuGroup(this)" class="w-full px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 hover:text-white dark:text-slate-400 dark:hover:text-slate-200 sidebar-text flex items-center justify-between transition-colors group/header focus:outline-none select-none" title="Sembunyikan / Tampilkan Keuangan & Akuntansi">
+                                <div class="flex items-center gap-1.5 truncate">
+                                    <i class="fa-solid fa-cash-register text-[9px] text-emerald-300/80"></i>
+                                    <span>Keuangan & Akuntansi</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-[8px] text-emerald-200/60 group-hover/header:text-white transition-transform duration-200 menu-group-arrow"></i>
+                            </button>
                             <ul class="space-y-1">
                                 <li>
                                     <button onclick="showAdminView('keuangan')" data-view="keuangan" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Kasir & Keuangan Santri">
@@ -5465,10 +5479,13 @@
 
                         <!-- Grup 6: Portal & Publikasi -->
                         <div class="admin-menu-group pt-2 border-t border-white/10 dark:border-white/5">
-                            <div class="px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 dark:text-slate-400 sidebar-text flex items-center gap-1.5">
-                                <i class="fa-solid fa-bullhorn text-[9px] text-emerald-300/80"></i>
-                                <span>Portal & Publikasi</span>
-                            </div>
+                            <button type="button" onclick="toggleAdminMenuGroup(this)" class="w-full px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 hover:text-white dark:text-slate-400 dark:hover:text-slate-200 sidebar-text flex items-center justify-between transition-colors group/header focus:outline-none select-none" title="Sembunyikan / Tampilkan Portal & Publikasi">
+                                <div class="flex items-center gap-1.5 truncate">
+                                    <i class="fa-solid fa-bullhorn text-[9px] text-emerald-300/80"></i>
+                                    <span>Portal & Publikasi</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-[8px] text-emerald-200/60 group-hover/header:text-white transition-transform duration-200 menu-group-arrow"></i>
+                            </button>
                             <ul class="space-y-1">
                                 <li>
                                     <button onclick="showAdminView('berita')" data-view="berita" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Manajemen Berita">
@@ -5505,10 +5522,13 @@
 
                         <!-- Grup 7: Sistem & Hak Akses -->
                         <div class="admin-menu-group pt-2 border-t border-white/10 dark:border-white/5">
-                            <div class="px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 dark:text-slate-400 sidebar-text flex items-center gap-1.5">
-                                <i class="fa-solid fa-sliders text-[9px] text-emerald-300/80"></i>
-                                <span>Sistem & Hak Akses</span>
-                            </div>
+                            <button type="button" onclick="toggleAdminMenuGroup(this)" class="w-full px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 hover:text-white dark:text-slate-400 dark:hover:text-slate-200 sidebar-text flex items-center justify-between transition-colors group/header focus:outline-none select-none" title="Sembunyikan / Tampilkan Sistem & Hak Akses">
+                                <div class="flex items-center gap-1.5 truncate">
+                                    <i class="fa-solid fa-sliders text-[9px] text-emerald-300/80"></i>
+                                    <span>Sistem & Hak Akses</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-[8px] text-emerald-200/60 group-hover/header:text-white transition-transform duration-200 menu-group-arrow"></i>
+                            </button>
                             <ul class="space-y-1">
                                 <li>
                                     <button onclick="showAdminView('users')" data-view="users" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Manajemen Pengguna">
@@ -5533,9 +5553,12 @@
 
                     </div>
 
-                    <!-- Bottom Footer (Copyright Pesantren) -->
+                    <!-- Bottom Footer (khodim.com Link) -->
                     <div class="py-2.5 px-3 border-t border-white/10 dark:border-white/5 shrink-0 text-center sidebar-text transition-opacity duration-300">
-                        <span class="text-[10px] text-white/60 font-medium tracking-wide">© 2026 PPTQ Mubarokah</span>
+                        <a href="https://khodim.com" target="_blank" rel="noopener noreferrer" class="text-[10.5px] text-white/70 hover:text-white font-medium tracking-wide transition-colors inline-flex items-center justify-center gap-1 hover:underline" title="Kunjungi khodim.com">
+                            <span>khodim.com</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[8px] opacity-70"></i>
+                        </a>
                     </div>
                 </aside>
 
@@ -5584,26 +5607,8 @@
                             </div>
                         </div>
 
-                        <!-- Sisi Kanan: Live Telemetry, Actions & Profile Bar -->
+                        <!-- Sisi Kanan: Actions & Profile Bar -->
                         <div class="flex items-center gap-3">
-                            <!-- Cloud Status Pill -->
-                            <div class="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 text-[11px] text-emerald-700 dark:text-emerald-400 font-medium">
-                                <span class="relative flex h-2 w-2">
-                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                                </span>
-                                <span class="font-bold">Google Cloud</span>
-                                <span id="admin-topbar-latency" class="font-mono text-[10px] text-emerald-600 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/60 px-1.5 py-0.2 rounded">35ms</span>
-                            </div>
-
-                            <!-- Live Real-Time Clock -->
-                            <div class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-[11px] font-mono font-semibold text-slate-600 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700">
-                                <i class="fa-regular fa-clock text-emerald-500"></i>
-                                <span id="admin-topbar-clock">--:--:-- WIB</span>
-                            </div>
-
-                            <!-- Vertical Separator -->
-                            <div class="h-5 w-px bg-slate-200 dark:bg-slate-700"></div>
 
                             <!-- Quick Button: Visit Public Web -->
                             <button type="button" onclick="switchTab('beranda')" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 text-xs font-semibold transition active:scale-95" title="Lihat Tampilan Website Publik">
@@ -20399,7 +20404,7 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js?v=39').then(registration => {
+                navigator.serviceWorker.register('/sw.js?v=40').then(registration => {
                     if (typeof registration.update === 'function') {
                         registration.update();
                     }
@@ -20426,7 +20431,7 @@
     <script src="/js/ppdb.js"></script>
     <script src="/js/ibadah.js"></script>
     <script src="/js/jadwal-sholat.js"></script>
-    <script src="/js/admin.js?v=26"></script>
+    <script src="/js/admin.js?v=27"></script>
     <script src="/js/roles.js?v=23"></script>
     <script src="/js/alumni.js"></script>
     <script src="/js/auth.js?v=20"></script>
