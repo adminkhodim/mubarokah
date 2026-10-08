@@ -610,28 +610,43 @@
                 }
             }
 
-            // Update Breadcrumb Desktop
-            const topbarTitleEl = document.getElementById('admin-topbar-breadcrumb-title');
-            if (topbarTitleEl) {
-                topbarTitleEl.textContent = (viewName === 'hub') ? 'Dashboard Utama' : (meta.title || 'Panel Layanan');
+            // Update Topbar Breadcrumb & Sidebar Active state
+            const breadcrumbEl = document.getElementById('admin-topbar-breadcrumb') || document.getElementById('admin-topbar-breadcrumb-title');
+            if (breadcrumbEl) {
+                const viewLabels = {
+                    'hub': 'Dashboard Utama',
+                    'tahfidz': 'Tahfidz Qur\'an',
+                    'tpq': 'TPQ Yanbu\'a',
+                    'sorogan': 'Sorogan Al-Qur\'an',
+                    'madin': 'Madrasah Diniyah',
+                    'presensi': 'Presensi Kegiatan',
+                    'santri': 'Data Santri',
+                    'ppdb': 'Pendaftar PPDB',
+                    'unit-kegiatan': 'Unit Kegiatan (UKS)',
+                    'jadwal-kegiatan': 'Jadwal Kegiatan',
+                    'alumni': 'Rekap Alumni',
+                    'program': 'Manajemen Program',
+                    'pegawai': 'Data Pegawai & Asatidz',
+                    'keaktifan-asatidz': 'Keaktifan Asatidz',
+                    'berita': 'Manajemen Berita',
+                    'banner': 'Banner Slider',
+                    'galeri': 'Manajemen Galeri',
+                    'profil-lembaga': 'Profil & Kepengurusan',
+                    'pengaturan': 'Tautan & Sosmed',
+                    'users': 'Manajemen Pengguna',
+                    'roles': 'Manajemen Peran',
+                    'notifikasi': 'Notifikasi Broadcast'
+                };
+                breadcrumbEl.innerText = viewLabels[viewName] || (meta && meta.title) || 'Panel Layanan';
             }
             const sep1 = document.getElementById('admin-breadcrumb-sep-1');
             const catEl = document.getElementById('admin-breadcrumb-category');
             const sep2 = document.getElementById('admin-breadcrumb-sep-2');
             const curEl = document.getElementById('admin-breadcrumb-current');
-            if (meta.group && catEl && curEl) {
-                if (sep1) sep1.classList.remove('hidden');
-                catEl.textContent = meta.category;
-                catEl.classList.remove('hidden');
-                if (sep2) sep2.classList.remove('hidden');
-                curEl.textContent = meta.title;
-                curEl.classList.remove('hidden');
-            } else {
-                if (sep1) sep1.classList.add('hidden');
-                if (catEl) catEl.classList.add('hidden');
-                if (sep2) sep2.classList.add('hidden');
-                if (curEl) curEl.classList.add('hidden');
-            }
+            if (sep1) sep1.classList.add('hidden');
+            if (catEl) catEl.classList.add('hidden');
+            if (sep2) sep2.classList.add('hidden');
+            if (curEl) curEl.classList.add('hidden');
             
 
             const hubView = document.getElementById('admin-menu-hub');

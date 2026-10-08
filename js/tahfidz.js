@@ -842,7 +842,7 @@ function renderTahfidzSummaryCards(filterHal = null) {
     });
     const avgJuzStr = totalSantri > 0 ? (totalJuz / totalSantri).toFixed(1) : "0.0";
     const elRata = document.getElementById('tahfidz-stat-rata');
-    if (elRata) elRata.innerHTML = `${avgJuzStr} <span class="text-[10px] md:text-xs font-bold text-slate-500 dark:text-slate-400">Juz</span>`;
+    if (elRata) elRata.innerHTML = `${avgJuzStr} <span class="text-xs font-bold text-white/80">Juz ↑</span>`;
 
     // Hitung santri yang berhalangan hadir (Sakit / Izin / Pulang)
     // agar KPI target pekanan tidak turun akibat ketidakhadiran santri berhalangan
@@ -1195,156 +1195,141 @@ function renderTahfidzStudentTable() {
             return `
             <tr class="hover:bg-slate-50/80 dark:hover:bg-[#1c2836]/60 transition border-b border-slate-100 dark:border-[#253447] ${isSelected ? 'bg-amber-50/40 dark:bg-amber-950/20' : ''}">
 
-                <!-- 1. SANTRI & HALAQAH -->
-                <td class="px-3.5 py-2.5">
-                    <div class="flex items-center space-x-2.5">
-                        <div class="w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-black flex items-center justify-center text-xs shrink-0 border border-emerald-200 dark:border-emerald-800/40">
+                <!-- 1. SANTRI & HALAQAH (w-[23%]) -->
+                <td class="px-2.5 py-2">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-black flex items-center justify-center text-[10px] shrink-0 border border-emerald-200 dark:border-emerald-800/40">
                             ${st.photoUrl ? `<img src="${escapeHtml(st.photoUrl)}" class="w-full h-full object-cover rounded-full" onerror="this.onerror=null; this.parentElement.innerText='${initials}';">` : initials}
                         </div>
-                        <div class="min-w-0">
-                            <h4 class="font-extrabold text-xs md:text-sm text-slate-800 dark:text-slate-100 truncate">${escapeHtml(st.name)}</h4>
-                            <p class="text-[10px] text-slate-400">NIS: ${escapeHtml(st.nis || '-')} • Bil Hifdhi</p>
-                            <span class="inline-flex items-center gap-1 px-1.5 py-0.2 mt-0.5 rounded text-[9px] font-bold ${inHal ? 'bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300' : 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40'}">
-                                <span class="w-1.5 h-1.5 rounded-full ${inHal ? 'bg-emerald-500' : 'bg-amber-400'}"></span>
-                                ${escapeHtml(halaqahName)}
+                        <div class="min-w-0 flex-1">
+                            <h4 class="font-extrabold text-xs text-slate-800 dark:text-slate-100 truncate" title="${escapeHtml(st.name)}">${escapeHtml(st.name)}</h4>
+                            <p class="text-[9.5px] text-slate-400 truncate">NIS: ${escapeHtml(st.nis || '-')} • Bil Hifdhi</p>
+                            <span class="inline-flex items-center gap-1 px-1.5 py-0.2 mt-0.5 rounded text-[8.5px] font-bold max-w-full truncate ${inHal ? 'bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300' : 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40'}" title="${escapeHtml(halaqahName)}">
+                                <span class="w-1.5 h-1.5 rounded-full shrink-0 ${inHal ? 'bg-emerald-500' : 'bg-amber-400'}"></span>
+                                <span class="truncate">${escapeHtml(halaqahName)}</span>
                             </span>
                         </div>
                     </div>
                 </td>
 
-                <!-- 2. TARGET CAPAIAN (COMPACT INTERACTIVE PILLS) -->
-                <td class="px-3.5 py-2.5">
-                    <div onclick="openTahfidzTargetModal('${st.studentId}')" class="inline-flex flex-col gap-1 group cursor-pointer" title="Klik untuk atur target capaian santri">
+                <!-- 2. TARGET CAPAIAN (w-[18%]) -->
+                <td class="px-2.5 py-2">
+                    <div onclick="openTahfidzTargetModal('${st.studentId}')" class="inline-flex flex-col gap-1 group cursor-pointer w-full max-w-full" title="Klik untuk atur target capaian santri">
                         <!-- Ziyadah Pill -->
-                        <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50/90 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40 text-[10px] transition hover:bg-emerald-100/90">
-                            <i class="fa-solid fa-book-open text-[8px] text-emerald-600 shrink-0"></i>
-                            <span class="font-bold">Ziyadah:</span>
-                            <span>${targetZ} Hlm/Setor</span>
-                            <span class="text-emerald-700/70 dark:text-emerald-400/70 font-semibold text-[9px]">(${targetZPekan}P / ${targetZBulan}B)</span>
-                            <i class="fa-solid fa-pencil text-[8px] text-slate-400 group-hover:text-emerald-600 ml-1 opacity-0 group-hover:opacity-100 transition"></i>
+                        <div class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50/90 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40 text-[9.5px] transition hover:bg-emerald-100/90 truncate max-w-full">
+                            <i class="fa-solid fa-book-open text-[7.5px] text-emerald-600 shrink-0"></i>
+                            <span class="font-bold">Z:</span>
+                            <span class="truncate">${targetZ} Hlm/Setor</span>
+                            <span class="text-emerald-700/70 dark:text-emerald-400/70 font-semibold text-[8.5px] shrink-0">(${targetZPekan}P)</span>
+                            <i class="fa-solid fa-pencil text-[7.5px] text-slate-400 group-hover:text-emerald-600 ml-auto opacity-0 group-hover:opacity-100 transition shrink-0"></i>
                         </div>
                         <!-- Muroja'ah Pill with Weekly Reality -->
                         <div class="flex flex-col gap-0.5">
-                            <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50/90 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40 text-[10px] transition hover:bg-amber-100/90">
-                                <i class="fa-solid fa-rotate text-[8px] text-amber-600 shrink-0"></i>
-                                <span class="font-bold">Muroja'ah:</span>
-                                <span>${targetM} Hlm/Setor</span>
-                                <span class="text-amber-700/70 dark:text-amber-400/70 font-semibold text-[9px]">(${targetMPekan}P)</span>
-                                <i class="fa-solid fa-pencil text-[8px] text-slate-400 group-hover:text-amber-600 ml-1 opacity-0 group-hover:opacity-100 transition"></i>
+                            <div class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50/90 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40 text-[9.5px] transition hover:bg-amber-100/90 truncate max-w-full">
+                                <i class="fa-solid fa-rotate text-[7.5px] text-amber-600 shrink-0"></i>
+                                <span class="font-bold">M:</span>
+                                <span class="truncate">${targetM} Hlm/Setor</span>
+                                <span class="text-amber-700/70 dark:text-amber-400/70 font-semibold text-[8.5px] shrink-0">(${targetMPekan}P)</span>
+                                <i class="fa-solid fa-pencil text-[7.5px] text-slate-400 group-hover:text-amber-600 ml-auto opacity-0 group-hover:opacity-100 transition shrink-0"></i>
                             </div>
-                            <div class="flex items-center justify-between px-1 text-[8px] font-bold">
-                                <span class="text-slate-500 dark:text-slate-400">Pekan: <b>${rekapM.realita || 0}/${targetMPekan} Hlm</b></span>
-                                <span class="px-1 py-0.2 rounded text-[7px] ${rekapM.isTuntas ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300' : ((rekapM.realita || 0) > 0 ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300' : 'bg-slate-100 dark:bg-[#1c2836] text-slate-400')}">
-                                    ${rekapM.isTuntas ? '✅ Tuntas' : ((rekapM.realita || 0) > 0 ? `Kurang ${rekapM.sisaHalaman}` : (isExcused ? 'Dikecualikan' : 'Belum'))}
+                            <div class="flex items-center justify-between px-0.5 text-[8px] font-bold">
+                                <span class="text-slate-500 dark:text-slate-400 truncate">Pekan: <b>${rekapM.realita || 0}/${targetMPekan}</b></span>
+                                <span class="px-1 py-0.2 rounded text-[7.5px] shrink-0 ${rekapM.isTuntas ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300' : ((rekapM.realita || 0) > 0 ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300' : 'bg-slate-100 dark:bg-[#1c2836] text-slate-400')}">
+                                    ${rekapM.isTuntas ? '✅ Tuntas' : ((rekapM.realita || 0) > 0 ? `Kurang ${rekapM.sisaHalaman}` : (isExcused ? 'Izin' : 'Belum'))}
                                 </span>
                             </div>
                         </div>
                     </div>
                 </td>
 
-                <!-- 3. SETORAN TERAKHIR (STREAMLINED) -->
-                <td class="px-3.5 py-2.5 text-xs">
+                <!-- 3. SETORAN TERAKHIR (w-[18%]) -->
+                <td class="px-2.5 py-2 text-xs">
                     ${last ? `
-                    <div class="space-y-0.5">
-                        <div class="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1">
-                            <span class="text-emerald-600 font-extrabold">Juz ${last.juz}</span>
-                            <span class="text-slate-400">•</span>
-                            <span class="truncate max-w-[140px]">${escapeHtml(last.surah)}</span>
+                    <div class="space-y-0.5 min-w-0">
+                        <div class="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1 text-[11px] truncate">
+                            <span class="text-emerald-600 font-extrabold shrink-0">Juz ${last.juz}</span>
+                            <span class="text-slate-300 dark:text-slate-600">•</span>
+                            <span class="truncate" title="${escapeHtml(last.surah)}">${escapeHtml(last.surah)}</span>
                         </div>
-                        <p class="text-[10px] text-slate-500 dark:text-slate-400">
+                        <p class="text-[9.5px] text-slate-500 dark:text-slate-400 truncate">
                             Hlm ${escapeHtml(last.halaman)} • <span class="text-slate-400">${escapeHtml(last.sesi)}</span>
                         </p>
-                        <p class="text-[9px] text-slate-400 truncate max-w-[170px]">
+                        <p class="text-[8.5px] text-slate-400 truncate" title="${escapeHtml(last.tanggal)} • ${escapeHtml(last.muhafiz)}">
                             ${escapeHtml(last.tanggal)} • <span class="italic">${escapeHtml(last.muhafiz)}</span>
                         </p>
                     </div>
                     ` : `
-                    <span class="text-[10px] text-slate-400 italic">Belum ada riwayat setoran.</span>
+                    <span class="text-[9.5px] text-slate-400 italic">Belum ada setoran.</span>
                     `}
                 </td>
 
-                <!-- 4. STATUS & NILAI -->
-                <td class="px-3.5 py-2.5">
+                <!-- 4. STATUS & NILAI (w-[13%]) -->
+                <td class="px-2.5 py-2">
                     ${isExcused ? `
-                    <div class="space-y-1">
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black ${presStatus === 'SAKIT' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-800' : (presStatus === 'PULANG' ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300 border border-purple-300 dark:border-purple-800' : 'bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-300 dark:border-blue-800')}" title="${escapeHtml(presData?.keterangan || presStatus)}">
-                            <i class="fa-solid ${presStatus === 'SAKIT' ? 'fa-notes-medical' : (presStatus === 'PULANG' ? 'fa-house-user' : 'fa-clipboard-user')} text-[8px]"></i>
-                            <span>${presStatus === 'SAKIT' ? '🏥 Sakit (UKS)' : (presStatus === 'PULANG' ? '🏠 Izin Pulang' : '📝 Izin')}</span>
+                    <div class="space-y-0.5 min-w-0">
+                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8.5px] font-black ${presStatus === 'SAKIT' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-800' : (presStatus === 'PULANG' ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300 border border-purple-300 dark:border-purple-800' : 'bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-300 dark:border-blue-800')}" title="${escapeHtml(presData?.keterangan || presStatus)}">
+                            <i class="fa-solid ${presStatus === 'SAKIT' ? 'fa-notes-medical' : (presStatus === 'PULANG' ? 'fa-house-user' : 'fa-clipboard-user')} text-[7.5px]"></i>
+                            <span>${presStatus === 'SAKIT' ? '🏥 Sakit' : (presStatus === 'PULANG' ? '🏠 Pulang' : '📝 Izin')}</span>
                         </span>
-                        <p class="text-[9px] text-slate-400 italic truncate max-w-[130px]">${escapeHtml(presData?.keterangan || (presStatus === 'SAKIT' ? 'Istirahat di asrama/UKS' : (presStatus === 'PULANG' ? 'Izin pulang ke rumah' : 'Izin tugas pondok')))}</p>
+                        <p class="text-[8.5px] text-slate-400 italic truncate" title="${escapeHtml(presData?.keterangan || presStatus)}">${escapeHtml(presData?.keterangan || (presStatus === 'SAKIT' ? 'Istirahat UKS' : (presStatus === 'PULANG' ? 'Izin pulang' : 'Izin tugas')))}</p>
                     </div>
                     ` : (last ? `
-                    <div class="space-y-1">
+                    <div class="space-y-0.5 min-w-0">
                         <div class="flex items-center gap-1 flex-wrap">
-                            <span class="inline-block px-2 py-0.5 rounded-full text-[9px] font-extrabold ${last.tipe === 'ZIYADAH' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300' : (last.tipe === 'MURAJAAH_SABQI' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300' : (last.tipe === 'MURAJAAH_MANZIL' ? 'bg-sky-100 text-sky-800 dark:bg-sky-950/80 dark:text-sky-300' : (last.tipe === 'TASMI' ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300')))}">
+                            <span class="inline-block px-1.5 py-0.2 rounded-full text-[8.5px] font-extrabold ${last.tipe === 'ZIYADAH' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300' : (last.tipe === 'MURAJAAH_SABQI' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300' : (last.tipe === 'MURAJAAH_MANZIL' ? 'bg-sky-100 text-sky-800 dark:bg-sky-950/80 dark:text-sky-300' : (last.tipe === 'TASMI' ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300')))}">
                                 ${last.tipe === 'MURAJAAH_SABQI' ? 'Sabqi' : (last.tipe === 'MURAJAAH_MANZIL' ? 'Manzil' : (last.tipe === 'ZIYADAH' ? 'Ziyadah' : (last.tipe === 'TASMI' ? "Tasmi'" : escapeHtml(last.tipe))))}
                             </span>
                             ${isUlang ? `
-                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-900">
-                                <i class="fa-solid fa-rotate-left text-[8px]"></i> Wajib Ulang
+                            <span class="inline-flex items-center gap-0.5 px-1 py-0.2 rounded-full text-[8px] font-black bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-200">
+                                <i class="fa-solid fa-rotate-left text-[7px]"></i> Ulang
                             </span>
                             ` : `
-                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-900/40">
-                                <i class="fa-solid fa-check text-[8px]"></i> Lulus
+                            <span class="inline-flex items-center gap-0.5 px-1 py-0.2 rounded-full text-[8px] font-black bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/60">
+                                <i class="fa-solid fa-check text-[7px]"></i> Lulus
                             </span>
                             `}
                         </div>
-                        <div class="text-[10px] font-bold text-slate-600 dark:text-slate-300">
-                            Nilai: <span class="${isUlang ? 'text-rose-600 font-extrabold' : 'text-emerald-600 font-extrabold'}">${last.nilai === 'MUMTAZ' ? 'A (Mumtaz)' : (last.nilai === 'JAYYID_JIDDAN' ? 'B+ (Jayyid)' : (last.nilai === 'JAYYID' ? 'B (Jayyid)' : 'C (Dha\'if)'))}</span>
+                        <div class="text-[9.5px] font-bold text-slate-600 dark:text-slate-300">
+                            Nilai: <span class="${isUlang ? 'text-rose-600 font-extrabold' : 'text-emerald-600 font-extrabold'}">${last.nilai === 'MUMTAZ' ? 'A (Mumtaz)' : (last.nilai === 'JAYYID_JIDDAN' ? 'B+' : (last.nilai === 'JAYYID' ? 'B' : 'C'))}</span>
                         </div>
                     </div>
-                    ` : `<span class="text-[10px] text-slate-400">-</span>`)}
+                    ` : `<span class="text-[9.5px] text-slate-400">-</span>`)}
                 </td>
 
-                <!-- 5. PROGRESS (0 - 30 JUZ) & ROTASI MUROJA'AH -->
-                <td class="px-3.5 py-2.5 w-48">
-                    <div class="space-y-1">
-                        <div class="flex justify-between items-center text-xs">
-                            <span class="font-black text-slate-800 dark:text-slate-100">
-                                ${isKhatam ? `<span class="text-amber-500 font-black flex items-center gap-1"><i class="fa-solid fa-crown text-amber-500 text-xs"></i> Khatam 30 Juz</span>` : `Juz ${currentJuz} <span class="text-slate-400 font-normal text-[10px]">/ 30</span>`}
-                            </span>
-                            <span class="text-[10px] font-extrabold ${isKhatam ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}">${percent}%</span>
+                <!-- 5. PROGRESS (0 - 30 JUZ) (w-[17%]) -->
+                <td class="px-2.5 py-2">
+                    <div class="space-y-1 min-w-0">
+                        <div class="flex justify-between items-center text-[11px]">
+                            <span class="font-black text-slate-800 dark:text-slate-100">Juz ${currentJuz} <span class="text-slate-400 font-normal text-[9px]">/30</span></span>
+                            <span class="text-[9.5px] font-extrabold text-emerald-600 dark:text-emerald-400">${percent}%</span>
                         </div>
                         <div class="w-full bg-slate-100 dark:bg-[#1c2836] h-1.5 rounded-full overflow-hidden">
                             <div class="bg-gradient-to-r from-emerald-500 to-teal-500 h-full rounded-full transition-all duration-500" style="width: ${percent}%;"></div>
                         </div>
-                        <div class="flex items-center justify-between gap-1">
-                            ${isExcused ? `
-                            <span class="inline-block px-1.5 py-0.2 text-[8px] font-bold rounded bg-slate-100 text-slate-600 dark:bg-[#1c2836] dark:text-slate-300 border border-slate-200 dark:border-[#283a4e]" title="Dikecualikan sementara dari target pekanan">
-                                Dikecualikan (${presStatus === 'SAKIT' ? 'Sakit' : (presStatus === 'PULANG' ? 'Pulang' : 'Izin')})
-                            </span>
-                            ` : `
-                            <span class="inline-block px-1.5 py-0.2 text-[8px] font-extrabold rounded ${isOnTrack ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-[#1c2836] dark:text-slate-400'}">
-                                ${escapeHtml(onTrackStatus)}
-                            </span>
-                            `}
-                        </div>
                         <!-- Mini Badge Rotasi Muroja'ah (Sabqi & Manzil) -->
-                        <div class="flex items-center gap-1 pt-0.5">
-                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40" title="Muroja'ah Sabqi: Juz ${currentJuz} (${sabqiDisp})">
-                                <i class="fa-solid fa-rotate-left text-[7px] text-amber-600"></i>
+                        <div class="flex items-center gap-1 pt-0.5 truncate">
+                            <span class="inline-flex items-center gap-0.5 px-1 py-0.2 rounded text-[7.5px] font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200/60 truncate" title="Muroja'ah Sabqi: Juz ${currentJuz} (${sabqiDisp})">
                                 <span>Sabqi: ${sabqiDisp}</span>
                             </span>
-                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-bold bg-sky-50 dark:bg-sky-950/50 text-sky-800 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/40" title="Muroja'ah Manzil: Juz ${manzilJuz} Hlm ${manzilHalaman} (Putaran Ke-${manzilPutaran})">
-                                <i class="fa-solid fa-repeat text-[7px] text-sky-600"></i>
-                                <span>Manzil: J${manzilJuz} (P${manzilPutaran})</span>
+                            <span class="inline-flex items-center gap-0.5 px-1 py-0.2 rounded text-[7.5px] font-bold bg-sky-50 dark:bg-sky-950/50 text-sky-800 dark:text-sky-300 border border-sky-200/60 truncate" title="Muroja'ah Manzil: Juz ${manzilJuz} Hlm ${manzilHalaman} (Putaran Ke-${manzilPutaran})">
+                                <span>Manzil: J${manzilJuz}</span>
                             </span>
                         </div>
                     </div>
                 </td>
 
-                <!-- 6. AKSI -->
-                <td class="px-3.5 py-2.5 text-right">
+                <!-- 6. AKSI (w-[11%]) -->
+                <td class="px-2 py-2 text-right">
                     <div class="flex items-center justify-end space-x-1">
-                        <button type="button" onclick="openTahfidzCatatModal('${st.studentId}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-sm active:scale-95" title="Catat Setoran">
-                            <i class="fa-solid fa-plus text-[9px]"></i>
+                        <button type="button" onclick="openTahfidzCatatModal('${st.studentId}')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold transition flex items-center space-x-1 shadow-xs active:scale-95 shrink-0" title="Catat Setoran">
+                            <i class="fa-solid fa-plus text-[8px]"></i>
                             <span>Catat</span>
                         </button>
-                        <button type="button" onclick="openTahfidzStudentDetail('${st.studentId}')" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] dark:hover:bg-[#253447] text-slate-600 dark:text-slate-300 flex items-center justify-center transition active:scale-95" title="Detail Riwayat & Mutaba'ah">
-                            <i class="fa-solid fa-clock-rotate-left text-[11px]"></i>
+                        <button type="button" onclick="openTahfidzStudentDetail('${st.studentId}')" class="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] dark:hover:bg-[#253447] text-slate-600 dark:text-slate-300 flex items-center justify-center transition active:scale-95 shrink-0" title="Detail Riwayat & Mutaba'ah">
+                            <i class="fa-solid fa-clock-rotate-left text-[10px]"></i>
                         </button>
-                        <button type="button" onclick="printTahfidzStudentCard('${st.studentId}')" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] dark:hover:bg-[#253447] text-slate-600 dark:text-slate-300 flex items-center justify-center transition active:scale-95" title="Cetak Rapor Mutaba'ah">
-                            <i class="fa-solid fa-print text-[11px]"></i>
+                        <button type="button" onclick="printTahfidzStudentCard('${st.studentId}')" class="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] dark:hover:bg-[#253447] text-slate-600 dark:text-slate-300 flex items-center justify-center transition active:scale-95 shrink-0" title="Cetak Rapor Mutaba'ah">
+                            <i class="fa-solid fa-print text-[10px]"></i>
                         </button>
                     </div>
                 </td>
