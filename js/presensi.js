@@ -188,6 +188,11 @@ function renderPresensiDashboard() {
 
     const elRerata = document.getElementById('presensi-stat-rerata-pct');
     if (elRerata) elRerata.textContent = (stats.rerataKehadiranPct != null ? stats.rerataKehadiranPct : 100) + '%';
+    const elRerataBar = document.getElementById('presensi-stat-bar-kehadiran');
+    if (elRerataBar) {
+        const pct = Math.min(100, Math.max(0, stats.rerataKehadiranPct != null ? stats.rerataKehadiranPct : 100));
+        elRerataBar.style.width = pct + '%';
+    }
 
     const elIzinSakit = document.getElementById('presensi-stat-izin-sakit');
     if (elIzinSakit) {
@@ -269,6 +274,12 @@ function renderPresensiTodaySessions() {
                 const pct = total > 0 ? Math.round((hadir / total) * 100) : 100;
                 const isTutup = s.statusSesi === 'Tutup';
 
+                let cleanWaktu = String(s.waktuBuka || '').trim();
+                if (cleanWaktu.includes(':')) {
+                    const timeMatch = cleanWaktu.match(/(\d{1,2}:\d{2})/);
+                    if (timeMatch) cleanWaktu = timeMatch[1];
+                }
+
                 html += `
                 <div class="bg-white dark:bg-[#15202d] p-4 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm hover:shadow-md transition space-y-3">
                     <div class="flex items-start justify-between">
@@ -278,7 +289,7 @@ function renderPresensiTodaySessions() {
                                     ${escapeHtml(s.namaKegiatan)}
                                 </span>
                                 <span class="text-[11px] font-semibold text-slate-500 flex items-center gap-1">
-                                    <i class="fa-regular fa-clock text-[10px]"></i> ${escapeHtml(s.waktuBuka || '-')} WIB
+                                    <i class="fa-regular fa-clock text-[10px]"></i> ${escapeHtml(cleanWaktu || '-')} WIB
                                 </span>
                                 <span class="px-2 py-0.5 rounded-full text-[9px] font-bold ${isTutup ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300' : 'bg-emerald-500 text-white animate-pulse'}">
                                     ${isTutup ? 'Selesai Direkap' : 'Sedang Buka (Live)'}
@@ -332,18 +343,18 @@ function renderPresensiTodaySessions() {
             recentSessions.slice(0, 10).forEach(s => {
                 htmlRecent += `
                 <tr class="border-b border-slate-50 dark:border-[#1e2a3a] hover:bg-slate-50/60 dark:hover:bg-[#1c2836]/40 transition text-xs">
-                    <td class="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-200">${escapeHtml(s.tanggal)}</td>
-                    <td class="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-100">${escapeHtml(s.namaKegiatan)}</td>
-                    <td class="py-2.5 px-3 text-slate-500">${escapeHtml(s.petugas || '-')}</td>
-                    <td class="py-2.5 px-3 text-center">
+                    <td class="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-200 align-middle truncate">${escapeHtml(s.tanggal)}</td>
+                    <td class="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-100 align-middle truncate" title="${escapeHtml(s.namaKegiatan)}">${escapeHtml(s.namaKegiatan)}</td>
+                    <td class="py-2.5 px-3 text-slate-500 align-middle truncate">${escapeHtml(s.petugas || '-')}</td>
+                    <td class="py-2.5 px-3 text-center align-middle whitespace-nowrap">
                         <span class="font-bold text-emerald-600">${s.totalHadir}</span> / <span class="text-slate-400">${s.totalPeserta}</span>
                     </td>
-                    <td class="py-2.5 px-3 text-center">
+                    <td class="py-2.5 px-3 text-center align-middle whitespace-nowrap">
                         <span class="text-[10px] text-blue-600 font-bold mr-1.5">${s.totalIzin || 0} I</span>
                         <span class="text-[10px] text-amber-600 font-bold mr-1.5">${s.totalSakit || 0} S</span>
                         <span class="text-[10px] text-rose-600 font-bold">${s.totalAlpa || 0} A</span>
                     </td>
-                    <td class="py-2.5 px-3 text-right">
+                    <td class="py-2.5 px-3 text-right pr-4 align-middle whitespace-nowrap">
                         <button type="button" onclick="resumePresensiSesi('${escapeHtml(s.sesiId)}')" 
                             class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-100 text-slate-700 hover:text-emerald-700 text-[11px] font-bold transition">
                             Detail

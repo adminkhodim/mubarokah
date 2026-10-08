@@ -61,7 +61,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <!-- Compiled & Minified Tailwind CSS -->
-    <link rel="stylesheet" href="/css/styles.min.css?v=35">
+    <link rel="stylesheet" href="/css/styles.min.css?v=36">
 
 
 
@@ -9131,82 +9131,132 @@
                             <!-- ================= VIEW: MODUL PRESENSI KEGIATAN SANTRI ================= -->
                             <div id="admin-view-presensi" class="hidden space-y-4">
                                 <!-- HEADER SUB-VIEW -->
-                                <div class="bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex items-center justify-between">
-                                    <div class="flex items-center space-x-2.5">
+                                <div class="bg-white dark:bg-[#15202d] px-3.5 py-2.5 md:px-4 md:py-3 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-wrap items-center justify-between gap-2.5 animate-fade-in-up stagger-1">
+                                    <div class="flex items-center space-x-2.5 min-w-0">
                                         <button type="button" onclick="backFromAdminModule()"
-                                            class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-lg flex items-center justify-center transition active:scale-95 shrink-0"
+                                            class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl flex items-center justify-center transition active:scale-95 shrink-0"
                                             title="Kembali">
                                             <i class="fa-solid fa-arrow-left text-xs"></i>
                                         </button>
-                                        <div>
+                                        <div class="min-w-0">
                                             <div class="flex items-center gap-2">
-                                                <span class="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400 uppercase tracking-widest block">Kesiswaan & Akademik</span>
-                                                <span class="text-[10px] font-bold px-2 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">Live & Exception</span>
+                                                <h2 class="text-sm md:text-base font-black text-slate-800 dark:text-slate-100 truncate">
+                                                    Presensi Kegiatan Santri
+                                                </h2>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
+                                                    Live & Exception
+                                                </span>
                                             </div>
-                                            <h2 class="text-sm md:text-base font-bold text-slate-800 dark:text-slate-100">
-                                                Presensi Kegiatan Santri
-                                            </h2>
+                                            <p class="text-[10px] text-slate-400 hidden md:block truncate">
+                                                Monitoring kehadiran shalat jamaah, pengajian, dan kegiatan santri secara real-time.
+                                            </p>
                                         </div>
                                     </div>
-                                    <div class="flex items-center space-x-1.5 sm:space-x-2">
+                                    <div class="flex items-center gap-1.5 flex-wrap ml-auto">
                                         <button type="button" onclick="openPresensiBukaSesiModal()"
-                                            class="px-3 sm:px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm active:scale-95">
+                                            class="px-3 sm:px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[11px] font-bold transition flex items-center space-x-1 shadow-sm active:scale-95">
                                             <i class="fa-solid fa-play text-xs"></i>
                                             <span>+ Buka Sesi</span>
                                         </button>
                                         <button type="button" onclick="switchPresensiMainTab('agenda')"
-                                            class="hidden sm:flex px-3 py-1.5 bg-slate-100 dark:bg-[#1c2836] hover:bg-slate-200 dark:hover:bg-[#253447] text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition items-center space-x-1.5 active:scale-95"
+                                            class="px-2.5 sm:px-3 py-1.5 bg-slate-100 dark:bg-[#1c2836] hover:bg-slate-200 dark:hover:bg-[#253447] text-slate-700 dark:text-slate-200 rounded-xl text-[11px] font-bold transition flex items-center space-x-1 border border-slate-200 dark:border-[#283a4e] active:scale-95"
                                             title="Kelola Master Agenda Kegiatan">
                                             <i class="fa-solid fa-list-check text-xs text-slate-400"></i>
-                                            <span>Agenda</span>
+                                            <span class="hidden sm:inline">Agenda</span>
                                         </button>
                                         <button type="button" onclick="loadAdminPresensiData(true)"
-                                            class="px-2.5 sm:px-3 py-1.5 bg-slate-100 dark:bg-[#1c2836] hover:bg-slate-200 dark:hover:bg-[#253447] text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 active:scale-95"
+                                            class="px-2.5 sm:px-3 py-1.5 bg-slate-100 dark:bg-[#1c2836] hover:bg-slate-200 dark:hover:bg-[#253447] text-slate-700 dark:text-slate-200 rounded-xl text-[11px] font-bold transition flex items-center space-x-1 border border-slate-200 dark:border-[#283a4e] active:scale-95"
                                             title="Segarkan Data">
-                                            <i class="fa-solid fa-rotate text-xs"></i>
-                                            <span class="hidden md:inline">Refresh</span>
+                                            <i class="fa-solid fa-arrows-rotate text-xs"></i>
+                                            <span class="hidden sm:inline">Refresh</span>
                                         </button>
                                     </div>
                                 </div>
 
-                                <!-- 4 STAT CARDS -->
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                    <div class="bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm space-y-1">
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Sesi Hari Ini</span>
-                                            <i class="fa-solid fa-calendar-day text-emerald-600 text-sm"></i>
+                                <!-- 4 KARTU MAKRO KPI PRESENSI (BERWARNA VIBRANT PERSIS TAHFIDZ & TPQ) -->
+                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
+                                    <!-- 1. Sesi Hari Ini (Emerald Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#22c55e] to-[#16a34a] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-emerald-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-2 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">SESI HARI INI</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-calendar-day"></i>
+                                            </div>
                                         </div>
-                                        <h3 id="presensi-stat-today-sessions" class="text-base sm:text-lg font-black text-slate-800 dark:text-slate-100">0 Sesi</h3>
-                                        <p class="text-[10px] text-slate-400">Ibadah & kajian terdaftar</p>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs">
+                                                <span id="presensi-stat-today-sessions">0 Sesi</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Ibadah & kajian terdaftar</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-emerald-700 font-black shadow-xs shrink-0 text-[9px]">Sesi Aktif</span>
+                                        </div>
                                     </div>
-                                    <div class="bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm space-y-1">
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Kehadiran Santri</span>
-                                            <i class="fa-solid fa-chart-line text-teal-600 text-sm"></i>
+
+                                    <!-- 2. Kehadiran Santri (Indigo Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#6366f1] to-[#4f46e5] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-indigo-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-3 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">KEHADIRAN SANTRI</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-chart-line"></i>
+                                            </div>
                                         </div>
-                                        <h3 id="presensi-stat-rerata-pct" class="text-base sm:text-lg font-black text-emerald-600">100%</h3>
-                                        <p class="text-[10px] text-slate-400">Rerata kehadiran bulan ini</p>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1.5">
+                                                <span id="presensi-stat-rerata-pct">100%</span>
+                                            </h4>
+                                            <div class="w-full bg-white/20 rounded-full h-1.5 overflow-hidden mt-1">
+                                                <div id="presensi-stat-bar-kehadiran" class="bg-white h-full rounded-full transition-all duration-500" style="width: 100%;"></div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Rerata kehadiran bulan ini</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white/25 text-white font-bold backdrop-blur-xs shrink-0 text-[9px]">Bulan Ini</span>
+                                        </div>
                                     </div>
-                                    <div class="bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm space-y-1">
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Izin & Sakit</span>
-                                            <i class="fa-solid fa-notes-medical text-amber-500 text-sm"></i>
+
+                                    <!-- 3. Izin & Sakit (Rose/Pink Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#f43f5e] via-[#ec4899] to-[#d946ef] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-pink-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-4 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">IZIN & SAKIT</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-notes-medical"></i>
+                                            </div>
                                         </div>
-                                        <h3 id="presensi-stat-izin-sakit" class="text-base sm:text-lg font-black text-amber-600">0 Santri</h3>
-                                        <p class="text-[10px] text-slate-400">Tercatat dengan keterangan</p>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs">
+                                                <span id="presensi-stat-izin-sakit">0 Santri</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Tercatat dengan keterangan</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white/25 text-white font-bold backdrop-blur-xs shrink-0 text-[9px]">Keterangan</span>
+                                        </div>
                                     </div>
-                                    <div class="bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm space-y-1">
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Alpa / Tanpa Ket</span>
-                                            <i class="fa-solid fa-triangle-exclamation text-rose-500 text-sm"></i>
+
+                                    <!-- 4. Alpa / Tanpa Ket (Amber/Orange Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#f59e0b] to-[#ea580c] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-amber-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-5 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">ALPA / TANPA KET</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                            </div>
                                         </div>
-                                        <h3 id="presensi-stat-alpa" class="text-base sm:text-lg font-black text-rose-600">0 Santri</h3>
-                                        <p class="text-[10px] text-slate-400">Perlu tindak lanjut</p>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs">
+                                                <span id="presensi-stat-alpa">0 Santri</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Perlu tindak lanjut santri</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-amber-700 font-black shadow-xs shrink-0 text-[9px]">Tindak Lanjut ⚠️</span>
+                                        </div>
                                     </div>
                                 </div>
 
                                 <!-- TAB NAVIGATION SWITCHER -->
-                                <div class="bg-white dark:bg-[#15202d] p-1.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex items-center gap-1 overflow-x-auto scrollbar-none">
+                                <div class="bg-white dark:bg-[#15202d] p-1.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex items-center gap-1 overflow-x-auto scrollbar-none animate-fade-in-up stagger-6">
                                     <button type="button" id="tab-presensi-btn-today" onclick="switchPresensiMainTab('today')"
                                         class="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs bg-emerald-600 text-white shadow-sm transition active:scale-95 shrink-0">
                                         <i class="fa-solid fa-calendar-day text-xs"></i>
@@ -9230,7 +9280,7 @@
                                 </div>
 
                                 <!-- ================= TAB 1: SESI HARI INI & RIWAYAT ================= -->
-                                <div id="panel-presensi-today" class="space-y-4">
+                                <div id="panel-presensi-today" class="space-y-4 animate-fade-in-up stagger-7">
                                     <!-- Sesi Hari Ini Card Grid -->
                                     <div class="space-y-2">
                                         <div class="flex items-center justify-between">
@@ -9264,23 +9314,23 @@
                                     </div>
 
                                     <!-- Riwayat Sesi Terdahulu Table -->
-                                    <div class="bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm overflow-hidden">
-                                        <div class="px-4 py-3 bg-slate-50 dark:bg-[#1c2836] border-b border-slate-100 dark:border-[#253447] flex justify-between items-center">
-                                            <h4 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
+                                    <div class="bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm overflow-hidden animate-fade-in-up stagger-8">
+                                        <div class="px-4 py-3 bg-slate-50/60 dark:bg-[#1c2836] border-b border-slate-100 dark:border-[#253447] flex justify-between items-center">
+                                            <h4 class="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider">
                                                 Riwayat Sesi Sebelumnya
                                             </h4>
-                                            <span class="text-[10px] text-slate-400">10 Sesi Terakhir</span>
+                                            <span class="text-[10px] text-slate-400 font-semibold">10 Sesi Terakhir</span>
                                         </div>
                                         <div class="overflow-x-auto">
-                                            <table class="w-full text-left">
+                                            <table class="w-full text-left table-fixed min-w-[750px]">
                                                 <thead>
-                                                    <tr class="border-b border-slate-100 dark:border-[#253447] bg-slate-50/50 dark:bg-[#182332] text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                                        <th class="py-2.5 px-3">Tanggal</th>
-                                                        <th class="py-2.5 px-3">Kegiatan</th>
-                                                        <th class="py-2.5 px-3">Petugas</th>
-                                                        <th class="py-2.5 px-3 text-center">Hadir</th>
-                                                        <th class="py-2.5 px-3 text-center">Pengecualian</th>
-                                                        <th class="py-2.5 px-3 text-right">Aksi</th>
+                                                    <tr class="border-b border-slate-100 dark:border-[#253447] bg-slate-50/80 dark:bg-[#182332] text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                                        <th class="py-2.5 px-3 w-[18%]">Tanggal</th>
+                                                        <th class="py-2.5 px-3 w-[30%]">Kegiatan</th>
+                                                        <th class="py-2.5 px-3 w-[18%]">Petugas</th>
+                                                        <th class="py-2.5 px-3 text-center w-[14%]">Hadir</th>
+                                                        <th class="py-2.5 px-3 text-center w-[10%]">Pengecualian</th>
+                                                        <th class="py-2.5 px-3 text-right pr-4 w-[10%]">Aksi</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody id="presensi-recent-sessions-list">
@@ -20306,7 +20356,7 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js?v=34').then(registration => {
+                navigator.serviceWorker.register('/sw.js?v=35').then(registration => {
                     if (typeof registration.update === 'function') {
                         registration.update();
                     }
@@ -20342,7 +20392,7 @@
     <script src="/js/tpq.js?v=17"></script>
     <script src="/js/sorogan.js?v=20"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
-    <script src="/js/presensi.js?v=15"></script>
+    <script src="/js/presensi.js?v=16"></script>
     <script src="/js/madin.js?v=15"></script>
     <script src="/js/keuangan.js"></script>
     <script src="/js/panduan.js?v=1"></script>
