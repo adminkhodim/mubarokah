@@ -107,12 +107,8 @@ const ASN_PHASE2B_AUTH_URL = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.au
     : ""; // __MUBAROKAH_CONFIG_PENDING__
 
 async function authApiPost(action, payload = {}) {
-    // 1. Prioritaskan serverless proxy Same-Origin jika berjalan di Web/Vercel
-    const isHostedWeb = typeof window !== 'undefined' && window.location && window.location.protocol.startsWith('http');
-    const proxyUrl = isHostedWeb ? `${window.location.origin}/api/auth` : '';
     const directUrl = ASN_PHASE2B_AUTH_URL || (typeof WEB_APP_URL !== 'undefined' ? WEB_APP_URL : '');
-
-    const targetUrl = proxyUrl || directUrl;
+    const targetUrl = directUrl;
     if (!targetUrl) throw new Error("Endpoint autentikasi belum dikonfigurasi.");
 
     const token = payload.token || 
@@ -133,39 +129,19 @@ async function authApiPost(action, payload = {}) {
         : "mubarokah";
     bodyPayload.tenantId = authoritativeTenantId;
 
-    try {
-        const response = await fetch(targetUrl, {
-            method: "POST",
-            redirect: "follow",
-            credentials: "omit",
-            headers: {
-                "Content-Type": "text/plain;charset=utf-8",
-                "Accept": "application/json"
-            },
-            body: JSON.stringify(bodyPayload)
-        });
+    const response = await fetch(targetUrl, {
+        method: "POST",
+        redirect: "follow",
+        credentials: "omit",
+        headers: {
+            "Content-Type": "text/plain;charset=utf-8",
+            "Accept": "application/json"
+        },
+        body: JSON.stringify(bodyPayload)
+    });
 
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return await response.json();
-    } catch (primaryErr) {
-        // Fallback otomatis: Jika proxyUrl gagal (misal 404 pada local server tanpa Vercel CLI), coba directUrl
-        if (targetUrl === proxyUrl && directUrl && directUrl !== proxyUrl) {
-            console.warn('[authApiPost] Proxy failed, falling back to direct Apps Script URL...', primaryErr);
-            const fallbackRes = await fetch(directUrl, {
-                method: "POST",
-                redirect: "follow",
-                credentials: "omit",
-                headers: {
-                    "Content-Type": "text/plain;charset=utf-8",
-                    "Accept": "application/json"
-                },
-                body: JSON.stringify(bodyPayload)
-            });
-            if (!fallbackRes.ok) throw new Error(`HTTP ${fallbackRes.status}`);
-            return await fallbackRes.json();
-        }
-        throw primaryErr;
-    }
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
 }
 
 /**

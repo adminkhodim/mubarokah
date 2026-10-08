@@ -9,9 +9,7 @@
             : "mubarokah";
 
         async function apiGet(action, params = {}) {
-            const isHostedWeb = typeof window !== 'undefined' && window.location && window.location.protocol.startsWith('http');
-            const proxyBase = isHostedWeb ? `${window.location.origin}/api/auth` : '';
-            const baseUrl = proxyBase || WEB_APP_URL;
+            const baseUrl = WEB_APP_URL;
             if (!baseUrl) throw new Error("API URL belum dikonfigurasi.");
 
             const url = new URL(baseUrl);
@@ -25,43 +23,19 @@
                 }
             });
 
-            try {
-                const response = await fetch(url.toString(), {
-                    method: "GET",
-                    redirect: "follow",
-                    credentials: "omit",
-                    headers: { "Accept": "application/json" }
-                });
+            const response = await fetch(url.toString(), {
+                method: "GET",
+                redirect: "follow",
+                credentials: "omit",
+                headers: { "Accept": "application/json" }
+            });
 
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                return await response.json();
-            } catch (err) {
-                // Fallback ke WEB_APP_URL langsung jika proxy lokal/offline gagal
-                if (baseUrl === proxyBase && WEB_APP_URL && WEB_APP_URL !== proxyBase) {
-                    console.warn(`[apiGet] Proxy ${action} gagal, fallback ke direct Apps Script URL...`, err);
-                    const fallbackUrl = new URL(WEB_APP_URL);
-                    fallbackUrl.searchParams.set("action", action);
-                    Object.entries(params).forEach(([key, value]) => {
-                        if (key === 'tenantId') fallbackUrl.searchParams.set("tenantId", AUTHORITATIVE_TENANT_ID);
-                        else if (value !== undefined && value !== null) fallbackUrl.searchParams.set(key, String(value));
-                    });
-                    const fallbackRes = await fetch(fallbackUrl.toString(), {
-                        method: "GET",
-                        redirect: "follow",
-                        credentials: "omit",
-                        headers: { "Accept": "application/json" }
-                    });
-                    if (!fallbackRes.ok) throw new Error(`HTTP ${fallbackRes.status}`);
-                    return await fallbackRes.json();
-                }
-                throw err;
-            }
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return await response.json();
         }
 
         async function apiPost(action, payload = {}) {
-            const isHostedWeb = typeof window !== 'undefined' && window.location && window.location.protocol.startsWith('http');
-            const proxyBase = isHostedWeb ? `${window.location.origin}/api/auth` : '';
-            const targetUrl = proxyBase || WEB_APP_URL;
+            const targetUrl = WEB_APP_URL;
             if (!targetUrl) throw new Error("WEB_APP_URL belum dikonfigurasi.");
 
             const storageKeys = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.storage && APP_CONFIG.storage.keys)
@@ -80,57 +54,16 @@
             // Lock tenantId strictly to authoritative tenant
             bodyPayload.tenantId = AUTHORITATIVE_TENANT_ID;
 
-            let response;
-            try {
-                response = await fetch(targetUrl, {
-                    method: "POST",
-                    redirect: "follow",
-                    credentials: "omit",
-                    headers: {
-                        "Content-Type": "text/plain;charset=utf-8",
-                        "Accept": "application/json"
-                    },
-                    body: JSON.stringify(bodyPayload)
-                });
-            } catch (postErr) {
-                if (targetUrl === proxyBase && WEB_APP_URL && WEB_APP_URL !== proxyBase) {
-                    console.warn(`[apiPost] Proxy ${action} gagal, fallback ke direct Apps Script URL...`, postErr);
-                    response = await fetch(WEB_APP_URL, {
-                        method: "POST",
-                        redirect: "follow",
-                        credentials: "omit",
-                        headers: {
-                            "Content-Type": "text/plain;charset=utf-8",
-                            "Accept": "application/json"
-                        },
-                        body: JSON.stringify(bodyPayload)
-                    });
-                } else {
-                    throw postErr;
-                }
-            }
-
-            // Fallback ke direct Apps Script jika proxy Vercel mengembalikan error (404 Not Found, 5xx server error, timeout, dll.)
-            if (!response.ok && targetUrl === proxyBase && WEB_APP_URL && WEB_APP_URL !== proxyBase) {
-                console.warn(`[apiPost] Proxy ${action} mengembalikan HTTP ${response.status}. Mencoba langsung ke Google Apps Script...`);
-                try {
-                    const fallbackRes = await fetch(WEB_APP_URL, {
-                        method: "POST",
-                        redirect: "follow",
-                        credentials: "omit",
-                        headers: {
-                            "Content-Type": "text/plain;charset=utf-8",
-                            "Accept": "application/json"
-                        },
-                        body: JSON.stringify(bodyPayload)
-                    });
-                    if (fallbackRes.ok) {
-                        return await fallbackRes.json();
-                    }
-                } catch (fbErr) {
-                    console.warn(`[apiPost] Fallback direct Apps Script juga gagal:`, fbErr);
-                }
-            }
+            const response = await fetch(targetUrl, {
+                method: "POST",
+                redirect: "follow",
+                credentials: "omit",
+                headers: {
+                    "Content-Type": "text/plain;charset=utf-8",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify(bodyPayload)
+            });
 
             if (!response.ok) {
                 // Penanganan khusus Google Apps Script macros/echo:
