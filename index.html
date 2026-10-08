@@ -61,7 +61,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <!-- Compiled & Minified Tailwind CSS -->
-    <link rel="stylesheet" href="/css/styles.min.css?v=29">
+    <link rel="stylesheet" href="/css/styles.min.css?v=30">
 
 
 
@@ -5651,9 +5651,8 @@
                             <!-- ================= VIEW 1: MENU HUB ADMIN (ICON GRID) ================= -->
                             <div id="admin-menu-hub" class="space-y-4">
 
-                                <!-- SWITCHER / PRATINJAU PERAN RBAC (7 ROLES) -->
-                                <div id="admin-role-switcher-container"
-                                    class="hidden bg-white dark:bg-[#15202d] p-3 md:p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-2.5">
+                                <!-- SWITCHER / PRATINJAU PERAN RBAC (7 ROLES) - DISEMBUNYIKAN UNTUK DASHBOARD EKSEKUTIF MURNI -->
+                                <div id="admin-role-switcher-container" class="hidden" style="display: none !important;">
                                     <div class="flex items-center space-x-2 shrink-0">
                                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                                         <span class="text-xs font-bold text-slate-700 dark:text-slate-200">Pratinjau Dashboard Peran:</span>
@@ -5728,7 +5727,8 @@
 
                                 <!-- Role Scope Notice Bar (Menjelaskan Hak Akses & Batasan) -->
                                 <div id="admin-hub-role-scope-notice"
-                                    class="hidden p-3.5 rounded-2xl border text-xs items-start space-x-3 transition-all duration-300 bg-purple-50/70 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800/40 text-purple-900 dark:text-purple-200">
+                                    class="hidden p-3.5 rounded-2xl border text-xs items-start space-x-3 transition-all duration-300 bg-purple-50/70 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800/40 text-purple-900 dark:text-purple-200"
+                                    style="display: none !important;">
                                     <i id="admin-hub-notice-icon" class="fa-solid fa-shield-halved mt-0.5 shrink-0 text-sm text-purple-600 dark:text-purple-400"></i>
                                     <div class="flex-1">
                                         <div class="flex items-center space-x-2">
@@ -20082,8 +20082,8 @@
     <script src="/js/ppdb.js"></script>
     <script src="/js/ibadah.js"></script>
     <script src="/js/jadwal-sholat.js"></script>
-    <script src="/js/admin.js?v=19"></script>
-    <script src="/js/roles.js?v=18"></script>
+    <script src="/js/admin.js?v=20"></script>
+    <script src="/js/roles.js?v=19"></script>
     <script src="/js/alumni.js"></script>
     <script src="/js/auth.js?v=17"></script>
     <script src="/js/pegawai.js"></script>
@@ -20097,7 +20097,7 @@
     <script src="/js/panduan.js?v=1"></script>
 
     <!-- Main Controller & Navigation -->
-    <script src="/js/main.js?v=18"></script>
+    <script src="/js/main.js?v=19"></script>
 </body>
 
 </html>

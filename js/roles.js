@@ -1621,25 +1621,38 @@
             if (bgIconEl) bgIconEl.className = `fa-solid ${profile.bgIcon}`;
         }
 
-        // 2. Perbarui Scope Notice Bar
+        // 2. Perbarui Scope Notice Bar & Pastikan Switcher Peran Tetap Tersembunyi
+        const switcherContainer = document.getElementById('admin-role-switcher-container');
+        if (switcherContainer) {
+            switcherContainer.classList.add('hidden');
+            switcherContainer.style.display = 'none';
+        }
+
         const noticeBar = document.getElementById('admin-hub-role-scope-notice');
         if (noticeBar) {
-            noticeBar.className = `p-3.5 rounded-2xl border text-xs flex items-start space-x-3 transition-all duration-300 ${profile.noticeBoxClass}`;
-            
-            const noticeIcon = document.getElementById('admin-hub-notice-icon');
-            if (noticeIcon) noticeIcon.className = `fa-solid ${profile.noticeIconClass} mt-0.5 shrink-0 text-sm`;
+            if (roleKey === 'SUPER_ADMIN' || roleKey === 'ADMIN') {
+                noticeBar.classList.add('hidden');
+                noticeBar.style.display = 'none';
+            } else {
+                noticeBar.classList.remove('hidden');
+                noticeBar.style.display = '';
+                noticeBar.className = `p-3.5 rounded-2xl border text-xs flex items-start space-x-3 transition-all duration-300 ${profile.noticeBoxClass}`;
+                
+                const noticeIcon = document.getElementById('admin-hub-notice-icon');
+                if (noticeIcon) noticeIcon.className = `fa-solid ${profile.noticeIconClass} mt-0.5 shrink-0 text-sm`;
 
-            const noticeTitle = document.getElementById('admin-hub-notice-title');
-            if (noticeTitle) noticeTitle.innerText = profile.noticeTitle;
+                const noticeTitle = document.getElementById('admin-hub-notice-title');
+                if (noticeTitle) noticeTitle.innerText = profile.noticeTitle;
 
-            const noticeCount = document.getElementById('admin-hub-notice-count-badge');
-            if (noticeCount) {
-                noticeCount.className = `px-2 py-0.2 rounded-full text-[9px] font-bold ${profile.noticeBadgeClass}`;
-                noticeCount.innerText = `${allowedModules.length} Modul Boleh Diakses`;
+                const noticeCount = document.getElementById('admin-hub-notice-count-badge');
+                if (noticeCount) {
+                    noticeCount.className = `px-2 py-0.2 rounded-full text-[9px] font-bold ${profile.noticeBadgeClass}`;
+                    noticeCount.innerText = `${allowedModules.length} Modul Boleh Diakses`;
+                }
+
+                const noticeText = document.getElementById('admin-hub-notice-text');
+                if (noticeText) noticeText.innerText = profile.noticeText;
             }
-
-            const noticeText = document.getElementById('admin-hub-notice-text');
-            if (noticeText) noticeText.innerText = profile.noticeText;
         }
 
         // 3. Render 4 Vibrant Pastel Gradient KPI Cards (Mengadopsi Desain Asnawiyyah)

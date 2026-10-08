@@ -357,3 +357,8 @@ body:has(#page-admin:not(.hidden)) footer {
   display: none !important;
 }
 
+/* Sembunyikan bilah pratinjau peran pada dashboard utama agar ringkas identik Asnawiyyah */
+#admin-role-switcher-container {
+  display: none !important;
+}
+
