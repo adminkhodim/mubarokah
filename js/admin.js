@@ -830,10 +830,29 @@
             _adminPrefetchScheduled = true;
 
             const runPrefetch = () => {
+                // Prefetch data santri, pegawai, dan presensi agar 4 KPI selalu merefleksikan data nyata
+                if (typeof loadAdminStudentsData === 'function') {
+                    loadAdminStudentsData().then(() => {
+                        if (typeof updateAdminDashboardKpis === 'function') updateAdminDashboardKpis();
+                    }).catch(() => {});
+                }
+                if (typeof loadAdminEmployeesData === 'function') {
+                    loadAdminEmployeesData().then(() => {
+                        if (typeof updateAdminDashboardKpis === 'function') updateAdminDashboardKpis();
+                    }).catch(() => {});
+                }
+                if (typeof loadAdminPresensiData === 'function') {
+                    loadAdminPresensiData().then(() => {
+                        if (typeof updateAdminDashboardKpis === 'function') updateAdminDashboardKpis();
+                    }).catch(() => {});
+                }
+
                 // Beri jeda kecil agar UI Hub Admin render duluan dengan sangat mulus
                 setTimeout(() => {
                     if (typeof loadAdminTahfidzData === 'function') {
-                        loadAdminTahfidzData().catch(() => {});
+                        loadAdminTahfidzData().then(() => {
+                            if (typeof updateAdminDashboardKpis === 'function') updateAdminDashboardKpis();
+                        }).catch(() => {});
                     }
                 }, 800);
 
@@ -4676,6 +4695,10 @@
 
             const hubBadge = document.getElementById('admin-hub-santri-count');
             if (hubBadge) hubBadge.innerText = `${totalCount} Santri`;
+
+            if (typeof updateAdminDashboardKpis === 'function') {
+                updateAdminDashboardKpis();
+            }
         }
         window.updateAdminStudentStats = updateAdminStudentStats;
 

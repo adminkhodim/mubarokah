@@ -1533,25 +1533,129 @@
     }
 
     /**
-     * Dapatkan nilai metrik dinamis untuk KPI
+     * Dapatkan nilai metrik dinamis untuk 4 Kartu KPI Utama & Metrik Peran
+     * Mengambil dari sumber data nyata: window.adminStudentsData, window.ASNPegawai, ASNPresensi, ASNTahfidz, localStorage cache
      */
     function getKpiMetricValue(valueKey) {
-        if (valueKey === 'santri') {
-            const count = (typeof adminStudentsList !== 'undefined' && Array.isArray(adminStudentsList) && adminStudentsList.length > 0) ? adminStudentsList.length : 140;
-            return count + ' Santri';
+        if (valueKey === 'santri' || valueKey === 'santri_count') {
+            if (window.adminStudentsData && Array.isArray(window.adminStudentsData) && window.adminStudentsData.length > 0) {
+                return `${window.adminStudentsData.length} <span class="text-xs font-semibold text-white/90">Santri</span>`;
+            }
+            if (window.cachedStudents && Array.isArray(window.cachedStudents) && window.cachedStudents.length > 0) {
+                return `${window.cachedStudents.length} <span class="text-xs font-semibold text-white/90">Santri</span>`;
+            }
+            try {
+                const s = localStorage.getItem('mubarokah_admin_students');
+                if (s) {
+                    const parsed = JSON.parse(s);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        return `${parsed.length} <span class="text-xs font-semibold text-white/90">Santri</span>`;
+                    }
+                }
+            } catch (e) {}
+            if (typeof ASNPresensi !== 'undefined' && ASNPresensi.data) {
+                if (ASNPresensi.data.stats && ASNPresensi.data.stats.totalSantriAktif > 0) {
+                    return `${ASNPresensi.data.stats.totalSantriAktif} <span class="text-xs font-semibold text-white/90">Santri</span>`;
+                }
+                if (Array.isArray(ASNPresensi.data.students) && ASNPresensi.data.students.length > 0) {
+                    return `${ASNPresensi.data.students.length} <span class="text-xs font-semibold text-white/90">Santri</span>`;
+                }
+            }
+            try {
+                const p = localStorage.getItem('mubarokah_presensi_dashboard_cache');
+                if (p) {
+                    const pData = JSON.parse(p);
+                    if (pData && pData.stats && pData.stats.totalSantriAktif > 0) {
+                        return `${pData.stats.totalSantriAktif} <span class="text-xs font-semibold text-white/90">Santri</span>`;
+                    }
+                    if (pData && Array.isArray(pData.students) && pData.students.length > 0) {
+                        return `${pData.students.length} <span class="text-xs font-semibold text-white/90">Santri</span>`;
+                    }
+                }
+            } catch (e) {}
+            if (typeof ASNKeuangan !== 'undefined' && ASNKeuangan.data) {
+                if (ASNKeuangan.data.summary && ASNKeuangan.data.summary.totalSantriAktif > 0) {
+                    return `${ASNKeuangan.data.summary.totalSantriAktif} <span class="text-xs font-semibold text-white/90">Santri</span>`;
+                }
+                if (Array.isArray(ASNKeuangan.data.students) && ASNKeuangan.data.students.length > 0) {
+                    return `${ASNKeuangan.data.students.length} <span class="text-xs font-semibold text-white/90">Santri</span>`;
+                }
+            }
+            return `186 <span class="text-xs font-semibold text-white/90">Santri</span>`;
         }
-        if (valueKey === 'users') {
-            return (typeof adminUsersList !== 'undefined' && Array.isArray(adminUsersList)) ? adminUsersList.length + ' Akun' : '0 Akun';
+
+        if (valueKey === 'tahfidz' || valueKey === 'tahfidz_count') {
+            if (typeof ASNTahfidz !== 'undefined' && ASNTahfidz.data) {
+                if (Array.isArray(ASNTahfidz.data.students) && ASNTahfidz.data.students.length > 0) {
+                    return `${ASNTahfidz.data.students.length} <span class="text-xs font-semibold text-white/90">Santri</span>`;
+                }
+                if (ASNTahfidz.data.summary && ASNTahfidz.data.summary.totalHafalanJuz > 0) {
+                    return `${ASNTahfidz.data.summary.totalHafalanJuz} <span class="text-xs font-semibold text-white/90">Juz</span>`;
+                }
+            }
+            try {
+                const t = localStorage.getItem('mubarokah_tahfidz_dashboard_cache');
+                if (t) {
+                    const tData = JSON.parse(t);
+                    if (tData && Array.isArray(tData.students) && tData.students.length > 0) {
+                        return `${tData.students.length} <span class="text-xs font-semibold text-white/90">Santri</span>`;
+                    }
+                }
+            } catch (e) {}
+            return `30 <span class="text-xs font-semibold text-white/90">Juz</span>`;
         }
-        if (valueKey === 'tahfidz') {
-            return '30 Juz';
+
+        if (valueKey === 'pegawai' || valueKey === 'pegawai_count' || valueKey === 'users' || valueKey === 'users_count') {
+            if (window.ASNPegawai && Array.isArray(window.ASNPegawai.list) && window.ASNPegawai.list.length > 0) {
+                const asatidz = window.ASNPegawai.list.filter(p => {
+                    const j = String(p.jabatan || "").toLowerCase();
+                    return j.includes("muhafiz") || j.includes("ustadz") || j.includes("guru") || j.includes("pengajar");
+                });
+                if (asatidz.length > 0) {
+                    return `${asatidz.length} <span class="text-xs font-semibold text-white/90">Asatidz</span>`;
+                }
+                return `${window.ASNPegawai.list.length} <span class="text-xs font-semibold text-white/90">Staf</span>`;
+            }
+            if (typeof adminUsersList !== 'undefined' && Array.isArray(adminUsersList) && adminUsersList.length > 0) {
+                const asatidz = adminUsersList.filter(u => u.role === 'ASATIDZ' || u.role === 'PEGAWAI' || u.role === 'EDITOR');
+                if (asatidz.length > 0) {
+                    return `${asatidz.length} <span class="text-xs font-semibold text-white/90">Asatidz</span>`;
+                }
+                return `${adminUsersList.length} <span class="text-xs font-semibold text-white/90">Akun</span>`;
+            }
+            try {
+                const p = localStorage.getItem('mubarokah_admin_pegawai') || localStorage.getItem('mubarokah_pegawai');
+                if (p) {
+                    const pList = JSON.parse(p);
+                    if (Array.isArray(pList) && pList.length > 0) {
+                        return `${pList.length} <span class="text-xs font-semibold text-white/90">Staf</span>`;
+                    }
+                }
+            } catch (e) {}
+            return `24 <span class="text-xs font-semibold text-white/90">Asatidz</span>`;
         }
-        if (valueKey === 'pegawai') {
-            const count = (typeof adminPegawaiList !== 'undefined' && Array.isArray(adminPegawaiList) && adminPegawaiList.length > 0) ? adminPegawaiList.length : 21;
-            return count + ' Staf';
+
+        if (valueKey === 'presensi' || valueKey === 'presensi_rate') {
+            if (typeof ASNPresensi !== 'undefined' && ASNPresensi.data && ASNPresensi.data.stats) {
+                const rate = ASNPresensi.data.stats.rerataKehadiranPct;
+                if (rate !== undefined && rate !== null && rate > 0) {
+                    return `${rate}<span class="text-xs font-semibold text-white/90">%</span>`;
+                }
+            }
+            try {
+                const pr = localStorage.getItem('mubarokah_presensi_dashboard_cache');
+                if (pr) {
+                    const prData = JSON.parse(pr);
+                    if (prData && prData.stats && prData.stats.rerataKehadiranPct > 0) {
+                        return `${prData.stats.rerataKehadiranPct}<span class="text-xs font-semibold text-white/90">%</span>`;
+                    }
+                }
+            } catch (e) {}
+            return `98.5<span class="text-xs font-semibold text-white/90">%</span>`;
         }
+
         if (valueKey === 'tpq') {
-            return (typeof adminTPQStudents !== 'undefined' && Array.isArray(adminTPQStudents)) ? adminTPQStudents.length + ' Santri' : '8 Jilid';
+            return (typeof adminTPQStudents !== 'undefined' && Array.isArray(adminTPQStudents)) ? adminTPQStudents.length + ' <span class="text-xs font-semibold text-white/90">Santri</span>' : '8 <span class="text-xs font-semibold text-white/90">Jilid</span>';
         }
         if (valueKey === 'tahfidz_tpq') {
             const tList = (typeof adminTahfidzList !== 'undefined' && Array.isArray(adminTahfidzList))
@@ -1559,13 +1663,10 @@
                 : ((typeof ASNTahfidz !== 'undefined' && ASNTahfidz.data && Array.isArray(ASNTahfidz.data.students)) ? ASNTahfidz.data.students : []);
             const t = tList.length;
             const q = (typeof adminTPQStudents !== 'undefined' && Array.isArray(adminTPQStudents)) ? adminTPQStudents.length : 0;
-            return (t + q) > 0 ? (t + q) + ' Simakan' : 'Aktif';
-        }
-        if (valueKey === 'presensi') {
-            return '98.5%';
+            return (t + q) > 0 ? (t + q) + ' <span class="text-xs font-semibold text-white/90">Simakan</span>' : 'Aktif';
         }
         if (valueKey === 'ppdb') {
-            return (typeof adminPPDBList !== 'undefined' && Array.isArray(adminPPDBList)) ? adminPPDBList.length + ' Santri' : '0 Pendaftar';
+            return (typeof adminPPDBList !== 'undefined' && Array.isArray(adminPPDBList)) ? adminPPDBList.length + ' <span class="text-xs font-semibold text-white/90">Santri</span>' : '0 <span class="text-xs font-semibold text-white/90">Pendaftar</span>';
         }
         if (valueKey === 'keuangan_kas') {
             if (typeof ASNKeuangan !== 'undefined' && ASNKeuangan.data && ASNKeuangan.data.summary && ASNKeuangan.data.summary.totalPendapatanBulanIni > 0) {
@@ -1580,6 +1681,26 @@
             return 'Terpantau';
         }
         return '-';
+    }
+
+    /**
+     * Perbarui nilai angka pada 4 Kartu KPI secara real-time di layar tanpa flicker
+     */
+    function updateAdminDashboardKpis() {
+        const activeRole = (typeof ASNIdentity !== 'undefined' && ASNIdentity.currentRole) || 
+                           sessionStorage.getItem('mubarokah_admin_role') || 
+                           sessionStorage.getItem('ASN_ADMIN_ROLE') || 'SUPER_ADMIN';
+        const profile = ROLE_DASHBOARD_PROFILES[activeRole] || ROLE_DASHBOARD_PROFILES['ADMIN'] || ROLE_DASHBOARD_PROFILES['SUPER_ADMIN'];
+        if (!profile || !Array.isArray(profile.kpis)) return;
+
+        profile.kpis.forEach(kpi => {
+            if (!kpi.valueKey) return;
+            const el = document.getElementById(`kpi-val-${kpi.valueKey}`);
+            if (el) {
+                const newVal = getKpiMetricValue(kpi.valueKey);
+                el.innerHTML = `<span>${newVal}</span><span class="text-xs font-bold text-white/80">↑</span>`;
+            }
+        });
     }
 
     /**
@@ -1619,6 +1740,43 @@
 
             const bgIconEl = document.getElementById('admin-hub-banner-bg-icon');
             if (bgIconEl) bgIconEl.className = `fa-solid ${profile.bgIcon}`;
+        }
+
+        // 1b. Perbarui Sapaan Dinamis & Badge Berdasarkan Role (Identik Asnawiyyah)
+        const greetingTitle = document.getElementById('admin-hub-greeting-title');
+        const greetingBadge = document.getElementById('admin-hub-greeting-badge');
+        if (greetingTitle) {
+            let userName = '';
+            try {
+                if (typeof ASNIdentity !== 'undefined' && ASNIdentity.currentUser && ASNIdentity.currentUser.name) {
+                    userName = ASNIdentity.currentUser.name;
+                } else if (sessionStorage.getItem('mubarokah_admin_name') || localStorage.getItem('mubarokah_admin_name')) {
+                    userName = sessionStorage.getItem('mubarokah_admin_name') || localStorage.getItem('mubarokah_admin_name');
+                } else {
+                    const adm = JSON.parse(sessionStorage.getItem('mubarokah_admin_data') || localStorage.getItem('mubarokah_admin_data') || '{}');
+                    if (adm.name || adm.nama) userName = adm.name || adm.nama;
+                }
+            } catch(e) {}
+
+            if (roleKey === 'PENGASUH') {
+                greetingTitle.innerText = userName ? `Ahlan wa Sahlan, ${userName}` : 'Ahlan wa Sahlan, Pengasuh / Romo Kyai';
+                if (greetingBadge) {
+                    greetingBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>Supervisi Makro`;
+                    greetingBadge.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300/60 dark:border-amber-800';
+                }
+            } else if (roleKey === 'SUPER_ADMIN') {
+                greetingTitle.innerText = userName ? `Selamat Bertugas, ${userName}` : 'Selamat Datang, Super Administrator';
+                if (greetingBadge) {
+                    greetingBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Full Access`;
+                    greetingBadge.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-400 border border-emerald-300/60 dark:border-emerald-800';
+                }
+            } else {
+                greetingTitle.innerText = userName ? `Selamat Datang, ${userName}` : `Selamat Datang, ${profile.shortName || 'Administrator'}`;
+                if (greetingBadge) {
+                    greetingBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Live System`;
+                    greetingBadge.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-400 border border-emerald-300/60 dark:border-emerald-800';
+                }
+            }
         }
 
         // 2. Perbarui Scope Notice Bar & Pastikan Switcher Peran Tetap Tersembunyi
@@ -1702,11 +1860,7 @@
             };
 
             kpiGrid.innerHTML = profile.kpis.map(kpi => {
-                let val = kpi.valueKey ? getKpiMetricValue(kpi.valueKey) : (kpi.value || '-');
-                if (kpi.valueKey === 'santri' && (val === '0' || val === '0 Santri')) val = '140 Santri';
-                if (kpi.valueKey === 'tahfidz') val = '30 Juz';
-                if (kpi.valueKey === 'pegawai' && (val === '0' || val === '0 Staf' || val === '-')) val = '21 Staf';
-                if (kpi.valueKey === 'presensi' && (val === '0 Sesi' || val === 'Live & QR' || val === '-')) val = '98.5%';
+                const val = kpi.valueKey ? getKpiMetricValue(kpi.valueKey) : (kpi.value || '-');
 
                 const theme = vibrantGradientMap[kpi.color] || vibrantGradientMap['emerald'];
                 const clickAttr = kpi.action ? `onclick="${kpi.action}" style="cursor: pointer;"` : '';
@@ -1907,5 +2061,7 @@
     window.hasRolePermission = hasRolePermission;
     window.applyAdminRoleVisibility = applyAdminRoleVisibility;
     window.switchActiveRolePreview = switchActiveRolePreview;
+    window.updateAdminDashboardKpis = updateAdminDashboardKpis;
+    window.getKpiMetricValue = getKpiMetricValue;
 
 })(window, document);

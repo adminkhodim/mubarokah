@@ -204,6 +204,10 @@ function renderPresensiDashboard() {
 
     // 3. Update dropdown kegiatan pada modal buka sesi
     populatePresensiKegiatanDropdown();
+
+    if (typeof updateAdminDashboardKpis === 'function') {
+        updateAdminDashboardKpis();
+    }
 }
 
 /**

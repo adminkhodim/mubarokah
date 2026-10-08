@@ -61,7 +61,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <!-- Compiled & Minified Tailwind CSS -->
-    <link rel="stylesheet" href="/css/styles.min.css?v=30">
+    <link rel="stylesheet" href="/css/styles.min.css?v=31">
 
 
 
@@ -5563,7 +5563,7 @@
                     </div>
 
                     <!-- ================= TOP HEADER BAR DESKTOP (STICKY & ELEGAN) ================= -->
-                    <header id="admin-desktop-topbar" class="hidden lg:flex items-center justify-between px-6 py-3 bg-white/85 dark:bg-[#15202d]/85 backdrop-blur-md border-b border-slate-200/80 dark:border-[#253447] z-20 shrink-0 sticky top-0 shadow-xs transition-colors">
+                    <header id="admin-desktop-topbar" class="hidden lg:flex items-center justify-between px-4 py-2.5 bg-white/95 dark:bg-[#15202d]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 shrink-0 sticky top-0 z-30 transition-colors duration-200">
                         
                         <!-- Sisi Kiri: Breadcrumb & Quick Menu Search Finder -->
                         <div class="flex items-center gap-4">
@@ -5645,65 +5645,17 @@
                     </header>
 
                     <!-- Scrollable Views Container -->
-                    <div class="flex-1 overflow-y-auto p-3 md:p-5 lg:p-6 bg-slate-50/70 dark:bg-[#0b131e] custom-scrollbar">
-                        <div class="max-w-6xl mx-auto space-y-4">
+                    <div class="flex-1 overflow-y-auto p-2.5 md:p-3.5 lg:p-4 bg-slate-50/70 dark:bg-[#0b131e] custom-scrollbar">
+                        <div class="max-w-6xl mx-auto">
 
                             <!-- ================= VIEW 1: MENU HUB ADMIN (ICON GRID) ================= -->
-                            <div id="admin-menu-hub" class="space-y-4">
-
-                                <!-- SWITCHER / PRATINJAU PERAN RBAC (7 ROLES) - DISEMBUNYIKAN UNTUK DASHBOARD EKSEKUTIF MURNI -->
-                                <div id="admin-role-switcher-container" class="hidden" style="display: none !important;">
-                                    <div class="flex items-center space-x-2 shrink-0">
-                                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                        <span class="text-xs font-bold text-slate-700 dark:text-slate-200">Pratinjau Dashboard Peran:</span>
-                                        <span id="admin-active-role-tag"
-                                            class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border border-purple-200">Super Admin</span>
-                                    </div>
-                                    <div id="admin-role-switcher-buttons"
-                                        class="flex items-center space-x-1.5 overflow-x-auto pb-1 md:pb-0 custom-scrollbar text-xs">
-                                        <button type="button" onclick="switchActiveRolePreview('SUPER_ADMIN')" data-role-btn="SUPER_ADMIN"
-                                            class="role-switch-btn px-2.5 py-1.5 rounded-xl font-bold transition flex items-center space-x-1.5 shrink-0 bg-purple-600 text-white shadow-xs">
-                                            <i class="fa-solid fa-crown text-[11px]"></i>
-                                            <span>Super Admin</span>
-                                        </button>
-                                        <button type="button" onclick="switchActiveRolePreview('ADMIN')" data-role-btn="ADMIN"
-                                            class="role-switch-btn px-2.5 py-1.5 rounded-xl font-bold transition flex items-center space-x-1.5 shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-brand-50 hover:text-brand-700">
-                                            <i class="fa-solid fa-shield-halved text-[11px]"></i>
-                                            <span>Admin</span>
-                                        </button>
-                                        <button type="button" onclick="switchActiveRolePreview('ASATIDZ')" data-role-btn="ASATIDZ"
-                                            class="role-switch-btn px-2.5 py-1.5 rounded-xl font-bold transition flex items-center space-x-1.5 shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 hover:text-indigo-700">
-                                            <i class="fa-solid fa-chalkboard-user text-[11px]"></i>
-                                            <span>Asatidz</span>
-                                        </button>
-                                        <button type="button" onclick="switchActiveRolePreview('BENDAHARA')" data-role-btn="BENDAHARA"
-                                            class="role-switch-btn px-2.5 py-1.5 rounded-xl font-bold transition flex items-center space-x-1.5 shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-700">
-                                            <i class="fa-solid fa-wallet text-[11px]"></i>
-                                            <span>Bendahara</span>
-                                        </button>
-                                        <button type="button" onclick="switchActiveRolePreview('PENGURUS')" data-role-btn="PENGURUS"
-                                            class="role-switch-btn px-2.5 py-1.5 rounded-xl font-bold transition flex items-center space-x-1.5 shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-sky-50 hover:text-sky-700">
-                                            <i class="fa-solid fa-clipboard-user text-[11px]"></i>
-                                            <span>Pengurus</span>
-                                        </button>
-                                        <button type="button" onclick="switchActiveRolePreview('WALI_SANTRI')" data-role-btn="WALI_SANTRI"
-                                            class="role-switch-btn px-2.5 py-1.5 rounded-xl font-bold transition flex items-center space-x-1.5 shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-teal-50 hover:text-teal-700">
-                                            <i class="fa-solid fa-people-roof text-[11px]"></i>
-                                            <span>Wali Santri</span>
-                                        </button>
-                                        <button type="button" onclick="switchActiveRolePreview('PENGASUH')" data-role-btn="PENGASUH"
-                                            class="role-switch-btn px-2.5 py-1.5 rounded-xl font-bold transition flex items-center space-x-1.5 shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-amber-50 hover:text-amber-700">
-                                            <i class="fa-solid fa-kaaba text-[11px]"></i>
-                                            <span>Pengasuh</span>
-                                        </button>
-                                    </div>
-                                </div>
+                            <div id="admin-menu-hub" class="space-y-2.5 md:space-y-3">
 
                                 <!-- Minimalist Executive Greeting Bar (Benchmark Hadirin Analysis) -->
                                 <div id="admin-hub-greeting-section" class="flex items-center justify-between pb-0.5 animate-fade-in-up stagger-1">
                                     <div class="flex items-center gap-2">
-                                        <h2 class="text-sm md:text-base font-black text-slate-800 dark:text-slate-100 tracking-tight">Selamat Datang, Administrator</h2>
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-400 border border-emerald-300/60 dark:border-emerald-800">
+                                        <h2 id="admin-hub-greeting-title" class="text-sm md:text-base font-black text-slate-800 dark:text-slate-100 tracking-tight">Selamat Datang, Administrator</h2>
+                                        <span id="admin-hub-greeting-badge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-400 border border-emerald-300/60 dark:border-emerald-800">
                                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                                             Live System
                                         </span>
@@ -5712,6 +5664,7 @@
                                 </div>
 
                                 <!-- Hidden elements for backward compatibility with roles.js & telemetry -->
+                                <div id="admin-role-switcher-container" class="hidden" style="display: none !important;"></div>
                                 <div id="admin-hub-welcome-banner" class="hidden" style="display: none !important;">
                                     <span id="admin-hub-welcome-badge"></span>
                                     <span id="admin-hub-role-tier-badge"></span>
@@ -20082,22 +20035,22 @@
     <script src="/js/ppdb.js"></script>
     <script src="/js/ibadah.js"></script>
     <script src="/js/jadwal-sholat.js"></script>
-    <script src="/js/admin.js?v=20"></script>
-    <script src="/js/roles.js?v=19"></script>
+    <script src="/js/admin.js?v=21"></script>
+    <script src="/js/roles.js?v=20"></script>
     <script src="/js/alumni.js"></script>
     <script src="/js/auth.js?v=17"></script>
-    <script src="/js/pegawai.js"></script>
+    <script src="/js/pegawai.js?v=2"></script>
     <script src="/js/tahfidz.js?v=23"></script>
     <script src="/js/tpq.js?v=16"></script>
     <script src="/js/sorogan.js?v=19"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
-    <script src="/js/presensi.js?v=14"></script>
+    <script src="/js/presensi.js?v=15"></script>
     <script src="/js/madin.js?v=14"></script>
     <script src="/js/keuangan.js"></script>
     <script src="/js/panduan.js?v=1"></script>
 
     <!-- Main Controller & Navigation -->
-    <script src="/js/main.js?v=19"></script>
+    <script src="/js/main.js?v=20"></script>
 </body>
 
 </html>

@@ -112,6 +112,10 @@ function updatePegawaiStatistics(employees) {
     if (elAsatidz) elAsatidz.innerText = asatidzCount;
     if (elStaf) elStaf.innerText = stafCount;
     if (elAktif) elAktif.innerText = aktifCount;
+
+    if (typeof updateAdminDashboardKpis === 'function') {
+        updateAdminDashboardKpis();
+    }
 }
 
 /**

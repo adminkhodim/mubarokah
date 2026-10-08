@@ -500,6 +500,12 @@
                     }, 100);
                 } else {
                     if (typeof isAdminLoggedIn !== 'undefined') isAdminLoggedIn = true;
+                    if (typeof scheduleAdminDataPrefetch === 'function') {
+                        scheduleAdminDataPrefetch();
+                    }
+                    if (typeof updateAdminDashboardKpis === 'function') {
+                        updateAdminDashboardKpis();
+                    }
                 }
             } else {
                 if (mainDesktopHeader) mainDesktopHeader.style.removeProperty('display');
