@@ -988,22 +988,13 @@ const ASNIdentity = {
             
             if (roleBadgeEl) roleBadgeEl.innerText = displayRole;
 
-            // Sinkronkan juga info identitas di sidebar admin baru
-            const sidebarNameEl = document.getElementById('admin-sidebar-user-name');
-            if (sidebarNameEl) sidebarNameEl.innerText = currentName;
-            const sidebarBadgeEl = document.getElementById('admin-sidebar-role-badge');
-            if (sidebarBadgeEl) sidebarBadgeEl.innerText = displayRole;
-            const sidebarInitialEl = document.getElementById('admin-sidebar-avatar-initial');
-            let initial = 'AU';
+            let initial = 'SU';
             if (currentName) {
                 const words = currentName.trim().split(/\s+/);
                 initial = words.length >= 2 ? (words[0][0] + words[1][0]).toUpperCase() : words[0].substring(0, 2).toUpperCase();
             }
-            if (sidebarInitialEl) {
-                sidebarInitialEl.innerText = initial;
-            }
 
-            // Sinkronkan juga info identitas di desktop topbar
+            // Sinkronkan info identitas di desktop topbar
             const topbarNameEl = document.getElementById('admin-topbar-username');
             if (topbarNameEl) topbarNameEl.innerText = currentName;
             const topbarRoleEl = document.getElementById('admin-topbar-role');

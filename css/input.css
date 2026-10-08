@@ -246,7 +246,8 @@ html.dark #admin-sidebar {
 
 /* Menu Item Aktif: Menonjol (Protruding) Flush Menyatu ke Content Canvas */
 .admin-nav-item.active {
-  width: 100% !important;
+  width: calc(100% + 2px) !important;
+  margin-right: -2px !important;
   background-color: var(--admin-content-bg) !important;
   color: #047857 !important;
   border-top-left-radius: 1.25rem !important;
@@ -268,7 +269,7 @@ html.dark .admin-nav-item.active {
   content: '';
   position: absolute;
   top: -16px;
-  right: 0;
+  right: -2px;
   width: 16px;
   height: 16px;
   background: radial-gradient(circle at top left, transparent 16px, var(--admin-content-bg) 16.5px);
@@ -281,7 +282,7 @@ html.dark .admin-nav-item.active {
   content: '';
   position: absolute;
   bottom: -16px;
-  right: 0;
+  right: -2px;
   width: 16px;
   height: 16px;
   background: radial-gradient(circle at bottom left, transparent 16px, var(--admin-content-bg) 16.5px);
@@ -290,33 +291,42 @@ html.dark .admin-nav-item.active {
 }
 
 /* ========================================================================= */
-/* SCROLLBAR MENU SIDEBAR & KONTEN ADMIN (HALUS, ELEGAN, TANPA PANAH ARROW)  */
+/* MENU SIDEBAR: SCROLLABLE SEAMLESS TANPA SCROLLBAR DI DALAM SIDEBAR HIJAU */
 /* ========================================================================= */
-#admin-sidebar-menu,
+#admin-sidebar-menu {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+#admin-sidebar-menu::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* ========================================================================= */
+/* SCROLLBAR AREA KONTEN (HALUS, ELEGAN, DI LUAR SIDEBAR HIJAU, TANPA PANAH) */
+/* ========================================================================= */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
+  scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
 }
-#admin-sidebar-menu::-webkit-scrollbar,
 .custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
 }
-#admin-sidebar-menu::-webkit-scrollbar-track,
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
   border: none;
 }
-#admin-sidebar-menu::-webkit-scrollbar-thumb,
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.25);
+  background: rgba(148, 163, 184, 0.3);
   border-radius: 9999px;
 }
-#admin-sidebar-menu::-webkit-scrollbar-thumb:hover,
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.45);
+  background: rgba(148, 163, 184, 0.5);
 }
-#admin-sidebar-menu::-webkit-scrollbar-button,
 .custom-scrollbar::-webkit-scrollbar-button {
   display: none !important;
   width: 0 !important;
@@ -324,24 +334,19 @@ html.dark .admin-nav-item.active {
 }
 
 /* Dark Mode Scrollbar */
-html.dark #admin-sidebar-menu,
 html.dark .custom-scrollbar {
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
-html.dark #admin-sidebar-menu::-webkit-scrollbar-track,
 html.dark .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
   border: none;
 }
-html.dark #admin-sidebar-menu::-webkit-scrollbar-thumb,
 html.dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.2);
 }
-html.dark #admin-sidebar-menu::-webkit-scrollbar-thumb:hover,
 html.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.35);
 }
-html.dark #admin-sidebar-menu::-webkit-scrollbar-button,
 html.dark .custom-scrollbar::-webkit-scrollbar-button {
   display: none !important;
   width: 0 !important;

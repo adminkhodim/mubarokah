@@ -61,7 +61,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <!-- Compiled & Minified Tailwind CSS -->
-    <link rel="stylesheet" href="/css/styles.min.css?v=39">
+    <link rel="stylesheet" href="/css/styles.min.css?v=40">
 
 
 
@@ -5311,38 +5311,29 @@
                         <i class="fa-solid fa-chevron-left text-xs transition-transform" id="admin-sidebar-icon"></i>
                     </button>
 
-                    <!-- Brand & Profil Administrator Header (Menyatu Mewah dengan Latar Solid) -->
+                    <!-- Identitas Pesantren Header (Logo & Nama Pesantren) -->
                     <div class="p-4 border-b border-white/10 dark:border-white/5 shrink-0">
-                        <div class="sidebar-text mb-3 px-1 flex items-center justify-between">
-                            <span class="text-[11px] font-extrabold tracking-widest text-emerald-100/90 dark:text-emerald-300 uppercase">PPTQ MUBAROKAH</span>
-                            <span class="text-[9px] bg-white/20 text-white px-1.5 py-0.5 rounded font-mono font-bold tracking-wide">ADMIN</span>
-                        </div>
-                        
                         <div class="flex items-center gap-3 overflow-hidden">
-                            <!-- User Avatar with Online Dot -->
+                            <!-- Logo Pesantren -->
                             <div class="relative shrink-0">
-                                <div class="w-10 h-10 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-md ring-2 ring-white/30">
-                                    <span id="admin-sidebar-avatar-initial">AU</span>
+                                <div class="w-10 h-10 rounded-2xl bg-white p-1 flex items-center justify-center shadow-md ring-2 ring-white/30 overflow-hidden">
+                                    <img src="/assets/img/splash-logo.png" alt="Logo PPTQ Mubarokah" class="w-full h-full object-contain">
                                 </div>
-                                <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-emerald-700 dark:border-[#132232] rounded-full shadow-xs" title="Online Active"></span>
                             </div>
 
-                            <!-- User Identity & Role Badge -->
+                            <!-- Nama Pesantren & Identitas Lembaga -->
                             <div class="sidebar-text min-w-0 transition-opacity duration-300">
-                                <div class="flex items-center gap-1.5">
-                                    <h2 id="admin-sidebar-user-name" class="text-xs font-bold text-white truncate leading-tight">Admin Utama</h2>
-                                    <i class="fa-solid fa-circle-check text-[10px] text-emerald-300 shrink-0" title="Terverifikasi"></i>
-                                </div>
-                                <span id="admin-sidebar-role-badge" class="inline-block mt-0.5 text-[9px] font-semibold text-emerald-100 bg-white/15 px-1.5 py-0.5 rounded tracking-wide leading-none border border-white/20">
-                                    Super Admin
+                                <h2 class="text-xs font-black tracking-wide text-white truncate leading-tight uppercase">PPTQ MUBAROKAH</h2>
+                                <p class="text-[10px] text-emerald-100/90 truncate font-medium mt-0.5">Asnawiyyah Pilangwetan</p>
+                                <span class="inline-block mt-1 text-[8.5px] font-bold text-white bg-white/20 px-1.5 py-0.5 rounded tracking-wider leading-none border border-white/25">
+                                    PORTAL ADMINISTRASI
                                 </span>
-                                <div class="text-[9px] text-emerald-200/80 dark:text-slate-400 truncate mt-0.5">ID: EMP-ADM-001</div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Menu Navigation (Grouped by Category, Pl-3 Pr-0 untuk Flush Protruding Tabs) -->
-                    <div class="flex-1 overflow-y-auto py-3 pl-3 pr-0 custom-scrollbar space-y-4" id="admin-sidebar-menu">
+                    <div class="flex-1 overflow-y-auto py-3 pl-3 pr-0 space-y-4" id="admin-sidebar-menu">
 
                         <!-- Grup 1: Ringkasan & Overview -->
                         <div class="admin-menu-group">
@@ -5542,15 +5533,9 @@
 
                     </div>
 
-                    <!-- Bottom Footer (Session Status & Logout) -->
-                    <div class="p-3 border-t border-white/10 dark:border-white/5 shrink-0 bg-black/10 dark:bg-black/20">
-                        <button onclick="logoutAdmin()" class="w-full flex items-center justify-center px-3 py-2.5 bg-white/15 hover:bg-rose-600 text-white rounded-xl transition overflow-hidden border border-white/20 font-bold text-xs group active:scale-98" title="Keluar dari Panel Admin">
-                            <i class="fa-solid fa-power-off text-sm shrink-0 group-hover:-translate-x-0.5 transition-transform"></i>
-                            <span class="ml-2 sidebar-text whitespace-nowrap transition-opacity duration-300">LOGOUT</span>
-                        </button>
-                        <div class="sidebar-text text-center mt-2 transition-opacity duration-300">
-                            <span class="text-[10px] text-white/60 font-medium">© 2026 PPTQ Mubarokah</span>
-                        </div>
+                    <!-- Bottom Footer (Copyright Pesantren) -->
+                    <div class="py-2.5 px-3 border-t border-white/10 dark:border-white/5 shrink-0 text-center sidebar-text transition-opacity duration-300">
+                        <span class="text-[10px] text-white/60 font-medium tracking-wide">© 2026 PPTQ Mubarokah</span>
                     </div>
                 </aside>
 
@@ -20414,7 +20399,7 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js?v=38').then(registration => {
+                navigator.serviceWorker.register('/sw.js?v=39').then(registration => {
                     if (typeof registration.update === 'function') {
                         registration.update();
                     }
@@ -20442,9 +20427,9 @@
     <script src="/js/ibadah.js"></script>
     <script src="/js/jadwal-sholat.js"></script>
     <script src="/js/admin.js?v=26"></script>
-    <script src="/js/roles.js?v=22"></script>
+    <script src="/js/roles.js?v=23"></script>
     <script src="/js/alumni.js"></script>
-    <script src="/js/auth.js?v=19"></script>
+    <script src="/js/auth.js?v=20"></script>
     <script src="/js/pegawai.js?v=4"></script>
     <script src="/js/tahfidz.js?v=24"></script>
     <script src="/js/tpq.js?v=17"></script>

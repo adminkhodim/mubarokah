@@ -1990,15 +1990,7 @@
             activeTag.className = `px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${profile.badgeBg}`;
         }
 
-        const sidebarRoleBadge = document.getElementById('admin-sidebar-role-badge');
-        if (sidebarRoleBadge) {
-            sidebarRoleBadge.innerText = profile.name || profile.shortName;
-        }
 
-        const sidebarAvatarInitial = document.getElementById('admin-sidebar-avatar-initial');
-        if (sidebarAvatarInitial && profile.shortName) {
-            sidebarAvatarInitial.innerText = profile.shortName.substring(0, 2).toUpperCase();
-        }
 
         const topbarRole = document.getElementById('admin-topbar-role');
         if (topbarRole) {
