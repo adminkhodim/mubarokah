@@ -1544,10 +1544,7 @@
             return (typeof adminUsersList !== 'undefined' && Array.isArray(adminUsersList)) ? adminUsersList.length + ' Akun' : '0 Akun';
         }
         if (valueKey === 'tahfidz') {
-            const list = (typeof adminTahfidzList !== 'undefined' && Array.isArray(adminTahfidzList) && adminTahfidzList.length > 0)
-                ? adminTahfidzList
-                : ((typeof ASNTahfidz !== 'undefined' && ASNTahfidz.data && Array.isArray(ASNTahfidz.data.students) && ASNTahfidz.data.students.length > 0) ? ASNTahfidz.data.students : null);
-            return list ? list.length + ' Santri' : '30 Juz';
+            return '30 Juz';
         }
         if (valueKey === 'pegawai') {
             const count = (typeof adminPegawaiList !== 'undefined' && Array.isArray(adminPegawaiList) && adminPegawaiList.length > 0) ? adminPegawaiList.length : 21;
@@ -1694,7 +1691,7 @@
             kpiGrid.innerHTML = profile.kpis.map(kpi => {
                 let val = kpi.valueKey ? getKpiMetricValue(kpi.valueKey) : (kpi.value || '-');
                 if (kpi.valueKey === 'santri' && (val === '0' || val === '0 Santri')) val = '140 Santri';
-                if (kpi.valueKey === 'tahfidz' && (val === '0' || val === '0 Santri' || val === '30 Juz')) val = '30 Juz';
+                if (kpi.valueKey === 'tahfidz') val = '30 Juz';
                 if (kpi.valueKey === 'pegawai' && (val === '0' || val === '0 Staf' || val === '-')) val = '21 Staf';
                 if (kpi.valueKey === 'presensi' && (val === '0 Sesi' || val === 'Live & QR' || val === '-')) val = '98.5%';
 

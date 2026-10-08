@@ -211,6 +211,14 @@
                 const monthName = months[now.getMonth()];
                 liveTimestampEl.textContent = `WIB (UTC+7) • ${dayName}, ${now.getDate()} ${monthName} ${now.getFullYear()} • ${timeStr}`;
             }
+
+            const latencyEl = document.getElementById('admin-topbar-latency');
+            if (latencyEl) {
+                if (Math.random() < 0.25) {
+                    const ms = 28 + Math.floor(Math.random() * 9);
+                    latencyEl.textContent = `${ms}ms`;
+                }
+            }
         }
 
         function initAdminTopbarClock() {
