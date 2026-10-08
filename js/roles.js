@@ -2004,6 +2004,10 @@
         if (topbarRole) {
             topbarRole.innerText = profile.name || profile.shortName;
         }
+        const topbarRoleBadge = document.getElementById('admin-topbar-role-badge');
+        if (topbarRoleBadge) {
+            topbarRoleBadge.innerText = `(${profile.shortName || profile.name})`;
+        }
 
         const topbarAvatarInitial = document.getElementById('admin-topbar-avatar-initial');
         if (topbarAvatarInitial && profile.shortName) {

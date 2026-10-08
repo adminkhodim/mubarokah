@@ -50,6 +50,50 @@
             switchTab('beranda');
         }
 
+        function toggleAdminUserDropdown(event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            const dropdown = document.getElementById('admin-user-dropdown');
+            const chevron = document.getElementById('admin-topbar-chevron');
+            if (!dropdown) return;
+            const isHidden = dropdown.classList.contains('hidden');
+            if (isHidden) {
+                dropdown.classList.remove('hidden');
+                if (chevron) chevron.classList.add('rotate-180');
+            } else {
+                dropdown.classList.add('hidden');
+                if (chevron) chevron.classList.remove('rotate-180');
+            }
+        }
+        window.toggleAdminUserDropdown = toggleAdminUserDropdown;
+
+        function closeAdminUserDropdown() {
+            const dropdown = document.getElementById('admin-user-dropdown');
+            const chevron = document.getElementById('admin-topbar-chevron');
+            if (dropdown) dropdown.classList.add('hidden');
+            if (chevron) chevron.classList.remove('rotate-180');
+        }
+        window.closeAdminUserDropdown = closeAdminUserDropdown;
+
+        function openAdminProfileSettings() {
+            if (typeof showAdminView === 'function') {
+                showAdminView('users');
+            }
+            if (typeof showToast === 'function') {
+                const username = document.getElementById('admin-topbar-username')?.innerText || 'Super Admin';
+                showToast(`Profil Pengguna: ${username}`);
+            }
+        }
+        window.openAdminProfileSettings = openAdminProfileSettings;
+
+        document.addEventListener('click', function(e) {
+            const wrapper = document.getElementById('admin-user-menu-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                closeAdminUserDropdown();
+            }
+        });
+
         
         let adminSidebarCollapsed = false;
         function toggleAdminSidebar() {

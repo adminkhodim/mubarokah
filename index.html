@@ -61,7 +61,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <!-- Compiled & Minified Tailwind CSS -->
-    <link rel="stylesheet" href="/css/styles.min.css?v=38">
+    <link rel="stylesheet" href="/css/styles.min.css?v=39">
 
 
 
@@ -5637,14 +5637,61 @@
                                 <span class="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white dark:ring-[#15202d]"></span>
                             </button>
 
-                            <!-- Mini Profile Avatar & Badge -->
-                            <div class="flex items-center gap-2 pl-1 border-l border-slate-200 dark:border-slate-700">
-                                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-700 to-teal-500 text-white flex items-center justify-center font-bold text-xs shadow-xs">
-                                    <span id="admin-topbar-avatar-initial">AU</span>
-                                </div>
-                                <div class="hidden 2xl:block text-left leading-tight">
-                                    <div id="admin-topbar-username" class="text-xs font-bold text-slate-800 dark:text-slate-100">Admin Utama</div>
-                                    <div id="admin-topbar-role" class="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold">Super Admin</div>
+                            <!-- User Account Dropdown Trigger & Popover (Reference: Santri Pay) -->
+                            <div class="relative pl-1 border-l border-slate-200 dark:border-slate-700" id="admin-user-menu-wrapper">
+                                <button type="button" id="admin-user-dropdown-btn" onclick="toggleAdminUserDropdown(event)"
+                                    class="flex items-center gap-2 px-1.5 py-1 rounded-2xl hover:bg-slate-100 dark:hover:bg-[#1a2634] transition active:scale-95 text-left group border border-transparent hover:border-slate-200/80 dark:hover:border-slate-700/80">
+                                    <!-- Foto / Avatar Circle -->
+                                    <div class="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-bold text-xs shadow-xs ring-2 ring-emerald-500/25 shrink-0 overflow-hidden">
+                                        <img id="admin-topbar-avatar-img" class="hidden w-full h-full object-cover" alt="Foto Pengguna">
+                                        <span id="admin-topbar-avatar-initial">SU</span>
+                                    </div>
+                                    <!-- Nama & Role (Adopsi Gambar Referensi Santri Pay) -->
+                                    <div class="hidden sm:block text-left leading-tight">
+                                        <div class="flex items-center gap-1.5">
+                                            <span id="admin-topbar-username" class="text-xs font-bold text-slate-800 dark:text-slate-100 max-w-[130px] lg:max-w-[180px] truncate">Super Admin</span>
+                                            <span id="admin-topbar-role-badge" class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold truncate">(Super Admin)</span>
+                                        </div>
+                                        <div id="admin-topbar-role" class="text-[10px] text-slate-400 dark:text-slate-400 truncate">Super Administrator</div>
+                                    </div>
+                                    <!-- Chevron Down Arrow -->
+                                    <i id="admin-topbar-chevron" class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-transform duration-200 ml-0.5"></i>
+                                </button>
+
+                                <!-- Dropdown Popover Card (Adopted from Santri Pay Reference) -->
+                                <div id="admin-user-dropdown" class="hidden absolute right-0 top-full mt-2 w-60 bg-white dark:bg-[#15202d] rounded-2xl shadow-xl shadow-slate-300/40 dark:shadow-black/60 border border-slate-100 dark:border-slate-700/80 p-2 z-50 animate-fade-in-up">
+                                    <!-- Header Akun Pondok -->
+                                    <div class="px-3 py-2.5 bg-slate-50 dark:bg-[#1c2836] rounded-xl mb-1.5">
+                                        <div class="text-[11px] font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                                            <i class="fa-solid fa-mosque text-emerald-600 dark:text-emerald-400 text-[10px]"></i>
+                                            <span>Akun Pondok</span>
+                                        </div>
+                                        <div id="admin-dropdown-email" class="text-[10px] text-slate-400 font-mono truncate mt-0.5">admin@mubarokah.ponpes.id</div>
+                                    </div>
+
+                                    <!-- Menu Links -->
+                                    <div class="space-y-0.5">
+                                        <button type="button" onclick="openAdminProfileSettings(); closeAdminUserDropdown();"
+                                            class="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#1c2836] rounded-xl transition text-left group">
+                                            <i class="fa-regular fa-id-card text-emerald-600 dark:text-emerald-400 w-4 text-center text-xs group-hover:scale-110 transition-transform"></i>
+                                            <span>Profil Saya</span>
+                                        </button>
+                                        <button type="button" onclick="showAdminView('profil-lembaga'); closeAdminUserDropdown();"
+                                            class="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#1c2836] rounded-xl transition text-left group">
+                                            <i class="fa-solid fa-sliders text-indigo-500 w-4 text-center text-xs group-hover:scale-110 transition-transform"></i>
+                                            <span>Pengaturan Pondok</span>
+                                        </button>
+                                    </div>
+
+                                    <!-- Divider Line -->
+                                    <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
+
+                                    <!-- Tombol Keluar / Logout Merah (Mirip Gambar Referensi) -->
+                                    <button type="button" onclick="logoutAdmin(); closeAdminUserDropdown();"
+                                        class="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition text-left group">
+                                        <i class="fa-solid fa-arrow-right-from-bracket text-rose-500 w-4 text-center text-xs group-hover:translate-x-0.5 transition-transform"></i>
+                                        <span>Keluar</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -20367,7 +20414,7 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js?v=37').then(registration => {
+                navigator.serviceWorker.register('/sw.js?v=38').then(registration => {
                     if (typeof registration.update === 'function') {
                         registration.update();
                     }
@@ -20394,10 +20441,10 @@
     <script src="/js/ppdb.js"></script>
     <script src="/js/ibadah.js"></script>
     <script src="/js/jadwal-sholat.js"></script>
-    <script src="/js/admin.js?v=25"></script>
-    <script src="/js/roles.js?v=21"></script>
+    <script src="/js/admin.js?v=26"></script>
+    <script src="/js/roles.js?v=22"></script>
     <script src="/js/alumni.js"></script>
-    <script src="/js/auth.js?v=18"></script>
+    <script src="/js/auth.js?v=19"></script>
     <script src="/js/pegawai.js?v=4"></script>
     <script src="/js/tahfidz.js?v=24"></script>
     <script src="/js/tpq.js?v=17"></script>

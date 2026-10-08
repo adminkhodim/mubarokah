@@ -1008,8 +1008,14 @@ const ASNIdentity = {
             if (topbarNameEl) topbarNameEl.innerText = currentName;
             const topbarRoleEl = document.getElementById('admin-topbar-role');
             if (topbarRoleEl) topbarRoleEl.innerText = displayRole;
+            const topbarRoleBadgeEl = document.getElementById('admin-topbar-role-badge');
+            if (topbarRoleBadgeEl) topbarRoleBadgeEl.innerText = `(${displayRole.includes('Super') ? 'Super Admin' : displayRole})`;
             const topbarInitialEl = document.getElementById('admin-topbar-avatar-initial');
             if (topbarInitialEl) topbarInitialEl.innerText = initial;
+            const dropdownEmailEl = document.getElementById('admin-dropdown-email');
+            if (dropdownEmailEl) {
+                dropdownEmailEl.innerText = (this.currentUser && (this.currentUser.email || this.currentUser.username)) || 'admin@mubarokah.ponpes.id';
+            }
 
             this.updateAvatarUI(this.currentRole, (this.currentUser && (this.currentUser.photoUrl || this.currentUser.photo_url)) || '');
 
@@ -1459,6 +1465,9 @@ const ASNIdentity = {
         const iconEl = document.getElementById(iconId);
         if (!imgEl) return;
 
+        const topbarImg = document.getElementById('admin-topbar-avatar-img');
+        const topbarInitial = document.getElementById('admin-topbar-avatar-initial');
+
         if (photoUrl) {
             const formatted = this.formatPhotoUrl(photoUrl);
             imgEl.src = formatted;
@@ -1468,10 +1477,26 @@ const ASNIdentity = {
                 imgEl.classList.add('hidden');
                 if (iconEl) iconEl.classList.remove('hidden');
             };
+
+            if (topbarImg) {
+                topbarImg.src = formatted;
+                topbarImg.classList.remove('hidden');
+                if (topbarInitial) topbarInitial.classList.add('hidden');
+                topbarImg.onerror = () => {
+                    topbarImg.classList.add('hidden');
+                    if (topbarInitial) topbarInitial.classList.remove('hidden');
+                };
+            }
         } else {
             imgEl.src = '';
             imgEl.classList.add('hidden');
             if (iconEl) iconEl.classList.remove('hidden');
+
+            if (topbarImg) {
+                topbarImg.src = '';
+                topbarImg.classList.add('hidden');
+                if (topbarInitial) topbarInitial.classList.remove('hidden');
+            }
         }
     },
 
