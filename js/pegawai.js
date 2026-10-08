@@ -14,6 +14,16 @@ window.ASNPegawai = {
     isLoading: false
 };
 
+function escapeHtml(str) {
+    if (!str && str !== 0) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 /**
  * Muat data pegawai dari backend Google Sheets
  */
@@ -23,8 +33,24 @@ async function loadAdminEmployeesData() {
     const mobileList = document.getElementById('admin-pegawai-mobile-list');
     const emptyState = document.getElementById('admin-pegawai-empty-state');
 
-    if (loader) loader.classList.remove('hidden');
-    if (emptyState) emptyState.classList.add('hidden');
+    // Cache-first instant display agar tidak pernah blank
+    if (!ASNPegawai.list || ASNPegawai.list.length === 0) {
+        try {
+            const cached = localStorage.getItem('mubarokah_admin_pegawai');
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    ASNPegawai.list = parsed;
+                    ASNPegawai.filtered = [...parsed];
+                    updatePegawaiStatistics(parsed);
+                    renderAdminPegawaiTable();
+                }
+            }
+        } catch (e) {}
+    }
+
+    if (loader && (!ASNPegawai.list || ASNPegawai.list.length === 0)) loader.classList.remove('hidden');
+    if (emptyState && (!ASNPegawai.list || ASNPegawai.list.length === 0)) emptyState.classList.add('hidden');
     ASNPegawai.isLoading = true;
 
     try {
@@ -53,6 +79,12 @@ async function loadAdminEmployeesData() {
             employees = response.data;
         } else if (Array.isArray(response)) {
             employees = response;
+        }
+
+        if (employees.length > 0) {
+            try {
+                localStorage.setItem('mubarokah_admin_pegawai', JSON.stringify(employees));
+            } catch (e) {}
         }
 
         ASNPegawai.list = employees;
