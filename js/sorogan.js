@@ -647,23 +647,23 @@ function renderSoroganTable() {
 
         html += `
             <tr class="hover:bg-slate-50/80 dark:hover:bg-[#1a2636]/60 transition border-b border-slate-100 dark:border-[#202f42] text-xs">
-                <td class="p-3 text-center">
+                <td class="p-3 align-middle text-center">
                     <input type="checkbox" class="sorogan-row-checkbox rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
                         ${isChecked ? 'checked' : ''} onchange="toggleSelectSoroganStudent('${escapeHtml(st.studentId)}', this.checked)">
                 </td>
-                <td class="p-3 text-center text-slate-400 font-medium">${idx + 1}</td>
-                <td class="p-3">
-                    <div class="flex items-center space-x-2.5">
+                <td class="p-3 align-middle text-center text-slate-400 font-medium">${idx + 1}</td>
+                <td class="p-3 align-middle">
+                    <div class="flex items-center space-x-2.5 min-w-0">
                         <div class="w-8 h-8 rounded-full bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 font-bold flex items-center justify-center shrink-0 border border-sky-200 dark:border-sky-800/40">
                             ${st.photoUrl ? `<img src="${escapeHtml(st.photoUrl)}" class="w-full h-full rounded-full object-cover">` : `<i class="fa-solid fa-user text-xs"></i>`}
                         </div>
-                        <div>
-                            <div class="font-bold text-slate-800 dark:text-slate-100 leading-snug">${escapeHtml(st.name)}</div>
-                            <div class="text-[10px] text-slate-400">NIS: ${escapeHtml(st.nis || "-")} • ${st.gender === 'P' ? 'Santriwati' : 'Santri'}</div>
+                        <div class="min-w-0 flex-1">
+                            <div class="font-bold text-slate-800 dark:text-slate-100 leading-snug truncate" title="${escapeHtml(st.name)}">${escapeHtml(st.name)}</div>
+                            <div class="text-[10px] text-slate-400 truncate">NIS: ${escapeHtml(st.nis || "-")} • ${st.gender === 'P' ? 'Santriwati' : 'Santri'}</div>
                         </div>
                     </div>
                 </td>
-                <td class="p-3">
+                <td class="p-3 align-middle">
                     <div class="space-y-1">
                         <div class="flex items-center justify-between gap-1 text-xs">
                             <span class="font-black text-slate-800 dark:text-slate-100">
@@ -673,7 +673,7 @@ function renderSoroganTable() {
                             </span>
                             <span class="text-[10px] font-extrabold ${isKhatam ? 'text-amber-600 dark:text-amber-400' : 'text-sky-600 dark:text-sky-400'}">${percent}%</span>
                         </div>
-                        <div class="text-[10px] text-slate-400 truncate max-w-[200px]" title="${escapeHtml(surahRef)}">
+                        <div class="text-[10px] text-slate-400 truncate" title="${escapeHtml(surahRef)}">
                             ${escapeHtml(surahRef)}
                         </div>
                         <div class="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
@@ -681,27 +681,27 @@ function renderSoroganTable() {
                         </div>
                     </div>
                 </td>
-                <td class="p-3">
+                <td class="p-3 align-middle">
                     <button type="button" onclick="openSoroganTargetModal('${escapeHtml(st.studentId)}')"
-                        class="text-left group/tgt hover:opacity-80 transition" title="Klik untuk atur target">
-                        <div class="flex items-center gap-1 font-bold text-slate-800 dark:text-slate-200">
-                            <i class="fa-solid fa-bullseye text-[10px] text-amber-500"></i>
-                            <span>Target Juz ${tgt.targetJuz || Math.min(30, currentJuz + 1)}</span>
+                        class="text-left group/tgt hover:opacity-80 transition w-full" title="Klik untuk atur target">
+                        <div class="flex items-center gap-1 font-bold text-slate-800 dark:text-slate-200 truncate">
+                            <i class="fa-solid fa-bullseye text-[10px] text-amber-500 shrink-0"></i>
+                            <span class="truncate">Target Juz ${tgt.targetJuz || Math.min(30, currentJuz + 1)}</span>
                         </div>
-                        <div class="text-[10px] text-slate-400 group-hover/tgt:text-sky-600 font-medium">
+                        <div class="text-[10px] text-slate-400 group-hover/tgt:text-sky-600 font-medium truncate">
                             ${tSesi} Hal/Sesi (${tPekan} Hal/Pekan)
                         </div>
                     </button>
                 </td>
-                <td class="p-3">
-                    <div class="text-xs font-semibold text-slate-700 dark:text-slate-200">${escapeHtml(st.namaHalaqah || "Belum Ada Halaqah")}</div>
-                    <div class="text-[10px] text-slate-400">Muallim: ${escapeHtml(st.muallimPengampu || "-")}</div>
+                <td class="p-3 align-middle">
+                    <div class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate" title="${escapeHtml(st.namaHalaqah || "Belum Ada Halaqah")}">${escapeHtml(st.namaHalaqah || "Belum Ada Halaqah")}</div>
+                    <div class="text-[10px] text-slate-400 truncate" title="Muallim: ${escapeHtml(st.muallimPengampu || "-")}">Muallim: ${escapeHtml(st.muallimPengampu || "-")}</div>
                 </td>
-                <td class="p-3">
+                <td class="p-3 align-middle">
                     ${statusBadge}
-                    ${st.updatedAt ? `<div class="text-[9px] text-slate-400 mt-1">Terakhir: ${st.updatedAt.substring(0, 10)}</div>` : ''}
+                    ${st.updatedAt ? `<div class="text-[9px] text-slate-400 mt-1 truncate">Terakhir: ${st.updatedAt.substring(0, 10)}</div>` : ''}
                 </td>
-                <td class="p-3 text-right">
+                <td class="p-3 align-middle text-right pr-4">
                     <div class="flex items-center justify-end gap-1.5">
                         <button type="button" onclick="openSoroganTargetModal('${escapeHtml(st.studentId)}')"
                             class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl text-xs transition" title="Atur Target">
@@ -3194,7 +3194,7 @@ function exportSoroganDataCSVFallback() {
 }
 
 function exportSoroganDataCSV() {
-    exportSoroganDataXLSX();
+    exportSoroganDataCSVFallback();
 }
 
 // Window global exports untuk Detail, Export & Print

@@ -301,6 +301,8 @@ const ASNMadin = {
 
         const pct = totalPeserta > 0 ? Math.round((totalHadir / totalPeserta) * 100) : 100;
         if (pctEl) pctEl.textContent = `${pct}%`;
+        const barEl = document.getElementById('madin-stat-bar-kehadiran');
+        if (barEl) barEl.style.width = `${pct}%`;
     },
 
     // ==================== POPULASI DROPDOWNS ====================
@@ -1521,36 +1523,36 @@ const ASNMadin = {
             else { predikat = 'Rosib (Ulang)'; color = 'text-rose-600 font-bold'; }
 
             rows += `
-                <tr class="hover:bg-slate-50 dark:hover:bg-[#1c2836] transition">
-                    <td class="py-2 px-3 text-center text-slate-400 text-xs">${idx + 1}</td>
-                    <td class="py-2 px-3">
-                        <span class="font-bold text-xs text-slate-800 dark:text-slate-100 block">${st.nama}</span>
-                        <span class="text-[10px] text-slate-400 font-mono">NIS: ${st.nis || '-'}</span>
+                <tr class="hover:bg-slate-50 dark:hover:bg-[#1c2836] transition text-xs">
+                    <td class="py-2.5 px-3 align-middle text-center text-slate-400 font-medium">${idx + 1}</td>
+                    <td class="py-2.5 px-3 align-middle">
+                        <span class="font-bold text-xs text-slate-800 dark:text-slate-100 block truncate" title="${st.nama}">${st.nama}</span>
+                        <span class="text-[10px] text-slate-400 font-mono block truncate">NIS: ${st.nis || '-'}</span>
                     </td>
-                    <td class="py-2 px-3 text-center">
+                    <td class="py-2.5 px-3 align-middle text-center">
                         <input type="number" min="0" max="100" value="${gr.harian}" data-std="${stId}" data-field="harian"
                             onchange="ASNMadin.calcRowGrade(this)"
                             class="grade-input w-16 px-1.5 py-1 text-center font-bold text-xs rounded-lg border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-slate-800 dark:text-slate-100">
                     </td>
-                    <td class="py-2 px-3 text-center">
+                    <td class="py-2.5 px-3 align-middle text-center">
                         <input type="number" min="0" max="100" value="${gr.lisan}" data-std="${stId}" data-field="lisan"
                             onchange="ASNMadin.calcRowGrade(this)"
                             class="grade-input w-16 px-1.5 py-1 text-center font-bold text-xs rounded-lg border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-slate-800 dark:text-slate-100">
                     </td>
-                    <td class="py-2 px-3 text-center">
+                    <td class="py-2.5 px-3 align-middle text-center">
                         <input type="number" min="0" max="100" value="${gr.tulis}" data-std="${stId}" data-field="tulis"
                             onchange="ASNMadin.calcRowGrade(this)"
                             class="grade-input w-16 px-1.5 py-1 text-center font-bold text-xs rounded-lg border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-slate-800 dark:text-slate-100">
                     </td>
-                    <td class="py-2 px-3 text-center font-black text-xs text-slate-800 dark:text-slate-100 row-akhir-${stId}">
+                    <td class="py-2.5 px-3 align-middle text-center font-black text-xs text-slate-800 dark:text-slate-100 row-akhir-${stId}">
                         ${akhir}
                     </td>
-                    <td class="py-2 px-3 text-center text-xs ${color} row-predikat-${stId}">
+                    <td class="py-2.5 px-3 align-middle text-center text-xs ${color} row-predikat-${stId}">
                         ${predikat}
                     </td>
-                    <td class="py-2 px-3">
+                    <td class="py-2.5 px-3 align-middle">
                         <input type="text" placeholder="Catatan asatidz..." value="${gr.catatan || ''}" data-std="${stId}" data-field="catatan"
-                            class="w-full px-2 py-1 text-[11px] rounded-lg border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-slate-800 dark:text-slate-100">
+                            class="w-full px-2 py-1 text-[11px] rounded-lg border border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] text-slate-800 dark:text-slate-100 truncate">
                     </td>
                 </tr>
             `;

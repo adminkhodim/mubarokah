@@ -61,7 +61,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <!-- Compiled & Minified Tailwind CSS -->
-    <link rel="stylesheet" href="/css/styles.min.css?v=33">
+    <link rel="stylesheet" href="/css/styles.min.css?v=34">
 
 
 
@@ -8614,9 +8614,8 @@
 
                             <!-- ================= VIEW: MODUL SOROGAN AL-QUR'AN (BINNAZHAR) ================= -->
                             <div id="admin-view-sorogan" class="hidden space-y-3">
-                                <!-- Header Sub-View -->
-                                <div
-                                    class="bg-white dark:bg-[#15202d] px-3.5 py-2.5 md:px-4 md:py-3 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-wrap items-center justify-between gap-2.5">
+                                <!-- Header Sub-View (Compact Single-Row Executive Header) -->
+                                <div class="bg-white dark:bg-[#15202d] px-3.5 py-2.5 md:px-4 md:py-3 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-wrap items-center justify-between gap-2.5 animate-fade-in-up stagger-1">
                                     <div class="flex items-center space-x-2.5 min-w-0">
                                         <button type="button" onclick="backFromAdminModule()"
                                             class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl flex items-center justify-center transition active:scale-95 shrink-0"
@@ -8638,22 +8637,29 @@
                                         </div>
                                     </div>
 
+                                    <!-- Action Buttons in One Clean Flex Row -->
                                     <div class="flex items-center gap-1.5 flex-wrap ml-auto">
                                         <button type="button" id="btn-refresh-sorogan" onclick="loadAdminSoroganData(true)"
                                             class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl text-[11px] font-bold transition flex items-center space-x-1 border border-slate-200 dark:border-[#283a4e] active:scale-95"
-                                            title="Segarkan Data">
+                                            title="Segarkan Data Terbaru">
                                             <i id="btn-refresh-sorogan-icon" class="fa-solid fa-arrows-rotate text-xs"></i>
                                             <span class="hidden sm:inline">Refresh</span>
                                         </button>
                                         <button type="button" onclick="exportSoroganDataXLSX()"
                                             class="sorogan-admin-action px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl text-[11px] font-bold transition flex items-center space-x-1 border border-slate-200 dark:border-[#283a4e] active:scale-95"
                                             title="Ekspor Data Excel (.xlsx)">
-                                            <i class="fa-solid fa-file-excel text-sky-600 text-xs"></i>
-                                            <span class="hidden sm:inline">Ekspor Excel</span>
+                                            <i class="fa-solid fa-file-excel text-emerald-600 text-xs"></i>
+                                            <span class="hidden sm:inline">Excel</span>
+                                        </button>
+                                        <button type="button" onclick="exportSoroganDataCSV()"
+                                            class="sorogan-admin-action px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl text-[11px] font-bold transition flex items-center space-x-1 border border-slate-200 dark:border-[#283a4e] active:scale-95"
+                                            title="Ekspor Data CSV">
+                                            <i class="fa-solid fa-file-export text-xs"></i>
+                                            <span class="hidden sm:inline">CSV</span>
                                         </button>
                                         <button type="button" onclick="printSoroganRekap()"
                                             class="sorogan-admin-action px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl text-[11px] font-bold transition flex items-center space-x-1 border border-slate-200 dark:border-[#283a4e] active:scale-95"
-                                            title="Cetak Rekapitulasi">
+                                            title="Cetak Rekapitulasi Data Sorogan">
                                             <i class="fa-solid fa-print text-xs"></i>
                                             <span class="hidden sm:inline">Cetak</span>
                                         </button>
@@ -8671,69 +8677,101 @@
                                     </div>
                                 </div>
 
-                                <!-- 4 KARTU STATISTIK SOROGAN -->
-                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-2.5">
-                                    <div class="bg-white dark:bg-[#15202d] p-2.5 md:p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex items-start justify-between">
-                                        <div class="space-y-0.5 min-w-0">
-                                            <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">TOTAL SANTRI</span>
-                                            <div id="sorogan-stat-total-santri" class="text-lg md:text-xl font-black text-slate-800 dark:text-slate-100">0</div>
-                                            <p class="text-[9px] text-sky-600 dark:text-sky-400 font-semibold truncate">Sorogan Aktif</p>
+                                <!-- 4 KARTU RINGKASAN MAKRO (BERWARNA VIBRANT PERSIS TAHFIDZ & TPQ) -->
+                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
+                                    <!-- 1. Total Santri Aktif (Emerald Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#22c55e] to-[#16a34a] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-emerald-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-2 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">TOTAL SANTRI AKTIF</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-book-bookmark"></i>
+                                            </div>
                                         </div>
-                                        <div class="w-8 h-8 rounded-xl bg-sky-50 dark:bg-sky-950 text-sky-600 flex items-center justify-center text-sm shrink-0">
-                                            <i class="fa-solid fa-book-bookmark"></i>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="sorogan-stat-total-santri">0</span>
+                                                <span class="text-xs font-bold text-white/80">Santri ↑</span>
+                                            </h4>
                                         </div>
-                                    </div>
-
-                                    <div class="bg-white dark:bg-[#15202d] p-2.5 md:p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex items-start justify-between">
-                                        <div class="space-y-0.5 min-w-0">
-                                            <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">RATA-RATA JUZ</span>
-                                            <div id="sorogan-stat-avg-juz" class="text-lg md:text-xl font-black text-sky-600 dark:text-sky-400">Juz 1.0</div>
-                                            <p class="text-[9px] text-slate-400 truncate">Capaian akumulasi</p>
-                                        </div>
-                                        <div class="w-8 h-8 rounded-xl bg-sky-50 dark:bg-sky-950 text-sky-600 flex items-center justify-center text-sm shrink-0">
-                                            <i class="fa-solid fa-chart-line"></i>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Sorogan Al-Qur'an</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-emerald-700 font-black shadow-xs shrink-0 text-[9px]">Data Induk</span>
                                         </div>
                                     </div>
 
-                                    <div class="bg-white dark:bg-[#15202d] p-2.5 md:p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex items-start justify-between">
-                                        <div class="space-y-0.5 min-w-0">
-                                            <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">KHATAM 30 JUZ</span>
-                                            <div id="sorogan-stat-khatam" class="text-lg md:text-xl font-black text-amber-500">0 Santri</div>
-                                            <p class="text-[9px] text-slate-400 truncate">Binnazhar sempurna</p>
+                                    <!-- 2. Rata-Rata Capaian Juz (Indigo Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#6366f1] to-[#4f46e5] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-indigo-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-3 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">RATA-RATA JUZ</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-chart-line"></i>
+                                            </div>
                                         </div>
-                                        <div class="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-500 flex items-center justify-center text-sm shrink-0">
-                                            <i class="fa-solid fa-award"></i>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="sorogan-stat-avg-juz">Juz 1.0</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Capaian akumulasi</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white/25 text-white font-bold backdrop-blur-xs shrink-0 text-[9px]">Mushaf Pojok</span>
                                         </div>
                                     </div>
 
-                                    <!-- 4. Aktivitas Pekan Ini -->
-                                    <div class="bg-white dark:bg-[#15202d] p-2.5 md:p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm space-y-1 relative overflow-hidden">
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">AKTIVITAS PEKAN INI</span>
-                                            <span class="w-5 h-5 rounded-full bg-sky-50 dark:bg-sky-950/60 text-sky-500 flex items-center justify-center text-[9px] shrink-0">
+                                    <!-- 3. Khatam 30 Juz (Rose/Pink Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#f43f5e] via-[#ec4899] to-[#d946ef] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-pink-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-4 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">KHATAM 30 JUZ</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-award"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="sorogan-stat-khatam">0 Santri</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Binnazhar sempurna</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white/25 text-white font-bold backdrop-blur-xs shrink-0 text-[9px]">Khatam 🏆</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 4. Tingkat Kelancaran Pekan Ini (Amber/Orange Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#f59e0b] to-[#ea580c] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-amber-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-5 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">TINGKAT KELANCARAN</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
                                                 <i class="fa-solid fa-chart-pie"></i>
-                                            </span>
+                                            </div>
                                         </div>
-                                        <div id="sorogan-stat-persen-lanjut" class="text-lg md:text-xl font-black text-sky-600 dark:text-sky-400 leading-tight">100%</div>
-                                        <div class="flex items-center space-x-2 text-[9px] md:text-[10px] font-bold">
-                                            <span class="flex items-center gap-1 text-sky-600 truncate" id="sorogan-stat-text-lanjut">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-sky-600 shrink-0"></span>
-                                                Lancar (100%)
-                                            </span>
-                                            <span class="flex items-center gap-1 text-amber-500 truncate" id="sorogan-stat-text-ulang">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
-                                                Mengulang
-                                            </span>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center justify-between">
+                                                <span class="flex items-baseline gap-1">
+                                                    <span id="sorogan-stat-persen-lanjut">100%</span>
+                                                </span>
+                                                <span class="flex items-center gap-1 text-[10px] bg-white/20 px-2 py-0.5 rounded-full backdrop-blur-xs text-white">
+                                                    <span class="font-black">Lancar</span>
+                                                </span>
+                                            </h4>
                                         </div>
-                                        <div class="w-full bg-amber-400 h-1.5 rounded-full overflow-hidden flex mt-0.5">
-                                            <div id="sorogan-stat-bar-lanjut" class="bg-sky-600 h-full transition-all duration-500" style="width: 100%;"></div>
+                                        <div class="space-y-1 pt-1 border-t border-white/10">
+                                            <div class="w-full bg-black/20 h-1.5 rounded-full overflow-hidden">
+                                                <div id="sorogan-stat-bar-lanjut" class="bg-white h-full rounded-full transition-all duration-500" style="width: 100%;"></div>
+                                            </div>
+                                            <div class="flex items-center justify-between text-[10px] text-white/90">
+                                                <span class="truncate text-[9.5px] opacity-90">Rasio Bimbingan Santri</span>
+                                                <span class="px-2 py-0.5 rounded-full bg-white text-amber-700 font-black shadow-xs shrink-0 text-[9px]">Mutaba'ah</span>
+                                            </div>
                                         </div>
+                                        <span id="sorogan-stat-text-lanjut" class="hidden"></span>
+                                        <span id="sorogan-stat-text-ulang" class="hidden"></span>
                                     </div>
                                 </div>
 
-                                <!-- FILTER & SEARCH TOOLBAR -->
-                                <div class="bg-white dark:bg-[#15202d] p-2.5 md:p-3 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2">
-                                    <div class="relative flex-1 min-w-[200px] max-w-md">
+                                <!-- FILTER & SEARCH TOOLBAR (COMPACT & BALANCED) -->
+                                <div class="bg-white dark:bg-[#15202d] p-2.5 md:p-3 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2 animate-fade-in-up stagger-6">
+                                    <div class="relative flex-1 min-w-[180px] max-w-sm">
                                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                                         <input type="text" id="sorogan-search-input" oninput="filterSoroganList()"
                                             placeholder="Cari santri, NIS, halaqah, muallim..."
@@ -8788,33 +8826,33 @@
                                         </select>
 
                                         <button type="button" onclick="openSoroganHalaqahModal(1)"
-                                            class="sorogan-admin-action px-2.5 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:hover:bg-sky-900/60 dark:text-sky-300 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 border border-sky-200 dark:border-sky-800/60 active:scale-95"
+                                            class="sorogan-admin-action px-2.5 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:hover:bg-sky-900/60 dark:text-sky-300 font-bold rounded-xl text-xs transition flex items-center space-x-1 border border-sky-200 dark:border-sky-800/60 active:scale-95"
                                             title="Kelola Halaqah & Plotting Santri Sorogan">
                                             <i class="fa-solid fa-users-gear text-xs"></i>
-                                            <span>Kelola Halaqah</span>
+                                            <span class="hidden sm:inline">Kelola Halaqah</span>
                                         </button>
                                         <button type="button" onclick="openSoroganHalaqahModal(4)"
-                                            class="sorogan-admin-action px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-200 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 border border-slate-200 dark:border-[#283a4e] active:scale-95"
+                                            class="sorogan-admin-action px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-200 font-bold rounded-xl text-xs transition flex items-center space-x-1 border border-slate-200 dark:border-[#283a4e] active:scale-95"
                                             title="Jadwal Sesi Sorogan Al-Qur'an">
                                             <i class="fa-regular fa-clock text-xs"></i>
-                                            <span>Jadwal & Sesi</span>
+                                            <span class="hidden sm:inline">Jadwal & Sesi</span>
                                         </button>
                                         <button type="button" onclick="openSoroganBulkTargetModal()"
-                                            class="sorogan-admin-action px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 dark:text-amber-300 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 border border-amber-200 dark:border-amber-800/60 active:scale-95"
+                                            class="sorogan-admin-action px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 dark:text-amber-300 font-bold rounded-xl text-xs transition flex items-center space-x-1 border border-amber-200 dark:border-amber-800/60 active:scale-95"
                                             title="Atur Target Capaian Sorogan Massal">
                                             <i class="fa-solid fa-bullseye text-xs text-amber-600"></i>
-                                            <span>Target Massal</span>
+                                            <span class="hidden sm:inline">Target Massal</span>
                                         </button>
                                     </div>
                                 </div>
 
                                 <!-- DAFTAR CAPAIAN SANTRI SOROGAN -->
-                                <section class="bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] space-y-2.5">
+                                <section class="bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] space-y-2.5 animate-fade-in-up stagger-7">
                                     <div class="flex justify-between items-center border-b border-slate-100 dark:border-[#253447] pb-2.5">
                                         <h3 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center">
                                             <i class="fa-solid fa-book-bookmark text-sky-600 mr-2"></i> Capaian Sorogan Al-Qur'an Binnazhar
                                         </h3>
-                                        <span id="admin-sorogan-count" class="text-[11px] font-bold text-sky-800 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2.5 py-0.5 rounded-lg">0 Santri</span>
+                                        <span id="admin-sorogan-count" class="text-[11px] font-bold text-sky-800 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2.5 py-0.5 rounded-lg border border-sky-200/50 dark:border-sky-800/40">0 Santri</span>
                                     </div>
 
                                     <!-- FLOATING BULK SELECTION ACTION BAR SOROGAN -->
@@ -8838,7 +8876,7 @@
 
                                     <!-- DESKTOP TABLE -->
                                     <div class="hidden md:block overflow-x-auto">
-                                        <table class="w-full text-left border-collapse">
+                                        <table class="w-full text-left border-collapse table-fixed min-w-[850px]">
                                             <thead>
                                                 <tr class="bg-slate-50 dark:bg-[#1c2836] text-slate-500 dark:text-slate-400 uppercase text-[10px] font-extrabold tracking-wider border-b border-slate-100 dark:border-[#253447]">
                                                     <th class="p-3 w-10 text-center">
@@ -8846,12 +8884,12 @@
                                                             class="rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer" title="Pilih Semua Santri">
                                                     </th>
                                                     <th class="p-3 w-10 text-center">No</th>
-                                                    <th class="p-3">Santri</th>
-                                                    <th class="p-3">Posisi Mushaf (20 Hal/Juz)</th>
-                                                    <th class="p-3">Target Capaian</th>
-                                                    <th class="p-3">Halaqah & Muallim</th>
-                                                    <th class="p-3">Status Terakhir</th>
-                                                    <th class="p-3 text-right">Aksi</th>
+                                                    <th class="p-3 w-[26%]">Santri</th>
+                                                    <th class="p-3 w-[16%]">Posisi Mushaf (20 Hal/Juz)</th>
+                                                    <th class="p-3 w-[15%]">Target Capaian</th>
+                                                    <th class="p-3 w-[15%]">Halaqah & Muallim</th>
+                                                    <th class="p-3 w-[14%]">Status Terakhir</th>
+                                                    <th class="p-3 w-[14%] text-right pr-4">Aksi</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="admin-sorogan-table-body" class="divide-y divide-slate-100 dark:divide-[#253447]">
@@ -9290,7 +9328,7 @@
                             <!-- ================= VIEW: MODUL MADRASAH DINIYAH ================= -->
                             <div id="admin-view-madin" class="hidden space-y-4">
                                 <!-- Header Sub-View -->
-                                <div class="bg-white dark:bg-[#15202d] px-3.5 py-2.5 md:px-4 md:py-3 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-wrap items-center justify-between gap-2.5">
+                                <div class="bg-white dark:bg-[#15202d] px-3.5 py-2.5 md:px-4 md:py-3 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-wrap items-center justify-between gap-2.5 animate-fade-in-up stagger-1">
                                     <div class="flex items-center space-x-2.5 min-w-0">
                                         <button type="button" onclick="backFromAdminModule()"
                                             class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl flex items-center justify-center transition active:scale-95 shrink-0"
@@ -9326,7 +9364,7 @@
                                             <span class="hidden sm:inline">Inisialisasi Sheet</span>
                                         </button>
                                         <button type="button" onclick="if(window.ASNMadin) ASNMadin.openStartSessionModal()"
-                                            class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[11px] font-bold transition flex items-center space-x-1.5 shadow-sm active:scale-95"
+                                            class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm active:scale-95 shrink-0"
                                             title="Buka Sesi KBM / Presensi Kelas">
                                             <i class="fa-solid fa-chalkboard-user text-xs"></i>
                                             <span>Mulai Sesi KBM</span>
@@ -9334,55 +9372,97 @@
                                     </div>
                                 </div>
 
-                                <!-- 4 KARTU STATISTIK RINGKASAN MADIN -->
-                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-2.5">
-                                    <div class="bg-white dark:bg-[#15202d] p-2.5 md:p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex items-start justify-between">
-                                        <div class="space-y-0.5 min-w-0">
-                                            <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">KELAS AKTIF</span>
-                                            <div id="madin-stat-total-kelas" class="text-lg md:text-xl font-black text-slate-800 dark:text-slate-100">0</div>
-                                            <p class="text-[9px] text-indigo-600 dark:text-indigo-400 font-semibold truncate">Awaliyah • Wustho • Ulya</p>
+                                <!-- 4 KARTU RINGKASAN MAKRO MADIN (BERWARNA VIBRANT PERSIS TAHFIDZ & TPQ) -->
+                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
+                                    <!-- 1. Total Kelas Aktif (Emerald Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#22c55e] to-[#16a34a] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-emerald-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-2 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">KELAS AKTIF</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-school"></i>
+                                            </div>
                                         </div>
-                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 text-sm">
-                                            <i class="fa-solid fa-school"></i>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="madin-stat-total-kelas">0 Kelas</span>
+                                            </h4>
                                         </div>
-                                    </div>
-
-                                    <div class="bg-white dark:bg-[#15202d] p-2.5 md:p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex items-start justify-between">
-                                        <div class="space-y-0.5 min-w-0">
-                                            <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">MATA PELAJARAN / KITAB</span>
-                                            <div id="madin-stat-total-kitab" class="text-lg md:text-xl font-black text-slate-800 dark:text-slate-100">0</div>
-                                            <p class="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold truncate">Kajian Kurikulum Madin</p>
-                                        </div>
-                                        <div class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 text-sm">
-                                            <i class="fa-solid fa-book"></i>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Awaliyah • Wustho • Ulya</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-emerald-700 font-black shadow-xs shrink-0 text-[9px]">Jenjang</span>
                                         </div>
                                     </div>
 
-                                    <div class="bg-white dark:bg-[#15202d] p-2.5 md:p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex items-start justify-between">
-                                        <div class="space-y-0.5 min-w-0">
-                                            <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">TATAP MUKA (SESI)</span>
-                                            <div id="madin-stat-sesi-bulan" class="text-lg md:text-xl font-black text-slate-800 dark:text-slate-100">0</div>
-                                            <p class="text-[9px] text-sky-600 dark:text-sky-400 font-semibold truncate">Jurnal Mengajar Tercatat</p>
+                                    <!-- 2. Mata Pelajaran / Kitab (Indigo Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#6366f1] to-[#4f46e5] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-indigo-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-3 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">MATA PELAJARAN / KITAB</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-book-open"></i>
+                                            </div>
                                         </div>
-                                        <div class="w-8 h-8 rounded-xl bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 text-sm">
-                                            <i class="fa-solid fa-calendar-check"></i>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="madin-stat-total-kitab">0 Kitab</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Kajian Kurikulum Madin</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white/25 text-white font-bold backdrop-blur-xs shrink-0 text-[9px]">Kurikulum</span>
                                         </div>
                                     </div>
 
-                                    <div class="bg-white dark:bg-[#15202d] p-2.5 md:p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex items-start justify-between">
-                                        <div class="space-y-0.5 min-w-0">
-                                            <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">RERATA KEHADIRAN</span>
-                                            <div id="madin-stat-kehadiran-pct" class="text-lg md:text-xl font-black text-teal-600 dark:text-teal-400">100%</div>
-                                            <p class="text-[9px] text-teal-600 dark:text-teal-400 font-semibold truncate">Kedisiplinan Kelas Madin</p>
+                                    <!-- 3. Sesi Tatap Muka Bulan Ini (Rose/Pink Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#f43f5e] via-[#ec4899] to-[#d946ef] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-pink-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-4 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">TATAP MUKA (SESI)</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-calendar-check"></i>
+                                            </div>
                                         </div>
-                                        <div class="w-8 h-8 rounded-xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 text-sm">
-                                            <i class="fa-solid fa-user-check"></i>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="madin-stat-sesi-bulan">0 Sesi</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Jurnal Mengajar Asatidz</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white/25 text-white font-bold backdrop-blur-xs shrink-0 text-[9px]">KBM Sesi</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 4. Rerata Kehadiran Santri (Amber/Orange Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#f59e0b] to-[#ea580c] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-amber-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-5 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">RERATA KEHADIRAN</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-user-check"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center justify-between">
+                                                <span class="flex items-baseline gap-1">
+                                                    <span id="madin-stat-kehadiran-pct">100%</span>
+                                                </span>
+                                                <span class="flex items-center gap-1 text-[10px] bg-white/20 px-2 py-0.5 rounded-full backdrop-blur-xs text-white">
+                                                    <span class="font-black">Disiplin ⭐</span>
+                                                </span>
+                                            </h4>
+                                        </div>
+                                        <div class="space-y-1 pt-1 border-t border-white/10">
+                                            <div class="w-full bg-black/20 h-1.5 rounded-full overflow-hidden">
+                                                <div id="madin-stat-bar-kehadiran" class="bg-white h-full rounded-full transition-all duration-500" style="width: 100%;"></div>
+                                            </div>
+                                            <div class="flex items-center justify-between text-[10px] text-white/90">
+                                                <span class="truncate text-[9.5px] opacity-90">Kedisiplinan Kelas Madin</span>
+                                                <span class="px-2 py-0.5 rounded-full bg-white text-amber-700 font-black shadow-xs shrink-0 text-[9px]">Presensi</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- SUB-TAB NAVIGATOR MADIN -->
-                                <div class="bg-white dark:bg-[#15202d] p-1.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm">
+                                <div class="bg-white dark:bg-[#15202d] p-1.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm animate-fade-in-up stagger-6">
                                     <div class="flex items-center gap-1 overflow-x-auto no-scrollbar">
                                         <button type="button" id="btn-madin-tab-jurnal" onclick="if(window.ASNMadin) ASNMadin.switchTab('jurnal')"
                                             class="madin-tab-btn flex-1 min-w-[130px] px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 bg-indigo-600 text-white shadow-sm">
@@ -9410,7 +9490,7 @@
                                 <!-- ================= TAB 1: JURNAL & PRESENSI KBM ================= -->
                                 <div id="panel-madin-jurnal" class="space-y-3.5">
                                     <!-- Toolbar Filter Kelas & Kitab -->
-                                    <div class="bg-white dark:bg-[#15202d] p-3 md:p-4 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm">
+                                    <div class="bg-white dark:bg-[#15202d] p-3 md:p-4 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm animate-fade-in-up stagger-7">
                                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
                                             <div>
                                                 <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Pilih Kelas</label>
@@ -9442,7 +9522,7 @@
                                     </div>
 
                                     <!-- Panel Presensi & Jurnal Kelas Aktif -->
-                                    <div id="madin-active-session-card" class="bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm overflow-hidden">
+                                    <div id="madin-active-session-card" class="bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm overflow-hidden animate-fade-in-up stagger-8">
                                         <!-- Header Sesi -->
                                         <div class="p-3.5 md:p-4 bg-slate-50/70 dark:bg-[#182332] border-b border-slate-100 dark:border-[#253447] flex flex-wrap items-center justify-between gap-2.5">
                                             <div class="space-y-0.5">
@@ -9607,17 +9687,17 @@
 
                                         <!-- Tabel Input Nilai -->
                                         <div class="overflow-x-auto">
-                                            <table class="w-full text-left text-xs">
+                                            <table class="w-full text-left text-xs table-fixed min-w-[760px]">
                                                 <thead class="bg-slate-50 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 font-bold uppercase text-[10px] tracking-wider border-y border-slate-100 dark:border-[#253447]">
                                                     <tr>
                                                         <th class="py-2.5 px-3 w-10 text-center">No</th>
-                                                        <th class="py-2.5 px-3 min-w-[160px]">Santri</th>
-                                                        <th class="py-2.5 px-3 w-24 text-center">Harian (30%)</th>
-                                                        <th class="py-2.5 px-3 w-24 text-center">Lisan (30%)</th>
-                                                        <th class="py-2.5 px-3 w-24 text-center">Tulis (40%)</th>
+                                                        <th class="py-2.5 px-3 w-[26%]">Santri</th>
+                                                        <th class="py-2.5 px-3 w-20 text-center">Harian (30%)</th>
+                                                        <th class="py-2.5 px-3 w-20 text-center">Lisan (30%)</th>
+                                                        <th class="py-2.5 px-3 w-20 text-center">Tulis (40%)</th>
                                                         <th class="py-2.5 px-3 w-20 text-center">Nilai Akhir</th>
                                                         <th class="py-2.5 px-3 w-24 text-center">Predikat</th>
-                                                        <th class="py-2.5 px-3 min-w-[140px]">Catatan Asatidz</th>
+                                                        <th class="py-2.5 px-3 w-[24%]">Catatan Asatidz</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody id="madin-grades-table-body" class="divide-y divide-slate-100 dark:divide-[#253447]">
@@ -20049,10 +20129,10 @@
     <script src="/js/pegawai.js?v=2"></script>
     <script src="/js/tahfidz.js?v=24"></script>
     <script src="/js/tpq.js?v=17"></script>
-    <script src="/js/sorogan.js?v=19"></script>
+    <script src="/js/sorogan.js?v=20"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="/js/presensi.js?v=15"></script>
-    <script src="/js/madin.js?v=14"></script>
+    <script src="/js/madin.js?v=15"></script>
     <script src="/js/keuangan.js"></script>
     <script src="/js/panduan.js?v=1"></script>
 
