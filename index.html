@@ -61,7 +61,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <!-- Compiled & Minified Tailwind CSS -->
-    <link rel="stylesheet" href="/css/styles.min.css?v=34">
+    <link rel="stylesheet" href="/css/styles.min.css?v=35">
 
 
 
@@ -7244,75 +7244,131 @@
                             <!-- ================= VIEW 4: MODUL DATA PENDAFTAR PPDB ================= -->
                             <div id="admin-view-ppdb" class="hidden space-y-4">
                                 <!-- Header Sub-View -->
-                                <div
-                                    class="bg-white p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
-                                    <div class="flex items-center space-x-2.5">
+                                <div class="bg-white dark:bg-[#15202d] px-3.5 py-2.5 md:px-4 md:py-3 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-wrap items-center justify-between gap-2.5 animate-fade-in-up stagger-1">
+                                    <div class="flex items-center space-x-2.5 min-w-0">
                                         <button type="button" onclick="backFromAdminModule()"
-                                            class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-lg flex items-center justify-center transition active:scale-95 shrink-0"
+                                            class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl flex items-center justify-center transition active:scale-95 shrink-0"
                                             title="Kembali">
                                             <i class="fa-solid fa-arrow-left text-xs"></i>
                                         </button>
-                                        <div>
-                                            <span
-                                                class="text-[10px] font-extrabold text-blue-700 uppercase tracking-widest block">Dashboard
-                                                Admin</span>
-                                            <h2
-                                                class="text-sm md:text-base font-bold text-slate-800 dark:text-slate-100">
-                                                Data Pendaftar PPDB</h2>
+                                        <div class="min-w-0">
+                                            <div class="flex items-center gap-2">
+                                                <h2 class="text-sm md:text-base font-black text-slate-800 dark:text-slate-100 truncate">
+                                                    Data Pendaftar PPDB
+                                                </h2>
+                                                <span class="hidden sm:inline-flex px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
+                                                    Santri Baru
+                                                </span>
+                                            </div>
+                                            <p class="text-[10px] text-slate-400 hidden md:block truncate">
+                                                Manajemen registrasi santri baru, verifikasi berkas formulir, dan seleksi kelulusan.
+                                            </p>
                                         </div>
                                     </div>
-                                    <button type="button" onclick="loadAdminPPDBData()"
-                                        class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold border border-blue-100 transition flex items-center space-x-1.5 active:scale-95">
-                                        <i class="fa-solid fa-rotate text-xs"></i>
-                                        <span class="hidden sm:inline">Refresh Data</span>
-                                    </button>
+                                    <div class="flex items-center gap-1.5 flex-wrap ml-auto">
+                                        <button type="button" onclick="loadAdminPPDBData()"
+                                            class="px-2.5 sm:px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl text-[11px] font-bold transition flex items-center space-x-1 border border-slate-200 dark:border-[#283a4e] active:scale-95"
+                                            title="Segarkan Data PPDB">
+                                            <i class="fa-solid fa-arrows-rotate text-xs"></i>
+                                            <span class="hidden sm:inline">Refresh Data</span>
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <!-- CARDS RINGKASAN PPDB -->
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                    <div class="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm space-y-1">
-                                        <span class="text-[10px] font-bold text-slate-400 uppercase">Total
-                                            Pendaftar</span>
-                                        <div id="admin-ppdb-stat-total"
-                                            class="text-lg md:text-xl font-extrabold text-slate-800">0</div>
-                                    </div>
-                                    <div
-                                        class="bg-white p-3.5 rounded-2xl border border-amber-100 bg-amber-50/30 shadow-sm space-y-1">
-                                        <span class="text-[10px] font-bold text-amber-700 uppercase">Menunggu
-                                            Seleksi</span>
-                                        <div id="admin-ppdb-stat-pending"
-                                            class="text-lg md:text-xl font-extrabold text-amber-800">0
+                                <!-- 4 KARTU MAKRO KPI PPDB (BERWARNA VIBRANT PERSIS TAHFIDZ & TPQ) -->
+                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
+                                    <!-- 1. Total Pendaftar (Emerald Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#22c55e] to-[#16a34a] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-emerald-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-2 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">TOTAL PENDAFTAR</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-users-rectangle"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="admin-ppdb-stat-total">0</span>
+                                                <span class="text-xs font-bold text-white/80">Pendaftar</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Calon santri terdaftar</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-emerald-700 font-black shadow-xs shrink-0 text-[9px]">Data Masuk</span>
                                         </div>
                                     </div>
-                                    <div
-                                        class="bg-white p-3.5 rounded-2xl border border-emerald-100 bg-emerald-50/30 shadow-sm space-y-1">
-                                        <span class="text-[10px] font-bold text-emerald-700 uppercase">Diterima</span>
-                                        <div id="admin-ppdb-stat-diterima"
-                                            class="text-lg md:text-xl font-extrabold text-emerald-800">0
+
+                                    <!-- 2. Menunggu Seleksi / Pending (Amber/Orange Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#f59e0b] to-[#ea580c] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-amber-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-3 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">MENUNGGU SELEKSI</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-clock-rotate-left"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="admin-ppdb-stat-pending">0</span>
+                                                <span class="text-xs font-bold text-white/80">Berkas</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Tahap verifikasi data</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-amber-700 font-black shadow-xs shrink-0 text-[9px]">Pending</span>
                                         </div>
                                     </div>
-                                    <div
-                                        class="bg-white p-3.5 rounded-2xl border border-rose-100 bg-rose-50/30 shadow-sm space-y-1">
-                                        <span class="text-[10px] font-bold text-rose-700 uppercase">Ditolak</span>
-                                        <div id="admin-ppdb-stat-ditolak"
-                                            class="text-lg md:text-xl font-extrabold text-rose-800">0
+
+                                    <!-- 3. Diterima / Lulus Seleksi (Indigo Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#6366f1] to-[#4f46e5] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-indigo-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-4 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">LULUS SELEKSI</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-circle-check"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="admin-ppdb-stat-diterima">0</span>
+                                                <span class="text-xs font-bold text-white/80">Diterima</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Siap registrasi ulang</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white/25 text-white font-bold backdrop-blur-xs shrink-0 text-[9px]">Diterima 🏆</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 4. Ditolak (Rose/Pink Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#f43f5e] via-[#ec4899] to-[#d946ef] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-pink-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-5 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">TIDAK LULUS</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-circle-xmark"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="admin-ppdb-stat-ditolak">0</span>
+                                                <span class="text-xs font-bold text-white/80">Santri</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Kualifikasi belum sesuai</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white/25 text-white font-bold backdrop-blur-xs shrink-0 text-[9px]">Ditolak</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- FITUR SEARCH & FILTER -->
-                                <div
-                                    class="bg-white p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+                                <div class="bg-white dark:bg-[#15202d] p-3 md:p-3.5 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-col md:flex-row gap-2.5 items-stretch md:items-center justify-between animate-fade-in-up stagger-6">
                                     <div class="relative flex-1">
-                                        <i
-                                            class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                                         <input type="text" id="admin-ppdb-search" oninput="filterAdminPPDBList()"
                                             placeholder="Cari berdasarkan Nama atau NISN..."
-                                            class="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 focus:bg-white transition">
+                                            class="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 dark:border-[#253447] text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white transition">
                                     </div>
                                     <div class="flex items-center space-x-2">
                                         <select id="admin-ppdb-filter-status" onchange="filterAdminPPDBList()"
-                                            class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 focus:bg-white transition">
+                                            class="px-3 py-2 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white transition">
                                             <option value="ALL">Semua Status</option>
                                             <option value="Pending">Menunggu (Pending)</option>
                                             <option value="Diterima">Diterima</option>
@@ -7322,42 +7378,35 @@
                                 </div>
 
                                 <!-- DAFTAR PENDAFTAR TABLE & MOBILE LIST -->
-                                <section
-                                    class="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-100 space-y-3">
-                                    <div
-                                        class="flex justify-between items-center border-b border-slate-100 dark:border-[#253447] pb-2.5">
-                                        <h3
-                                            class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center">
-                                            <i class="fa-solid fa-list-check text-blue-600 mr-2"></i> Daftar Calon
-                                            Santri
+                                <section class="bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] space-y-3 animate-fade-in-up stagger-7">
+                                    <div class="flex justify-between items-center border-b border-slate-100 dark:border-[#253447] pb-2.5">
+                                        <h3 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center">
+                                            <i class="fa-solid fa-list-check text-blue-600 mr-2"></i> Daftar Calon Santri Baru
                                         </h3>
                                         <span id="admin-ppdb-list-count"
-                                            class="text-[11px] font-bold text-blue-800 bg-blue-50 px-2.5 py-0.5 rounded-lg">0
-                                            Data</span>
+                                            class="text-[11px] font-bold text-blue-800 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-0.5 rounded-lg border border-blue-200/60 dark:border-blue-800/40">0 Data</span>
                                     </div>
 
                                     <!-- DESKTOP TABLE VIEW (MD UP) -->
                                     <div class="hidden md:block overflow-x-auto">
-                                        <table class="w-full text-left border-collapse text-xs">
+                                        <table class="w-full text-left border-collapse text-xs table-fixed min-w-[850px]">
                                             <thead>
-                                                <tr
-                                                    class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold border-b border-slate-100">
-                                                    <th class="py-2.5 px-3">No</th>
-                                                    <th class="py-2.5 px-3">Nama Santri</th>
-                                                    <th class="py-2.5 px-3">NISN</th>
-                                                    <th class="py-2.5 px-3">Wali</th>
-                                                    <th class="py-2.5 px-3">Program Pilihan</th>
-                                                    <th class="py-2.5 px-3">No. WhatsApp</th>
-                                                    <th class="py-2.5 px-3">Status</th>
-                                                    <th class="py-2.5 px-3">Tanggal</th>
-                                                    <th class="py-2.5 px-3 text-center">Aksi</th>
+                                                <tr class="bg-slate-50 dark:bg-[#1c2836] text-slate-500 dark:text-slate-400 uppercase text-[10px] font-bold border-b border-slate-100 dark:border-[#253447]">
+                                                    <th class="py-2.5 px-3 w-10 text-center">No</th>
+                                                    <th class="py-2.5 px-3 w-[24%]">Nama Santri</th>
+                                                    <th class="py-2.5 px-3 w-[14%]">NISN</th>
+                                                    <th class="py-2.5 px-3 w-[18%]">Wali</th>
+                                                    <th class="py-2.5 px-3 w-[15%]">Program Pilihan</th>
+                                                    <th class="py-2.5 px-3 w-[15%]">No. WhatsApp</th>
+                                                    <th class="py-2.5 px-3 w-24 text-center">Status</th>
+                                                    <th class="py-2.5 px-3 w-[14%]">Tanggal</th>
+                                                    <th class="py-2.5 px-3 w-20 text-center pr-2">Aksi</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="admin-ppdb-table-tbody"
-                                                class="divide-y divide-slate-100 text-slate-700">
+                                                class="divide-y divide-slate-100 dark:divide-[#253447] text-slate-700 dark:text-slate-200">
                                                 <!-- Rendered dynamically by JavaScript -->
                                             </tbody>
-                                        </table>
                                     </div>
 
                                     <!-- MOBILE CARD LIST VIEW (SM DOWN) -->
@@ -7381,98 +7430,134 @@
                             <!-- ================= VIEW: MODUL MANAJEMEN PENGGUNA ================= -->
                             <div id="admin-view-users" class="hidden space-y-4">
                                 <!-- Header Sub-View -->
-                                <div
-                                    class="bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex items-center justify-between">
-                                    <div class="flex items-center space-x-2.5">
+                                <div class="bg-white dark:bg-[#15202d] px-3.5 py-2.5 md:px-4 md:py-3 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-wrap items-center justify-between gap-2.5 animate-fade-in-up stagger-1">
+                                    <div class="flex items-center space-x-2.5 min-w-0">
                                         <button type="button" onclick="backFromAdminModule()"
-                                            class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-lg flex items-center justify-center transition active:scale-95 shrink-0"
+                                            class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl flex items-center justify-center transition active:scale-95 shrink-0"
                                             title="Kembali">
                                             <i class="fa-solid fa-arrow-left text-xs"></i>
                                         </button>
-                                        <div>
-                                            <span
-                                                class="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400 uppercase tracking-widest block">Dashboard
-                                                Admin</span>
-                                            <h2
-                                                class="text-sm md:text-base font-bold text-slate-800 dark:text-slate-100">
-                                                Manajemen Pengguna Terpadu</h2>
+                                        <div class="min-w-0">
+                                            <div class="flex items-center gap-2">
+                                                <h2 class="text-sm md:text-base font-black text-slate-800 dark:text-slate-100 truncate">
+                                                    Manajemen Pengguna Terpadu
+                                                </h2>
+                                                <span class="hidden sm:inline-flex px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
+                                                    Otentikasi & Akun
+                                                </span>
+                                            </div>
+                                            <p class="text-[10px] text-slate-400 hidden md:block truncate">
+                                                Pangkalan akun pengguna, peran otorisasi, relasi wali santri, dan status online.
+                                            </p>
                                         </div>
                                     </div>
-                                    <div class="flex items-center space-x-2">
+                                    <div class="flex items-center gap-1.5 flex-wrap ml-auto">
                                         <button type="button" onclick="openOnlineUsersModal()"
-                                            class="px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm active:scale-95"
+                                            class="px-2.5 sm:px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 rounded-xl text-[11px] font-bold transition flex items-center space-x-1.5 shadow-2xs active:scale-95"
                                             title="Lihat Sesi Pengguna Online Real-time">
                                             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                                             <span class="hidden sm:inline">Sesi Real-time</span>
                                         </button>
                                         <button type="button" onclick="openAdminUserModal()"
-                                            class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm active:scale-95">
+                                            class="px-3 sm:px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[11px] font-bold transition flex items-center space-x-1 shadow-sm active:scale-95">
                                             <i class="fa-solid fa-user-plus text-xs"></i>
-                                            <span class="hidden sm:inline">Tambah Pengguna</span>
+                                            <span>+ Tambah Pengguna</span>
                                         </button>
                                         <button type="button" onclick="loadAdminUsersData()"
-                                            class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 active:scale-95"
+                                            class="px-2.5 sm:px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl text-[11px] font-bold transition flex items-center space-x-1 border border-slate-200 dark:border-[#283a4e] active:scale-95"
                                             title="Refresh Data">
-                                            <i class="fa-solid fa-rotate text-xs"></i>
+                                            <i class="fa-solid fa-arrows-rotate text-xs"></i>
                                             <span class="hidden sm:inline">Refresh</span>
                                         </button>
                                     </div>
                                 </div>
 
-                                <!-- Metric Summary Cards -->
-                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
-                                    <div
-                                        class="bg-white dark:bg-[#15202d] p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm">
-                                        <span class="text-[10px] font-bold text-slate-400 uppercase block">Total
-                                            Pengguna</span>
-                                        <div class="flex items-baseline space-x-1 mt-0.5">
-                                            <span
-                                                class="text-lg md:text-xl font-black text-slate-800 dark:text-slate-100"
-                                                id="user-count-total">0</span>
-                                            <span class="text-[10px] text-slate-400">Akun</span>
+                                <!-- 4 KARTU MAKRO KPI DATA PENGGUNA (BERWARNA VIBRANT PERSIS TAHFIDZ & TPQ) -->
+                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
+                                    <!-- 1. Total Pengguna Terdata (Emerald Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#22c55e] to-[#16a34a] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-emerald-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-2 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">TOTAL PENGGUNA</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-users"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="user-count-total">0</span>
+                                                <span class="text-xs font-bold text-white/80">Akun</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Seluruh akun di sistem</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-emerald-700 font-black shadow-xs shrink-0 text-[9px]">Total Akun</span>
                                         </div>
                                     </div>
-                                    <div
-                                        class="bg-white dark:bg-[#15202d] p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm">
-                                        <span
-                                            class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase block">Wali
-                                            Santri</span>
-                                        <div class="flex items-baseline space-x-1 mt-0.5">
-                                            <span
-                                                class="text-lg md:text-xl font-black text-emerald-700 dark:text-emerald-300"
-                                                id="user-count-wali">0</span>
-                                            <span class="text-[10px] text-slate-400">Akun</span>
+
+                                    <!-- 2. Akun Wali Santri (Indigo Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#6366f1] to-[#4f46e5] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-indigo-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-3 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">WALI SANTRI</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-user-group"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="user-count-wali">0</span>
+                                                <span class="text-xs font-bold text-white/80">Akun</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Terhubung profil santri</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white/25 text-white font-bold backdrop-blur-xs shrink-0 text-[9px]">Wali Santri</span>
                                         </div>
                                     </div>
-                                    <div
-                                        class="bg-white dark:bg-[#15202d] p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm">
-                                        <span
-                                            class="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase block">Pengasuh</span>
-                                        <div class="flex items-baseline space-x-1 mt-0.5">
-                                            <span
-                                                class="text-lg md:text-xl font-black text-amber-600 dark:text-amber-400"
-                                                id="user-count-pengasuh">0</span>
-                                            <span class="text-[10px] text-slate-400">Akun</span>
+
+                                    <!-- 3. Akun Pengasuh & Asatidz (Rose/Pink Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#f43f5e] via-[#ec4899] to-[#d946ef] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-pink-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-4 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">PENGASUH & ASATIDZ</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-hands-praying"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="user-count-pengasuh">0</span>
+                                                <span class="text-xs font-bold text-white/80">Akun</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Masyayikh & dewan guru</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white/25 text-white font-bold backdrop-blur-xs shrink-0 text-[9px]">Masyayikh</span>
                                         </div>
                                     </div>
-                                    <div
-                                        class="bg-white dark:bg-[#15202d] p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm">
-                                        <span
-                                            class="text-[10px] font-bold text-brand-600 dark:text-brand-400 uppercase block">Administrator</span>
-                                        <div class="flex items-baseline space-x-1 mt-0.5">
-                                            <span
-                                                class="text-lg md:text-xl font-black text-brand-700 dark:text-brand-300"
-                                                id="user-count-admin">0</span>
-                                            <span class="text-[10px] text-slate-400">Akun</span>
+
+                                    <!-- 4. Administrator (Amber/Orange Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#f59e0b] to-[#ea580c] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-amber-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-5 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">ADMINISTRATOR SISTEM</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-user-shield"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="user-count-admin">0</span>
+                                                <span class="text-xs font-bold text-white/80">Akun</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Super Admin & pengelola</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-amber-700 font-black shadow-xs shrink-0 text-[9px]">Admin ⭐</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Filter & Search Bar -->
-                                <div
-                                    class="bg-white dark:bg-[#15202d] p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
-                                    <div
-                                        class="flex items-center space-x-1 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+                                <div class="bg-white dark:bg-[#15202d] p-3 md:p-3.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3 animate-fade-in-up stagger-6">
+                                    <div class="flex items-center space-x-1 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
                                         <button type="button" onclick="filterAdminUsers('ALL')" data-role-filter="ALL"
                                             class="admin-user-tab active px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 text-white transition shadow-sm shrink-0">Semua
                                             (<span id="user-tab-count-all">0</span>)</button>
@@ -7513,8 +7598,7 @@
                                     </div>
 
                                     <div class="relative w-full sm:w-64 shrink-0">
-                                        <i
-                                            class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-400"></i>
+                                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-400"></i>
                                         <input type="text" id="admin-users-search-input"
                                             oninput="handleAdminUsersSearch(this.value)"
                                             placeholder="Cari nama, email, NIS..."
@@ -7523,19 +7607,24 @@
                                 </div>
 
                                 <!-- Table Container -->
-                                <div
-                                    class="bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm overflow-hidden">
+                                <div class="bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm overflow-hidden p-3.5 md:p-4 space-y-3 animate-fade-in-up stagger-7">
+                                    <div class="flex justify-between items-center border-b border-slate-100 dark:border-[#253447] pb-2.5">
+                                        <h3 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center">
+                                            <i class="fa-solid fa-users text-emerald-600 mr-2"></i> Daftar Akun Pengguna
+                                        </h3>
+                                        <span class="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-lg border border-emerald-200/60 dark:border-emerald-800/40">Database Users</span>
+                                    </div>
+
                                     <div class="overflow-x-auto">
-                                        <table class="w-full text-left text-xs">
-                                            <thead
-                                                class="bg-slate-50 dark:bg-[#1c2836]/60 text-slate-400 dark:text-slate-300 font-bold uppercase tracking-wider text-[10px] border-b border-slate-100 dark:border-[#253447]">
+                                        <table class="w-full text-left text-xs table-fixed min-w-[850px]">
+                                            <thead class="bg-slate-50 dark:bg-[#1c2836]/60 text-slate-400 dark:text-slate-300 font-bold uppercase tracking-wider text-[10px] border-b border-slate-100 dark:border-[#253447]">
                                                 <tr>
-                                                    <th class="p-3.5">Pengguna</th>
-                                                    <th class="p-3.5">WhatsApp / HP</th>
-                                                    <th class="p-3.5">Peran</th>
-                                                    <th class="p-3.5">Santri Terhubung</th>
-                                                    <th class="p-3.5 text-center">Status</th>
-                                                    <th class="p-3.5 text-right">Aksi</th>
+                                                    <th class="py-2.5 px-3 w-[28%]">Pengguna</th>
+                                                    <th class="py-2.5 px-3 w-[18%]">WhatsApp / HP</th>
+                                                    <th class="py-2.5 px-3 w-[18%]">Peran</th>
+                                                    <th class="py-2.5 px-3 w-[18%]">Santri Terhubung</th>
+                                                    <th class="py-2.5 px-3 text-center w-20">Status</th>
+                                                    <th class="py-2.5 px-3 text-right w-20 pr-2">Aksi</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="admin-users-table-body"
@@ -7569,101 +7658,132 @@
                             <!-- ================= VIEW: MODUL MANAJEMEN PERAN (RBAC) ================= -->
                             <div id="admin-view-roles" class="hidden space-y-4">
                                 <!-- Header Sub-View -->
-                                <div
-                                    class="bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                    <div class="flex items-center space-x-2.5">
+                                <div class="bg-white dark:bg-[#15202d] px-3.5 py-2.5 md:px-4 md:py-3 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-wrap items-center justify-between gap-2.5 animate-fade-in-up stagger-1">
+                                    <div class="flex items-center space-x-2.5 min-w-0">
                                         <button type="button" onclick="backFromAdminModule()"
-                                            class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-lg flex items-center justify-center transition active:scale-95 shrink-0"
+                                            class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl flex items-center justify-center transition active:scale-95 shrink-0"
                                             title="Kembali">
                                             <i class="fa-solid fa-arrow-left text-xs"></i>
                                         </button>
-                                        <div>
-                                            <div class="flex items-center space-x-2">
-                                                <span
-                                                    class="text-[10px] font-extrabold text-purple-700 dark:text-purple-400 uppercase tracking-widest block">Keamanan
-                                                    & Otoritas</span>
-                                                <span
-                                                    class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-100 text-purple-800 dark:bg-purple-950/70 dark:text-purple-300 border border-purple-200/60">
+                                        <div class="min-w-0">
+                                            <div class="flex items-center gap-2">
+                                                <h2 class="text-sm md:text-base font-black text-slate-800 dark:text-slate-100 truncate">
+                                                    Manajemen Peran & Hak Akses
+                                                </h2>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/40">
                                                     <i class="fa-solid fa-lock text-[8px] mr-1"></i>RBAC Active
                                                 </span>
                                             </div>
-                                            <h2
-                                                class="text-sm md:text-base font-bold text-slate-800 dark:text-slate-100">
-                                                Manajemen Peran & Hak Akses</h2>
+                                            <p class="text-[10px] text-slate-400 hidden md:block truncate">
+                                                Matriks kontrol wewenang CRUD dan batasan modul bagi setiap level hak akses.
+                                            </p>
                                         </div>
                                     </div>
-                                    <div class="flex items-center space-x-2 self-end sm:self-auto">
+                                    <div class="flex items-center gap-1.5 flex-wrap ml-auto">
                                         <button type="button" onclick="openRoleGuideModal()"
-                                            class="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:hover:bg-purple-900/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800/50 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 active:scale-95">
+                                            class="px-2.5 sm:px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:hover:bg-purple-900/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800/50 rounded-xl text-[11px] font-bold transition flex items-center space-x-1.5 active:scale-95">
                                             <i class="fa-solid fa-book-bookmark text-xs"></i>
                                             <span class="hidden sm:inline">Panduan RBAC</span>
                                         </button>
                                         <button type="button" onclick="showAdminView('users')"
-                                            class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm active:scale-95">
+                                            class="px-3 sm:px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[11px] font-bold transition flex items-center space-x-1 shadow-sm active:scale-95">
                                             <i class="fa-solid fa-users text-xs"></i>
-                                            <span class="hidden sm:inline">Kelola Akun</span>
+                                            <span>Kelola Akun</span>
                                         </button>
                                         <button type="button" onclick="loadAdminRolesData()"
-                                            class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 active:scale-95"
+                                            class="px-2.5 sm:px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl text-[11px] font-bold transition flex items-center space-x-1 border border-slate-200 dark:border-[#283a4e] active:scale-95"
                                             title="Refresh Matriks">
-                                            <i class="fa-solid fa-rotate text-xs"></i>
+                                            <i class="fa-solid fa-arrows-rotate text-xs"></i>
                                             <span class="hidden sm:inline">Refresh</span>
                                         </button>
                                     </div>
                                 </div>
 
-                                <!-- Metric Summary Cards -->
-                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
-                                    <div
-                                        class="bg-white dark:bg-[#15202d] p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm">
-                                        <span class="text-[10px] font-bold text-slate-400 uppercase block">Total Peran
-                                            Sistem</span>
-                                        <div class="flex items-baseline space-x-1 mt-0.5">
-                                            <span
-                                                class="text-lg md:text-xl font-black text-purple-700 dark:text-purple-300"
-                                                id="role-kpi-total-roles">7</span>
-                                            <span class="text-[10px] text-slate-400">Role</span>
+                                <!-- 4 KARTU MAKRO KPI MANAJEMEN PERAN & RBAC (BERWARNA VIBRANT PERSIS TAHFIDZ & TPQ) -->
+                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
+                                    <!-- 1. Total Peran Sistem (Emerald Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#22c55e] to-[#16a34a] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-emerald-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-2 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">TOTAL PERAN SISTEM</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-shield-halved"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="role-kpi-total-roles">7</span>
+                                                <span class="text-xs font-bold text-white/80">Role</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Klasifikasi peran otorisasi</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-emerald-700 font-black shadow-xs shrink-0 text-[9px]">Level Otoritas</span>
                                         </div>
                                     </div>
-                                    <div
-                                        class="bg-white dark:bg-[#15202d] p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm">
-                                        <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase block">Total
-                                            Akun Terdata</span>
-                                        <div class="flex items-baseline space-x-1 mt-0.5">
-                                            <span
-                                                class="text-lg md:text-xl font-black text-emerald-700 dark:text-emerald-300"
-                                                id="role-kpi-total-users">0</span>
-                                            <span class="text-[10px] text-slate-400">Pengguna</span>
+
+                                    <!-- 2. Total Akun Terdata (Indigo Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#6366f1] to-[#4f46e5] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-indigo-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-3 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">TOTAL AKUN TERDATA</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-id-badge"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="role-kpi-total-users">0</span>
+                                                <span class="text-xs font-bold text-white/80">Pengguna</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Pengguna aktif berwewenang</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white/25 text-white font-bold backdrop-blur-xs shrink-0 text-[9px]">Pengguna</span>
                                         </div>
                                     </div>
-                                    <div
-                                        class="bg-white dark:bg-[#15202d] p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm">
-                                        <span
-                                            class="text-[10px] font-bold text-sky-600 dark:text-sky-400 uppercase block">Modul
-                                            Terproteksi</span>
-                                        <div class="flex items-baseline space-x-1 mt-0.5">
-                                            <span
-                                                class="text-lg md:text-xl font-black text-sky-700 dark:text-sky-300"
-                                                id="role-kpi-total-modules">14</span>
-                                            <span class="text-[10px] text-slate-400">Modul</span>
+
+                                    <!-- 3. Modul Terproteksi (Rose/Pink Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#f43f5e] via-[#ec4899] to-[#d946ef] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-pink-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-4 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">MODUL TERPROTEKSI</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-cubes-stacked"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="role-kpi-total-modules">14</span>
+                                                <span class="text-xs font-bold text-white/80">Modul</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Fitur dalam kendali wewenang</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white/25 text-white font-bold backdrop-blur-xs shrink-0 text-[9px]">Modul RBAC</span>
                                         </div>
                                     </div>
-                                    <div
-                                        class="bg-white dark:bg-[#15202d] p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm">
-                                        <span
-                                            class="text-[10px] font-bold text-brand-600 dark:text-brand-400 uppercase block">Peran
-                                            Anda Saat Ini</span>
-                                        <div class="flex items-baseline space-x-1 mt-0.5">
-                                            <span
-                                                class="text-base md:text-lg font-black text-brand-700 dark:text-brand-300 truncate"
-                                                id="role-kpi-current-role">Administrator</span>
+
+                                    <!-- 4. Peran Anda Saat Ini (Amber/Orange Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#f59e0b] to-[#ea580c] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-amber-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-5 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">PERAN ANDA SAAT INI</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-key"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-lg md:text-xl font-black text-white tracking-tight drop-shadow-2xs truncate">
+                                                <span id="role-kpi-current-role">Administrator</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Hak akses sesi login saat ini</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-amber-700 font-black shadow-xs shrink-0 text-[9px]">Sesi Aktif ⭐</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Matriks Hak Akses Table (RBAC Matrix) -->
                                 <div
-                                    class="bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm overflow-hidden">
+                                    class="bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm overflow-hidden animate-fade-in-up stagger-6">
                                     <div
                                         class="p-4 border-b border-slate-100 dark:border-[#253447] flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50 dark:bg-[#1c2836]/40">
                                         <div>
@@ -7723,7 +7843,7 @@
                                 </div>
 
                                 <!-- Filter Tab & Role Cards Inspector Grid -->
-                                <div class="space-y-3 pt-2">
+                                <div class="space-y-3 pt-2 animate-fade-in-up stagger-7">
                                     <div
                                         class="bg-white dark:bg-[#15202d] p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
                                         <div class="flex items-center space-x-1 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
@@ -7763,82 +7883,129 @@
                             <!-- ================= VIEW: MODUL MASTER DATA SANTRI ================= -->
                             <div id="admin-view-santri" class="hidden space-y-4">
                                 <!-- Header Sub-View -->
-                                <div
-                                    class="bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex items-center justify-between">
-                                    <div class="flex items-center space-x-2.5">
+                                <div class="bg-white dark:bg-[#15202d] px-3.5 py-2.5 md:px-4 md:py-3 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-wrap items-center justify-between gap-2.5 animate-fade-in-up stagger-1">
+                                    <div class="flex items-center space-x-2.5 min-w-0">
                                         <button type="button" onclick="backFromAdminModule()"
-                                            class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-lg flex items-center justify-center transition active:scale-95 shrink-0"
+                                            class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl flex items-center justify-center transition active:scale-95 shrink-0"
                                             title="Kembali">
                                             <i class="fa-solid fa-arrow-left text-xs"></i>
                                         </button>
-                                        <div>
-                                            <span
-                                                class="text-[10px] font-extrabold text-cyan-700 dark:text-cyan-400 uppercase tracking-widest block">Dashboard
-                                                Admin</span>
-                                            <h2
-                                                class="text-sm md:text-base font-bold text-slate-800 dark:text-slate-100">
-                                                Master Data Santri</h2>
+                                        <div class="min-w-0">
+                                            <div class="flex items-center gap-2">
+                                                <h2 class="text-sm md:text-base font-black text-slate-800 dark:text-slate-100 truncate">
+                                                    Master Data Santri
+                                                </h2>
+                                                <span class="hidden sm:inline-flex px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200/60 dark:border-cyan-800/40">
+                                                    Data Induk Santri
+                                                </span>
+                                            </div>
+                                            <p class="text-[10px] text-slate-400 hidden md:block truncate">
+                                                Database induk santri, identitas NIS/NIK, data wali, dan status keaktifan akademik.
+                                            </p>
                                         </div>
                                     </div>
-                                    <div class="flex items-center space-x-2">
+                                    <div class="flex items-center gap-1.5 flex-wrap ml-auto">
                                         <button type="button" onclick="openAdminStudentModal()"
-                                            class="px-3.5 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm active:scale-95">
+                                            class="px-3 sm:px-3.5 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl text-[11px] font-bold transition flex items-center space-x-1 shadow-sm active:scale-95">
                                             <i class="fa-solid fa-user-plus text-xs"></i>
-                                            <span class="hidden sm:inline">Tambah Santri</span>
+                                            <span>+ Tambah Santri</span>
                                         </button>
                                         <button type="button" id="admin-student-btn-refresh" onclick="loadAdminStudentsData(true)"
-                                            class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 active:scale-95"
+                                            class="px-2.5 sm:px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl text-[11px] font-bold transition flex items-center space-x-1 border border-slate-200 dark:border-[#283a4e] active:scale-95"
                                             title="Sinkron / Muat Ulang Data Server">
-                                            <i id="admin-student-refresh-icon" class="fa-solid fa-rotate text-xs"></i>
+                                            <i id="admin-student-refresh-icon" class="fa-solid fa-arrows-rotate text-xs"></i>
                                             <span class="hidden sm:inline">Refresh</span>
                                         </button>
                                     </div>
                                 </div>
 
-                                <!-- CARDS RINGKASAN DATA SANTRI -->
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                    <div
-                                        class="bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm space-y-1">
-                                        <span class="text-[10px] font-bold text-slate-400 uppercase">Total Santri</span>
-                                        <div id="admin-student-stat-total"
-                                            class="text-lg md:text-xl font-extrabold text-slate-800 dark:text-slate-100">
-                                            0</div>
-                                    </div>
-                                    <div
-                                        class="bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-blue-100 dark:border-blue-900/40 bg-blue-50/30 dark:bg-blue-950/20 shadow-sm space-y-1">
-                                        <span
-                                            class="text-[10px] font-bold text-blue-700 dark:text-blue-400 uppercase">Santri
-                                            Putra (L)</span>
-                                        <div id="admin-student-stat-putra"
-                                            class="text-lg md:text-xl font-extrabold text-blue-800 dark:text-blue-300">0
+                                <!-- 4 KARTU MAKRO KPI DATA SANTRI (BERWARNA VIBRANT PERSIS TAHFIDZ & TPQ) -->
+                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
+                                    <!-- 1. Total Santri Induk (Emerald Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#22c55e] to-[#16a34a] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-emerald-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-2 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">TOTAL SANTRI INDUK</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-users"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="admin-student-stat-total">0</span>
+                                                <span class="text-xs font-bold text-white/80">Santri</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Terdaftar di pangkalan data</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-emerald-700 font-black shadow-xs shrink-0 text-[9px]">Data Induk</span>
                                         </div>
                                     </div>
-                                    <div
-                                        class="bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-pink-100 dark:border-pink-900/40 bg-pink-50/30 dark:bg-pink-950/20 shadow-sm space-y-1">
-                                        <span
-                                            class="text-[10px] font-bold text-pink-700 dark:text-pink-400 uppercase">Santri
-                                            Putri (P)</span>
-                                        <div id="admin-student-stat-putri"
-                                            class="text-lg md:text-xl font-extrabold text-pink-800 dark:text-pink-300">0
+
+                                    <!-- 2. Santri Putra / Banin (Indigo Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#6366f1] to-[#4f46e5] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-indigo-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-3 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">SANTRI PUTRA (L)</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-person"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="admin-student-stat-putra">0</span>
+                                                <span class="text-xs font-bold text-white/80">Santri</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Santriwan Asrama Putra</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white/25 text-white font-bold backdrop-blur-xs shrink-0 text-[9px]">Banin</span>
                                         </div>
                                     </div>
-                                    <div
-                                        class="bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-emerald-100 dark:border-emerald-900/40 bg-emerald-50/30 dark:bg-emerald-950/20 shadow-sm space-y-1">
-                                        <span
-                                            class="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase">Santri
-                                            Aktif</span>
-                                        <div id="admin-student-stat-aktif"
-                                            class="text-lg md:text-xl font-extrabold text-emerald-800 dark:text-emerald-300">
-                                            0</div>
+
+                                    <!-- 3. Santri Putri / Banat (Rose/Pink Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#f43f5e] via-[#ec4899] to-[#d946ef] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-pink-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-4 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">SANTRI PUTRI (P)</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-person-dress"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="admin-student-stat-putri">0</span>
+                                                <span class="text-xs font-bold text-white/80">Santri</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Santriwati Asrama Putri</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white/25 text-white font-bold backdrop-blur-xs shrink-0 text-[9px]">Banat</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 4. Santri Aktif (Amber/Orange Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#f59e0b] to-[#ea580c] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-amber-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-5 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">SANTRI STATUS AKTIF</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-user-check"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="admin-student-stat-aktif">0</span>
+                                                <span class="text-xs font-bold text-white/80">Aktif</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Mengikuti kegiatan KBM</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-amber-700 font-black shadow-xs shrink-0 text-[9px]">Aktif ⭐</span>
+                                        </div>
                                     </div>
                                 </div>
 
                                 <!-- FITUR SEARCH & FILTER DATA SANTRI -->
-                                <div
-                                    class="bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+                                <div class="bg-white dark:bg-[#15202d] p-3 md:p-3.5 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-col md:flex-row gap-2.5 items-stretch md:items-center justify-between animate-fade-in-up stagger-6">
                                     <div class="relative flex-1">
-                                        <i
-                                            class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                                         <input type="text" id="admin-student-search" oninput="filterAdminStudentsList()"
                                             placeholder="Cari Nama, NIS, atau NIK Santri..."
                                             class="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 dark:border-[#253447] text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white transition">
@@ -7864,43 +8031,36 @@
                                 </div>
 
                                 <!-- DAFTAR SANTRI TABLE & MOBILE LIST -->
-                                <section
-                                    class="bg-white dark:bg-[#15202d] p-4 md:p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] space-y-3">
-                                    <div
-                                        class="flex justify-between items-center border-b border-slate-100 dark:border-[#253447] pb-2.5">
-                                        <h3
-                                            class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center">
-                                            <i class="fa-solid fa-id-card-clip text-cyan-600 mr-2"></i> Master Data
-                                            Santri
+                                <section class="bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] space-y-3 animate-fade-in-up stagger-7">
+                                    <div class="flex justify-between items-center border-b border-slate-100 dark:border-[#253447] pb-2.5">
+                                        <h3 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center">
+                                            <i class="fa-solid fa-id-card-clip text-cyan-600 mr-2"></i> Master Data Santri
                                         </h3>
                                         <span id="admin-student-list-count"
-                                            class="text-[11px] font-bold text-cyan-800 dark:text-cyan-300 bg-cyan-50 dark:bg-cyan-950/60 px-2.5 py-0.5 rounded-lg">0
-                                            Santri</span>
+                                            class="text-[11px] font-bold text-cyan-800 dark:text-cyan-300 bg-cyan-50 dark:bg-cyan-950/60 px-2.5 py-0.5 rounded-lg border border-cyan-200/60 dark:border-cyan-800/40">0 Santri</span>
                                     </div>
 
                                     <!-- DESKTOP TABLE VIEW (MD UP) -->
                                     <div class="hidden md:block overflow-x-auto">
-                                        <table class="w-full text-left border-collapse text-xs">
+                                        <table class="w-full text-left border-collapse text-xs table-fixed min-w-[850px]">
                                             <thead>
-                                                <tr
-                                                    class="bg-slate-50 dark:bg-[#1c2836] text-slate-500 dark:text-slate-400 uppercase text-[10px] font-bold border-b border-slate-100 dark:border-[#253447]">
-                                                    <th class="py-2.5 px-3">No</th>
-                                                    <th class="py-2.5 px-3">Foto</th>
-                                                    <th class="py-2.5 px-3">Nama Santri</th>
-                                                    <th class="py-2.5 px-3">NIS</th>
-                                                    <th class="py-2.5 px-3">NIK</th>
-                                                    <th class="py-2.5 px-3 text-center">L/P</th>
-                                                    <th class="py-2.5 px-3">Tgl Lahir</th>
-                                                    <th class="py-2.5 px-3">Program</th>
-                                                    <th class="py-2.5 px-3 text-center">Status</th>
-                                                    <th class="py-2.5 px-3 text-center">Aksi</th>
+                                                <tr class="bg-slate-50 dark:bg-[#1c2836] text-slate-500 dark:text-slate-400 uppercase text-[10px] font-bold border-b border-slate-100 dark:border-[#253447]">
+                                                    <th class="py-2.5 px-3 w-10 text-center">No</th>
+                                                    <th class="py-2.5 px-3 w-14 text-center">Foto</th>
+                                                    <th class="py-2.5 px-3 w-[24%]">Nama Santri</th>
+                                                    <th class="py-2.5 px-3 w-[13%]">NIS</th>
+                                                    <th class="py-2.5 px-3 w-[14%]">NIK</th>
+                                                    <th class="py-2.5 px-3 w-12 text-center">L/P</th>
+                                                    <th class="py-2.5 px-3 w-[12%]">Tgl Lahir</th>
+                                                    <th class="py-2.5 px-3 w-[13%]">Program</th>
+                                                    <th class="py-2.5 px-3 w-16 text-center">Status</th>
+                                                    <th class="py-2.5 px-3 w-20 text-center pr-2">Aksi</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="admin-student-table-tbody"
                                                 class="divide-y divide-slate-100 dark:divide-[#253447] text-slate-700 dark:text-slate-200">
                                                 <!-- Rendered dynamically by JavaScript -->
                                             </tbody>
-                                        </table>
                                     </div>
 
                                     <!-- MOBILE CARD LIST VIEW (SM DOWN) -->
@@ -7929,83 +8089,129 @@
                             <!-- ================= VIEW: MODUL MASTER DATA PEGAWAI ================= -->
                             <div id="admin-view-pegawai" class="hidden space-y-4">
                                 <!-- Header Sub-View -->
-                                <div
-                                    class="bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex items-center justify-between">
-                                    <div class="flex items-center space-x-2.5">
+                                <div class="bg-white dark:bg-[#15202d] px-3.5 py-2.5 md:px-4 md:py-3 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-wrap items-center justify-between gap-2.5 animate-fade-in-up stagger-1">
+                                    <div class="flex items-center space-x-2.5 min-w-0">
                                         <button type="button" onclick="backFromAdminModule()"
-                                            class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-lg flex items-center justify-center transition active:scale-95 shrink-0"
+                                            class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl flex items-center justify-center transition active:scale-95 shrink-0"
                                             title="Kembali">
                                             <i class="fa-solid fa-arrow-left text-xs"></i>
                                         </button>
-                                        <div>
-                                            <span
-                                                class="text-[10px] font-extrabold text-indigo-700 dark:text-indigo-400 uppercase tracking-widest block">Dashboard
-                                                Admin</span>
-                                            <h2
-                                                class="text-sm md:text-base font-bold text-slate-800 dark:text-slate-100">
-                                                Master Data Pegawai & Asatidz</h2>
+                                        <div class="min-w-0">
+                                            <div class="flex items-center gap-2">
+                                                <h2 class="text-sm md:text-base font-black text-slate-800 dark:text-slate-100 truncate">
+                                                    Master Data Pegawai & Asatidz
+                                                </h2>
+                                                <span class="hidden sm:inline-flex px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/40">
+                                                    SDM & Tenaga Pendidik
+                                                </span>
+                                            </div>
+                                            <p class="text-[10px] text-slate-400 hidden md:block truncate">
+                                                Pangkalan data asatidz, muhafiz, musyrif asrama, dan tenaga kependidikan pesantren.
+                                            </p>
                                         </div>
                                     </div>
-                                    <div class="flex items-center space-x-2">
+                                    <div class="flex items-center gap-1.5 flex-wrap ml-auto">
                                         <button type="button" onclick="openAdminEmployeeModal()"
-                                            class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm active:scale-95">
+                                            class="px-3 sm:px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[11px] font-bold transition flex items-center space-x-1 shadow-sm active:scale-95">
                                             <i class="fa-solid fa-user-plus text-xs"></i>
-                                            <span class="hidden sm:inline">Tambah Pegawai</span>
+                                            <span>+ Tambah Pegawai</span>
                                         </button>
                                         <button type="button" onclick="loadAdminEmployeesData()"
-                                            class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 active:scale-95"
+                                            class="px-2.5 sm:px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl text-[11px] font-bold transition flex items-center space-x-1 border border-slate-200 dark:border-[#283a4e] active:scale-95"
                                             title="Refresh Data">
-                                            <i class="fa-solid fa-rotate text-xs"></i>
+                                            <i class="fa-solid fa-arrows-rotate text-xs"></i>
                                             <span class="hidden sm:inline">Refresh</span>
                                         </button>
                                     </div>
                                 </div>
 
-                                <!-- CARDS RINGKASAN DATA PEGAWAI -->
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                    <div
-                                        class="bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm space-y-1">
-                                        <span class="text-[10px] font-bold text-slate-400 uppercase">Total
-                                            Pegawai</span>
-                                        <div id="admin-pegawai-stat-total"
-                                            class="text-lg md:text-xl font-extrabold text-slate-800 dark:text-slate-100">
-                                            0</div>
+                                <!-- 4 KARTU MAKRO KPI DATA PEGAWAI (BERWARNA VIBRANT PERSIS TAHFIDZ & TPQ) -->
+                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
+                                    <!-- 1. Total SDM Pegawai (Emerald Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#22c55e] to-[#16a34a] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-emerald-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-2 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">TOTAL SDM PEGAWAI</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-users-gear"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="admin-pegawai-stat-total">0</span>
+                                                <span class="text-xs font-bold text-white/80">Orang</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Total civitas pendidik & staf</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-emerald-700 font-black shadow-xs shrink-0 text-[9px]">SDM Pesantren</span>
+                                        </div>
                                     </div>
-                                    <div
-                                        class="bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-indigo-100 dark:border-indigo-900/40 bg-indigo-50/30 dark:bg-indigo-950/20 shadow-sm space-y-1">
-                                        <span
-                                            class="text-[10px] font-bold text-indigo-700 dark:text-indigo-400 uppercase">Asatidz
-                                            / Muhafiz</span>
-                                        <div id="admin-pegawai-stat-asatidz"
-                                            class="text-lg md:text-xl font-extrabold text-indigo-800 dark:text-indigo-300">
-                                            0</div>
+
+                                    <!-- 2. Asatidz / Muhafiz (Indigo Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#6366f1] to-[#4f46e5] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-indigo-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-3 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">ASATIDZ / MUHAFIZ</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-chalkboard-user"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="admin-pegawai-stat-asatidz">0</span>
+                                                <span class="text-xs font-bold text-white/80">Guru</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Tenaga pengajar & pembina</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white/25 text-white font-bold backdrop-blur-xs shrink-0 text-[9px]">Pengajar</span>
+                                        </div>
                                     </div>
-                                    <div
-                                        class="bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-amber-100 dark:border-amber-900/40 bg-amber-50/30 dark:bg-amber-950/20 shadow-sm space-y-1">
-                                        <span
-                                            class="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase">Tenaga
-                                            Kependidikan</span>
-                                        <div id="admin-pegawai-stat-staf"
-                                            class="text-lg md:text-xl font-extrabold text-amber-800 dark:text-amber-300">
-                                            0</div>
+
+                                    <!-- 3. Tenaga Kependidikan / Staf (Rose/Pink Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#f43f5e] via-[#ec4899] to-[#d946ef] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-pink-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-4 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">TENAGA KEPENDIDIKAN</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-user-tie"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="admin-pegawai-stat-staf">0</span>
+                                                <span class="text-xs font-bold text-white/80">Staf</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Staf TU, Admin & Keuangan</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white/25 text-white font-bold backdrop-blur-xs shrink-0 text-[9px]">Staf TU</span>
+                                        </div>
                                     </div>
-                                    <div
-                                        class="bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-emerald-100 dark:border-emerald-900/40 bg-emerald-50/30 dark:bg-emerald-950/20 shadow-sm space-y-1">
-                                        <span
-                                            class="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase">Status
-                                            Aktif</span>
-                                        <div id="admin-pegawai-stat-aktif"
-                                            class="text-lg md:text-xl font-extrabold text-emerald-800 dark:text-emerald-300">
-                                            0</div>
+
+                                    <!-- 4. Status Aktif (Amber/Orange Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#f59e0b] to-[#ea580c] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-amber-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-5 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">STATUS PENUGASAN AKTIF</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-circle-check"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="admin-pegawai-stat-aktif">0</span>
+                                                <span class="text-xs font-bold text-white/80">Aktif</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Penugasan aktif berjalan</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-amber-700 font-black shadow-xs shrink-0 text-[9px]">Aktif ⭐</span>
+                                        </div>
                                     </div>
                                 </div>
 
                                 <!-- FITUR SEARCH & FILTER DATA PEGAWAI -->
-                                <div
-                                    class="bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+                                <div class="bg-white dark:bg-[#15202d] p-3 md:p-3.5 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-col md:flex-row gap-2.5 items-stretch md:items-center justify-between animate-fade-in-up stagger-6">
                                     <div class="relative flex-1">
-                                        <i
-                                            class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                                         <input type="text" id="admin-pegawai-search" oninput="filterAdminPegawaiList()"
                                             placeholder="Cari Nama, NIP, atau Keahlian Pegawai..."
                                             class="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 dark:border-[#253447] text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white transition">
@@ -8029,20 +8235,25 @@
                                 </div>
 
                                 <!-- TABLE SECTION -->
-                                <section
-                                    class="bg-white dark:bg-[#15202d] rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] overflow-hidden p-3.5 md:p-4 space-y-3">
+                                <section class="bg-white dark:bg-[#15202d] rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] overflow-hidden p-3.5 md:p-4 space-y-3 animate-fade-in-up stagger-7">
+                                    <div class="flex justify-between items-center border-b border-slate-100 dark:border-[#253447] pb-2.5">
+                                        <h3 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center">
+                                            <i class="fa-solid fa-users-gear text-indigo-600 mr-2"></i> Daftar Pegawai & Asatidz
+                                        </h3>
+                                        <span class="text-[11px] font-bold text-indigo-800 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-2.5 py-0.5 rounded-lg border border-indigo-200/60 dark:border-indigo-800/40">Civitas Akademik</span>
+                                    </div>
+
                                     <!-- DESKTOP TABLE VIEW (MD UP) -->
                                     <div class="hidden md:block overflow-x-auto">
-                                        <table class="w-full text-left border-collapse text-xs">
+                                        <table class="w-full text-left border-collapse text-xs table-fixed min-w-[850px]">
                                             <thead>
-                                                <tr
-                                                    class="bg-slate-50 dark:bg-[#1c2836] text-slate-500 dark:text-slate-400 uppercase text-[10px] font-bold border-b border-slate-100 dark:border-[#253447]">
-                                                    <th class="py-2.5 px-4 text-center w-12">No</th>
-                                                    <th class="py-2.5 px-4">Nama Pegawai & NIP</th>
-                                                    <th class="py-2.5 px-4">Jabatan & Spesialisasi</th>
-                                                    <th class="py-2.5 px-4">Kontak WhatsApp</th>
-                                                    <th class="py-2.5 px-4 text-center">Status</th>
-                                                    <th class="py-2.5 px-4 text-center w-24">Aksi</th>
+                                                <tr class="bg-slate-50 dark:bg-[#1c2836] text-slate-500 dark:text-slate-400 uppercase text-[10px] font-bold border-b border-slate-100 dark:border-[#253447]">
+                                                    <th class="py-2.5 px-3 text-center w-10">No</th>
+                                                    <th class="py-2.5 px-3 w-[30%]">Nama Pegawai & NIP</th>
+                                                    <th class="py-2.5 px-3 w-[25%]">Jabatan & Spesialisasi</th>
+                                                    <th class="py-2.5 px-3 w-[18%]">Kontak WhatsApp</th>
+                                                    <th class="py-2.5 px-3 text-center w-20">Status</th>
+                                                    <th class="py-2.5 px-3 text-center w-24 pr-2">Aksi</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="admin-pegawai-table-tbody"
@@ -20095,7 +20306,7 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js?v=33').then(registration => {
+                navigator.serviceWorker.register('/sw.js?v=34').then(registration => {
                     if (typeof registration.update === 'function') {
                         registration.update();
                     }
@@ -20122,11 +20333,11 @@
     <script src="/js/ppdb.js"></script>
     <script src="/js/ibadah.js"></script>
     <script src="/js/jadwal-sholat.js"></script>
-    <script src="/js/admin.js?v=22"></script>
-    <script src="/js/roles.js?v=20"></script>
+    <script src="/js/admin.js?v=23"></script>
+    <script src="/js/roles.js?v=21"></script>
     <script src="/js/alumni.js"></script>
     <script src="/js/auth.js?v=18"></script>
-    <script src="/js/pegawai.js?v=2"></script>
+    <script src="/js/pegawai.js?v=3"></script>
     <script src="/js/tahfidz.js?v=24"></script>
     <script src="/js/tpq.js?v=17"></script>
     <script src="/js/sorogan.js?v=20"></script>

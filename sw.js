@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mubarokah-cache-v42';
+const CACHE_NAME = 'mubarokah-cache-v43';
 
 const PRECACHE_URLS = [
   '/',

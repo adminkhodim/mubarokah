@@ -187,44 +187,44 @@ function renderAdminPegawaiTable() {
             const waLink = waClean ? `https://wa.me/${waClean.startsWith('0') ? '62' + waClean.substring(1) : waClean}` : "";
 
             return `
-            <tr class="hover:bg-slate-50/80 dark:hover:bg-[#1c2836] border-b border-slate-100 dark:border-[#253447] transition">
-                <td class="px-4 py-3 text-slate-400 font-semibold text-center">${idx + 1}</td>
-                <td class="px-4 py-3">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-9 h-9 rounded-xl ${p.gender === 'P' ? 'bg-pink-100 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300'} flex items-center justify-center font-bold text-xs shrink-0 shadow-sm">
+            <tr class="hover:bg-slate-50/80 dark:hover:bg-[#1c2836]/60 border-b border-slate-100 dark:border-[#253447] transition">
+                <td class="px-3 py-3 text-slate-400 font-bold text-center align-middle">${idx + 1}</td>
+                <td class="px-3 py-3 align-middle">
+                    <div class="flex items-center space-x-2.5 min-w-0">
+                        <div class="w-8 h-8 rounded-xl ${p.gender === 'P' ? 'bg-pink-100 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300'} flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
                             ${initials}
                         </div>
-                        <div>
-                            <div class="font-bold text-slate-800 dark:text-slate-100">${escapeHtml(p.nama)}</div>
-                            <div class="text-[10px] text-slate-400 font-mono">NIP: ${escapeHtml(p.nip || '-')}</div>
+                        <div class="min-w-0">
+                            <div class="font-bold text-slate-800 dark:text-slate-100 truncate">${escapeHtml(p.nama)}</div>
+                            <div class="text-[10px] text-slate-400 font-mono truncate">NIP: ${escapeHtml(p.nip || '-')}</div>
                         </div>
                     </div>
                 </td>
-                <td class="px-4 py-3">
-                    <span class="inline-block px-2.5 py-1 rounded-lg text-[10px] font-extrabold bg-indigo-50 text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/60">
+                <td class="px-3 py-3 align-middle">
+                    <span class="inline-block px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-indigo-50 text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/60 truncate max-w-full">
                         ${escapeHtml(p.jabatan || 'Pegawai')}
                     </span>
-                    ${p.spesialisasi ? `<span class="block text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">${escapeHtml(p.spesialisasi)}</span>` : ''}
+                    ${p.spesialisasi ? `<span class="block text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">${escapeHtml(p.spesialisasi)}</span>` : ''}
                 </td>
-                <td class="px-4 py-3">
+                <td class="px-3 py-3 align-middle truncate">
                     ${waLink ? `
-                        <a href="${waLink}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[11px] transition">
+                        <a href="${waLink}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 dark:text-emerald-300 font-bold text-[11px] transition">
                             <i class="fa-brands fa-whatsapp text-emerald-600"></i>
-                            <span>${escapeHtml(p.telepon)}</span>
+                            <span class="truncate">${escapeHtml(p.telepon)}</span>
                         </a>
                     ` : `<span class="text-slate-400 text-[11px]">-</span>`}
                 </td>
-                <td class="px-4 py-3 text-center">
-                    <span class="px-2.5 py-0.5 rounded-md text-[10px] font-extrabold ${isAktif ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}">
+                <td class="px-3 py-3 text-center align-middle">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${isAktif ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300' : 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}">
                         ${isAktif ? 'Aktif' : 'Nonaktif'}
                     </span>
                 </td>
-                <td class="px-4 py-3 text-center">
+                <td class="px-3 py-3 text-center align-middle pr-2">
                     <div class="flex items-center justify-center space-x-1.5">
-                        <button type="button" onclick="openAdminEmployeeModal('${p.employeeId}')" class="w-8 h-8 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 dark:text-indigo-300 flex items-center justify-center transition" title="Edit Data">
+                        <button type="button" onclick="openAdminEmployeeModal('${p.employeeId}')" class="w-7 h-7 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 dark:text-indigo-300 flex items-center justify-center transition active:scale-95 shadow-2xs" title="Edit Data">
                             <i class="fa-solid fa-pen-to-square text-xs"></i>
                         </button>
-                        <button type="button" onclick="deleteAdminEmployee('${p.employeeId}', '${escapeHtml(p.nama)}')" class="w-8 h-8 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 dark:text-rose-300 flex items-center justify-center transition" title="Hapus Data">
+                        <button type="button" onclick="deleteAdminEmployee('${p.employeeId}', '${escapeHtml(p.nama)}')" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 dark:text-rose-300 flex items-center justify-center transition active:scale-95 shadow-2xs" title="Hapus Data">
                             <i class="fa-solid fa-trash-can text-xs"></i>
                         </button>
                     </div>

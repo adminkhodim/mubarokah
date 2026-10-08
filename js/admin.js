@@ -1534,20 +1534,24 @@
 
                 // Desktop Table Row
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50/80 transition";
+                tr.className = "hover:bg-slate-50/80 dark:hover:bg-[#1c2836]/60 transition border-b border-slate-100 dark:border-[#253447]";
                 tr.innerHTML = `
-                    <td class="py-3 px-3 font-bold text-slate-400">${index + 1}</td>
-                    <td class="py-3 px-3 font-bold text-slate-800">${escapeHtml(item.nama)}</td>
-                    <td class="py-3 px-3 font-mono text-slate-600">${escapeHtml(item.nisn)}</td>
-                    <td class="py-3 px-3 text-slate-600">${escapeHtml(item.wali || '-')}</td>
-                    <td class="py-3 px-3 text-brand-700 font-semibold">${escapeHtml(item.program || '-')}</td>
-                    <td class="py-3 px-3 font-mono text-slate-600">${escapeHtml(item.whatsapp || '-')}</td>
-                    <td class="py-3 px-3">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${statusBadgeClass}">${escapeHtml(status)}</span>
+                    <td class="py-3 px-3 font-bold text-slate-400 text-center align-middle">${index + 1}</td>
+                    <td class="py-3 px-3 align-middle">
+                        <div class="font-bold text-slate-800 dark:text-slate-100 truncate">${escapeHtml(item.nama)}</div>
                     </td>
-                    <td class="py-3 px-3 text-slate-400 text-[11px]">${escapeHtml(item.tanggalDaftar || '-')}</td>
-                    <td class="py-3 px-3 text-center">
-                        <button type="button" onclick="viewAdminPPDBDetail(${index})" class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-semibold border border-blue-100 transition shadow-sm" title="Lihat Detail">
+                    <td class="py-3 px-3 font-mono text-slate-600 dark:text-slate-300 align-middle truncate">${escapeHtml(item.nisn)}</td>
+                    <td class="py-3 px-3 text-slate-600 dark:text-slate-300 align-middle truncate">${escapeHtml(item.wali || '-')}</td>
+                    <td class="py-3 px-3 align-middle">
+                        <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 truncate inline-block max-w-full">${escapeHtml(item.program || '-')}</span>
+                    </td>
+                    <td class="py-3 px-3 font-mono text-slate-600 dark:text-slate-300 align-middle truncate">${escapeHtml(item.whatsapp || '-')}</td>
+                    <td class="py-3 px-3 text-center align-middle">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${statusBadgeClass}">${escapeHtml(status)}</span>
+                    </td>
+                    <td class="py-3 px-3 text-slate-400 text-[11px] align-middle truncate">${escapeHtml(item.tanggalDaftar || '-')}</td>
+                    <td class="py-3 px-3 text-center align-middle pr-2">
+                        <button type="button" onclick="viewAdminPPDBDetail(${index})" class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 dark:text-blue-300 rounded-lg text-xs font-semibold border border-blue-200/60 dark:border-blue-800/40 transition shadow-xs active:scale-95" title="Lihat Detail">
                             <i class="fa-solid fa-eye mr-1"></i> Detail
                         </button>
                     </td>
@@ -5052,28 +5056,30 @@
                     const studentJson = escapeHtml(JSON.stringify(s));
 
                     return `
-                        <tr class="hover:bg-slate-50/80 dark:hover:bg-[#1c2836]/60 transition">
-                            <td class="py-3 px-3 font-semibold text-slate-400">${index + 1}</td>
-                            <td class="py-3 px-3">${avatarHtml}</td>
-                            <td class="py-3 px-3">
-                                <div class="font-bold text-slate-800 dark:text-slate-100">${name}</div>
-                                <div class="text-[10px] text-slate-400">ID: ${escapeHtml(id)}</div>
+                        <tr class="hover:bg-slate-50/80 dark:hover:bg-[#1c2836]/60 transition border-b border-slate-100 dark:border-[#253447]">
+                            <td class="py-3 px-3 font-bold text-slate-400 text-center align-middle">${index + 1}</td>
+                            <td class="py-3 px-3 text-center align-middle">
+                                <div class="flex justify-center">${avatarHtml}</div>
+                            </td>
+                            <td class="py-3 px-3 align-middle">
+                                <div class="font-bold text-slate-800 dark:text-slate-100 truncate">${name}</div>
+                                <div class="text-[10px] text-slate-400 truncate">ID: ${escapeHtml(id)}</div>
                                 ${phoneHtml}
                             </td>
-                            <td class="py-3 px-3 font-mono font-bold text-cyan-700 dark:text-cyan-400">${nis}</td>
-                            <td class="py-3 px-3 font-mono text-slate-500 dark:text-slate-400">${nik}</td>
-                            <td class="py-3 px-3 text-center">${genderBadge}</td>
-                            <td class="py-3 px-3 text-slate-600 dark:text-slate-300">${birth}</td>
-                            <td class="py-3 px-3">
-                                <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-cyan-50 dark:bg-cyan-950/60 text-cyan-800 dark:text-cyan-300">${prog}</span>
+                            <td class="py-3 px-3 font-mono font-bold text-cyan-700 dark:text-cyan-400 align-middle truncate">${nis}</td>
+                            <td class="py-3 px-3 font-mono text-slate-500 dark:text-slate-400 align-middle truncate">${nik}</td>
+                            <td class="py-3 px-3 text-center align-middle">${genderBadge}</td>
+                            <td class="py-3 px-3 text-slate-600 dark:text-slate-300 align-middle truncate">${birth}</td>
+                            <td class="py-3 px-3 align-middle">
+                                <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-cyan-50 dark:bg-cyan-950/60 text-cyan-800 dark:text-cyan-300 truncate inline-block max-w-full">${prog}</span>
                             </td>
-                            <td class="py-3 px-3 text-center">${statusBadge}</td>
-                            <td class="py-3 px-3 text-center">
+                            <td class="py-3 px-3 text-center align-middle">${statusBadge}</td>
+                            <td class="py-3 px-3 text-center align-middle pr-2">
                                 <div class="flex items-center justify-center gap-1.5">
-                                    <button type="button" onclick='openAdminStudentModal(${studentJson})' class="w-7 h-7 bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 dark:text-amber-300 rounded-lg flex items-center justify-center transition active:scale-95" title="Edit Santri">
+                                    <button type="button" onclick='openAdminStudentModal(${studentJson})' class="w-7 h-7 bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 dark:text-amber-300 rounded-lg flex items-center justify-center transition active:scale-95 shadow-2xs" title="Edit Santri">
                                         <i class="fa-solid fa-pen text-xs"></i>
                                     </button>
-                                    <button type="button" onclick="openAdminStudentDeleteModal('${escapeHtml(id)}', '${escapeHtml(name)}')" class="w-7 h-7 bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 dark:text-rose-300 rounded-lg flex items-center justify-center transition active:scale-95" title="Hapus Santri">
+                                    <button type="button" onclick="openAdminStudentDeleteModal('${escapeHtml(id)}', '${escapeHtml(name)}')" class="w-7 h-7 bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 dark:text-rose-300 rounded-lg flex items-center justify-center transition active:scale-95 shadow-2xs" title="Hapus Santri">
                                         <i class="fa-solid fa-trash text-xs"></i>
                                     </button>
                                 </div>
@@ -5777,35 +5783,35 @@
                     : `<span class="text-[9px] text-slate-400 font-medium">${presence.text}</span>`;
 
                 return `
-                    <tr class="hover:bg-slate-50/70 dark:hover:bg-[#1c2836]/40 transition">
-                        <td class="p-3.5">
-                            <div class="flex items-center space-x-3">
+                    <tr class="hover:bg-slate-50/70 dark:hover:bg-[#1c2836]/40 transition border-b border-slate-100 dark:border-[#253447]">
+                        <td class="py-3 px-3 align-middle">
+                            <div class="flex items-center space-x-2.5 min-w-0">
                                 <div class="relative shrink-0">
                                     ${avatarHtml}
                                     <span class="absolute -bottom-0.5 -right-0.5">${onlineIndicator}</span>
                                 </div>
-                                <div class="min-w-0">
+                                <div class="min-w-0 flex-1">
                                     <div class="flex items-center gap-1.5">
                                         <h4 class="font-bold text-slate-800 dark:text-slate-100 text-xs leading-tight truncate">${safeName}</h4>
                                     </div>
-                                    <div class="flex items-center gap-2 mt-0.5">
-                                        <span class="text-[10px] text-slate-400 font-mono truncate">${safeEmail}</span>
-                                        <span class="text-slate-300 dark:text-slate-700">•</span>
-                                        ${presenceBadge}
+                                    <div class="flex items-center gap-1.5 mt-0.5 min-w-0">
+                                        <span class="text-[10px] text-slate-400 font-mono truncate max-w-[120px] inline-block">${safeEmail}</span>
+                                        <span class="text-slate-300 dark:text-slate-700 shrink-0">•</span>
+                                        <span class="truncate">${presenceBadge}</span>
                                     </div>
                                 </div>
                             </div>
                         </td>
-                        <td class="p-3.5 whitespace-nowrap">${phoneHtml}</td>
-                        <td class="p-3.5 whitespace-nowrap">${roleBadge}</td>
-                        <td class="p-3.5 max-w-xs">${linkedHtml}</td>
-                        <td class="p-3.5 text-center whitespace-nowrap">${statusBadge}</td>
-                        <td class="p-3.5 text-right whitespace-nowrap">
+                        <td class="py-3 px-3 align-middle truncate">${phoneHtml}</td>
+                        <td class="py-3 px-3 align-middle truncate">${roleBadge}</td>
+                        <td class="py-3 px-3 align-middle truncate">${linkedHtml}</td>
+                        <td class="py-3 px-3 text-center align-middle">${statusBadge}</td>
+                        <td class="py-3 px-3 text-right align-middle pr-2">
                             <div class="flex items-center justify-end space-x-1.5">
-                                <button type="button" onclick="openAdminUserModal('${safeUserId}')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] dark:hover:bg-[#253447] text-slate-700 dark:text-slate-200 rounded-lg text-xs font-semibold transition active:scale-95" title="Edit Akun">
+                                <button type="button" onclick="openAdminUserModal('${safeUserId}')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] dark:hover:bg-[#253447] text-slate-700 dark:text-slate-200 rounded-lg text-xs font-semibold transition active:scale-95 shadow-2xs" title="Edit Akun">
                                     <i class="fa-solid fa-pen-to-square text-[11px] mr-1"></i>Edit
                                 </button>
-                                <button type="button" onclick="toggleAdminUserStatus('${safeUserId}', '${status}')" class="px-2 py-1 rounded-lg text-xs font-semibold transition active:scale-95 ${isActive ? 'bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400'}" title="${isActive ? 'Nonaktifkan Akun' : 'Aktifkan Akun'}">
+                                <button type="button" onclick="toggleAdminUserStatus('${safeUserId}', '${status}')" class="px-2 py-1 rounded-lg text-xs font-semibold transition active:scale-95 shadow-2xs ${isActive ? 'bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400'}" title="${isActive ? 'Nonaktifkan Akun' : 'Aktifkan Akun'}">
                                     <i class="fa-solid ${isActive ? 'fa-user-slash' : 'fa-user-check'} text-[11px]"></i>
                                 </button>
                             </div>
