@@ -61,7 +61,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <!-- Compiled & Minified Tailwind CSS -->
-    <link rel="stylesheet" href="/css/styles.min.css?v=32">
+    <link rel="stylesheet" href="/css/styles.min.css?v=33">
 
 
 
@@ -8322,9 +8322,8 @@
 
                             <!-- ================= VIEW: MODUL TPQ YANBU'A (JILID 1-7) ================= -->
                             <div id="admin-view-tpq" class="hidden space-y-3">
-                                <!-- Header Sub-View -->
-                                <div
-                                    class="bg-white dark:bg-[#15202d] px-3.5 py-2.5 md:px-4 md:py-3 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-wrap items-center justify-between gap-2.5">
+                                <!-- Header Sub-View (Compact Single-Row Executive Header) -->
+                                <div class="bg-white dark:bg-[#15202d] px-3.5 py-2.5 md:px-4 md:py-3 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-wrap items-center justify-between gap-2.5 animate-fade-in-up stagger-1">
                                     <div class="flex items-center space-x-2.5 min-w-0">
                                         <button type="button" onclick="backFromAdminModule()"
                                             class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl flex items-center justify-center transition active:scale-95 shrink-0"
@@ -8346,24 +8345,31 @@
                                         </div>
                                     </div>
 
+                                    <!-- Action Buttons in One Clean Flex Row -->
                                     <div class="flex items-center gap-1.5 flex-wrap ml-auto">
-                                        <button type="button" onclick="loadAdminTPQData(true)"
+                                        <button type="button" id="btn-refresh-tpq" onclick="loadAdminTPQData(true)"
                                             class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl text-[11px] font-bold transition flex items-center space-x-1 border border-slate-200 dark:border-[#283a4e] active:scale-95"
-                                            title="Segarkan Data">
+                                            title="Segarkan Data Terbaru">
                                             <i id="btn-refresh-tpq-icon" class="fa-solid fa-arrows-rotate text-xs"></i>
                                             <span class="hidden sm:inline">Refresh</span>
                                         </button>
                                         <button type="button" onclick="exportTPQDataXLSX()"
-                                            class="tpq-admin-action px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 dark:text-emerald-300 font-bold rounded-xl text-[11px] transition flex items-center space-x-1 border border-emerald-200 dark:border-emerald-800/60 active:scale-95"
-                                            title="Ekspor Data TPQ ke Excel (.xlsx)">
-                                            <i class="fa-solid fa-file-excel text-xs text-emerald-600"></i>
-                                            <span class="hidden sm:inline">Export Excel</span>
+                                            class="tpq-admin-action px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl text-[11px] font-bold transition flex items-center space-x-1 border border-slate-200 dark:border-[#283a4e] active:scale-95"
+                                            title="Ekspor Data Excel (.xlsx)">
+                                            <i class="fa-solid fa-file-excel text-emerald-600 text-xs"></i>
+                                            <span class="hidden sm:inline">Excel</span>
+                                        </button>
+                                        <button type="button" onclick="exportTPQDataCSV()"
+                                            class="tpq-admin-action px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl text-[11px] font-bold transition flex items-center space-x-1 border border-slate-200 dark:border-[#283a4e] active:scale-95"
+                                            title="Ekspor Data CSV">
+                                            <i class="fa-solid fa-file-export text-xs"></i>
+                                            <span class="hidden sm:inline">CSV</span>
                                         </button>
                                         <button type="button" onclick="printTPQRekap()"
-                                            class="tpq-admin-action px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-200 font-bold rounded-xl text-[11px] transition flex items-center space-x-1 border border-slate-200 dark:border-[#283a4e] active:scale-95"
+                                            class="tpq-admin-action px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl text-[11px] font-bold transition flex items-center space-x-1 border border-slate-200 dark:border-[#283a4e] active:scale-95"
                                             title="Cetak Rekapitulasi Data TPQ">
                                             <i class="fa-solid fa-print text-xs"></i>
-                                            <span class="hidden sm:inline">Cetak Rekap</span>
+                                            <span class="hidden sm:inline">Cetak</span>
                                         </button>
                                         <button type="button" onclick="initTPQDatabaseSheets()"
                                             class="tpq-admin-action px-2.5 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 dark:bg-teal-950/60 dark:hover:bg-teal-900/60 dark:text-teal-300 font-bold rounded-xl text-[11px] transition flex items-center space-x-1 border border-teal-200 dark:border-teal-800/60 active:scale-95"
@@ -8374,69 +8380,114 @@
                                     </div>
                                 </div>
 
-                                <!-- 4 KARTU STATISTIK RINGKASAN TPQ -->
-                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-2.5">
-                                    <div class="bg-white dark:bg-[#15202d] p-2.5 md:p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex items-start justify-between">
-                                        <div class="space-y-0.5 min-w-0">
-                                            <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">TOTAL SANTRI</span>
-                                            <div id="tpq-stat-total-santri" class="text-lg md:text-xl font-black text-slate-800 dark:text-slate-100">0</div>
-                                            <p class="text-[9px] text-teal-600 dark:text-teal-400 font-semibold truncate">Terplot dalam Kelas</p>
+                                <!-- 4 KARTU RINGKASAN MAKRO (BERWARNA VIBRANT PERSIS TAHFIDZ & DASHBOARD UTAMA) -->
+                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
+                                    <!-- 1. Total Santri Aktif (Emerald Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#22c55e] to-[#16a34a] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-emerald-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-2 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">TOTAL SANTRI TPQ</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-users"></i>
+                                            </div>
                                         </div>
-                                        <div class="w-8 h-8 rounded-xl bg-teal-50 dark:bg-teal-950 text-teal-600 flex items-center justify-center text-sm shrink-0">
-                                            <i class="fa-solid fa-users"></i>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="tpq-stat-total-santri">0</span>
+                                                <span class="text-xs font-bold text-white/80">Santri ↑</span>
+                                            </h4>
                                         </div>
-                                    </div>
-
-                                    <div class="bg-white dark:bg-[#15202d] p-2.5 md:p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex items-start justify-between">
-                                        <div class="space-y-0.5 min-w-0">
-                                            <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">LANCAR (LANJUT)</span>
-                                            <div id="tpq-stat-total-lanjut" class="text-lg md:text-xl font-black text-emerald-600 dark:text-emerald-400">0</div>
-                                            <p class="text-[9px] text-slate-400 truncate">Naik halaman</p>
-                                        </div>
-                                        <div class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center text-sm shrink-0">
-                                            <i class="fa-solid fa-circle-check"></i>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Terplot dalam Kelas</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-emerald-700 font-black shadow-xs shrink-0 text-[9px]">Data Induk</span>
                                         </div>
                                     </div>
 
-                                    <div class="bg-white dark:bg-[#15202d] p-2.5 md:p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex items-start justify-between">
-                                        <div class="space-y-0.5 min-w-0">
-                                            <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">WAJIB ULANG</span>
-                                            <div id="tpq-stat-total-ulang" class="text-lg md:text-xl font-black text-rose-600 dark:text-rose-400">0</div>
-                                            <p class="text-[9px] text-slate-400 truncate">I'adah materi</p>
+                                    <!-- 2. Lancar (Lanjut) (Indigo Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#6366f1] to-[#4f46e5] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-indigo-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-3 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">LANCAR (LANJUT)</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-circle-check"></i>
+                                            </div>
                                         </div>
-                                        <div class="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950 text-rose-600 flex items-center justify-center text-sm shrink-0">
-                                            <i class="fa-solid fa-rotate-left"></i>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="tpq-stat-total-lanjut">0</span>
+                                                <span class="text-xs font-bold text-white/80">Santri ↑</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Naik halaman Yanbu'a</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white/25 text-white font-bold backdrop-blur-xs shrink-0 text-[9px]">Lancar</span>
                                         </div>
                                     </div>
 
-                                    <div class="bg-white dark:bg-[#15202d] p-2.5 md:p-3 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm flex items-start justify-between">
-                                        <div class="space-y-0.5 min-w-0">
-                                            <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">TINGKAT KELANCARAN</span>
-                                            <div id="tpq-stat-persentase-lanjut" class="text-lg md:text-xl font-black text-teal-600 dark:text-teal-400">100%</div>
-                                            <p class="text-[9px] text-slate-400 truncate">Rasio kelulusan hal</p>
+                                    <!-- 3. Wajib Mengulang (Rose/Pink Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#f43f5e] via-[#ec4899] to-[#d946ef] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-pink-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-4 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">WAJIB MENGULANG</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-rotate-left"></i>
+                                            </div>
                                         </div>
-                                        <div class="w-8 h-8 rounded-xl bg-teal-50 dark:bg-teal-950 text-teal-600 flex items-center justify-center text-sm shrink-0">
-                                            <i class="fa-solid fa-chart-pie"></i>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="tpq-stat-total-ulang">0</span>
+                                                <span class="text-xs font-bold text-white/80">Santri</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">I'adah materi & makhraj</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white/25 text-white font-bold backdrop-blur-xs shrink-0 text-[9px]">Perlu Bimbingan</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 4. Tingkat Kelancaran (Amber/Orange Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#f59e0b] to-[#ea580c] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-amber-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-5 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs">TINGKAT KELANCARAN</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-chart-pie"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center justify-between">
+                                                <span class="flex items-baseline gap-1">
+                                                    <span id="tpq-stat-persentase-lanjut">100%</span>
+                                                </span>
+                                                <span class="flex items-center gap-1 text-[10px] bg-white/20 px-2 py-0.5 rounded-full backdrop-blur-xs text-white">
+                                                    <span class="font-black">Lulus Hal</span>
+                                                </span>
+                                            </h4>
+                                        </div>
+                                        <div class="space-y-1 pt-1 border-t border-white/10">
+                                            <div class="w-full bg-black/20 h-1.5 rounded-full overflow-hidden">
+                                                <div id="tpq-stat-bar-kelancaran" class="bg-white h-full rounded-full transition-all duration-500" style="width: 100%;"></div>
+                                            </div>
+                                            <div class="flex items-center justify-between text-[10px] text-white/90">
+                                                <span class="truncate text-[9.5px] opacity-90">Rasio Kelulusan Santri</span>
+                                                <span class="px-2 py-0.5 rounded-full bg-white text-amber-700 font-black shadow-xs shrink-0 text-[9px]">Mutaba'ah</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- DISTRIBUSI SANTRI PER JILID YANBU'A (1 - 7) -->
-                                <div class="bg-white dark:bg-[#15202d] p-3 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] space-y-1.5">
+                                <div class="bg-white dark:bg-[#15202d] p-3 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] space-y-2 animate-fade-in-up stagger-6">
                                     <div class="flex items-center justify-between">
                                         <span class="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                                             <i class="fa-solid fa-layer-group text-teal-600"></i> Distribusi Santri per Jilid Yanbu'a (1 - 7)
                                         </span>
-                                        <span class="text-[10px] text-slate-400">Kitab Yanbu'a Thoriqoh Baca Tulis Al-Qur'an</span>
+                                        <span class="text-[10px] text-slate-400 hidden sm:inline">Kitab Yanbu'a Thoriqoh Baca Tulis Al-Qur'an</span>
                                     </div>
-                                    <div id="tpq-stat-distribusi-container" class="grid grid-cols-4 sm:grid-cols-7 gap-1.5 overflow-x-auto">
+                                    <div id="tpq-stat-distribusi-container" class="grid grid-cols-4 sm:grid-cols-4 lg:grid-cols-8 gap-1.5 md:gap-2">
                                         <!-- Rendered dynamically -->
                                     </div>
                                 </div>
 
-                                <!-- FILTER & SEARCH TOOLBAR -->
-                                <div class="bg-white dark:bg-[#15202d] p-2.5 md:p-3 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2">
-                                    <div class="relative flex-1 min-w-[200px] max-w-md">
+                                <!-- FILTER & SEARCH TOOLBAR (COMPACT & BALANCED) -->
+                                <div class="bg-white dark:bg-[#15202d] p-2.5 md:p-3 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2 animate-fade-in-up stagger-7">
+                                    <div class="relative flex-1 min-w-[180px] max-w-sm">
                                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                                         <input type="text" id="tpq-search-input" oninput="filterTPQList()"
                                             placeholder="Cari santri, NIS, kelas, ustadz..."
@@ -8451,7 +8502,7 @@
                                         </select>
                                         <select id="tpq-filter-jilid" onchange="filterTPQList()"
                                             class="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-semibold focus:ring-2 focus:ring-teal-500 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 transition">
-                                            <option value="ALL">Semua Tingkat (Pemula & Jilid 1-7)</option>
+                                            <option value="ALL">Semua Tingkat</option>
                                             <option value="0">Pemula (48 Hal)</option>
                                             <option value="1">Jilid 1 (44 Hal)</option>
                                             <option value="2">Jilid 2 (43 Hal)</option>
@@ -8469,33 +8520,33 @@
                                         </select>
 
                                         <button type="button" onclick="openTPQKelasModal(1)"
-                                            class="tpq-admin-action px-2.5 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 dark:bg-teal-950/60 dark:hover:bg-teal-900/60 dark:text-teal-300 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 border border-teal-200 dark:border-teal-800/60 active:scale-95"
+                                            class="tpq-admin-action px-2.5 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 dark:bg-teal-950/60 dark:hover:bg-teal-900/60 dark:text-teal-300 font-bold rounded-xl text-xs transition flex items-center space-x-1 border border-teal-200 dark:border-teal-800/60 active:scale-95"
                                             title="Kelola Kelas & Plotting Santri TPQ">
                                             <i class="fa-solid fa-users-gear text-xs"></i>
-                                            <span>Kelola Kelas</span>
+                                            <span class="hidden sm:inline">Kelola Kelas</span>
                                         </button>
                                         <button type="button" onclick="openTPQKelasModal(4)"
-                                            class="tpq-admin-action px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-200 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 border border-slate-200 dark:border-[#283a4e] active:scale-95"
+                                            class="tpq-admin-action px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-200 font-bold rounded-xl text-xs transition flex items-center space-x-1 border border-slate-200 dark:border-[#283a4e] active:scale-95"
                                             title="Jadwal Sesi Bimbingan TPQ">
                                             <i class="fa-regular fa-clock text-xs"></i>
-                                            <span>Jadwal & Sesi</span>
+                                            <span class="hidden sm:inline">Jadwal & Sesi</span>
                                         </button>
                                         <button type="button" onclick="openTPQBulkTargetModal()"
-                                            class="tpq-admin-action px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 dark:text-amber-300 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 border border-amber-200 dark:border-amber-800/60 active:scale-95"
+                                            class="tpq-admin-action px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 dark:text-amber-300 font-bold rounded-xl text-xs transition flex items-center space-x-1 border border-amber-200 dark:border-amber-800/60 active:scale-95"
                                             title="Atur Target Capaian TPQ Massal">
                                             <i class="fa-solid fa-bullseye text-xs text-amber-600"></i>
-                                            <span>Target Massal</span>
+                                            <span class="hidden sm:inline">Target Massal</span>
                                         </button>
                                     </div>
                                 </div>
 
                                 <!-- DAFTAR CAPAIAN SANTRI TPQ -->
-                                <section class="bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] space-y-2.5">
+                                <section class="bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] space-y-2.5 animate-fade-in-up stagger-8">
                                     <div class="flex justify-between items-center border-b border-slate-100 dark:border-[#253447] pb-2.5">
                                         <h3 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center">
                                             <i class="fa-solid fa-book-open-reader text-teal-600 mr-2"></i> Capaian Santri TPQ Yanbu'a
                                         </h3>
-                                        <span id="admin-tpq-count" class="text-[11px] font-bold text-teal-800 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 px-2.5 py-0.5 rounded-lg">0 Santri</span>
+                                        <span id="admin-tpq-count" class="text-[11px] font-bold text-teal-800 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 px-2.5 py-0.5 rounded-lg border border-teal-200/50 dark:border-teal-800/40">0 Santri</span>
                                     </div>
 
                                     <!-- FLOATING BULK SELECTION ACTION BAR TPQ -->
@@ -8519,7 +8570,7 @@
 
                                     <!-- DESKTOP TABLE (Hidden on Mobile) -->
                                     <div class="hidden md:block overflow-x-auto">
-                                        <table class="w-full text-left border-collapse">
+                                        <table class="w-full text-left border-collapse table-fixed min-w-[850px]">
                                             <thead>
                                                 <tr class="bg-slate-50 dark:bg-[#1c2836] text-slate-500 dark:text-slate-400 uppercase text-[10px] font-extrabold tracking-wider border-b border-slate-100 dark:border-[#253447]">
                                                     <th class="p-3 w-10 text-center">
@@ -8527,12 +8578,12 @@
                                                             class="rounded border-slate-300 text-teal-600 focus:ring-teal-500 cursor-pointer" title="Pilih Semua Santri">
                                                     </th>
                                                     <th class="p-3 w-10 text-center">No</th>
-                                                    <th class="p-3">Santri</th>
-                                                    <th class="p-3">Posisi Yanbu'a</th>
-                                                    <th class="p-3">Target Capaian</th>
-                                                    <th class="p-3">Kelas & Ustadz</th>
-                                                    <th class="p-3">Status Terakhir</th>
-                                                    <th class="p-3 text-right">Aksi</th>
+                                                    <th class="p-3 w-[26%]">Santri</th>
+                                                    <th class="p-3 w-[15%]">Posisi Yanbu'a</th>
+                                                    <th class="p-3 w-[15%]">Target Capaian</th>
+                                                    <th class="p-3 w-[15%]">Kelas & Ustadz</th>
+                                                    <th class="p-3 w-[14%]">Status Terakhir</th>
+                                                    <th class="p-3 w-[15%] text-right pr-4">Aksi</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="admin-tpq-table-body" class="divide-y divide-slate-100 dark:divide-[#253447]">
@@ -19997,7 +20048,7 @@
     <script src="/js/auth.js?v=17"></script>
     <script src="/js/pegawai.js?v=2"></script>
     <script src="/js/tahfidz.js?v=24"></script>
-    <script src="/js/tpq.js?v=16"></script>
+    <script src="/js/tpq.js?v=17"></script>
     <script src="/js/sorogan.js?v=19"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="/js/presensi.js?v=15"></script>

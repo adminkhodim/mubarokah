@@ -372,24 +372,29 @@ function renderTPQSummaryCards() {
     const elLanjut = document.getElementById('tpq-stat-total-lanjut');
     const elUlang = document.getElementById('tpq-stat-total-ulang');
     const elPersen = document.getElementById('tpq-stat-persentase-lanjut');
+    const elBarKelancaran = document.getElementById('tpq-stat-bar-kelancaran');
     const elDistBar = document.getElementById('tpq-stat-distribusi-container');
 
     if (elTotal) elTotal.innerText = totalSantri;
     if (elLanjut) elLanjut.innerText = totalLanjut;
     if (elUlang) elUlang.innerText = totalUlang;
     if (elPersen) elPersen.innerText = `${persentaseLanjut}%`;
+    if (elBarKelancaran) {
+        elBarKelancaran.style.width = `${Math.min(100, Math.max(0, persentaseLanjut))}%`;
+    }
 
-    // Render bar jilid mini
+    // Render bar jilid mini (8 Kolom Rata & Elegan)
     if (elDistBar) {
         let html = '';
         for (let j = 0; j <= 7; j++) {
             const count = dist[j] || 0;
             const jInfo = YANBUA_JILID_INFO[j] || { name: (j === 0 ? "Pemula" : `Jilid ${j}`) };
+            const hasSantri = count > 0;
             html += `
-                <div class="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-50 dark:bg-[#1c2836] border border-slate-100 dark:border-[#253447] text-center min-w-[70px]">
-                    <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400">${jInfo.name}</span>
-                    <span class="text-sm font-black text-emerald-600 dark:text-emerald-400 mt-0.5">${count}</span>
-                    <span class="text-[9px] text-slate-400">Santri</span>
+                <div class="flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-200 border text-center ${hasSantri ? 'bg-teal-50/70 dark:bg-teal-950/30 border-teal-200/80 dark:border-teal-800/40 shadow-xs' : 'bg-slate-50 dark:bg-[#1c2836] border-slate-100 dark:border-[#253447]'} hover:-translate-y-0.5">
+                    <span class="text-[10px] font-bold ${hasSantri ? 'text-teal-700 dark:text-teal-300' : 'text-slate-500 dark:text-slate-400'} truncate w-full">${jInfo.name}</span>
+                    <span class="text-base font-black ${hasSantri ? 'text-teal-600 dark:text-teal-400' : 'text-slate-700 dark:text-slate-200'} mt-0.5 leading-none">${count}</span>
+                    <span class="text-[9px] text-slate-400 mt-0.5">Santri</span>
                 </div>
             `;
         }
@@ -704,57 +709,57 @@ function renderTPQTable() {
 
         html += `
             <tr class="hover:bg-slate-50/80 dark:hover:bg-[#1a2636]/60 transition border-b border-slate-100 dark:border-[#202f42] text-xs">
-                <td class="p-3 text-center">
+                <td class="p-3 text-center align-middle">
                     <input type="checkbox" class="tpq-row-checkbox rounded border-slate-300 text-teal-600 focus:ring-teal-500 cursor-pointer"
                         ${isChecked ? 'checked' : ''} onchange="toggleSelectTPQStudent('${escapeHtml(st.studentId)}', this.checked)">
                 </td>
-                <td class="p-3 text-center text-slate-400 font-medium">${idx + 1}</td>
-                <td class="p-3">
-                    <div class="flex items-center space-x-2.5">
+                <td class="p-3 text-center text-slate-400 font-medium align-middle">${idx + 1}</td>
+                <td class="p-3 align-middle">
+                    <div class="flex items-center space-x-2.5 min-w-0">
                         <div onclick="openTPQStudentDetail('${escapeHtml(st.studentId)}')" class="w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300 font-bold flex items-center justify-center shrink-0 border border-teal-200 dark:border-teal-800/40 cursor-pointer" title="Lihat Mutaba'ah">
                             ${st.photoUrl ? `<img src="${escapeHtml(st.photoUrl)}" class="w-full h-full rounded-full object-cover">` : `<i class="fa-solid fa-user text-xs"></i>`}
                         </div>
-                        <div>
-                            <div onclick="openTPQStudentDetail('${escapeHtml(st.studentId)}')" class="font-bold text-slate-800 dark:text-slate-100 leading-snug cursor-pointer hover:text-teal-600 transition" title="Lihat Rapor Mutaba'ah">${escapeHtml(st.name)}</div>
-                            <div class="text-[10px] text-slate-400">NIS: ${escapeHtml(st.nis || "-")} • ${st.gender === 'P' ? 'Santriwati' : 'Santri'}</div>
+                        <div class="min-w-0 flex-1">
+                            <div onclick="openTPQStudentDetail('${escapeHtml(st.studentId)}')" class="font-bold text-slate-800 dark:text-slate-100 leading-snug cursor-pointer hover:text-teal-600 transition truncate" title="Lihat Rapor Mutaba'ah">${escapeHtml(st.name)}</div>
+                            <div class="text-[10px] text-slate-400 truncate">NIS: ${escapeHtml(st.nis || "-")} • ${st.gender === 'P' ? 'Santriwati' : 'Santri'}</div>
                         </div>
                     </div>
                 </td>
-                <td class="p-3">
+                <td class="p-3 align-middle">
                     <div class="flex flex-col gap-1">
                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black border ${jInfo.badge} w-fit">
                             <i class="fa-solid fa-book-open-reader text-xs"></i>
                             <span>${jInfo.name}</span>
                         </span>
                         <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-                            Halaman <strong class="text-teal-600 dark:text-teal-400 font-black text-sm">${st.halamanAktif || 1}</strong> <span class="text-[10px] text-slate-400 font-normal">/ ${jInfo.totalHalaman || 44}</span>
+                            Hal <strong class="text-teal-600 dark:text-teal-400 font-black text-sm">${st.halamanAktif || 1}</strong> <span class="text-[10px] text-slate-400 font-normal">/ ${jInfo.totalHalaman || 44}</span>
                         </span>
                     </div>
                 </td>
-                <td class="p-3">
+                <td class="p-3 align-middle">
                     <button type="button" onclick="openTPQTargetModal('${escapeHtml(st.studentId)}')"
-                        class="text-left group/tgt hover:opacity-80 transition" title="Klik untuk ubah target">
-                        <div class="flex items-center gap-1 font-bold text-slate-800 dark:text-slate-200">
-                            <i class="fa-solid fa-bullseye text-[10px] text-amber-500"></i>
-                            <span>${(tgt.targetJilid === 0 || String(tgt.targetJilid).toLowerCase() === 'pemula') ? 'Pemula' : `Jilid ${tgt.targetJilid || Math.min(7, (st.jilidAktif || 1) + 1)}`}</span>
+                        class="text-left group/tgt hover:opacity-80 transition block w-full truncate" title="Klik untuk ubah target">
+                        <div class="flex items-center gap-1 font-bold text-slate-800 dark:text-slate-200 truncate">
+                            <i class="fa-solid fa-bullseye text-[10px] text-amber-500 shrink-0"></i>
+                            <span class="truncate">${(tgt.targetJilid === 0 || String(tgt.targetJilid).toLowerCase() === 'pemula') ? 'Pemula' : `Jilid ${tgt.targetJilid || Math.min(7, (st.jilidAktif || 1) + 1)}`}</span>
                         </div>
-                        <div class="text-[10px] text-slate-400 group-hover/tgt:text-teal-600 font-medium">
+                        <div class="text-[10px] text-slate-400 group-hover/tgt:text-teal-600 font-medium truncate">
                             ${tgt.targetHalamanSesi || 1} Hal/Sesi (${Math.round((tgt.targetHalamanSesi || 1) * getTPQActiveWeeklySessionCounts() * 10) / 10} Hal/Pekan)
                         </div>
                     </button>
                 </td>
-                <td class="p-3">
-                    <div class="text-xs font-semibold text-slate-700 dark:text-slate-200">${escapeHtml(st.namaKelas || "Belum Ada Kelas")}</div>
-                    <div class="text-[10px] text-slate-400">Pengampu: ${escapeHtml(st.ustadzPengampu || "-")}</div>
+                <td class="p-3 align-middle">
+                    <div class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">${escapeHtml(st.namaKelas || "Belum Ada Kelas")}</div>
+                    <div class="text-[10px] text-slate-400 truncate">Pengampu: ${escapeHtml(st.ustadzPengampu || "-")}</div>
                 </td>
-                <td class="p-3">
+                <td class="p-3 align-middle">
                     ${statusBadge}
-                    ${st.updatedAt ? `<div class="text-[9px] text-slate-400 mt-1">Terakhir: ${st.updatedAt.substring(0, 10)}</div>` : ''}
+                    ${st.updatedAt ? `<div class="text-[9px] text-slate-400 mt-1 truncate">Terakhir: ${st.updatedAt.substring(0, 10)}</div>` : ''}
                 </td>
-                <td class="p-3 text-right">
+                <td class="p-3 text-right align-middle pr-4">
                     <div class="flex items-center justify-end gap-1.5">
                         <button type="button" onclick="openTPQTargetModal('${escapeHtml(st.studentId)}')"
-                            class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl text-xs transition" title="Atur Target">
+                            class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl text-xs transition active:scale-95" title="Atur Target">
                             <i class="fa-solid fa-bullseye text-amber-600"></i>
                         </button>
                         <button type="button" onclick="openTPQStudentDetail('${escapeHtml(st.studentId)}')"
@@ -762,7 +767,7 @@ function renderTPQTable() {
                             <i class="fa-solid fa-clock-rotate-left text-xs"></i>
                         </button>
                         <button type="button" onclick="openSimakTPQModal('${escapeHtml(st.studentId)}')"
-                            class="px-2.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs shadow-sm transition active:scale-95 inline-flex items-center gap-1">
+                            class="px-2.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs shadow-sm transition active:scale-95 inline-flex items-center gap-1 shrink-0">
                             <i class="fa-solid fa-pen-nib text-[10px]"></i>
                             <span>Simak</span>
                         </button>
@@ -3226,7 +3231,7 @@ function exportTPQDataCSVFallback() {
 }
 
 function exportTPQDataCSV() {
-    exportTPQDataXLSX();
+    exportTPQDataCSVFallback();
 }
 
 window.openTPQStudentDetail = openTPQStudentDetail;
