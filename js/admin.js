@@ -6263,6 +6263,14 @@
 
         // Window exports
         if (typeof window !== 'undefined') {
+            window.loadAdminUsersData = loadAdminUsersData;
+            window.renderAdminUsersTable = renderAdminUsersTable;
+            window.filterAdminUsers = filterAdminUsers;
+            window.handleAdminUsersSearch = handleAdminUsersSearch;
+            window.openAdminUserModal = openAdminUserModal;
+            if (typeof closeAdminUserModal !== 'undefined') window.closeAdminUserModal = closeAdminUserModal;
+            if (typeof saveAdminUser !== 'undefined') window.saveAdminUser = saveAdminUser;
+            if (typeof toggleAdminUserStatus !== 'undefined') window.toggleAdminUserStatus = toggleAdminUserStatus;
             window.openOnlineUsersModal = openOnlineUsersModal;
             window.closeOnlineUsersModal = closeOnlineUsersModal;
             window.refreshOnlineUsersModal = refreshOnlineUsersModal;
