@@ -144,6 +144,7 @@
                 if (typeof renderCalendar === 'function') {
                     try { renderCalendar(); } catch (e) {}
                 }
+                handleClientRouting();
             });
         } else {
             if (typeof initializeProgramRuntime === 'function') initializeProgramRuntime();
@@ -153,6 +154,7 @@
             if (typeof renderCalendar === 'function') {
                 try { renderCalendar(); } catch (e) {}
             }
+            handleClientRouting();
         }
 
         function navigateToNews() {

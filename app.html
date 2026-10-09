@@ -169,7 +169,7 @@
     </script>
 
     <!-- ==================== HEADER DESKTOP (2-TIER INSTITUTIONAL NAV) ==================== -->
-    <div id="main-desktop-header" class="hidden md:block sticky top-0 z-50 shadow-md">
+    <div id="main-desktop-header" class="hidden sticky top-0 z-50 shadow-md">
 
         <!-- MAIN NAVIGATION BAR WITH STRUCTURED DROPDOWNS -->
         <header
@@ -577,7 +577,7 @@
     <main class="flex-grow w-full mx-auto mb-16 md:mb-0">
 
         <!-- ==================== TABS 1: BERANDA (ENTERPRISE 10-FOLD INSTITUTIONAL LAYOUT) ==================== -->
-        <div id="page-beranda" class="tab-content block">
+        <div id="page-beranda" class="tab-content hidden">
 
             <!-- FOLD 0: ISLAMIC PRAYER & CALENDAR UTILITY STRIP -->
             <section onclick="openJadwalSholatPage()" title="Buka Portal Ibadah & Jadwal Sholat Lengkap"
@@ -5445,7 +5445,7 @@
         </div>
 
         <!-- ==================== TABS KHUSUS: DASHBOARD ADMIN ==================== -->
-        <div id="page-admin" class="tab-content hidden h-screen w-full">
+        <div id="page-admin" class="tab-content block h-screen w-full">
 
             <!-- Admin Dashboard Layout Wrapper -->
             <div class="flex h-screen w-full bg-slate-50 overflow-hidden text-slate-800 font-sans">
@@ -20574,25 +20574,40 @@
     <script src="js/data-programs.js"></script>
 
     <!-- Logic Modules -->
-    <script src="js/programs.js"></script>
+    <script src="js/programs.js?v=30"></script>
     <script src="js/ppdb.js"></script>
     <script src="js/ibadah.js"></script>
     <script src="js/jadwal-sholat.js"></script>
-    <script src="js/admin.js?v=27"></script>
-    <script src="js/roles.js?v=23"></script>
+    <script src="js/admin.js?v=30"></script>
+    <script src="js/roles.js?v=30"></script>
     <script src="js/alumni.js"></script>
-    <script src="js/auth.js?v=20"></script>
-    <script src="js/pegawai.js?v=4"></script>
-    <script src="js/tahfidz.js?v=24"></script>
-    <script src="js/tpq.js?v=17"></script>
-    <script src="js/sorogan.js?v=20"></script>
-    <script src="js/presensi.js?v=16"></script>
-    <script src="js/madin.js?v=15"></script>
-    <script src="js/keuangan.js"></script>
-    <script src="js/panduan.js?v=1"></script>
+    <script src="js/auth.js?v=30"></script>
+    <script src="js/pegawai.js?v=30"></script>
+    <script src="js/tahfidz.js?v=30"></script>
+    <script src="js/tpq.js?v=30"></script>
+    <script src="js/sorogan.js?v=30"></script>
+    <script src="js/presensi.js?v=30"></script>
+    <script src="js/madin.js?v=30"></script>
+    <script src="js/keuangan.js?v=30"></script>
+    <script src="js/panduan.js?v=30"></script>
 
     <!-- Main Controller & Navigation -->
-    <script src="js/main.js?v=20"></script>
+    <script src="js/main.js?v=30"></script>
+    <script>
+        // Pastikan tab admin langsung diprioritaskan saat membuka app.html
+        (function() {
+            function activateAdminView() {
+                if (typeof switchTab === 'function') {
+                    switchTab('admin', false);
+                }
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', activateAdminView);
+            } else {
+                activateAdminView();
+            }
+        })();
+    </script>
 </body>
 
 </html>

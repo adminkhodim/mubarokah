@@ -1036,22 +1036,25 @@
             return val;
         }
 
-        const DEFAULT_PROFIL_MUBAROKAH = {
-            nama_pesantren: "Pondok Pesantren Roudlotul Mubarokah",
-            alamat_pesantren: "Rimbukidul, RT 01 / RW 07, Rejosari, Karangawen, Demak, Jawa Tengah",
-            tahun_berdiri: "1983",
-            tanggal_berdiri: "12 Desember 1983",
-            sejarah: "Pondok Pesantren Tahfidzul Qur'an Roudlotul Mubarokah didirikan dengan tekad luhur untuk mencetak generasi penghafal Al-Qur'an yang mutqin, berakhlak mulia, dan berwawasan kebangsaan yang luas.\n\nBerawal dari majelis halaqah tahfidz dan pembinaan keagamaan masyarakat, Pesantren Roudlotul Mubarokah kini berkembang menjadi lembaga pendidikan terpadu yang memadukan sanad tahfidz Al-Qur'an bersanad muttashil, kajian kitab kuning (salaf), serta penguasaan sains dan teknologi modern.\n\nDengan lingkungan pesantren yang kondusif, asri, dan berdisiplin tinggi di Karangawen Demak, kami berkomitmen mendampingi para santri mencapai kemandirian spiritual, kedalaman keilmuan syariah, dan kesiapan menjadi pemimpin umat masa depan.",
-            visi_misi: "Visi:\nMencetak Generasi Qur'ani, Berakhlak Mulia, Unggul dalam Ilmu Syariah, dan Berdaya Saing Global.\n\nMisi:\n1. Menyelenggarakan pendidikan tahfidzul Qur'an intensif dengan standar bacaan tartil dan sanad muttashil.\n2. Menanamkan adab, akhlaqul karimah, dan keteladanan salafus shalih dalam rutinitas keseharian santri.\n3. Mengembangkan keilmuan integratif antara kajian turots Islamiyah dan penguasaan sains teknologi.\n4. Membangun kemandirian santri melalui pembinaan karakter, kedisiplinan asrama, dan kepemimpinan dakwah.",
-            struktur_kepengurusan: JSON.stringify([
-                { nama: "Pengasuh Pesantren", jabatan: "Pengasuh Pondok Pesantren", foto: "" },
-                { nama: "Lurah Pondok", jabatan: "Kepala / Lurah Pondok", foto: "" },
-                { nama: "Koordinator Tahfidz", jabatan: "Koordinator Tahfidzul Qur'an", foto: "" },
-                { nama: "Koordinator Kurikulum", jabatan: "Bidang Pendidikan & Kitab", foto: "" },
-                { nama: "Bagian Keamanan & Disiplin", jabatan: "Bidang Ketertiban & Keamanan", foto: "" },
-                { nama: "Bagian Humas & Layanan", jabatan: "Humas & Hubungan Masyarakat", foto: "" }
-            ])
-        };
+        if (typeof window.DEFAULT_PROFIL_MUBAROKAH === 'undefined') {
+            window.DEFAULT_PROFIL_MUBAROKAH = {
+                nama_pesantren: "Pondok Pesantren Roudlotul Mubarokah",
+                alamat_pesantren: "Rimbukidul, RT 01 / RW 07, Rejosari, Karangawen, Demak, Jawa Tengah",
+                tahun_berdiri: "1983",
+                tanggal_berdiri: "12 Desember 1983",
+                sejarah: "Pondok Pesantren Tahfidzul Qur'an Roudlotul Mubarokah didirikan dengan tekad luhur untuk mencetak generasi penghafal Al-Qur'an yang mutqin, berakhlak mulia, dan berwawasan kebangsaan yang luas.\n\nBerawal dari majelis halaqah tahfidz dan pembinaan keagamaan masyarakat, Pesantren Roudlotul Mubarokah kini berkembang menjadi lembaga pendidikan terpadu yang memadukan sanad tahfidz Al-Qur'an bersanad muttashil, kajian kitab kuning (salaf), serta penguasaan sains dan teknologi modern.\n\nDengan lingkungan pesantren yang kondusif, asri, dan berdisiplin tinggi di Karangawen Demak, kami berkomitmen mendampingi para santri mencapai kemandirian spiritual, kedalaman keilmuan syariah, dan kesiapan menjadi pemimpin umat masa depan.",
+                visi_misi: "Visi:\nMencetak Generasi Qur'ani, Berakhlak Mulia, Unggul dalam Ilmu Syariah, dan Berdaya Saing Global.\n\nMisi:\n1. Menyelenggarakan pendidikan tahfidzul Qur'an intensif dengan standar bacaan tartil dan sanad muttashil.\n2. Menanamkan adab, akhlaqul karimah, dan keteladanan salafus shalih dalam rutinitas keseharian santri.\n3. Mengembangkan keilmuan integratif antara kajian turots Islamiyah dan penguasaan sains teknologi.\n4. Membangun kemandirian santri melalui pembinaan karakter, kedisiplinan asrama, dan kepemimpinan dakwah.",
+                struktur_kepengurusan: JSON.stringify([
+                    { nama: "Pengasuh Pesantren", jabatan: "Pengasuh Pondok Pesantren", foto: "" },
+                    { nama: "Lurah Pondok", jabatan: "Kepala / Lurah Pondok", foto: "" },
+                    { nama: "Koordinator Tahfidz", jabatan: "Koordinator Tahfidzul Qur'an", foto: "" },
+                    { nama: "Koordinator Kurikulum", jabatan: "Bidang Pendidikan & Kitab", foto: "" },
+                    { nama: "Bagian Keamanan & Disiplin", jabatan: "Bidang Ketertiban & Keamanan", foto: "" },
+                    { nama: "Bagian Humas & Layanan", jabatan: "Humas & Hubungan Masyarakat", foto: "" }
+                ])
+            };
+        }
+        var DEFAULT_PROFIL_MUBAROKAH = window.DEFAULT_PROFIL_MUBAROKAH;
 
         window.APP_PROFIL_STATE = window.APP_PROFIL_STATE || {};
         if (!window.APP_PROFIL_STATE.nama_pesantren) window.APP_PROFIL_STATE.nama_pesantren = DEFAULT_PROFIL_MUBAROKAH.nama_pesantren;
