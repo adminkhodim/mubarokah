@@ -954,6 +954,19 @@ async function startPresensiQRScanner() {
     const readerElem = document.getElementById('presensi-qr-reader');
     if (!readerElem) return;
 
+    if (typeof Html5Qrcode === 'undefined' && window.MubarokahLazy) {
+        try {
+            readerElem.innerHTML = `
+            <div class="p-6 text-center text-xs text-slate-500 space-y-2">
+                <i class="fa-solid fa-spinner fa-spin text-emerald-600 text-2xl"></i>
+                <p>Memuat modul kamera QR...</p>
+            </div>`;
+            await window.MubarokahLazy.ensureHtml5Qrcode();
+        } catch (e) {
+            console.error('[Presensi] Gagal memuat Html5Qrcode on-demand:', e);
+        }
+    }
+
     if (typeof Html5Qrcode === 'undefined') {
         readerElem.innerHTML = `
         <div class="p-6 text-center text-xs text-slate-500 space-y-2">
@@ -1348,14 +1361,23 @@ function renderPresensiRekapTable(list = []) {
 /**
  * Ekspor Data Rekap ke Excel (XLSX)
  */
-function exportPresensiRekapXLSX() {
+async function exportPresensiRekapXLSX() {
     if (!ASNPresensi.data.rekapData || !ASNPresensi.data.rekapData.rekap) {
         alert('Data rekapitulasi belum dimuat.');
         return;
     }
     const list = ASNPresensi.data.rekapData.rekap;
+
+    if (typeof XLSX === 'undefined' && window.MubarokahLazy) {
+        try {
+            await window.MubarokahLazy.ensureXLSX();
+        } catch (e) {
+            console.error('[Presensi] Gagal memuat XLSX on-demand:', e);
+        }
+    }
+
     if (typeof XLSX === 'undefined') {
-        alert('Pustaka XLSX belum tersedia.');
+        alert('Pustaka XLSX belum tersedia. Pastikan koneksi internet aktif.');
         return;
     }
 

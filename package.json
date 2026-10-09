@@ -4,6 +4,8 @@
   "private": true,
   "description": "Aplikasi Pesantren Mubarokah",
   "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
     "build:css": "tailwindcss -i ./css/input.css -o ./css/styles.min.css --minify",
     "watch:css": "tailwindcss -i ./css/input.css -o ./css/styles.min.css --watch",
     "build": "npm run build:css",

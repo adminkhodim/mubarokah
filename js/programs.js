@@ -563,3 +563,143 @@
             renderAllProgramDetails();
             renderProgramSubmenus();
         }
+
+        // ==================== PROFIL LEMBAGA & KURIKULUM PUBLIK ====================
+        const DEFAULT_PROFIL_MUBAROKAH = {
+            nama_pesantren: "Pondok Pesantren Roudlotul Mubarokah",
+            alamat_pesantren: "Rimbukidul, RT 01 / RW 07, Rejosari, Karangawen, Demak, Jawa Tengah",
+            tahun_berdiri: "1983",
+            tanggal_berdiri: "12 Desember 1983",
+            sejarah: "Pondok Pesantren Tahfidzul Qur'an Roudlotul Mubarokah didirikan dengan tekad luhur untuk mencetak generasi penghafal Al-Qur'an yang mutqin, berakhlak mulia, dan berwawasan kebangsaan yang luas.\n\nBerawal dari majelis halaqah tahfidz dan pembinaan keagamaan masyarakat, Pesantren Roudlotul Mubarokah kini berkembang menjadi lembaga pendidikan terpadu yang memadukan sanad tahfidz Al-Qur'an bersanad muttashil, kajian kitab kuning (salaf), serta penguasaan sains dan teknologi modern.\n\nDengan lingkungan pesantren yang kondusif, asri, dan berdisiplin tinggi di Karangawen Demak, kami berkomitmen mendampingi para santri mencapai kemandirian spiritual, kedalaman keilmuan syariah, dan kesiapan menjadi pemimpin umat masa depan.",
+            visi_misi: "Visi:\nMencetak Generasi Qur'ani, Berakhlak Mulia, Unggul dalam Ilmu Syariah, dan Berdaya Saing Global.\n\nMisi:\n1. Menyelenggarakan pendidikan tahfidzul Qur'an intensif dengan standar bacaan tartil dan sanad muttashil.\n2. Menanamkan adab, akhlaqul karimah, dan keteladanan salafus shalih dalam rutinitas keseharian santri.\n3. Mengembangkan keilmuan integratif antara kajian turots Islamiyah dan penguasaan sains teknologi.\n4. Membangun kemandirian santri melalui pembinaan karakter, kedisiplinan asrama, dan kepemimpinan dakwah.",
+            struktur_kepengurusan: JSON.stringify([
+                { nama: "Pengasuh Pesantren", jabatan: "Pengasuh Pondok Pesantren", foto: "" },
+                { nama: "Lurah Pondok", jabatan: "Kepala / Lurah Pondok", foto: "" },
+                { nama: "Koordinator Tahfidz", jabatan: "Koordinator Tahfidzul Qur'an", foto: "" },
+                { nama: "Koordinator Kurikulum", jabatan: "Bidang Pendidikan & Kitab", foto: "" },
+                { nama: "Bagian Keamanan & Disiplin", jabatan: "Bidang Ketertiban & Keamanan", foto: "" },
+                { nama: "Bagian Humas & Layanan", jabatan: "Humas & Hubungan Masyarakat", foto: "" }
+            ])
+        };
+
+        window.APP_PROFIL_STATE = window.APP_PROFIL_STATE || {};
+        if (!window.APP_PROFIL_STATE.nama_pesantren) window.APP_PROFIL_STATE.nama_pesantren = DEFAULT_PROFIL_MUBAROKAH.nama_pesantren;
+        if (!window.APP_PROFIL_STATE.alamat_pesantren) {
+            try {
+                window.APP_PROFIL_STATE.alamat_pesantren = localStorage.getItem('mubarokah_alamat_pesantren') || DEFAULT_PROFIL_MUBAROKAH.alamat_pesantren;
+            } catch(e) {
+                window.APP_PROFIL_STATE.alamat_pesantren = DEFAULT_PROFIL_MUBAROKAH.alamat_pesantren;
+            }
+        }
+        if (!window.APP_PROFIL_STATE.tahun_berdiri) window.APP_PROFIL_STATE.tahun_berdiri = DEFAULT_PROFIL_MUBAROKAH.tahun_berdiri;
+        if (!window.APP_PROFIL_STATE.tanggal_berdiri) window.APP_PROFIL_STATE.tanggal_berdiri = DEFAULT_PROFIL_MUBAROKAH.tanggal_berdiri;
+        if (!window.APP_PROFIL_STATE.sejarah) window.APP_PROFIL_STATE.sejarah = DEFAULT_PROFIL_MUBAROKAH.sejarah;
+        if (!window.APP_PROFIL_STATE.visi_misi) window.APP_PROFIL_STATE.visi_misi = DEFAULT_PROFIL_MUBAROKAH.visi_misi;
+        if (!window.APP_PROFIL_STATE.struktur_kepengurusan) window.APP_PROFIL_STATE.struktur_kepengurusan = DEFAULT_PROFIL_MUBAROKAH.struktur_kepengurusan;
+
+        async function loadPublicProfilLembaga() {
+            renderPublicProfilLembaga();
+            if (typeof isApiConfigured === 'function' && !isApiConfigured()) {
+                return;
+            }
+            try {
+                if (typeof apiGet === 'function') {
+                    const data = await apiGet("getPengaturan");
+                    if (data && data.status === "success" && data.data) {
+                        const config = data.data;
+                        if (config.nama_pesantren) window.APP_PROFIL_STATE.nama_pesantren = config.nama_pesantren;
+                        if (config.alamat_pesantren) {
+                            window.APP_PROFIL_STATE.alamat_pesantren = config.alamat_pesantren;
+                            try { localStorage.setItem('mubarokah_alamat_pesantren', config.alamat_pesantren); } catch(e) {}
+                        }
+                        if (config.tahun_berdiri) window.APP_PROFIL_STATE.tahun_berdiri = config.tahun_berdiri;
+                        if (config.tanggal_berdiri) window.APP_PROFIL_STATE.tanggal_berdiri = (typeof formatTanggalIndo === 'function') ? formatTanggalIndo(config.tanggal_berdiri) : config.tanggal_berdiri;
+                        if (config.sejarah) window.APP_PROFIL_STATE.sejarah = config.sejarah;
+                        if (config.visi_misi) window.APP_PROFIL_STATE.visi_misi = config.visi_misi;
+                        if (config.struktur_kepengurusan) window.APP_PROFIL_STATE.struktur_kepengurusan = config.struktur_kepengurusan;
+                        renderPublicProfilLembaga();
+                    }
+                }
+            } catch(e) {
+                console.warn("Menggunakan profil default (API offline):", e);
+                renderPublicProfilLembaga();
+            }
+        }
+        window.loadPublicProfilLembaga = loadPublicProfilLembaga;
+
+        function renderPublicProfilLembaga() {
+            const elNamaPesantren = document.getElementById('public-profil-nama-pesantren');
+            const elTahun = document.getElementById('public-didirikan-tahun');
+            const elTanggal = document.getElementById('public-didirikan-tanggal');
+            const elBadge = document.getElementById('public-profil-berdiri-badge');
+
+            if (elNamaPesantren) {
+                elNamaPesantren.textContent = window.APP_PROFIL_STATE.nama_pesantren || DEFAULT_PROFIL_MUBAROKAH.nama_pesantren;
+            }
+            if (elTahun) {
+                elTahun.textContent = window.APP_PROFIL_STATE.tahun_berdiri || "1983";
+            }
+            if (elTanggal) {
+                elTanggal.textContent = (typeof formatTanggalIndo === 'function') ? formatTanggalIndo(window.APP_PROFIL_STATE.tanggal_berdiri) : (window.APP_PROFIL_STATE.tanggal_berdiri || "12 Desember 1983");
+            }
+            if (elBadge) {
+                elBadge.textContent = `Berdiri sejak ${window.APP_PROFIL_STATE.tahun_berdiri || "1983"}`;
+            }
+
+            const containerSejarah = document.getElementById('public-sejarah-container');
+            const containerVisiMisi = document.getElementById('public-visimisi-container');
+            const containerPengurus = document.getElementById('public-pengurus-container');
+
+            if (containerSejarah) {
+                const textSejarah = window.APP_PROFIL_STATE.sejarah || "Sejarah belum ditambahkan.";
+                const pTags = textSejarah.split('\n').filter(t => t.trim() !== '').map(p => `<p>${escapeHtml(p)}</p>`).join('');
+                containerSejarah.innerHTML = pTags;
+            }
+
+            if (containerVisiMisi) {
+                const textVisiMisi = window.APP_PROFIL_STATE.visi_misi || "Visi misi belum ditambahkan.";
+                const pTags = textVisiMisi.split('\n').filter(t => t.trim() !== '').map(p => `<p>${escapeHtml(p)}</p>`).join('');
+                containerVisiMisi.innerHTML = `
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-white dark:bg-[#1c2836] border border-slate-100 dark:border-[#253447] flex items-center justify-center text-teal-600 dark:text-emerald-400 shadow-sm">
+                            <i class="fa-solid fa-bullseye"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-800 dark:text-slate-100">Arah & Tujuan</h4>
+                        </div>
+                    </div>
+                    ${pTags}
+                `;
+            }
+
+            if (containerPengurus) {
+                containerPengurus.innerHTML = '';
+                let struct = [];
+                try {
+                    const rawStruct = window.APP_PROFIL_STATE.struktur_kepengurusan;
+                    struct = rawStruct ? (typeof rawStruct === 'string' ? JSON.parse(rawStruct) : rawStruct) : [];
+                    if (!Array.isArray(struct)) struct = [];
+                } catch(e) { struct = []; }
+
+                if (struct.length === 0) {
+                    containerPengurus.innerHTML = `<p class="col-span-full text-center text-xs text-slate-400 dark:text-slate-500 italic py-4">Data kepengurusan belum ditambahkan.</p>`;
+                } else {
+                    struct.forEach(p => {
+                        const imgSrc = p.foto || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(p.nama || 'P') + '&background=e0e7ff&color=4f46e5';
+                        containerPengurus.innerHTML += `
+                            <div class="bg-slate-50 dark:bg-[#1c2836] rounded-3xl overflow-hidden border border-slate-100 dark:border-[#253447] p-4 text-center space-y-3 flex flex-col items-center hover:shadow-md transition">
+                                <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-emerald-600 shadow-sm shrink-0 bg-white dark:bg-[#15202d]">
+                                    <img src="${imgSrc}" alt="${escapeHtml(p.nama)}" class="w-full h-full object-cover">
+                                </div>
+                                <div>
+                                    <span class="bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase">${escapeHtml(p.jabatan || 'Pengurus')}</span>
+                                    <h4 class="text-xs md:text-sm font-bold text-slate-800 dark:text-slate-100 mt-1">${escapeHtml(p.nama || 'Tanpa Nama')}</h4>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            }
+        }
+        window.renderPublicProfilLembaga = renderPublicProfilLembaga;
+

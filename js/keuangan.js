@@ -1104,6 +1104,13 @@ async function submitKeuanganPOSPayment() {
             const snapRes = await apiPost("createMidtransSnapToken", snapPayload);
 
             if (snapRes && snapRes.success && snapRes.token) {
+                if (typeof window.snap === 'undefined' && window.MubarokahLazy) {
+                    try {
+                        await window.MubarokahLazy.ensureMidtransSnap();
+                    } catch (eSnap) {
+                        console.error('[Keuangan] Gagal memuat Midtrans Snap on-demand:', eSnap);
+                    }
+                }
                 if (typeof window.snap !== 'undefined' && typeof window.snap.pay === 'function') {
                     window.snap.pay(snapRes.token, {
                         onSuccess: function(result) {
@@ -3674,6 +3681,13 @@ async function payPortalWaliMidtrans() {
         }
 
         if (snapRes && snapRes.success && snapRes.token) {
+            if (typeof window.snap === 'undefined' && window.MubarokahLazy) {
+                try {
+                    await window.MubarokahLazy.ensureMidtransSnap();
+                } catch (eSnap) {
+                    console.error('[Keuangan] Gagal memuat Midtrans Snap on-demand:', eSnap);
+                }
+            }
             if (typeof window.snap !== 'undefined' && typeof window.snap.pay === 'function') {
                 window.snap.pay(snapRes.token, {
                     onSuccess: function(result) {
@@ -4170,6 +4184,13 @@ async function submitTopupTabungan() {
 
             const snapRes = await apiPost("createMidtransSnapToken", snapPayload);
             if (snapRes && snapRes.success && snapRes.token) {
+                if (typeof window.snap === 'undefined' && window.MubarokahLazy) {
+                    try {
+                        await window.MubarokahLazy.ensureMidtransSnap();
+                    } catch (eSnap) {
+                        console.error('[Keuangan] Gagal memuat Midtrans Snap on-demand:', eSnap);
+                    }
+                }
                 if (typeof window.snap !== 'undefined' && typeof window.snap.pay === 'function') {
                     window.snap.pay(snapRes.token, {
                         onSuccess: function(result) {

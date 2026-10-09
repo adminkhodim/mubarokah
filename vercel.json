@@ -6,6 +6,22 @@
       "destination": "/api/og?slug=:slug"
     },
     {
+      "source": "/app",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/app/(.*)",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/administrator",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/app.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

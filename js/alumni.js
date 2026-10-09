@@ -61,11 +61,21 @@
         }
 
 
-        function initAlumniMap() {
+        async function initAlumniMap() {
             if (alumniMap) {
                 setTimeout(() => { alumniMap.invalidateSize(); }, 300);
                 return;
             }
+
+            if (typeof L === 'undefined' && window.MubarokahLazy) {
+                try {
+                    await window.MubarokahLazy.ensureLeaflet();
+                } catch (e) {
+                    console.error('[Alumni] Gagal memuat Leaflet on-demand:', e);
+                    return;
+                }
+            }
+            if (typeof L === 'undefined') return;
             
             alumniMap = L.map('alumni-map', {
                 center: [-6.9147, 110.6384],

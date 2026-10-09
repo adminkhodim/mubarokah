@@ -811,3 +811,21 @@
         }
         window.setButtonLoading = setButtonLoading;
 
+        // Auto-render kalender saat script dimuat jika elemen grid tersedia di DOM
+        try {
+            if (typeof document !== 'undefined') {
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => {
+                        if (document.getElementById('calendar-days-grid')) {
+                            renderCalendar();
+                        }
+                    });
+                } else {
+                    if (document.getElementById('calendar-days-grid')) {
+                        renderCalendar();
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn("Auto-render calendar init:", e);
+        }

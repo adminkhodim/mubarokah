@@ -11,12 +11,26 @@
 
     /**
      * Memeriksa apakah aplikasi sedang berjalan dalam mode standalone (sudah terinstal)
+     * Hanya bernilai true jika benar-benar dibuka dari PWA standalone atau parameter eksplisit ?source=pwa
      */
     function isRunningStandalone() {
+        // Bersihkan residu persistensi lama agar sesi browsing mobile web biasa tidak terkontaminasi
+        try {
+            localStorage.removeItem('mubarokah_pwa_standalone');
+        } catch (e) {}
+
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isUrlPwa = urlParams.get('source') === 'pwa' || urlParams.get('mode') === 'app';
+            if (isUrlPwa) {
+                return true;
+            }
+        } catch (e) {}
+
         return (
             window.matchMedia('(display-mode: standalone)').matches ||
             window.navigator.standalone === true ||
-            document.referrer.includes('android-app://')
+            Boolean(document.referrer && document.referrer.includes('android-app://'))
         );
     }
 
@@ -32,9 +46,9 @@
      * Deteksi apakah pengguna menggunakan perangkat Mobile (Android / iOS / Small Touch Screen)
      */
     function isMobileDevice() {
-        const ua = (window.navigator.userAgent || window.navigator.vendor || window.opera).toLowerCase();
+        const ua = (window.navigator.userAgent || window.navigator.vendor || window.opera || '').toLowerCase();
         const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(ua);
-        const isTouchScreen = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        const isTouchScreen = ('ontouchstart' in window) || (window.navigator && window.navigator.maxTouchPoints > 0);
         const isSmallScreen = window.innerWidth < 768;
         return isMobileUA || (isTouchScreen && isSmallScreen);
     }
@@ -58,7 +72,7 @@
     }
 
     /**
-     * Memperbarui tampilan tombol Pasang Aplikasi di navigasi Header (HANYA Mobile)
+     * Memperbarui tampilan tombol Pasang Aplikasi di navigasi Header (HANYA Mobile Web Sebelum Diinstal)
      */
     function updateNavInstallButtons(show) {
         // Tombol desktop dinonaktifkan permanen
@@ -70,7 +84,7 @@
 
         const mobileBtn = document.getElementById('mobile-btn-install-app');
         if (mobileBtn) {
-            if (show && isMobileDevice()) {
+            if (show && isMobileDevice() && !isRunningStandalone()) {
                 mobileBtn.classList.remove('hidden');
                 mobileBtn.classList.add('flex');
             } else {
@@ -81,7 +95,7 @@
     }
 
     /**
-     * Menampilkan Smart Floating Install Banner (HANYA Mobile Android & iOS)
+     * Menampilkan Smart Floating Install Banner (HANYA Mobile Web Sebelum Diinstal)
      */
     function showFloatingInstallBanner() {
         if (!isMobileDevice() || isRunningStandalone() || isBannerDismissed()) {
@@ -98,6 +112,74 @@
             banner.classList.add('translate-y-0', 'opacity-100');
         }, 120);
     }
+
+    /**
+     * Pengontrol Tampilan Beranda 3-Mode Adaptif (Desktop, Mobile Web Sebelum Diinstal, dan Mobile Terinstal PWA)
+     */
+    function applyMubarokahDisplayMode() {
+        const standalone = isRunningStandalone();
+        const isDesktop = window.innerWidth >= 768;
+
+        const portalContent = document.getElementById('beranda-portal-content');
+        const mobileApp = document.getElementById('beranda-mobile-app');
+        const banner = document.getElementById('pwa-smart-install-banner');
+        const bottomNav = document.getElementById('mobile-bottom-nav');
+
+        if (isDesktop) {
+            // MODE 1: DESKTOP (>= 768px) -> Tampilkan Portal Institusional Lengkap
+            document.body.classList.remove('is-pwa-standalone');
+            if (portalContent) {
+                portalContent.classList.remove('hidden');
+                portalContent.classList.add('block');
+            }
+            if (mobileApp) {
+                mobileApp.classList.add('hidden');
+                mobileApp.classList.remove('block');
+            }
+            if (banner) banner.classList.add('hidden');
+            if (bottomNav) bottomNav.style.setProperty('display', 'none', 'important');
+            updateNavInstallButtons(false);
+            return;
+        }
+
+        // LAYAR MOBILE (< 768px):
+        if (standalone) {
+            // MODE 3: GAMBAR 3 (Mobile Setelah Diinstal / PWA Standalone)
+            document.body.classList.add('is-pwa-standalone');
+            if (portalContent) {
+                portalContent.classList.add('hidden');
+                portalContent.classList.remove('block');
+            }
+            if (mobileApp) {
+                mobileApp.classList.remove('hidden');
+                mobileApp.classList.add('block');
+            }
+            if (banner) banner.classList.add('hidden');
+            if (bottomNav) bottomNav.style.setProperty('display', 'flex', 'important');
+            updateNavInstallButtons(false);
+        } else {
+            // MODE 2: GAMBAR 2 (Mobile Web Sebelum Diinstal / Browser Ponsel)
+            document.body.classList.remove('is-pwa-standalone');
+            if (portalContent) {
+                portalContent.classList.remove('hidden');
+                portalContent.classList.add('block');
+            }
+            if (mobileApp) {
+                mobileApp.classList.add('hidden');
+                mobileApp.classList.remove('block');
+            }
+            // Sembunyikan bottom navbar di Mobile Web biasa (khusus mobile setelah diinstal)
+            if (bottomNav) bottomNav.style.setProperty('display', 'none', 'important');
+            updateNavInstallButtons(true);
+            if (!isBannerDismissed()) {
+                showFloatingInstallBanner();
+            }
+        }
+    }
+
+    // Expose ke global scope
+    window.isMubarokahStandalone = isRunningStandalone;
+    window.applyMubarokahDisplayMode = applyMubarokahDisplayMode;
 
     /**
      * Menutup Smart Floating Install Banner
@@ -220,6 +302,8 @@
         window.deferredPwaPrompt = null;
         updateNavInstallButtons(false);
         window.dismissPwaBanner(true);
+        try { localStorage.setItem('mubarokah_pwa_standalone', 'true'); } catch (e) {}
+        applyMubarokahDisplayMode();
 
         if (typeof showCustomToast === 'function') {
             showCustomToast('Alhamdulillah, aplikasi berhasil dipasang di perangkat Anda!', 'success');
@@ -229,11 +313,11 @@
 
     // Inisialisasi saat DOM siap
     function initPwa() {
-        // Jika bukan mobile atau sudah standalone, sembunyikan semua UI instalasi
+        applyMubarokahDisplayMode();
+
+        // Jika bukan mobile atau sudah standalone, sembunyikan tombol instalasi di header
         if (isRunningStandalone() || !isMobileDevice()) {
             updateNavInstallButtons(false);
-            const banner = document.getElementById('pwa-smart-install-banner');
-            if (banner) banner.classList.add('hidden');
             return;
         }
 
@@ -246,11 +330,7 @@
 
     // Dengarkan perubahan ukuran layar (Resize)
     window.addEventListener('resize', () => {
-        if (!isMobileDevice()) {
-            updateNavInstallButtons(false);
-            const banner = document.getElementById('pwa-smart-install-banner');
-            if (banner) banner.classList.add('hidden');
-        }
+        applyMubarokahDisplayMode();
     });
 
     if (document.readyState === 'loading') {

@@ -3,7 +3,7 @@
   "short_name": "Mubarokah",
   "description": "Aplikasi Pesantren Mubarokah",
   "id": "/",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
   "background_color": "#f8fafc",

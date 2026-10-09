@@ -134,19 +134,25 @@
             }
         };
 
-        // Render program, banner, berita & notifikasi secepat kilat sebelum window.onload (Stale-While-Revalidate)
+        // Render program, banner, berita, kalender & notifikasi secepat kilat sebelum window.onload (Stale-While-Revalidate)
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
                 if (typeof initializeProgramRuntime === 'function') initializeProgramRuntime();
                 loadBanners();
                 loadNews();
                 loadNotifikasi();
+                if (typeof renderCalendar === 'function') {
+                    try { renderCalendar(); } catch (e) {}
+                }
             });
         } else {
             if (typeof initializeProgramRuntime === 'function') initializeProgramRuntime();
             loadBanners();
             loadNews();
             loadNotifikasi();
+            if (typeof renderCalendar === 'function') {
+                try { renderCalendar(); } catch (e) {}
+            }
         }
 
         function navigateToNews() {
@@ -195,7 +201,17 @@
                 switchTab('unit-kegiatan', false);
             } else if (path === '/kehidupan-santri/poskestren') {
                 switchTab('poskestren', false);
-            } else if (path === '/administrator') {
+            } else if (path === '/app' || path.startsWith('/app/') || path.endsWith('app.html')) {
+                if (document.getElementById('page-admin')) {
+                    switchTab('admin', false);
+                } else {
+                    window.location.href = window.location.protocol === 'file:' ? 'app.html' : '/app';
+                }
+            } else if (path === '/administrator' || path === '/admin') {
+                if (!document.getElementById('page-admin')) {
+                    window.location.href = window.location.protocol === 'file:' ? 'app.html' : '/app';
+                    return;
+                }
                 const isMobile = window.innerWidth < 768;
                 if (isMobile) {
                     window.history.replaceState({ tab: 'pengaturan' }, '', '/');
@@ -322,7 +338,17 @@
                 else switchTab('quran-index', false);
             } else if (path === '/layanan/portal-ibadah/quran/halaman') {
                 switchTab('quran-page', false);
-            } else if (path === '/administrator') {
+            } else if (path === '/app' || path.startsWith('/app/') || path.endsWith('app.html')) {
+                if (document.getElementById('page-admin')) {
+                    switchTab('admin', false);
+                } else {
+                    window.location.href = window.location.protocol === 'file:' ? 'app.html' : '/app';
+                }
+            } else if (path === '/administrator' || path === '/admin') {
+                if (!document.getElementById('page-admin')) {
+                    window.location.href = window.location.protocol === 'file:' ? 'app.html' : '/app';
+                    return;
+                }
                 const isMobile = window.innerWidth < 768;
                 if (isMobile) {
                     window.history.replaceState({ tab: 'pengaturan' }, '', '/');
@@ -361,6 +387,12 @@
         }
 
         function switchTab(tabId, updateUrl = true, customUrl = null) {
+            // Guard Decoupling: Jika tab admin diminta dari portal publik tanpa elemen page-admin, arahkan ke aplikasi internal app.html / /app
+            if (tabId === 'admin' && !document.getElementById('page-admin')) {
+                window.location.href = window.location.protocol === 'file:' ? 'app.html' : '/app';
+                return;
+            }
+
             const isUserAdmin = (typeof checkIsAdminLoggedIn === 'function')
                 ? checkIsAdminLoggedIn()
                 : ((typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn) || (typeof ASNIdentity !== 'undefined' && (ASNIdentity.currentRole === 'admin' || ASNIdentity.currentRole === 'editor')));
@@ -437,7 +469,9 @@
             }
 
             if (tabId === 'profil' || tabId === 'sejarah-berdirinya' || tabId === 'tujuan-visi-misi' || tabId === 'struktur-kepengurusan') {
-                loadPublicProfilLembaga();
+                if (typeof loadPublicProfilLembaga === 'function') {
+                    loadPublicProfilLembaga();
+                }
             }
 
             if (tabId === 'pengaturan') {
@@ -457,6 +491,8 @@
                 if (!targetTab.classList.contains('flex')) {
                     targetTab.classList.add('block');
                 }
+                // Gulir halaman langsung ke atas agar tab langsung terlihat oleh pengguna
+                window.scrollTo({ top: 0, behavior: 'instant' });
             }
 
             // Hide menus for Admin layout
@@ -512,7 +548,13 @@
                 if (mainMobileHeader) mainMobileHeader.style.removeProperty('display');
                 if (deskNavMenu) deskNavMenu.style.removeProperty('display');
                 if (deskActionMenu) deskActionMenu.style.removeProperty('display');
-                if (mobileBottomNav) mobileBottomNav.style.removeProperty('display');
+                if (mobileBottomNav) {
+                    if (document.body.classList.contains('is-pwa-standalone') && window.innerWidth < 768) {
+                        mobileBottomNav.style.setProperty('display', 'flex', 'important');
+                    } else {
+                        mobileBottomNav.style.setProperty('display', 'none', 'important');
+                    }
+                }
                 if (mainFooter) mainFooter.style.removeProperty('display');
             }
 
@@ -537,6 +579,10 @@
             } else if (tabId === 'jadwal-sholat') {
                 if (typeof ASNJadwalSholat !== 'undefined') {
                     ASNJadwalSholat.init();
+                }
+            } else if (tabId === 'kalender') {
+                if (typeof renderCalendar === 'function') {
+                    renderCalendar();
                 }
             } else if (tabId === 'galeri') {
                 if (typeof loadPengaturan === 'function') {
@@ -750,8 +796,13 @@
             const topHeadline = newsArray.slice(0, 3);
             const defaultThumb = "https://images.unsplash.com/photo-1585036156171-384164a8c675?q=80&w=400&auto=format&fit=crop";
 
-            // Mobile Render
-            if (containerMobile) {
+            // Mobile Render (bisa untuk beranda-mobile-landing dan beranda-mobile-app)
+            const mobileContainers = [
+                document.getElementById('headline-news-container'),
+                document.getElementById('headline-news-container-app')
+            ].filter(Boolean);
+
+            mobileContainers.forEach(containerMobile => {
                 containerMobile.innerHTML = "";
                 topHeadline.forEach((news, idx) => {
                     const item = document.createElement('article');
@@ -775,7 +826,7 @@
                     `;
                     containerMobile.appendChild(item);
                 });
-            }
+            });
 
             // Desktop Render
             if (containerDesktop) {
@@ -1186,6 +1237,11 @@
                     type: 'mobile'
                 },
                 {
+                    slider: document.getElementById('hero-slider-container-app'),
+                    dots: document.getElementById('hero-dots-container-app'),
+                    type: 'mobile'
+                },
+                {
                     slider: document.getElementById('hero-slider-container-desktop'),
                     dots: document.getElementById('hero-dots-container-desktop'),
                     type: 'desktop'
@@ -1258,7 +1314,11 @@
 
             if (activeBanners.length > 1) {
                 heroSlideTimer = setInterval(() => {
-                    const activeSelector = isDesktop ? '#hero-slider-container-desktop .hero-slide' : '#hero-slider-container .hero-slide';
+                    const activeSelector = isDesktop 
+                        ? '#hero-slider-container-desktop .hero-slide' 
+                        : (document.getElementById('hero-slider-container-app') && !document.getElementById('beranda-mobile-app')?.classList.contains('hidden') 
+                            ? '#hero-slider-container-app .hero-slide' 
+                            : '#hero-slider-container .hero-slide');
                     const slides = document.querySelectorAll(activeSelector);
                     if (slides.length > 0) {
                         currentHeroSlide = (currentHeroSlide + 1) % slides.length;
@@ -1273,6 +1333,7 @@
 
             const containers = [
                 { slides: document.querySelectorAll('#hero-slider-container .hero-slide'), dots: document.querySelectorAll('#hero-dots-container .hero-dot') },
+                { slides: document.querySelectorAll('#hero-slider-container-app .hero-slide'), dots: document.querySelectorAll('#hero-dots-container-app .hero-dot') },
                 { slides: document.querySelectorAll('#hero-slider-container-desktop .hero-slide'), dots: document.querySelectorAll('#hero-dots-container-desktop .hero-dot') }
             ];
 
