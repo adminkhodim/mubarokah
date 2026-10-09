@@ -2,11 +2,15 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Redirecting...</title>
+    <title>Mengalihkan...</title>
     <script>
-      // Fallback routing untuk GitHub Pages SPA
-      var path = window.location.pathname;
-      window.location.replace('/?route=' + encodeURIComponent(path));
+      // Fallback routing untuk SPA (GitHub Pages & Vercel)
+      var path = window.location.pathname.replace(/\/+$/, '') || '/';
+      if (path === '/administrator' || path === '/admin' || path.startsWith('/app')) {
+        window.location.replace('/app');
+      } else {
+        window.location.replace('/?route=' + encodeURIComponent(window.location.pathname));
+      }
     </script>
   </head>
   <body>
