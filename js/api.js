@@ -300,19 +300,30 @@
 
         function checkIsAdminLoggedIn() {
             try {
-                if (typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn === true) return true;
-                if (typeof ASNIdentity !== 'undefined') {
-                    const r = String(ASNIdentity.currentRole || '').toUpperCase();
-                    if (['SUPER_ADMIN', 'ADMIN', 'BENDAHARA', 'PENGURUS', 'ASATIDZ', 'PEGAWAI', 'EDITOR'].includes(r)) return true;
-                }
                 const tokenKey = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.storage && APP_CONFIG.storage.keys) ? APP_CONFIG.storage.keys.adminToken : "mubarokah_admin_token";
                 const token = sessionStorage.getItem(tokenKey) || localStorage.getItem(tokenKey);
+                const pengasuhTokenKey = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.storage && APP_CONFIG.storage.keys) ? APP_CONFIG.storage.keys.pengasuhToken : "mubarokah_pengasuh_token";
+                const pengasuhToken = sessionStorage.getItem(pengasuhTokenKey) || localStorage.getItem(pengasuhTokenKey);
+
+                if (!token && !pengasuhToken) {
+                    if (typeof isAdminLoggedIn !== 'undefined') isAdminLoggedIn = false;
+                    return false;
+                }
+
+                if (pengasuhToken) {
+                    if (typeof isAdminLoggedIn !== 'undefined') isAdminLoggedIn = true;
+                    return true;
+                }
+
                 const roleKey = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.storage && APP_CONFIG.storage.keys) ? APP_CONFIG.storage.keys.adminRole : "mubarokah_admin_role";
                 const role = String(sessionStorage.getItem(roleKey) || localStorage.getItem(roleKey) || '').toLowerCase();
-                if (token && (['super_admin', 'admin', 'bendahara', 'pengurus', 'asatidz', 'pegawai', 'editor'].includes(role) || role === '')) {
+                const isValidRole = (['super_admin', 'admin', 'bendahara', 'pengurus', 'asatidz', 'pegawai', 'editor'].includes(role) || role === '');
+                if (isValidRole) {
+                    if (typeof isAdminLoggedIn !== 'undefined') isAdminLoggedIn = true;
                     return true;
                 }
             } catch (e) {}
+            if (typeof isAdminLoggedIn !== 'undefined') isAdminLoggedIn = false;
             return false;
         }
 
@@ -320,9 +331,13 @@
             try {
                 const tokenKey = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.storage && APP_CONFIG.storage.keys) ? APP_CONFIG.storage.keys.adminToken : "mubarokah_admin_token";
                 const token = sessionStorage.getItem(tokenKey) || localStorage.getItem(tokenKey);
+                const pengasuhTokenKey = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.storage && APP_CONFIG.storage.keys) ? APP_CONFIG.storage.keys.pengasuhToken : "mubarokah_pengasuh_token";
+                const pengasuhToken = sessionStorage.getItem(pengasuhTokenKey) || localStorage.getItem(pengasuhTokenKey);
+                if (!token && !pengasuhToken) return false;
+                if (pengasuhToken) return true;
                 const roleKey = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.storage && APP_CONFIG.storage.keys) ? APP_CONFIG.storage.keys.adminRole : "mubarokah_admin_role";
                 const role = String(sessionStorage.getItem(roleKey) || localStorage.getItem(roleKey) || '').toLowerCase();
-                return Boolean(token && (['super_admin', 'admin', 'pegawai', 'editor'].includes(role) || role === ''));
+                return Boolean(token && (['super_admin', 'admin', 'bendahara', 'pengurus', 'asatidz', 'pegawai', 'editor'].includes(role) || role === ''));
             } catch (e) {
                 return false;
             }
