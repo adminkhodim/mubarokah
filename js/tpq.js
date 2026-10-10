@@ -1471,7 +1471,7 @@ function onSelectPlottingTPQKelas(kelasId) {
     }
 
     let currentIds = [];
-    if (Array.isArray(kelas.studentIds) && kelas.studentIds.length > 0) {
+    if (Array.isArray(kelas.studentIds)) {
         currentIds = [...kelas.studentIds];
     } else if (Array.isArray(ASNTPQ.data.students)) {
         currentIds = ASNTPQ.data.students
@@ -1625,7 +1625,8 @@ async function submitTPQPlotting() {
         return;
     }
 
-    const kelasId = ASNTPQ.activePlottingKelas.kelasId;
+    const targetKelas = ASNTPQ.activePlottingKelas;
+    const kelasId = targetKelas.kelasId;
     const studentIds = ASNTPQ.activePlottingStudentIds || [];
     const btn = document.getElementById('tab2-btn-save-tpq-plotting');
 
@@ -1645,15 +1646,81 @@ async function submitTPQPlotting() {
         });
 
         if (res && (res.success || res.status === "success")) {
-            if (typeof showToast === 'function') {
-                showToast(`✅ Berhasil mengatur ${studentIds.length} santri binaan ke ${ASNTPQ.activePlottingKelas.namaKelas}!`);
+            // 1. Update state kelas aktif
+            targetKelas.studentIds = [...studentIds];
+
+            // 2. Update kelasList di memori lokal
+            if (Array.isArray(ASNTPQ.data.kelasList)) {
+                const kObj = ASNTPQ.data.kelasList.find(k => k.kelasId === kelasId);
+                if (kObj) {
+                    kObj.studentIds = [...studentIds];
+                }
             }
-            if (ASNTPQ.activePlottingKelas) {
-                ASNTPQ.activePlottingKelas.studentIds = studentIds;
+
+            // 3. Update objek santri di ASNTPQ.data.students secara instan!
+            const cleanIdSet = new Set(studentIds.map(s => String(s).trim()));
+            const kName = targetKelas.namaKelas || ("Kelas " + (targetKelas.ustadzPengampu || kelasId));
+            const kUstadz = targetKelas.ustadzPengampu || "-";
+
+            if (Array.isArray(ASNTPQ.data.students)) {
+                ASNTPQ.data.students.forEach(st => {
+                    const sid = String(st.studentId || "").trim();
+                    const snis = String(st.nis || "").trim();
+                    const isEnrolled = (sid && cleanIdSet.has(sid)) || (snis && cleanIdSet.has(snis));
+
+                    if (isEnrolled) {
+                        st.kelasId = kelasId;
+                        st.namaKelas = kName;
+                        st.ustadzPengampu = kUstadz;
+                    } else if (st.kelasId === kelasId) {
+                        // Santri dikeluarkan dari kelas ini
+                        st.kelasId = "";
+                        st.namaKelas = "Belum Ditentukan";
+                        st.ustadzPengampu = "-";
+                    }
+                });
             }
+
+            // 4. Perbarui cache lokal agar SWR langsung konsisten
+            try {
+                const cachePayload = JSON.stringify({ data: ASNTPQ.data, timestamp: Date.now() });
+                localStorage.setItem(TPQ_CACHE_KEY, cachePayload);
+                sessionStorage.setItem(TPQ_CACHE_KEY, cachePayload);
+            } catch (ce) {}
+
+            // 5. Re-render UI modal Tab 2 (Plotting Santri), Tab 1 (Kelas), & Tab 3 (Matriks Beban)
+            renderTPQPlottingLists();
             renderTPQKelasCards();
             renderTPQMatriksBeban();
-            loadAdminTPQData(true);
+
+            // 6. Refresh tabel dashboard luar
+            renderTPQSummaryCards();
+            populateTPQFilters();
+            filterTPQList();
+
+            if (typeof showToast === 'function') {
+                showToast(`✅ Berhasil mengatur ${studentIds.length} santri binaan ke ${kName}!`);
+            }
+
+            // 7. Background revalidation dari server untuk memastikan sinkronisasi Google Sheets
+            try {
+                await loadAdminTPQData(true);
+                // Re-sync reference kelas aktif pasca reload server
+                if (Array.isArray(ASNTPQ.data.kelasList)) {
+                    const reloadedK = ASNTPQ.data.kelasList.find(k => k.kelasId === kelasId);
+                    if (reloadedK) {
+                        ASNTPQ.activePlottingKelas = reloadedK;
+                        if (Array.isArray(reloadedK.studentIds)) {
+                            ASNTPQ.activePlottingStudentIds = [...reloadedK.studentIds];
+                        }
+                    }
+                }
+                renderTPQPlottingLists();
+                renderTPQKelasCards();
+                renderTPQMatriksBeban();
+            } catch (syncErr) {
+                console.warn("Background sync error:", syncErr);
+            }
         } else {
             const msg = ((res && res.message) || "Kesalahan server saat menyimpan plotting.");
             if (typeof showToast === 'function') showToast("❌ " + msg);

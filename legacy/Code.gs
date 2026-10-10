@@ -15588,10 +15588,10 @@ function syncTPQPlottingToCapaian_(ss, kelasId, studentIds, ustadz, namaKelas) {
     const headersCapaian = ["student_id", "student_name", "jilid_aktif", "halaman_aktif", "status_terakhir", "kelas_id", "nama_kelas", "ustadz_pengampu", "updated_at"];
     const cSheet = getOrCreateTPQSheet(ss, SHEET_TPQ_CAPAIAN, headersCapaian, "#0d9488");
     const cData = cSheet.getDataRange().getValues();
-    if (cData.length < 2) return;
 
-    const cHead = cData[0].map(h => String(h || "").trim().toLowerCase());
+    const cHead = cData.length > 0 ? cData[0].map(h => String(h || "").trim().toLowerCase()) : headersCapaian;
     const sIdIdx = cHead.indexOf("student_id");
+    const sNameIdx = cHead.indexOf("student_name");
     const kIdIdx = cHead.indexOf("kelas_id");
     const kNameIdx = cHead.indexOf("nama_kelas");
     const uIdx = cHead.indexOf("ustadz_pengampu");
@@ -15599,24 +15599,94 @@ function syncTPQPlottingToCapaian_(ss, kelasId, studentIds, ustadz, namaKelas) {
 
     if (sIdIdx === -1 || kIdIdx === -1) return;
 
+    // Ambil mapping santri dari Sheet Students untuk mencocokkan student_id vs NIS
+    const studSheet = ss.getSheetByName(SHEET_STUDENTS);
+    const studMap = {};
+    if (studSheet) {
+      const sVals = studSheet.getDataRange().getValues();
+      if (sVals.length > 1) {
+        const sHead = sVals[0].map(h => String(h || "").trim().toLowerCase());
+        const sIdCol = sHead.indexOf("student_id");
+        const sNisCol = sHead.indexOf("nis") !== -1 ? sHead.indexOf("nis") : sHead.indexOf("nisn");
+        const sNameCol = sHead.indexOf("name") !== -1 ? sHead.indexOf("name") : sHead.indexOf("nama");
+        for (let i = 1; i < sVals.length; i++) {
+          const rowSid = sIdCol !== -1 ? String(sVals[i][sIdCol] || "").trim() : "";
+          const rowNis = sNisCol !== -1 ? String(sVals[i][sNisCol] || "").trim() : "";
+          const rowName = sNameCol !== -1 ? String(sVals[i][sNameCol] || "").trim() : "";
+          const item = { studentId: rowSid, nis: rowNis, name: rowName };
+          if (rowSid) studMap[rowSid] = item;
+          if (rowNis) studMap[rowNis] = item;
+        }
+      }
+    }
+
     const cleanSids = Array.isArray(studentIds) ? studentIds.map(s => String(s).trim()).filter(Boolean) : [];
+    // Bangun set pencocokan yang mencakup baik studentId maupun NIS
+    const enrolledMatches = new Set();
+    cleanSids.forEach(id => {
+      enrolledMatches.add(id);
+      if (studMap[id]) {
+        if (studMap[id].studentId) enrolledMatches.add(studMap[id].studentId);
+        if (studMap[id].nis) enrolledMatches.add(studMap[id].nis);
+      }
+    });
+
     const kName = namaKelas || (ustadz && ustadz !== "-" ? ("Kelas " + ustadz) : ("Kelas " + kelasId));
     const nowIso = new Date().toISOString();
+    const existingMatchedIds = new Set();
 
+    // 1. Perbarui baris yang sudah ada di TPQ_Capaian
     for (let i = 1; i < cData.length; i++) {
       const rowSid = String(cData[i][sIdIdx] || "").trim();
       const currentKId = String(cData[i][kIdIdx] || "").trim();
+      const rowNumber = i + 1;
 
-      if (cleanSids.includes(rowSid)) {
-        const rowNumber = i + 1;
+      // Cek apakah santri ini cocok dengan yang di-plot
+      let isEnrolled = enrolledMatches.has(rowSid);
+      if (!isEnrolled && studMap[rowSid]) {
+        if (enrolledMatches.has(studMap[rowSid].studentId) || enrolledMatches.has(studMap[rowSid].nis)) {
+          isEnrolled = true;
+        }
+      }
+
+      if (isEnrolled) {
+        existingMatchedIds.add(rowSid);
+        if (studMap[rowSid]) {
+          if (studMap[rowSid].studentId) existingMatchedIds.add(studMap[rowSid].studentId);
+          if (studMap[rowSid].nis) existingMatchedIds.add(studMap[rowSid].nis);
+        }
         if (currentKId !== kelasId || String(cData[i][kNameIdx] || "").trim() === "Belum Ditentukan" || !cData[i][kNameIdx]) {
           cSheet.getRange(rowNumber, kIdIdx + 1).setValue(kelasId);
           if (kNameIdx !== -1) cSheet.getRange(rowNumber, kNameIdx + 1).setValue(kName);
           if (uIdx !== -1 && ustadz && ustadz !== "-") cSheet.getRange(rowNumber, uIdx + 1).setValue(ustadz);
           if (upIdx !== -1) cSheet.getRange(rowNumber, upIdx + 1).setValue(nowIso);
         }
+      } else if (currentKId === kelasId) {
+        // Santri DIKELUARKAN dari kelas ini -> reset kelas_id & nama_kelas
+        cSheet.getRange(rowNumber, kIdIdx + 1).setValue("");
+        if (kNameIdx !== -1) cSheet.getRange(rowNumber, kNameIdx + 1).setValue("Belum Ditentukan");
+        if (uIdx !== -1) cSheet.getRange(rowNumber, uIdx + 1).setValue("-");
+        if (upIdx !== -1) cSheet.getRange(rowNumber, upIdx + 1).setValue(nowIso);
       }
     }
+
+    // 2. Jika ada santri di cleanSids yang BELUM memiliki baris di TPQ_Capaian, tambahkan baris baru!
+    cleanSids.forEach(sid => {
+      let alreadyExists = existingMatchedIds.has(sid);
+      if (!alreadyExists && studMap[sid]) {
+        alreadyExists = existingMatchedIds.has(studMap[sid].studentId) || existingMatchedIds.has(studMap[sid].nis);
+      }
+      if (!alreadyExists) {
+        const info = studMap[sid] || { studentId: sid, nis: "", name: "Santri TPQ" };
+        const finalId = info.studentId || sid;
+        const finalName = info.name || "Santri TPQ";
+        // Header: ["student_id", "student_name", "jilid_aktif", "halaman_aktif", "status_terakhir", "kelas_id", "nama_kelas", "ustadz_pengampu", "updated_at"]
+        cSheet.appendRow([finalId, finalName, 1, 1, "LANJUT", kelasId, kName, ustadz || "-", nowIso]);
+        existingMatchedIds.add(finalId);
+        if (info.nis) existingMatchedIds.add(info.nis);
+      }
+    });
+
   } catch (err) {
     Logger.log("syncTPQPlottingToCapaian_ error: " + err.message);
   }
@@ -16658,7 +16728,11 @@ function saveTPQPlotting(payload, token) {
 
       let foundRow = -1;
       for (let i = 1; i < data.length; i++) {
-        if (String(data[i][0] || "").trim() === kelasId) {
+        const rowId = String(data[i][0] || "").trim();
+        const rowU = String(data[i][1] || "").trim();
+        if (rowId === kelasId || rowId.toLowerCase() === kelasId.toLowerCase() || 
+            (rowU && ("kelas " + rowU).toLowerCase() === kelasId.toLowerCase()) || 
+            (rowU && rowU.toLowerCase() === kelasId.toLowerCase())) {
           foundRow = i + 1;
           break;
         }
