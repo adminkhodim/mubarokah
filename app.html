@@ -5535,6 +5535,12 @@
                                     </button>
                                 </li>
                                 <li>
+                                    <button onclick="showAdminView('jadwal-kegiatan')" data-view="jadwal-kegiatan" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Jadwal Kegiatan Santri">
+                                        <i class="fa-solid fa-calendar-check w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Jadwal Kegiatan</span>
+                                    </button>
+                                </li>
+                                <li>
                                     <button onclick="showAdminView('program')" data-view="program" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Manajemen Program">
                                         <i class="fa-solid fa-shapes w-5 text-center text-sm"></i>
                                         <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Manajemen Program</span>
@@ -6283,7 +6289,22 @@
                                                 </div>
                                                 <div>
                                                     <h4 class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-teal-700 transition">Unit Kegiatan (UKS)</h4>
-                                                    <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Ekstrakurikuler & jadwal santri.</p>
+                                                    <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Ekstrakurikuler & minat bakat.</p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Jadwal Kegiatan Santri -->
+                                            <div data-admin-module="jadwal-kegiatan" onclick="showAdminView('jadwal-kegiatan')"
+                                                class="bg-white hover:bg-emerald-50/60 p-4 rounded-2xl border border-slate-100 hover:border-emerald-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
+                                                <div class="flex justify-between items-start">
+                                                    <div class="w-11 h-11 bg-emerald-50 text-emerald-700 group-hover:bg-emerald-700 group-hover:text-white rounded-2xl flex items-center justify-center text-lg shadow-sm transition-all duration-300">
+                                                        <i class="fa-solid fa-calendar-check"></i>
+                                                    </div>
+                                                    <span id="admin-hub-jadwal-kegiatan-count" class="text-[9px] font-extrabold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md uppercase">25 Agenda</span>
+                                                </div>
+                                                <div>
+                                                    <h4 class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-emerald-700 transition">Jadwal Kegiatan</h4>
+                                                    <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Agenda harian, mingguan, & event.</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -11994,6 +12015,285 @@
                                         <p>Belum ada data unit kegiatan.</p>
                                     </div>
                                 </section>
+                            </div>
+
+                            <!-- ================= VIEW 7: MODUL MANAJEMEN JADWAL KEGIATAN SANTRI ================= -->
+                            <div id="admin-view-jadwal-kegiatan" class="hidden space-y-4">
+                                <!-- Header Sub-View -->
+                                <div class="bg-white dark:bg-[#15202d] px-3.5 py-2.5 md:px-4 md:py-3 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-wrap items-center justify-between gap-2.5 animate-fade-in-up stagger-1">
+                                    <div class="flex items-center space-x-2.5 min-w-0">
+                                        <button type="button" onclick="backFromAdminModule()"
+                                            class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl flex items-center justify-center transition active:scale-95 shrink-0"
+                                            title="Kembali">
+                                            <i class="fa-solid fa-arrow-left text-xs"></i>
+                                        </button>
+                                        <div class="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-base shadow-xs shrink-0">
+                                            <i class="fa-solid fa-calendar-check"></i>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400 uppercase tracking-widest block">Dashboard Admin</span>
+                                                <span class="hidden sm:inline-flex px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
+                                                    Kesantrian & Tahfidz
+                                                </span>
+                                            </div>
+                                            <h2 class="text-sm md:text-base font-black text-slate-800 dark:text-slate-100 truncate">
+                                                Manajemen Jadwal Kegiatan Santri
+                                            </h2>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        <button type="button" onclick="loadAdminJadwalKegiatan()"
+                                            class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 active:scale-95"
+                                            title="Muat Ulang Data">
+                                            <i class="fa-solid fa-rotate text-xs"></i>
+                                            <span class="hidden sm:inline">Refresh</span>
+                                        </button>
+                                        <button type="button" onclick="openAdminJadwalModal()"
+                                            class="px-3 md:px-4 py-1.5 md:py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm active:scale-95">
+                                            <i class="fa-solid fa-plus text-xs"></i>
+                                            <span>Tambah Agenda</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- 4 Kartu Makro KPI Jadwal Kegiatan (Asnawiyyah Gradient Style) -->
+                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                                    <!-- KPI 1: TOTAL AGENDA (Teal Gradient) -->
+                                    <div class="rounded-2xl p-4 bg-gradient-to-br from-[#0f766e] to-[#0d9488] text-white shadow-lg shadow-teal-900/15 border border-teal-500/20 hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group animate-fade-in-up stagger-2">
+                                        <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-white/10 blur-xl pointer-events-none"></div>
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-teal-100">TOTAL AGENDA</span>
+                                            <span class="w-8 h-8 rounded-xl bg-white/15 backdrop-blur-xs flex items-center justify-center text-white text-xs shadow-inner">
+                                                <i class="fa-solid fa-calendar-days"></i>
+                                            </span>
+                                        </div>
+                                        <div class="flex items-baseline gap-1.5">
+                                            <span id="jadwal-kpi-total" class="text-2xl md:text-3xl font-black tracking-tight drop-shadow-xs">25</span>
+                                            <span class="text-xs font-bold text-white/80">Agenda ↑</span>
+                                        </div>
+                                        <div class="mt-3 pt-2.5 border-t border-white/15 flex items-center justify-between text-[11px] text-teal-100">
+                                            <span class="truncate">Jadwal pesantren</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-teal-800 font-black shadow-xs shrink-0 text-[9px]">Jadwal Santri</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- KPI 2: AGENDA HARIAN (Sky Gradient) -->
+                                    <div class="rounded-2xl p-4 bg-gradient-to-br from-[#0284c7] to-[#0369a1] text-white shadow-lg shadow-sky-900/15 border border-sky-400/20 hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group animate-fade-in-up stagger-3">
+                                        <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-white/10 blur-xl pointer-events-none"></div>
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-sky-100">AGENDA HARIAN</span>
+                                            <span class="w-8 h-8 rounded-xl bg-white/15 backdrop-blur-xs flex items-center justify-center text-white text-xs shadow-inner">
+                                                <i class="fa-solid fa-clock"></i>
+                                            </span>
+                                        </div>
+                                        <div class="flex items-baseline gap-1.5">
+                                            <span id="jadwal-kpi-harian" class="text-2xl md:text-3xl font-black tracking-tight drop-shadow-xs">11</span>
+                                            <span class="text-xs font-bold text-white/80">Harian</span>
+                                        </div>
+                                        <div class="mt-3 pt-2.5 border-t border-white/15 flex items-center justify-between text-[11px] text-sky-100">
+                                            <span class="truncate">Rutinitas santri</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-sky-800 font-black shadow-xs shrink-0 text-[9px]">Rutinitas</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- KPI 3: AGENDA MINGGUAN (Orange Gradient) -->
+                                    <div class="rounded-2xl p-4 bg-gradient-to-br from-[#f97316] to-[#ea580c] text-white shadow-lg shadow-orange-900/15 border border-orange-400/20 hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group animate-fade-in-up stagger-4">
+                                        <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-white/10 blur-xl pointer-events-none"></div>
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-orange-100">AGENDA MINGGUAN</span>
+                                            <span class="w-8 h-8 rounded-xl bg-white/15 backdrop-blur-xs flex items-center justify-center text-white text-xs shadow-inner">
+                                                <i class="fa-solid fa-calendar-week"></i>
+                                            </span>
+                                        </div>
+                                        <div class="flex items-baseline gap-1.5">
+                                            <span id="jadwal-kpi-mingguan" class="text-2xl md:text-3xl font-black tracking-tight drop-shadow-xs">5</span>
+                                            <span class="text-xs font-bold text-white/80">Mingguan</span>
+                                        </div>
+                                        <div class="mt-3 pt-2.5 border-t border-white/15 flex items-center justify-between text-[11px] text-orange-100">
+                                            <span class="truncate">Kajian & siklus pekanan</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-orange-800 font-black shadow-xs shrink-0 text-[9px]">Pekanan</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- KPI 4: PERIODIK & KHUSUS (Purple Gradient) -->
+                                    <div class="rounded-2xl p-4 bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white shadow-lg shadow-purple-900/15 border border-purple-400/20 hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group animate-fade-in-up stagger-5">
+                                        <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-white/10 blur-xl pointer-events-none"></div>
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-purple-100">PERIODIK & KHUSUS</span>
+                                            <span class="w-8 h-8 rounded-xl bg-white/15 backdrop-blur-xs flex items-center justify-center text-white text-xs shadow-inner">
+                                                <i class="fa-solid fa-star"></i>
+                                            </span>
+                                        </div>
+                                        <div class="flex items-baseline gap-1.5">
+                                            <span id="jadwal-kpi-periodik" class="text-2xl md:text-3xl font-black tracking-tight drop-shadow-xs">9</span>
+                                            <span class="text-xs font-bold text-white/80">Periodik</span>
+                                        </div>
+                                        <div class="mt-3 pt-2.5 border-t border-white/15 flex items-center justify-between text-[11px] text-purple-100">
+                                            <span class="truncate">Bulanan & event tahunan</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-purple-800 font-black shadow-xs shrink-0 text-[9px]">Event Khusus</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Filter Tabs & Search Bar (Asnawiyyah Layout) -->
+                                <div class="bg-white dark:bg-[#15202d] p-3 md:p-3.5 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-col md:flex-row md:items-center justify-between gap-3 animate-fade-in-up stagger-6">
+                                    <!-- Tabs -->
+                                    <div class="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+                                        <button type="button" id="tab-jadwal-semua" onclick="setAdminJadwalFilterTab('Semua')"
+                                            class="jadwal-tab-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-emerald-600 text-white shadow-xs">
+                                            <span>Semua</span>
+                                            <span id="tab-jadwal-semua-count" class="opacity-90">(25)</span>
+                                        </button>
+                                        <button type="button" id="tab-jadwal-harian" onclick="setAdminJadwalFilterTab('Harian')"
+                                            class="jadwal-tab-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#253447]">
+                                            <span>Harian</span>
+                                            <span id="tab-jadwal-harian-count" class="opacity-80">(11)</span>
+                                        </button>
+                                        <button type="button" id="tab-jadwal-mingguan" onclick="setAdminJadwalFilterTab('Mingguan')"
+                                            class="jadwal-tab-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#253447]">
+                                            <span>Mingguan</span>
+                                            <span id="tab-jadwal-mingguan-count" class="opacity-80">(5)</span>
+                                        </button>
+                                        <button type="button" id="tab-jadwal-bulanan" onclick="setAdminJadwalFilterTab('Bulanan')"
+                                            class="jadwal-tab-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#253447]">
+                                            <span>Bulanan</span>
+                                            <span id="tab-jadwal-bulanan-count" class="opacity-80">(4)</span>
+                                        </button>
+                                        <button type="button" id="tab-jadwal-tahunan" onclick="setAdminJadwalFilterTab('Tahunan')"
+                                            class="jadwal-tab-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#253447]">
+                                            <span>Tahunan</span>
+                                            <span id="tab-jadwal-tahunan-count" class="opacity-80">(5)</span>
+                                        </button>
+                                    </div>
+
+                                    <!-- Search input -->
+                                    <div class="relative w-full md:w-72 shrink-0">
+                                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                        <input type="text" id="admin-jadwal-search" oninput="filterAdminJadwalKegiatan()"
+                                            placeholder="Cari kegiatan atau waktu..."
+                                            class="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-[#253447] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-[#15202d] focus:ring-2 focus:ring-emerald-600 focus:outline-none transition">
+                                    </div>
+                                </div>
+
+                                <!-- Loader & State -->
+                                <div id="admin-jadwal-loader" class="hidden py-8 text-center text-xs text-slate-500 space-y-2">
+                                    <i class="fa-solid fa-spinner fa-spin text-xl text-emerald-600"></i>
+                                    <p>Memuat data jadwal kegiatan...</p>
+                                </div>
+
+                                <!-- Container Card List -->
+                                <div id="admin-jadwal-list-container" class="space-y-3 animate-fade-in-up stagger-7">
+                                    <!-- Rendered by JavaScript -->
+                                </div>
+
+                                <div id="admin-jadwal-empty-state" class="hidden py-12 text-center text-xs text-slate-400 space-y-2 bg-white dark:bg-[#15202d] rounded-2xl border border-dashed border-slate-200 dark:border-[#253447]">
+                                    <i class="fa-solid fa-calendar-xmark text-4xl text-slate-300 dark:text-slate-600"></i>
+                                    <p class="font-bold text-slate-600 dark:text-slate-400">Belum ada agenda kegiatan.</p>
+                                    <p class="text-[11px] text-slate-400">Klik tombol "+ Tambah Agenda" di atas untuk menambahkan jadwal baru.</p>
+                                </div>
+                            </div>
+
+                            <!-- Modal Tambah / Edit Agenda Jadwal Kegiatan -->
+                            <div id="adminJadwalModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+                                <div class="bg-white dark:bg-[#15202d] rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl border border-slate-100 dark:border-[#253447] space-y-4 animate-scale-up">
+                                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-[#253447] pb-3">
+                                        <h3 id="admin-jadwal-modal-title" class="text-sm md:text-base font-bold text-slate-800 dark:text-slate-100 flex items-center">
+                                            <i class="fa-solid fa-circle-plus text-emerald-600 mr-2"></i> Tambah Agenda Kegiatan Baru
+                                        </h3>
+                                        <button type="button" onclick="closeAdminJadwalModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#1c2836] text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center transition">
+                                            <i class="fa-solid fa-xmark text-xs"></i>
+                                        </button>
+                                    </div>
+
+                                    <form id="adminJadwalForm" onsubmit="submitAdminJadwalKegiatan(event)" class="space-y-3.5">
+                                        <input type="hidden" id="admin-jadwal-id">
+
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                                Nama / Judul Kegiatan <span class="text-rose-500">*</span>
+                                            </label>
+                                            <input type="text" id="admin-jadwal-nama" required
+                                                placeholder="Contoh: Sema'an Al-Qur'an Bil-Ghaib, Sholat Dhuha Berjamaah"
+                                                class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-[#253447] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-[#15202d] focus:ring-2 focus:ring-emerald-600 focus:outline-none transition">
+                                        </div>
+
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                                    Tipe Siklus Agenda <span class="text-rose-500">*</span>
+                                                </label>
+                                                <select id="admin-jadwal-tipe" required
+                                                    class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-[#253447] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-[#15202d] focus:ring-2 focus:ring-emerald-600 focus:outline-none transition">
+                                                    <option value="Harian">Harian (Rutinitas)</option>
+                                                    <option value="Mingguan">Mingguan (Pekanan)</option>
+                                                    <option value="Bulanan">Bulanan (Siklus Bulanan)</option>
+                                                    <option value="Tahunan">Tahunan (Event Khusus)</option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                                    Keterangan Waktu / Jam <span class="text-rose-500">*</span>
+                                                </label>
+                                                <input type="text" id="admin-jadwal-waktu" required
+                                                    placeholder="Contoh: 03.30 - 04.30 WIB, Pekan Ke-1, Senin & Kamis"
+                                                    class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-[#253447] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-[#15202d] focus:ring-2 focus:ring-emerald-600 focus:outline-none transition">
+                                            </div>
+                                        </div>
+
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                                    Tag / Sub-Label
+                                                </label>
+                                                <input type="text" id="admin-jadwal-tag"
+                                                    placeholder="Contoh: P-1, Sunnah, Wajib, 24 Jam"
+                                                    class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-[#253447] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-[#15202d] focus:ring-2 focus:ring-emerald-600 focus:outline-none transition">
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                                    Urutan Tampil
+                                                </label>
+                                                <input type="number" id="admin-jadwal-urutan" min="1" value="1"
+                                                    class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-[#253447] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-[#15202d] focus:ring-2 focus:ring-emerald-600 focus:outline-none transition">
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                                    Status Agenda
+                                                </label>
+                                                <select id="admin-jadwal-status"
+                                                    class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-[#253447] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-[#15202d] focus:ring-2 focus:ring-emerald-600 focus:outline-none transition">
+                                                    <option value="Aktif">Aktif</option>
+                                                    <option value="Nonaktif">Nonaktif</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                                Deskripsi / Rincian Kegiatan <span class="text-rose-500">*</span>
+                                            </label>
+                                            <textarea id="admin-jadwal-deskripsi" rows="3" required
+                                                placeholder="Tuliskan fokus kegiatan, lokasi, peserta, dan tujuan pelaksanaan..."
+                                                class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-[#253447] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-[#15202d] focus:ring-2 focus:ring-emerald-600 focus:outline-none transition"></textarea>
+                                        </div>
+
+                                        <div class="flex items-center justify-end space-x-2.5 pt-3 border-t border-slate-100 dark:border-[#253447]">
+                                            <button type="button" onclick="closeAdminJadwalModal()"
+                                                class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836] transition">
+                                                Batal
+                                            </button>
+                                            <button type="submit" id="admin-jadwal-submit-btn"
+                                                class="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center space-x-1.5 transition active:scale-95">
+                                                <i id="admin-jadwal-submit-icon" class="fa-solid fa-check text-xs"></i>
+                                                <span id="admin-jadwal-submit-text">Simpan Agenda</span>
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
 
                             <!-- ==================== VIEW 9: MANAJEMEN NOTIFIKASI & POP-UP BERANDA ==================== -->
@@ -20659,8 +20959,8 @@
     <script src="js/ppdb.js"></script>
     <script src="js/ibadah.js"></script>
     <script src="js/jadwal-sholat.js"></script>
-    <script src="js/admin.js?v=32"></script>
-    <script src="js/roles.js?v=30"></script>
+    <script src="js/admin.js?v=33"></script>
+    <script src="js/roles.js?v=33"></script>
     <script src="js/alumni.js"></script>
     <script src="js/auth.js?v=30"></script>
     <script src="js/pegawai.js?v=30"></script>

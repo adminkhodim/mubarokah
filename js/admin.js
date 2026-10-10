@@ -129,6 +129,7 @@
             'presensi': { group: 'kesiswaan', category: 'Kesantrian', title: 'Presensi Kegiatan' },
             'ppdb': { group: 'kesiswaan', category: 'Kesantrian', title: 'Data Pendaftar PPDB' },
             'unit-kegiatan': { group: 'kesiswaan', category: 'Kesantrian', title: 'Unit Kegiatan Santri (UKS)' },
+            'jadwal-kegiatan': { group: 'kesiswaan', category: 'Kesantrian', title: 'Manajemen Jadwal Kegiatan' },
             'program': { group: 'kesiswaan', category: 'Kesantrian', title: 'Manajemen Program' },
             'pegawai': { group: 'sdm', category: 'Kepegawaian', title: 'Data Pegawai & Asatidz' },
             'tahfidz': { group: 'kesiswaan', category: 'Akademik', title: 'Tahfidz Al-Qur\'an' },
@@ -154,6 +155,7 @@
             { view: 'presensi', name: 'Presensi Kegiatan', category: 'Kesantrian', icon: 'fa-clipboard-user' },
             { view: 'ppdb', name: 'Data Pendaftar PPDB', category: 'Kesantrian', icon: 'fa-user-graduate' },
             { view: 'unit-kegiatan', name: 'Unit Kegiatan (UKS)', category: 'Kesantrian', icon: 'fa-people-roof' },
+            { view: 'jadwal-kegiatan', name: 'Jadwal Kegiatan', category: 'Kesantrian', icon: 'fa-calendar-check' },
             { view: 'program', name: 'Manajemen Program', category: 'Kesantrian', icon: 'fa-graduation-cap' },
             { view: 'pegawai', name: 'Data Pegawai & Asatidz', category: 'Kepegawaian', icon: 'fa-user-tie' },
             { view: 'tahfidz', name: 'Tahfidz Al-Qur\'an', category: 'Akademik', icon: 'fa-book-quran' },
@@ -739,6 +741,7 @@
             const pengaturanView = document.getElementById('admin-view-pengaturan');
             const profilLembagaView = document.getElementById('admin-view-profil-lembaga');
             const unitKegiatanView = document.getElementById('admin-view-unit-kegiatan');
+            const jadwalKegiatanView = document.getElementById('admin-view-jadwal-kegiatan');
             const notifikasiView = document.getElementById('admin-view-notifikasi');
             const pegawaiView = document.getElementById('admin-view-pegawai');
             const usersView = document.getElementById('admin-view-users');
@@ -764,6 +767,7 @@
             if (pengaturanView) pengaturanView.classList.add('hidden');
             if (profilLembagaView) profilLembagaView.classList.add('hidden');
             if (unitKegiatanView) unitKegiatanView.classList.add('hidden');
+            if (jadwalKegiatanView) jadwalKegiatanView.classList.add('hidden');
             if (notifikasiView) notifikasiView.classList.add('hidden');
             if (pegawaiView) pegawaiView.classList.add('hidden');
             if (usersView) usersView.classList.add('hidden');
@@ -883,6 +887,9 @@
             } else if (viewName === 'unit-kegiatan') {
                 if (unitKegiatanView) unitKegiatanView.classList.remove('hidden');
                 renderAdminUnitKegiatanList();
+            } else if (viewName === 'jadwal-kegiatan') {
+                if (jadwalKegiatanView) jadwalKegiatanView.classList.remove('hidden');
+                loadAdminJadwalKegiatan();
             } else {
                 hubView.classList.remove('hidden');
                 if (typeof applyAdminRoleVisibility === 'function') {
@@ -3223,6 +3230,396 @@
             window.toggleAdminUnitKegiatanStatus = toggleAdminUnitKegiatanStatus;
             window.deleteAdminUnitKegiatan = deleteAdminUnitKegiatan;
             window.updateAdminUksKpis = updateAdminUksKpis;
+        }
+
+        // ==================== JADWAL KEGIATAN SANTRI LOGIC (CLIENT & ADMIN) ====================
+        let mockJadwalKegiatanData = [
+            // 11 AGENDA HARIAN
+            { id: "JDW_H_01", nama: "Qiyamul Lail & Sholat Tahajud", tipe: "Harian", waktu: "03.30 - 04.30 WIB", tag: "24 Jam", deskripsi: "Pembiasaan sholat sunnah tahajud, witir, dan istighfar fajar berjamaah di asrama santri.", urutan: 1, status: "Aktif" },
+            { id: "JDW_H_02", nama: "Sholat Subuh & Muroja'ah Pagi", tipe: "Harian", waktu: "04.30 - 05.30 WIB", tag: "Wajib", deskripsi: "Sholat Subuh berjamaah dilanjutkan dzikir pagi dan muroja'ah hafalan Qur'an mandiri.", urutan: 2, status: "Aktif" },
+            { id: "JDW_H_03", nama: "Halaqah Tahfidz Pagi", tipe: "Harian", waktu: "05.30 - 06.30 WIB", tag: "Tahfidz", deskripsi: "Setoran ziyadah hafalan baru Al-Qur'an dan bimbingan tajwid bersama ustadz pembina halaqah.", urutan: 3, status: "Aktif" },
+            { id: "JDW_H_04", nama: "Sarapan & Piket Kebersihan Pondok", tipe: "Harian", waktu: "06.30 - 07.15 WIB", tag: "Kedisiplinan", deskripsi: "Makan pagi bersama dan operasi bersih lingkungan kamar santri dan area pesantren.", urutan: 4, status: "Aktif" },
+            { id: "JDW_H_05", nama: "Sholat Dhuha Berjamaah", tipe: "Harian", waktu: "07.15 - 07.45 WIB", tag: "Sunnah", deskripsi: "Pelaksanaan sholat sunnah dhuha secara berjamaah di masjid utama sebelum kegiatan belajar formal.", urutan: 5, status: "Aktif" },
+            { id: "JDW_H_06", nama: "Kegiatan Belajar Madrasah / Sekolah", tipe: "Harian", waktu: "07.45 - 11.45 WIB", tag: "Formal", deskripsi: "Pembelajaran kurikulum formal, sains, bahasa, dan keilmuan umum di kelas madrasah.", urutan: 6, status: "Aktif" },
+            { id: "JDW_H_07", nama: "Sholat Dhuhur & Istirahat Qailulah", tipe: "Harian", waktu: "11.45 - 13.30 WIB", tag: "Istirahat", deskripsi: "Sholat Dhuhur berjamaah, makan siang, dan tidur siang sejenak mengikuti sunnah nabi.", urutan: 7, status: "Aktif" },
+            { id: "JDW_H_08", nama: "Pembelajaran Madrasah Diniyah", tipe: "Harian", waktu: "13.30 - 15.00 WIB", tag: "Diniyah", deskripsi: "Kajian kitab kuning dasar (Safinatun Najah, Jurumiyyah, Aqidatul Awam, dll) sesuai tingkatan kelas.", urutan: 8, status: "Aktif" },
+            { id: "JDW_H_09", nama: "Sholat Ashar & Mufradat Bahasa", tipe: "Harian", waktu: "15.15 - 16.30 WIB", tag: "Bahasa", deskripsi: "Sholat Ashar berjamaah dan penambahan kosa kata harian Bahasa Arab dan Inggris santri.", urutan: 9, status: "Aktif" },
+            { id: "JDW_H_10", nama: "Sholat Maghrib & Sorogan Kitab / Yanbu'a", tipe: "Harian", waktu: "17.45 - 19.00 WIB", tag: "Sorogan", deskripsi: "Sholat Maghrib, membaca ratib/wirid, dan sorogan qira'ah Al-Qur'an metode Yanbu'a.", urutan: 10, status: "Aktif" },
+            { id: "JDW_H_11", nama: "Sholat Isya & Belajar Malam Terbimbing", tipe: "Harian", waktu: "19.15 - 21.30 WIB", tag: "Muroja'ah", deskripsi: "Sholat Isya berjamaah dilanjutkan mudzakarah pelajaran dan persiapan setoran hafalan esok hari.", urutan: 11, status: "Aktif" },
+
+            // 5 AGENDA MINGGUAN
+            { id: "JDW_M_01", nama: "Puasa Sunnah & Buka Bersama sama", tipe: "Mingguan", waktu: "Senin & Kamis", tag: "Sunnah", deskripsi: "Pelaksanaan Puasa Sunnah Senin-Kamis dilanjutkan doa & buka puasa bersama santri di aula.", urutan: 1, status: "Aktif" },
+            { id: "JDW_M_02", nama: "Pembacaan Maulid Simthudduror / Diba'", tipe: "Mingguan", waktu: "Malam Jumat", tag: "Sholawat", deskripsi: "Gema sholawat nabi dan pembacaan maulid diiringi tim hadroh santri di masjid utama.", urutan: 2, status: "Aktif" },
+            { id: "JDW_M_03", nama: "Mujahadah & Istighotsah Kubro Santri", tipe: "Mingguan", waktu: "Jumat Pagi", tag: "Doa Bersama", deskripsi: "Doa bersama untuk keberkahan ilmu, orang tua wali santri, bangsa, dan kebaikan umat.", urutan: 3, status: "Aktif" },
+            { id: "JDW_M_04", nama: "Latihan Khithobah & Muhadharah 3 Bahasa", tipe: "Mingguan", waktu: "Sabtu Malam", tag: "Public Speaking", deskripsi: "Latihan pidato santri dalam bahasa Indonesia, Arab, dan Inggris melatih mental kepemimpinan.", urutan: 4, status: "Aktif" },
+            { id: "JDW_M_05", nama: "Senam Santri & Ro'an Akbar Pondok", tipe: "Mingguan", waktu: "Ahad Pagi", tag: "Kebugaran", deskripsi: "Olahraga kebugaran santri dilanjutkan kerja bakti massal membersihkan lingkungan pondok.", urutan: 5, status: "Aktif" },
+
+            // 4 AGENDA BULANAN
+            { id: "JDW_B_01", nama: "Sema'an Al-Qur'an Bil-Ghaib", tipe: "Bulanan", waktu: "Pekan Ke-1", tag: "P-1", deskripsi: "Khataman Al-Qur'an hafalan santri secara bergantian dalam satu hari di majlis utama.", urutan: 1, status: "Aktif" },
+            { id: "JDW_B_02", nama: "Santunan Yatim & Doa Bersama Wali Santri", tipe: "Bulanan", waktu: "Jumat Kliwon", tag: "Sosial", deskripsi: "Pemberian santunan dan doa istighatsah bulanan bersama donatur dan masyarakat sekitar pondok.", urutan: 2, status: "Aktif" },
+            { id: "JDW_B_03", nama: "Evaluasi Bulanan & Tasmi' Juziyyah", tipe: "Bulanan", waktu: "Pekan Ke-4", tag: "Ujian Tahfidz", deskripsi: "Ujian tasmi' sekali duduk per 1 juz atau 5 juz di hadapan dewan asatidz tahfidz.", urutan: 3, status: "Aktif" },
+            { id: "JDW_B_04", nama: "Sidang Dewan Pengurus & Bahtsul Masail", tipe: "Bulanan", waktu: "Sabtu Malam Akhir Bulan", tag: "Musyawarah", deskripsi: "Musyawarah fikih dan evaluasi manajemen kegiatan kedisiplinan santri antarpengurus.", urutan: 4, status: "Aktif" },
+
+            // 5 AGENDA TAHUNAN
+            { id: "JDW_T_01", nama: "Peringatan Maulid Nabi & Haflah Akhirussanah", tipe: "Tahunan", waktu: "Bulan Rabiul Awwal", tag: "Event Akbar", deskripsi: "Perayaan maulid nabi dan temu akbar wali santri dengan tabligh akbar ulama.", urutan: 1, status: "Aktif" },
+            { id: "JDW_T_02", nama: "Khotmil Qur'an & Wisuda Santri", tipe: "Tahunan", waktu: "Bulan Sya'ban", tag: "Wisuda", deskripsi: "Prosesi sakral wisuda santri yang telah menyelesaikan hafalan 30 Juz dan kitab diniyah.", urutan: 2, status: "Aktif" },
+            { id: "JDW_T_03", nama: "Pesantren Kilat Ramadhan & Tarawih 30 Juz", tipe: "Tahunan", waktu: "Bulan Ramadhan", tag: "Ramadhan", deskripsi: "Kajian pasaran kitab kuning intensif dan sholat tarawih 1 malam 1 juz Al-Qur'an.", urutan: 3, status: "Aktif" },
+            { id: "JDW_T_04", nama: "Kemah Santri & Peringatan Hari Santri Nasional", tipe: "Tahunan", waktu: "22 Oktober", tag: "Hari Santri", deskripsi: "Apel akbar hari santri nasional, perkemahan, napak tilas perjuangan muassis pesantren.", urutan: 4, status: "Aktif" },
+            { id: "JDW_T_05", nama: "Rihlah Ilmiah & Ziarah Wali Songo", tipe: "Tahunan", waktu: "Liburan Akhir Tahun", tag: "Ziarah", deskripsi: "Perjalanan ziarah makam para wali dan ulama nusantara memperkuat sanad dan berkah.", urutan: 5, status: "Aktif" }
+        ];
+        let currentAdminJadwalFilter = "Semua";
+
+        function updateAdminJadwalKpis() {
+            const list = Array.isArray(mockJadwalKegiatanData) ? mockJadwalKegiatanData : [];
+            const total = list.length;
+            const harian = list.filter(item => (item.tipe || '').toLowerCase() === 'harian').length;
+            const mingguan = list.filter(item => (item.tipe || '').toLowerCase() === 'mingguan').length;
+            const bulanan = list.filter(item => (item.tipe || '').toLowerCase() === 'bulanan').length;
+            const tahunan = list.filter(item => (item.tipe || '').toLowerCase() === 'tahunan').length;
+            const periodik = bulanan + tahunan;
+
+            const elTotal = document.getElementById('jadwal-kpi-total');
+            const elHarian = document.getElementById('jadwal-kpi-harian');
+            const elMingguan = document.getElementById('jadwal-kpi-mingguan');
+            const elPeriodik = document.getElementById('jadwal-kpi-periodik');
+
+            if (elTotal) elTotal.innerText = total;
+            if (elHarian) elHarian.innerText = harian;
+            if (elMingguan) elMingguan.innerText = mingguan;
+            if (elPeriodik) elPeriodik.innerText = periodik;
+
+            // Update Tab Count Badges
+            const tabSemua = document.getElementById('tab-jadwal-semua-count');
+            const tabHarian = document.getElementById('tab-jadwal-harian-count');
+            const tabMingguan = document.getElementById('tab-jadwal-mingguan-count');
+            const tabBulanan = document.getElementById('tab-jadwal-bulanan-count');
+            const tabTahunan = document.getElementById('tab-jadwal-tahunan-count');
+
+            if (tabSemua) tabSemua.innerText = `(${total})`;
+            if (tabHarian) tabHarian.innerText = `(${harian})`;
+            if (tabMingguan) tabMingguan.innerText = `(${mingguan})`;
+            if (tabBulanan) tabBulanan.innerText = `(${bulanan})`;
+            if (tabTahunan) tabTahunan.innerText = `(${tahunan})`;
+
+            // Hub Badge
+            const hubBadge = document.getElementById('admin-hub-jadwal-kegiatan-count');
+            if (hubBadge) hubBadge.innerText = `${total} Agenda`;
+        }
+
+        async function loadAdminJadwalKegiatan() {
+            try {
+                const loader = document.getElementById('admin-jadwal-loader');
+                if (loader) loader.classList.remove('hidden');
+
+                if (!isApiConfigured()) {
+                    if (loader) loader.classList.add('hidden');
+                    renderAdminJadwalList();
+                    return;
+                }
+
+                const response = await apiGet("getJadwalKegiatan");
+                if (loader) loader.classList.add('hidden');
+
+                if (response && response.status === "success" && Array.isArray(response.data) && response.data.length > 0) {
+                    mockJadwalKegiatanData = response.data;
+                }
+
+                renderAdminJadwalList();
+            } catch (err) {
+                console.warn("Gagal memuat jadwal kegiatan dari server, menggunakan data lokal:", err);
+                const loader = document.getElementById('admin-jadwal-loader');
+                if (loader) loader.classList.add('hidden');
+                renderAdminJadwalList();
+            }
+        }
+
+        function setAdminJadwalFilterTab(tabName) {
+            currentAdminJadwalFilter = tabName;
+
+            const tabs = ['Semua', 'Harian', 'Mingguan', 'Bulanan', 'Tahunan'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-jadwal-${t.toLowerCase()}`);
+                if (!btn) return;
+                if (t.toLowerCase() === tabName.toLowerCase()) {
+                    btn.className = "jadwal-tab-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-emerald-600 text-white shadow-xs";
+                } else {
+                    btn.className = "jadwal-tab-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#253447]";
+                }
+            });
+
+            filterAdminJadwalKegiatan();
+        }
+
+        function filterAdminJadwalKegiatan() {
+            const query = (document.getElementById('admin-jadwal-search')?.value || '').toLowerCase().trim();
+
+            const filtered = mockJadwalKegiatanData.filter(item => {
+                const matchesTab = (currentAdminJadwalFilter === "Semua") || 
+                    ((item.tipe || '').toLowerCase() === currentAdminJadwalFilter.toLowerCase());
+
+                if (!matchesTab) return false;
+
+                if (!query) return true;
+
+                const nama = (item.nama || '').toLowerCase();
+                const tipe = (item.tipe || '').toLowerCase();
+                const waktu = (item.waktu || '').toLowerCase();
+                const tag = (item.tag || '').toLowerCase();
+                const deskripsi = (item.deskripsi || '').toLowerCase();
+
+                return nama.includes(query) || tipe.includes(query) || waktu.includes(query) || tag.includes(query) || deskripsi.includes(query);
+            });
+
+            renderAdminJadwalList(filtered);
+        }
+
+        function renderAdminJadwalList(itemsToRender = null) {
+            updateAdminJadwalKpis();
+
+            const container = document.getElementById('admin-jadwal-list-container');
+            const emptyState = document.getElementById('admin-jadwal-empty-state');
+            if (!container) return;
+
+            container.innerHTML = "";
+            const list = itemsToRender !== null ? itemsToRender : (
+                currentAdminJadwalFilter === "Semua" 
+                    ? mockJadwalKegiatanData 
+                    : mockJadwalKegiatanData.filter(i => (i.tipe || '').toLowerCase() === currentAdminJadwalFilter.toLowerCase())
+            );
+
+            if (list.length === 0) {
+                if (emptyState) emptyState.classList.remove('hidden');
+                return;
+            }
+
+            if (emptyState) emptyState.classList.add('hidden');
+
+            list.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-xs hover:shadow-md hover:border-emerald-500/40 dark:hover:border-emerald-500/40 transition duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3";
+
+                // Tipe badge styling
+                let tipeBadgeClass = "bg-teal-100 dark:bg-teal-950/70 text-teal-800 dark:text-teal-300 border-teal-200/60 dark:border-teal-800/40";
+                const tipeLower = (item.tipe || '').toLowerCase();
+                if (tipeLower === 'mingguan') {
+                    tipeBadgeClass = "bg-blue-100 dark:bg-blue-950/70 text-blue-800 dark:text-blue-300 border-blue-200/60 dark:border-blue-800/40";
+                } else if (tipeLower === 'bulanan') {
+                    tipeBadgeClass = "bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border-amber-200/60 dark:border-amber-800/40";
+                } else if (tipeLower === 'tahunan') {
+                    tipeBadgeClass = "bg-purple-100 dark:bg-purple-950/70 text-purple-800 dark:text-purple-300 border-purple-200/60 dark:border-purple-800/40";
+                }
+
+                const isAktif = (item.status === 'Aktif');
+
+                card.innerHTML = `
+                    <div class="space-y-1.5 flex-1 min-w-0">
+                        <div class="flex items-center space-x-2 flex-wrap gap-y-1">
+                            <span class="text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider border ${tipeBadgeClass}">
+                                ${escapeHtml(item.tipe || 'Harian')}
+                            </span>
+                            <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40 flex items-center gap-1">
+                                <i class="fa-solid fa-clock text-[9px] text-emerald-600 dark:text-emerald-400"></i>
+                                ${escapeHtml(item.waktu || '-')}
+                            </span>
+                            ${item.tag ? `<span class="text-[9px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300">${escapeHtml(item.tag)}</span>` : ''}
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-medium ml-auto sm:ml-0">
+                                Urutan: ${item.urutan || 1}
+                            </span>
+                        </div>
+                        <h4 class="text-xs md:text-sm font-bold text-slate-800 dark:text-slate-100 pt-0.5">
+                            ${escapeHtml(item.nama)}
+                        </h4>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
+                            ${escapeHtml(item.deskripsi || '-')}
+                        </p>
+                    </div>
+
+                    <div class="flex items-center justify-end space-x-2 sm:self-center shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-[#253447]">
+                        <button onclick="toggleAdminJadwalStatus('${item.id}', '${isAktif ? 'Nonaktif' : 'Aktif'}')"
+                            class="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-lg transition ${isAktif ? 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40' : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1c2836]'}">
+                            <i class="fa-solid fa-circle text-[8px]"></i>
+                            <span>${isAktif ? 'Aktif' : 'Nonaktif'}</span>
+                        </button>
+                        <button onclick='openAdminJadwalModal(${JSON.stringify(item)})'
+                            class="inline-flex items-center gap-1 text-[11px] font-bold text-teal-600 dark:text-teal-400 hover:text-teal-700 px-2.5 py-1 rounded-lg hover:bg-teal-50 dark:hover:bg-teal-950/40 transition">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                            <span>Edit</span>
+                        </button>
+                        <button onclick="deleteAdminJadwalKegiatan('${item.id}')"
+                            class="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 dark:text-rose-400 hover:text-rose-700 px-2.5 py-1 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition">
+                            <i class="fa-solid fa-trash-can"></i>
+                            <span>Hapus</span>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function openAdminJadwalModal(item = null) {
+            const modal = document.getElementById('adminJadwalModal');
+            if (!modal) return;
+
+            const form = document.getElementById('adminJadwalForm');
+            if (form) form.reset();
+
+            const title = document.getElementById('admin-jadwal-modal-title');
+            const submitText = document.getElementById('admin-jadwal-submit-text');
+
+            if (item) {
+                if (title) title.innerHTML = '<i class="fa-solid fa-pen-to-square text-emerald-600 mr-2"></i> Edit Agenda Kegiatan';
+                if (submitText) submitText.innerText = "Perbarui Agenda";
+                document.getElementById('admin-jadwal-id').value = item.id || "";
+                document.getElementById('admin-jadwal-nama').value = item.nama || "";
+                document.getElementById('admin-jadwal-tipe').value = item.tipe || "Harian";
+                document.getElementById('admin-jadwal-waktu').value = item.waktu || "";
+                document.getElementById('admin-jadwal-tag').value = item.tag || "";
+                document.getElementById('admin-jadwal-urutan').value = item.urutan || 1;
+                document.getElementById('admin-jadwal-status').value = item.status || "Aktif";
+                document.getElementById('admin-jadwal-deskripsi').value = item.deskripsi || "";
+            } else {
+                if (title) title.innerHTML = '<i class="fa-solid fa-circle-plus text-emerald-600 mr-2"></i> Tambah Agenda Kegiatan Baru';
+                if (submitText) submitText.innerText = "Simpan Agenda";
+                document.getElementById('admin-jadwal-id').value = "";
+                document.getElementById('admin-jadwal-tipe').value = currentAdminJadwalFilter !== "Semua" ? currentAdminJadwalFilter : "Harian";
+                document.getElementById('admin-jadwal-urutan').value = (mockJadwalKegiatanData.length + 1);
+                document.getElementById('admin-jadwal-status').value = "Aktif";
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeAdminJadwalModal() {
+            const modal = document.getElementById('adminJadwalModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        async function submitAdminJadwalKegiatan(event) {
+            event.preventDefault();
+
+            const btn = document.getElementById('admin-jadwal-submit-btn');
+            const btnIcon = document.getElementById('admin-jadwal-submit-icon');
+            const btnText = document.getElementById('admin-jadwal-submit-text');
+
+            const id = document.getElementById('admin-jadwal-id').value;
+            const nama = document.getElementById('admin-jadwal-nama').value.trim();
+            const tipe = document.getElementById('admin-jadwal-tipe').value;
+            const waktu = document.getElementById('admin-jadwal-waktu').value.trim();
+            const tag = document.getElementById('admin-jadwal-tag').value.trim();
+            const urutan = Number(document.getElementById('admin-jadwal-urutan').value) || 1;
+            const status = document.getElementById('admin-jadwal-status').value;
+            const deskripsi = document.getElementById('admin-jadwal-deskripsi').value.trim();
+
+            btn.disabled = true;
+            btnIcon.className = "fa-solid fa-spinner fa-spin";
+            btnText.innerText = "Menyimpan...";
+
+            try {
+                const payload = {
+                    id: id,
+                    nama: nama,
+                    tipe: tipe,
+                    waktu: waktu,
+                    tag: tag,
+                    urutan: urutan,
+                    status: status,
+                    deskripsi: deskripsi
+                };
+
+                if (!isApiConfigured()) {
+                    if (id) {
+                        const idx = mockJadwalKegiatanData.findIndex(j => j.id === id);
+                        if (idx >= 0) {
+                            mockJadwalKegiatanData[idx] = { ...mockJadwalKegiatanData[idx], ...payload };
+                        }
+                    } else {
+                        mockJadwalKegiatanData.push({
+                            ...payload,
+                            id: "JDW_" + new Date().getTime()
+                        });
+                    }
+                    showToast("✅ Agenda kegiatan disimpan (Mode Lokal).");
+                    closeAdminJadwalModal();
+                    renderAdminJadwalList();
+                    btn.disabled = false;
+                    btnIcon.className = "fa-solid fa-check";
+                    btnText.innerText = "Simpan Agenda";
+                    return;
+                }
+
+                const response = await apiPost("saveJadwalKegiatan", payload);
+                btn.disabled = false;
+                btnIcon.className = "fa-solid fa-check";
+                btnText.innerText = "Simpan Agenda";
+
+                if (response && response.success) {
+                    showToast("✅ " + response.message);
+                    closeAdminJadwalModal();
+                    await loadAdminJadwalKegiatan();
+                } else {
+                    showToast("❌ Gagal: " + (response ? response.message : "Terjadi kesalahan"));
+                }
+            } catch (err) {
+                console.error("Jadwal Submit Error:", err);
+                btn.disabled = false;
+                btnIcon.className = "fa-solid fa-check";
+                btnText.innerText = "Simpan Agenda";
+                showToast("❌ Gagal memproses data: " + err.message);
+            }
+        }
+
+        async function toggleAdminJadwalStatus(id, newStatus) {
+            try {
+                if (!isApiConfigured()) {
+                    const idx = mockJadwalKegiatanData.findIndex(j => j.id === id);
+                    if (idx >= 0) mockJadwalKegiatanData[idx].status = newStatus;
+                    renderAdminJadwalList();
+                    showToast(`Status diubah ke ${newStatus}`);
+                    return;
+                }
+
+                const response = await apiPost("toggleJadwalKegiatan", { id, newStatus });
+                showToast(response && response.message ? response.message : "Status jadwal diperbarui.");
+                if (response && response.success) await loadAdminJadwalKegiatan();
+            } catch (err) {
+                showToast("❌ Gagal mengubah status: " + err.message);
+            }
+        }
+
+        async function deleteAdminJadwalKegiatan(id) {
+            if (!confirm("Apakah Anda yakin ingin menghapus agenda kegiatan ini?")) return;
+            try {
+                if (!isApiConfigured()) {
+                    mockJadwalKegiatanData = mockJadwalKegiatanData.filter(j => j.id !== id);
+                    renderAdminJadwalList();
+                    showToast("Agenda berhasil dihapus.");
+                    return;
+                }
+
+                const response = await apiPost("deleteJadwalKegiatan", { id });
+                showToast(response && response.message ? response.message : "Agenda dihapus.");
+                if (response && response.success) await loadAdminJadwalKegiatan();
+            } catch (err) {
+                showToast("❌ Gagal menghapus agenda: " + err.message);
+            }
+        }
+
+        // Export Jadwal Kegiatan functions to window
+        if (typeof window !== 'undefined') {
+            window.loadAdminJadwalKegiatan = loadAdminJadwalKegiatan;
+            window.renderAdminJadwalList = renderAdminJadwalList;
+            window.filterAdminJadwalKegiatan = filterAdminJadwalKegiatan;
+            window.setAdminJadwalFilterTab = setAdminJadwalFilterTab;
+            window.openAdminJadwalModal = openAdminJadwalModal;
+            window.closeAdminJadwalModal = closeAdminJadwalModal;
+            window.submitAdminJadwalKegiatan = submitAdminJadwalKegiatan;
+            window.toggleAdminJadwalStatus = toggleAdminJadwalStatus;
+            window.deleteAdminJadwalKegiatan = deleteAdminJadwalKegiatan;
+            window.updateAdminJadwalKpis = updateAdminJadwalKpis;
         }
 
         // ==================== DASHBOARD ADMIN: MANAJEMEN PROGRAM (CMS) ====================

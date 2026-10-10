@@ -1303,6 +1303,55 @@ function doPost(e) {
       return createJsonResponse(toggleStatusUnitKegiatan(kegiatanId, newStatus));
     }
 
+    // ========================================================
+    // JADWAL KEGIATAN SANTRI API ROUTER (POST)
+    // ========================================================
+    if (action === "getJadwalKegiatan") {
+      return createJsonResponse(getJadwalKegiatanData());
+    }
+
+    if (action === "saveJadwalKegiatan") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "EDITOR"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      return createJsonResponse(simpanJadwalKegiatan(payload.data || payload));
+    }
+
+    if (action === "deleteJadwalKegiatan") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "EDITOR"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      const jadwalId = payload.id || (payload.data && payload.data.id);
+      if (!jadwalId) {
+        return createJsonResponse({ status: "error", message: "ID Jadwal wajib diisi" });
+      }
+      return createJsonResponse(hapusJadwalKegiatan(jadwalId));
+    }
+
+    if (action === "toggleJadwalKegiatan") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "EDITOR"]);
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", message: authErr.message });
+      }
+      const jadwalId = payload.id || (payload.data && payload.data.id);
+      const newStatus = payload.newStatus || (payload.data && payload.data.newStatus);
+      if (!jadwalId || !newStatus) {
+        return createJsonResponse({ status: "error", message: "ID Jadwal dan status wajib diisi" });
+      }
+      return createJsonResponse(toggleStatusJadwalKegiatan(jadwalId, newStatus));
+    }
+
     if (action === "alumni.getTestimonials") {
       return createJsonResponse(getAlumniTestimonials());
     }
@@ -2062,6 +2111,12 @@ function doGet(e) {
       );
     }
 
+    if (action === "getJadwalKegiatan") {
+      return createJsonResponse(
+        getJadwalKegiatanData()
+      );
+    }
+
     if (action === "getStudents" || action === "student.list") {
       const token = e.parameter.token || null;
       return createJsonResponse(
@@ -2276,6 +2331,7 @@ function getKabarData() {
 const BANNER_SHEET_NAME = "Banner";
 const GALERI_SHEET_NAME = "Galeri";
 const UNIT_KEGIATAN_SHEET_NAME = "Unit_Kegiatan";
+const JADWAL_KEGIATAN_SHEET_NAME = "Jadwal_Kegiatan";
 const PENGATURAN_SHEET_NAME = "Pengaturan";
 const ALUMNI_SHEET_NAME = "Data_Alumni";
 
@@ -2923,6 +2979,181 @@ function toggleStatusUnitKegiatan(kegiatanId, newStatus) {
       }
     }
     return { success: false, message: "ID Unit Kegiatan tidak ditemukan" };
+  } catch (err) {
+    return { success: false, message: err.toString() };
+  }
+}
+
+// ==================== PENGELOLAAN JADWAL KEGIATAN SANTRI ====================
+function getJadwalKegiatanData() {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    let sheet = ss.getSheetByName(JADWAL_KEGIATAN_SHEET_NAME);
+
+    // Jika sheet belum ada, buat otomatis beserta header dan 25 agenda default
+    if (!sheet) {
+      sheet = ss.insertSheet(JADWAL_KEGIATAN_SHEET_NAME);
+      sheet.appendRow(["ID_Jadwal", "Nama_Kegiatan", "Tipe", "Waktu", "Tag", "Deskripsi", "Urutan", "Status", "Timestamp"]);
+
+      const nowIso = new Date().toISOString();
+      const defaultAgenda = [
+        // 11 AGENDA HARIAN
+        ["JDW_H_01", "Qiyamul Lail & Sholat Tahajud", "Harian", "03.30 - 04.30 WIB", "24 Jam", "Pembiasaan sholat sunnah tahajud, witir, dan istighfar fajar berjamaah di asrama santri.", 1, "Aktif", nowIso],
+        ["JDW_H_02", "Sholat Subuh & Muroja'ah Pagi", "Harian", "04.30 - 05.30 WIB", "Wajib", "Sholat Subuh berjamaah dilanjutkan dzikir pagi dan muroja'ah hafalan Qur'an mandiri.", 2, "Aktif", nowIso],
+        ["JDW_H_03", "Halaqah Tahfidz Pagi", "Harian", "05.30 - 06.30 WIB", "Tahfidz", "Setoran ziyadah hafalan baru Al-Qur'an dan bimbingan tajwid bersama ustadz pembina halaqah.", 3, "Aktif", nowIso],
+        ["JDW_H_04", "Sarapan & Piket Kebersihan Pondok", "Harian", "06.30 - 07.15 WIB", "Kedisiplinan", "Makan pagi bersama dan operasi bersih lingkungan kamar santri dan area pesantren.", 4, "Aktif", nowIso],
+        ["JDW_H_05", "Sholat Dhuha Berjamaah", "Harian", "07.15 - 07.45 WIB", "Sunnah", "Pelaksanaan sholat sunnah dhuha secara berjamaah di masjid utama sebelum kegiatan belajar formal.", 5, "Aktif", nowIso],
+        ["JDW_H_06", "Kegiatan Belajar Madrasah / Sekolah", "Harian", "07.45 - 11.45 WIB", "Formal", "Pembelajaran kurikulum formal, sains, bahasa, dan keilmuan umum di kelas madrasah.", 6, "Aktif", nowIso],
+        ["JDW_H_07", "Sholat Dhuhur & Istirahat Qailulah", "Harian", "11.45 - 13.30 WIB", "Istirahat", "Sholat Dhuhur berjamaah, makan siang, dan tidur siang sejenak mengikuti sunnah nabi.", 7, "Aktif", nowIso],
+        ["JDW_H_08", "Pembelajaran Madrasah Diniyah", "Harian", "13.30 - 15.00 WIB", "Diniyah", "Kajian kitab kuning dasar (Safinatun Najah, Jurumiyyah, Aqidatul Awam, dll) sesuai tingkatan kelas.", 8, "Aktif", nowIso],
+        ["JDW_H_09", "Sholat Ashar & Mufradat Bahasa", "Harian", "15.15 - 16.30 WIB", "Bahasa", "Sholat Ashar berjamaah dan penambahan kosa kata harian Bahasa Arab dan Inggris santri.", 9, "Aktif", nowIso],
+        ["JDW_H_10", "Sholat Maghrib & Sorogan Kitab / Yanbu'a", "Harian", "17.45 - 19.00 WIB", "Sorogan", "Sholat Maghrib, membaca ratib/wirid, dan sorogan qira'ah Al-Qur'an metode Yanbu'a.", 10, "Aktif", nowIso],
+        ["JDW_H_11", "Sholat Isya & Belajar Malam Terbimbing", "Harian", "19.15 - 21.30 WIB", "Muroja'ah", "Sholat Isya berjamaah dilanjutkan mudzakarah pelajaran dan persiapan setoran hafalan esok hari.", 11, "Aktif", nowIso],
+
+        // 5 AGENDA MINGGUAN
+        ["JDW_M_01", "Puasa Sunnah & Buka Bersama sama", "Mingguan", "Senin & Kamis", "Sunnah", "Pelaksanaan Puasa Sunnah Senin-Kamis dilanjutkan doa & buka puasa bersama santri di aula.", 1, "Aktif", nowIso],
+        ["JDW_M_02", "Pembacaan Maulid Simthudduror / Diba'", "Mingguan", "Malam Jumat", "Sholawat", "Gema sholawat nabi dan pembacaan maulid diiringi tim hadroh santri di masjid utama.", 2, "Aktif", nowIso],
+        ["JDW_M_03", "Mujahadah & Istighotsah Kubro Santri", "Mingguan", "Jumat Pagi", "Doa Bersama", "Doa bersama untuk keberkahan ilmu, orang tua wali santri, bangsa, dan kebaikan umat.", 3, "Aktif", nowIso],
+        ["JDW_M_04", "Latihan Khithobah & Muhadharah 3 Bahasa", "Mingguan", "Sabtu Malam", "Public Speaking", "Latihan pidato santri dalam bahasa Indonesia, Arab, dan Inggris melatih mental kepemimpinan.", 4, "Aktif", nowIso],
+        ["JDW_M_05", "Senam Santri & Ro'an Akbar Pondok", "Mingguan", "Ahad Pagi", "Kebugaran", "Olahraga kebugaran santri dilanjutkan kerja bakti massal membersihkan lingkungan pondok.", 5, "Aktif", nowIso],
+
+        // 4 AGENDA BULANAN
+        ["JDW_B_01", "Sema'an Al-Qur'an Bil-Ghaib", "Bulanan", "Pekan Ke-1", "P-1", "Khataman Al-Qur'an hafalan santri secara bergantian dalam satu hari di majlis utama.", 1, "Aktif", nowIso],
+        ["JDW_B_02", "Santunan Yatim & Doa Bersama Wali Santri", "Bulanan", "Jumat Kliwon", "Sosial", "Pemberian santunan dan doa istighatsah bulanan bersama donatur dan masyarakat sekitar pondok.", 2, "Aktif", nowIso],
+        ["JDW_B_03", "Evaluasi Bulanan & Tasmi' Juziyyah", "Bulanan", "Pekan Ke-4", "Ujian Tahfidz", "Ujian tasmi' sekali duduk per 1 juz atau 5 juz di hadapan dewan asatidz tahfidz.", 3, "Aktif", nowIso],
+        ["JDW_B_04", "Sidang Dewan Pengurus & Bahtsul Masail", "Bulanan", "Sabtu Malam Akhir Bulan", "Musyawarah", "Musyawarah fikih dan evaluasi manajemen kegiatan kedisiplinan santri antarpengurus.", 4, "Aktif", nowIso],
+
+        // 5 AGENDA TAHUNAN
+        ["JDW_T_01", "Peringatan Maulid Nabi & Haflah Akhirussanah", "Tahunan", "Bulan Rabiul Awwal", "Event Akbar", "Perayaan maulid nabi dan temu akbar wali santri dengan tabligh akbar ulama.", 1, "Aktif", nowIso],
+        ["JDW_T_02", "Khotmil Qur'an & Wisuda Santri", "Tahunan", "Bulan Sya'ban", "Wisuda", "Prosesi sakral wisuda santri yang telah menyelesaikan hafalan 30 Juz dan kitab diniyah.", 2, "Aktif", nowIso],
+        ["JDW_T_03", "Pesantren Kilat Ramadhan & Tarawih 30 Juz", "Tahunan", "Bulan Ramadhan", "Ramadhan", "Kajian pasaran kitab kuning intensif dan sholat tarawih 1 malam 1 juz Al-Qur'an.", 3, "Aktif", nowIso],
+        ["JDW_T_04", "Kemah Santri & Peringatan Hari Santri Nasional", "Tahunan", "22 Oktober", "Hari Santri", "Apel akbar hari santri nasional, perkemahan, napak tilas perjuangan muassis pesantren.", 4, "Aktif", nowIso],
+        ["JDW_T_05", "Rihlah Ilmiah & Ziarah Wali Songo", "Tahunan", "Liburan Akhir Tahun", "Ziarah", "Perjalanan ziarah makam para wali dan ulama nusantara memperkuat sanad dan berkah.", 5, "Aktif", nowIso]
+      ];
+
+      for (var d = 0; d < defaultAgenda.length; d++) {
+        sheet.appendRow(defaultAgenda[d]);
+      }
+    }
+
+    const data = sheet.getDataRange().getValues();
+    const list = [];
+
+    for (var i = 1; i < data.length; i++) {
+      if (data[i][0]) {
+        list.push({
+          id: String(data[i][0]),
+          nama: String(data[i][1] || ""),
+          tipe: String(data[i][2] || "Harian"),
+          waktu: String(data[i][3] || ""),
+          tag: String(data[i][4] || ""),
+          deskripsi: String(data[i][5] || ""),
+          urutan: Number(data[i][6]) || 1,
+          status: String(data[i][7] || "Aktif"),
+          timestamp: String(data[i][8] || "")
+        });
+      }
+    }
+
+    list.sort(function(a, b) {
+      return a.urutan - b.urutan;
+    });
+
+    return { status: "success", data: list };
+  } catch (err) {
+    return { status: "error", message: err.toString(), data: [] };
+  }
+}
+
+function simpanJadwalKegiatan(formData) {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    let sheet = ss.getSheetByName(JADWAL_KEGIATAN_SHEET_NAME);
+    if (!sheet) {
+      getJadwalKegiatanData();
+      sheet = ss.getSheetByName(JADWAL_KEGIATAN_SHEET_NAME);
+    }
+
+    const data = sheet.getDataRange().getValues();
+    let isEdit = false;
+    const nowIso = new Date().toISOString();
+    const targetId = formData.id;
+
+    if (targetId) {
+      for (var i = 1; i < data.length; i++) {
+        if (String(data[i][0]) === String(targetId)) {
+          sheet.getRange(i + 1, 2).setValue(formData.nama || "");
+          sheet.getRange(i + 1, 3).setValue(formData.tipe || "Harian");
+          sheet.getRange(i + 1, 4).setValue(formData.waktu || "");
+          sheet.getRange(i + 1, 5).setValue(formData.tag || "");
+          sheet.getRange(i + 1, 6).setValue(formData.deskripsi || "");
+          sheet.getRange(i + 1, 7).setValue(Number(formData.urutan) || 1);
+          sheet.getRange(i + 1, 8).setValue(formData.status || "Aktif");
+          sheet.getRange(i + 1, 9).setValue(nowIso);
+          isEdit = true;
+          break;
+        }
+      }
+    }
+
+    if (!isEdit) {
+      const newId = targetId || ("JDW_" + new Date().getTime());
+      sheet.appendRow([
+        newId,
+        formData.nama || "",
+        formData.tipe || "Harian",
+        formData.waktu || "",
+        formData.tag || "",
+        formData.deskripsi || "",
+        Number(formData.urutan) || 1,
+        formData.status || "Aktif",
+        nowIso
+      ]);
+    }
+
+    return {
+      success: true,
+      status: "success",
+      message: isEdit ? "Jadwal kegiatan berhasil diperbarui!" : "Jadwal kegiatan baru berhasil ditambahkan!"
+    };
+  } catch (err) {
+    return { success: false, status: "error", message: err.toString() };
+  }
+}
+
+function toggleStatusJadwalKegiatan(jadwalId, newStatus) {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    const sheet = ss.getSheetByName(JADWAL_KEGIATAN_SHEET_NAME);
+    if (!sheet) return { success: false, message: "Sheet Jadwal Kegiatan tidak ditemukan" };
+
+    const data = sheet.getDataRange().getValues();
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][0]) === String(jadwalId)) {
+        sheet.getRange(i + 1, 8).setValue(newStatus);
+        return { success: true, message: "Status Jadwal Kegiatan diubah ke: " + newStatus };
+      }
+    }
+    return { success: false, message: "ID Jadwal Kegiatan tidak ditemukan" };
+  } catch (err) {
+    return { success: false, message: err.toString() };
+  }
+}
+
+function hapusJadwalKegiatan(jadwalId) {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    const sheet = ss.getSheetByName(JADWAL_KEGIATAN_SHEET_NAME);
+    if (!sheet) return { success: false, message: "Sheet Jadwal Kegiatan tidak ditemukan" };
+
+    const data = sheet.getDataRange().getValues();
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][0]) === String(jadwalId)) {
+        sheet.deleteRow(i + 1);
+        return { success: true, message: "Jadwal kegiatan berhasil dihapus dari database" };
+      }
+    }
+    return { success: false, message: "ID Jadwal Kegiatan tidak ditemukan" };
   } catch (err) {
     return { success: false, message: err.toString() };
   }

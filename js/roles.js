@@ -249,6 +249,7 @@
         'ppdb': ['ppdb.manage'],
         'program': ['unit.manage', 'profil.manage'],
         'unit-kegiatan': ['unit.manage'],
+        'jadwal-kegiatan': ['unit.manage'],
         'users': ['users.manage'],
         'roles': ['roles.manage'],
         'pegawai': ['pegawai.manage'],

@@ -43,6 +43,7 @@ var AUTHORITATIVE_SCHEMAS_ = {
   "Banner": ["ID_Banner", "Nama_Banner", "Gambar_URL", "Tipe_Aksi", "Target_Aksi", "Urutan", "Status"],
   "Galeri": ["ID_Galeri", "Judul", "Kategori", "Keterangan", "Gambar_URL", "Status", "Timestamp"],
   "Unit_Kegiatan": ["ID_Kegiatan", "Nama", "Kategori", "Jadwal", "Deskripsi", "Gambar_URL", "Urutan", "Status", "Timestamp"],
+  "Jadwal_Kegiatan": ["ID_Jadwal", "Nama_Kegiatan", "Tipe", "Waktu", "Tag", "Deskripsi", "Urutan", "Status", "Timestamp"],
   "Notifikasi": ["ID", "Judul", "Kategori", "Tanggal", "Ringkasan", "Isi", "Gambar_URL", "Is_Popup", "Status", "CreatedAt"],
   "Pengaturan": ["Key", "Value", "Keterangan", "Update_Terakhir"],
   "Data_Alumni": ["Timestamp", "Nama Lengkap", "Jenis Kelamin", "No WhatsApp", "Media Sosial", "Tahun Masuk", "Tahun Lulus", "Program Terakhir", "Kesibukan", "Instansi/Perusahaan", "Kesan & Pesan", "Provinsi", "Kabupaten", "Kecamatan", "Desa/Kelurahan", "Alamat Lengkap", "Latitude", "Longitude", "Foto", "Izin Publikasi"],
