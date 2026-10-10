@@ -11656,80 +11656,84 @@
                                     </div>
                                 </div>
 
-                                <!-- 4 KARTU MAKRO KPI STATUS PROGRAM (Asnawiyyah Gradient Style) -->
-                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                                    <!-- KPI 1: TOTAL PROGRAM (Indigo Gradient) -->
-                                    <div class="rounded-2xl p-4 bg-gradient-to-br from-[#4f46e5] to-[#3b82f6] text-white shadow-lg shadow-indigo-900/15 border border-indigo-400/20 hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group animate-fade-in-up stagger-2">
-                                        <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-white/10 blur-xl pointer-events-none"></div>
-                                        <div class="flex items-center justify-between mb-3">
-                                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-indigo-100">TOTAL PROGRAM</span>
-                                            <span class="w-8 h-8 rounded-xl bg-white/15 backdrop-blur-xs flex items-center justify-center text-white text-xs shadow-inner">
+                                <!-- 4 KARTU MAKRO KPI STATUS PROGRAM (Ukuran Standar Modul) -->
+                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
+                                    <!-- 1. Total Program (Indigo Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#4f46e5] to-[#3b82f6] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-indigo-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-2 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs uppercase">TOTAL PROGRAM</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
                                                 <i class="fa-solid fa-graduation-cap"></i>
-                                            </span>
+                                            </div>
                                         </div>
-                                        <div class="flex items-baseline gap-1.5">
-                                            <span id="admin-program-stat-total" class="text-2xl md:text-3xl font-black tracking-tight drop-shadow-xs">0</span>
-                                            <span class="text-xs font-bold text-white/80">Program ↑</span>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="admin-program-stat-total">0</span>
+                                                <span class="text-xs font-bold text-white/80">Program ↑</span>
+                                            </h4>
                                         </div>
-                                        <div class="mt-3 pt-2.5 border-t border-white/15 flex items-center justify-between text-[11px] text-indigo-100">
-                                            <span class="truncate">Katalog kurikulum & opsi</span>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Katalog kurikulum & opsi</span>
                                             <span class="px-2 py-0.5 rounded-full bg-white text-indigo-700 font-black shadow-xs shrink-0 text-[9px]">Katalog CMS</span>
                                         </div>
                                     </div>
 
-                                    <!-- KPI 2: PUBLISHED (Emerald Gradient) -->
-                                    <div class="rounded-2xl p-4 bg-gradient-to-br from-[#059669] to-[#10b981] text-white shadow-lg shadow-emerald-900/15 border border-emerald-400/20 hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group animate-fade-in-up stagger-3">
-                                        <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-white/10 blur-xl pointer-events-none"></div>
-                                        <div class="flex items-center justify-between mb-3">
-                                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-100">PUBLISHED</span>
-                                            <span class="w-8 h-8 rounded-xl bg-white/15 backdrop-blur-xs flex items-center justify-center text-white text-xs shadow-inner">
+                                    <!-- 2. Published (Emerald Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#059669] to-[#10b981] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-emerald-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-3 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs uppercase">PUBLISHED</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
                                                 <i class="fa-solid fa-circle-check"></i>
-                                            </span>
+                                            </div>
                                         </div>
-                                        <div class="flex items-baseline gap-1.5">
-                                            <span id="admin-program-stat-published" class="text-2xl md:text-3xl font-black tracking-tight drop-shadow-xs">0</span>
-                                            <span class="text-xs font-bold text-white/80">Aktif</span>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="admin-program-stat-published">0</span>
+                                                <span class="text-xs font-bold text-white/80">Aktif</span>
+                                            </h4>
                                         </div>
-                                        <div class="mt-3 pt-2.5 border-t border-white/15 flex items-center justify-between text-[11px] text-emerald-100">
-                                            <span class="truncate">Tayang di portal website</span>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Tayang di portal website</span>
                                             <span class="px-2 py-0.5 rounded-full bg-white text-emerald-800 font-black shadow-xs shrink-0 text-[9px]">Tayang</span>
                                         </div>
                                     </div>
 
-                                    <!-- KPI 3: DRAFT (Orange Gradient) -->
-                                    <div class="rounded-2xl p-4 bg-gradient-to-br from-[#f97316] to-[#ea580c] text-white shadow-lg shadow-orange-900/15 border border-orange-400/20 hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group animate-fade-in-up stagger-4">
-                                        <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-white/10 blur-xl pointer-events-none"></div>
-                                        <div class="flex items-center justify-between mb-3">
-                                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-orange-100">DRAFT</span>
-                                            <span class="w-8 h-8 rounded-xl bg-white/15 backdrop-blur-xs flex items-center justify-center text-white text-xs shadow-inner">
+                                    <!-- 3. Draft (Orange Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#f97316] to-[#ea580c] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-orange-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-4 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs uppercase">DRAFT</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
                                                 <i class="fa-solid fa-file-pen"></i>
-                                            </span>
+                                            </div>
                                         </div>
-                                        <div class="flex items-baseline gap-1.5">
-                                            <span id="admin-program-stat-draft" class="text-2xl md:text-3xl font-black tracking-tight drop-shadow-xs">0</span>
-                                            <span class="text-xs font-bold text-white/80">Konsep</span>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="admin-program-stat-draft">0</span>
+                                                <span class="text-xs font-bold text-white/80">Konsep</span>
+                                            </h4>
                                         </div>
-                                        <div class="mt-3 pt-2.5 border-t border-white/15 flex items-center justify-between text-[11px] text-orange-100">
-                                            <span class="truncate">Menunggu publikasi</span>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Menunggu publikasi</span>
                                             <span class="px-2 py-0.5 rounded-full bg-white text-orange-800 font-black shadow-xs shrink-0 text-[9px]">Draft</span>
                                         </div>
                                     </div>
 
-                                    <!-- KPI 4: ARCHIVED (Purple Gradient) -->
-                                    <div class="rounded-2xl p-4 bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white shadow-lg shadow-purple-900/15 border border-purple-400/20 hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group animate-fade-in-up stagger-5">
-                                        <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-white/10 blur-xl pointer-events-none"></div>
-                                        <div class="flex items-center justify-between mb-3">
-                                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-purple-100">ARCHIVED</span>
-                                            <span class="w-8 h-8 rounded-xl bg-white/15 backdrop-blur-xs flex items-center justify-center text-white text-xs shadow-inner">
+                                    <!-- 4. Archived (Purple Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-purple-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-5 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs uppercase">ARCHIVED</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
                                                 <i class="fa-solid fa-box-archive"></i>
-                                            </span>
+                                            </div>
                                         </div>
-                                        <div class="flex items-baseline gap-1.5">
-                                            <span id="admin-program-stat-archived" class="text-2xl md:text-3xl font-black tracking-tight drop-shadow-xs">0</span>
-                                            <span class="text-xs font-bold text-white/80">Arsip</span>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="admin-program-stat-archived">0</span>
+                                                <span class="text-xs font-bold text-white/80">Arsip</span>
+                                            </h4>
                                         </div>
-                                        <div class="mt-3 pt-2.5 border-t border-white/15 flex items-center justify-between text-[11px] text-purple-100">
-                                            <span class="truncate">Riwayat program nonaktif</span>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Riwayat program nonaktif</span>
                                             <span class="px-2 py-0.5 rounded-full bg-white text-purple-800 font-black shadow-xs shrink-0 text-[9px]">Diarsipkan</span>
                                         </div>
                                     </div>
@@ -12104,80 +12108,84 @@
                                     </div>
                                 </div>
 
-                                <!-- 4 Kartu Makro KPI Jadwal Kegiatan (Asnawiyyah Gradient Style) -->
-                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                                    <!-- KPI 1: TOTAL AGENDA (Teal Gradient) -->
-                                    <div class="rounded-2xl p-4 bg-gradient-to-br from-[#0f766e] to-[#0d9488] text-white shadow-lg shadow-teal-900/15 border border-teal-500/20 hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group animate-fade-in-up stagger-2">
-                                        <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-white/10 blur-xl pointer-events-none"></div>
-                                        <div class="flex items-center justify-between mb-3">
-                                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-teal-100">TOTAL AGENDA</span>
-                                            <span class="w-8 h-8 rounded-xl bg-white/15 backdrop-blur-xs flex items-center justify-center text-white text-xs shadow-inner">
+                                <!-- 4 Kartu Makro KPI Jadwal Kegiatan (Ukuran Standar Modul) -->
+                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
+                                    <!-- 1. Total Agenda (Teal Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#0f766e] to-[#0d9488] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-teal-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-2 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs uppercase">TOTAL AGENDA</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
                                                 <i class="fa-solid fa-calendar-days"></i>
-                                            </span>
+                                            </div>
                                         </div>
-                                        <div class="flex items-baseline gap-1.5">
-                                            <span id="jadwal-kpi-total" class="text-2xl md:text-3xl font-black tracking-tight drop-shadow-xs">25</span>
-                                            <span class="text-xs font-bold text-white/80">Agenda ↑</span>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="jadwal-kpi-total">25</span>
+                                                <span class="text-xs font-bold text-white/80">Agenda ↑</span>
+                                            </h4>
                                         </div>
-                                        <div class="mt-3 pt-2.5 border-t border-white/15 flex items-center justify-between text-[11px] text-teal-100">
-                                            <span class="truncate">Jadwal pesantren</span>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Jadwal pesantren</span>
                                             <span class="px-2 py-0.5 rounded-full bg-white text-teal-800 font-black shadow-xs shrink-0 text-[9px]">Jadwal Santri</span>
                                         </div>
                                     </div>
 
-                                    <!-- KPI 2: AGENDA HARIAN (Sky Gradient) -->
-                                    <div class="rounded-2xl p-4 bg-gradient-to-br from-[#0284c7] to-[#0369a1] text-white shadow-lg shadow-sky-900/15 border border-sky-400/20 hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group animate-fade-in-up stagger-3">
-                                        <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-white/10 blur-xl pointer-events-none"></div>
-                                        <div class="flex items-center justify-between mb-3">
-                                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-sky-100">AGENDA HARIAN</span>
-                                            <span class="w-8 h-8 rounded-xl bg-white/15 backdrop-blur-xs flex items-center justify-center text-white text-xs shadow-inner">
+                                    <!-- 2. Agenda Harian (Sky Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#0284c7] to-[#0369a1] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-sky-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-3 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs uppercase">AGENDA HARIAN</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
                                                 <i class="fa-solid fa-clock"></i>
-                                            </span>
+                                            </div>
                                         </div>
-                                        <div class="flex items-baseline gap-1.5">
-                                            <span id="jadwal-kpi-harian" class="text-2xl md:text-3xl font-black tracking-tight drop-shadow-xs">11</span>
-                                            <span class="text-xs font-bold text-white/80">Harian</span>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="jadwal-kpi-harian">11</span>
+                                                <span class="text-xs font-bold text-white/80">Harian</span>
+                                            </h4>
                                         </div>
-                                        <div class="mt-3 pt-2.5 border-t border-white/15 flex items-center justify-between text-[11px] text-sky-100">
-                                            <span class="truncate">Rutinitas santri</span>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Rutinitas santri</span>
                                             <span class="px-2 py-0.5 rounded-full bg-white text-sky-800 font-black shadow-xs shrink-0 text-[9px]">Rutinitas</span>
                                         </div>
                                     </div>
 
-                                    <!-- KPI 3: AGENDA MINGGUAN (Orange Gradient) -->
-                                    <div class="rounded-2xl p-4 bg-gradient-to-br from-[#f97316] to-[#ea580c] text-white shadow-lg shadow-orange-900/15 border border-orange-400/20 hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group animate-fade-in-up stagger-4">
-                                        <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-white/10 blur-xl pointer-events-none"></div>
-                                        <div class="flex items-center justify-between mb-3">
-                                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-orange-100">AGENDA MINGGUAN</span>
-                                            <span class="w-8 h-8 rounded-xl bg-white/15 backdrop-blur-xs flex items-center justify-center text-white text-xs shadow-inner">
+                                    <!-- 3. Agenda Mingguan (Orange Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#f97316] to-[#ea580c] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-orange-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-4 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs uppercase">AGENDA MINGGUAN</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
                                                 <i class="fa-solid fa-calendar-week"></i>
-                                            </span>
+                                            </div>
                                         </div>
-                                        <div class="flex items-baseline gap-1.5">
-                                            <span id="jadwal-kpi-mingguan" class="text-2xl md:text-3xl font-black tracking-tight drop-shadow-xs">5</span>
-                                            <span class="text-xs font-bold text-white/80">Mingguan</span>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="jadwal-kpi-mingguan">5</span>
+                                                <span class="text-xs font-bold text-white/80">Mingguan</span>
+                                            </h4>
                                         </div>
-                                        <div class="mt-3 pt-2.5 border-t border-white/15 flex items-center justify-between text-[11px] text-orange-100">
-                                            <span class="truncate">Kajian & siklus pekanan</span>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Kajian & siklus pekanan</span>
                                             <span class="px-2 py-0.5 rounded-full bg-white text-orange-800 font-black shadow-xs shrink-0 text-[9px]">Pekanan</span>
                                         </div>
                                     </div>
 
-                                    <!-- KPI 4: PERIODIK & KHUSUS (Purple Gradient) -->
-                                    <div class="rounded-2xl p-4 bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white shadow-lg shadow-purple-900/15 border border-purple-400/20 hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group animate-fade-in-up stagger-5">
-                                        <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-white/10 blur-xl pointer-events-none"></div>
-                                        <div class="flex items-center justify-between mb-3">
-                                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-purple-100">PERIODIK & KHUSUS</span>
-                                            <span class="w-8 h-8 rounded-xl bg-white/15 backdrop-blur-xs flex items-center justify-center text-white text-xs shadow-inner">
+                                    <!-- 4. Periodik & Khusus (Purple Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-purple-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-5 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs uppercase">PERIODIK & KHUSUS</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
                                                 <i class="fa-solid fa-star"></i>
-                                            </span>
+                                            </div>
                                         </div>
-                                        <div class="flex items-baseline gap-1.5">
-                                            <span id="jadwal-kpi-periodik" class="text-2xl md:text-3xl font-black tracking-tight drop-shadow-xs">9</span>
-                                            <span class="text-xs font-bold text-white/80">Periodik</span>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="jadwal-kpi-periodik">9</span>
+                                                <span class="text-xs font-bold text-white/80">Periodik</span>
+                                            </h4>
                                         </div>
-                                        <div class="mt-3 pt-2.5 border-t border-white/15 flex items-center justify-between text-[11px] text-purple-100">
-                                            <span class="truncate">Bulanan & event tahunan</span>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Bulanan & event tahunan</span>
                                             <span class="px-2 py-0.5 rounded-full bg-white text-purple-800 font-black shadow-xs shrink-0 text-[9px]">Event Khusus</span>
                                         </div>
                                     </div>
