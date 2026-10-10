@@ -5541,6 +5541,12 @@
                                     </button>
                                 </li>
                                 <li>
+                                    <button onclick="showAdminView('alumni')" data-view="alumni" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Rekap Alumni">
+                                        <i class="fa-solid fa-user-graduate w-5 text-center text-sm"></i>
+                                        <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Rekap Alumni</span>
+                                    </button>
+                                </li>
+                                <li>
                                     <button onclick="showAdminView('program')" data-view="program" class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative" title="Manajemen Program">
                                         <i class="fa-solid fa-shapes w-5 text-center text-sm"></i>
                                         <span class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Manajemen Program</span>
@@ -6305,6 +6311,21 @@
                                                 <div>
                                                     <h4 class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-emerald-700 transition">Jadwal Kegiatan</h4>
                                                     <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Agenda harian, mingguan, & event.</p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Rekap Alumni -->
+                                            <div data-admin-module="alumni" onclick="showAdminView('alumni')"
+                                                class="bg-white hover:bg-emerald-50/60 p-4 rounded-2xl border border-slate-100 hover:border-emerald-300 shadow-sm hover:shadow transition cursor-pointer flex flex-col justify-between space-y-3 group active:scale-[0.98]">
+                                                <div class="flex justify-between items-start">
+                                                    <div class="w-11 h-11 bg-emerald-50 text-emerald-700 group-hover:bg-emerald-700 group-hover:text-white rounded-2xl flex items-center justify-center text-lg shadow-sm transition-all duration-300">
+                                                        <i class="fa-solid fa-user-graduate"></i>
+                                                    </div>
+                                                    <span id="admin-hub-alumni-count" class="text-[9px] font-extrabold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md uppercase">0 Alumni</span>
+                                                </div>
+                                                <div>
+                                                    <h4 class="text-xs md:text-sm font-bold text-slate-800 group-hover:text-emerald-700 transition">Rekap Alumni</h4>
+                                                    <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Direktori & database alumni.</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -12348,6 +12369,238 @@
                                             </button>
                                         </div>
                                     </form>
+                                </div>
+                            </div>
+
+                            <!-- ==================== VIEW: REKAP ALUMNI (ASNAWIYYAH BENCHMARK) ==================== -->
+                            <div id="admin-view-alumni" class="hidden space-y-4">
+                                <!-- Header Sub-View (Asnawiyyah Benchmark) -->
+                                <div class="bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex items-center justify-between animate-fade-in-up stagger-1">
+                                    <div class="flex items-center space-x-2.5">
+                                        <button type="button" onclick="backFromAdminModule()"
+                                            class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl flex items-center justify-center transition active:scale-95 shrink-0"
+                                            title="Kembali">
+                                            <i class="fa-solid fa-arrow-left text-xs"></i>
+                                        </button>
+                                        <div class="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-base shadow-xs shrink-0">
+                                            <i class="fa-solid fa-graduation-cap"></i>
+                                        </div>
+                                        <div>
+                                            <span class="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400 uppercase tracking-widest block">Dashboard Admin</span>
+                                            <h2 class="text-sm md:text-base font-black text-slate-800 dark:text-slate-100 truncate">
+                                                Rekapitulasi Data Alumni
+                                            </h2>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        <button type="button" onclick="loadAdminAlumniData()"
+                                            class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 active:scale-95"
+                                            title="Muat Ulang Data">
+                                            <i class="fa-solid fa-rotate text-xs"></i>
+                                            <span class="hidden sm:inline">Refresh</span>
+                                        </button>
+                                        <button type="button" onclick="exportAdminAlumniCSV()"
+                                            class="px-3 md:px-4 py-1.5 md:py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm active:scale-95"
+                                            title="Unduh File CSV Data Alumni">
+                                            <i class="fa-solid fa-file-csv text-xs"></i>
+                                            <span>Ekspor CSV</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- 4 Kartu Makro KPI Rekap Alumni (Ukuran Standar Modul Compact) -->
+                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
+                                    <!-- 1. Total Terdata (Emerald Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#059669] to-[#10b981] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-emerald-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-2 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs uppercase">TOTAL TERDATA</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-graduation-cap"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="alumni-kpi-total">0</span>
+                                                <span class="text-xs font-bold text-white/80">Alumni ↑</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Database Alumni</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-emerald-800 font-black shadow-xs shrink-0 text-[9px]">Terdata</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 2. Bekerja / Usaha (Orange Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#f97316] to-[#ea580c] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-orange-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-3 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs uppercase">BEKERJA / USAHA</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-briefcase"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="alumni-kpi-bekerja">0</span>
+                                                <span class="text-xs font-bold text-white/80">Karier</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Profesi & Mandiri</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-orange-800 font-black shadow-xs shrink-0 text-[9px]">Mandiri</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 3. Studi Lanjutan (Indigo Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#6366f1] to-[#4f46e5] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-indigo-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-4 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs uppercase">STUDI LANJUTAN</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-book-open"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="alumni-kpi-studi">0</span>
+                                                <span class="text-xs font-bold text-white/80">Studi</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Kuliah & Pesantren</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-indigo-800 font-black shadow-xs shrink-0 text-[9px]">Akademik</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 4. Izin Publikasi (Purple Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-purple-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-5 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs uppercase">IZIN PUBLIKASI</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-bullhorn"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="alumni-kpi-izin">0</span>
+                                                <span class="text-xs font-bold text-white/80">Publik</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Tampil di portal alumni</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-purple-800 font-black shadow-xs shrink-0 text-[9px]">Terverifikasi</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Filter Tabs & Search Bar (Asnawiyyah Layout) -->
+                                <div class="bg-white dark:bg-[#15202d] p-3 md:p-3.5 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-col md:flex-row gap-2.5 items-stretch md:items-center justify-between animate-fade-in-up stagger-6">
+                                    <!-- Search Input -->
+                                    <div class="relative flex-1">
+                                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                        <input type="text" id="admin-alumni-search" oninput="filterAdminAlumniTable()"
+                                            placeholder="Cari nama, WA, instansi, kota..."
+                                            class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-[#253447] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:bg-white dark:focus:bg-[#15202d] focus:ring-2 focus:ring-emerald-600 focus:outline-none transition">
+                                    </div>
+
+                                    <!-- Filter Selects -->
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <select id="admin-alumni-filter-angkatan" onchange="filterAdminAlumniTable()"
+                                            class="px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-[#253447] bg-slate-50 dark:bg-[#1c2836] text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-600 focus:outline-none transition cursor-pointer">
+                                            <option value="">Semua Angkatan</option>
+                                        </select>
+
+                                        <select id="admin-alumni-filter-kesibukan" onchange="filterAdminAlumniTable()"
+                                            class="px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-[#253447] bg-slate-50 dark:bg-[#1c2836] text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-600 focus:outline-none transition cursor-pointer">
+                                            <option value="">Semua Kesibukan</option>
+                                            <option value="Kuliah">Kuliah / Studi Lanjut</option>
+                                            <option value="Bekerja">Bekerja</option>
+                                            <option value="Wirausaha">Wirausaha</option>
+                                            <option value="Khidmah">Khidmah / Mengabdi</option>
+                                            <option value="Lainnya">Lainnya</option>
+                                        </select>
+
+                                        <select id="admin-alumni-filter-izin" onchange="filterAdminAlumniTable()"
+                                            class="px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-[#253447] bg-slate-50 dark:bg-[#1c2836] text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-600 focus:outline-none transition cursor-pointer">
+                                            <option value="">Semua Status Izin</option>
+                                            <option value="Ya">Publik (Diizinkan)</option>
+                                            <option value="Tidak">Privat (Tidak Diizinkan)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Table & List Container (Asnawiyyah Benchmark) -->
+                                <div class="bg-white dark:bg-[#15202d] rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] overflow-hidden animate-fade-in-up stagger-7">
+                                    <!-- Loader State -->
+                                    <div id="admin-alumni-loader" class="hidden py-12 text-center text-xs text-slate-500 dark:text-slate-400 space-y-2">
+                                        <i class="fa-solid fa-spinner fa-spin text-2xl text-emerald-600"></i>
+                                        <p class="font-medium">Memuat rekapitulasi data alumni...</p>
+                                    </div>
+
+                                    <!-- Empty State -->
+                                    <div id="admin-alumni-empty" class="hidden py-12 text-center text-xs text-slate-400 dark:text-slate-500 space-y-2">
+                                        <div class="w-12 h-12 mx-auto rounded-full bg-slate-100 dark:bg-[#1c2836] flex items-center justify-center text-xl text-slate-400">
+                                            <i class="fa-solid fa-user-graduate"></i>
+                                        </div>
+                                        <p class="font-semibold text-slate-600 dark:text-slate-300">Belum ada data alumni ditemukan</p>
+                                        <p class="text-[11px] text-slate-400">Data yang diisi lewat formulir alumni akan tampil di sini.</p>
+                                    </div>
+
+                                    <!-- Desktop Table View -->
+                                    <div class="hidden md:block overflow-x-auto">
+                                        <table class="w-full text-left border-collapse text-xs">
+                                            <thead>
+                                                <tr class="border-b border-slate-100 dark:border-[#253447] bg-slate-50/70 dark:bg-[#1c2836]/50 text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-400">
+                                                    <th class="py-3 px-3.5 text-center w-12">NO</th>
+                                                    <th class="py-3 px-3.5">ALUMNI</th>
+                                                    <th class="py-3 px-3.5">ANGKATAN & PROGRAM</th>
+                                                    <th class="py-3 px-3.5">KESIBUKAN & INSTANSI</th>
+                                                    <th class="py-3 px-3.5">DOMISILI</th>
+                                                    <th class="py-3 px-3.5 text-center">PUBLIKASI</th>
+                                                    <th class="py-3 px-3.5 text-center w-28">AKSI</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="admin-alumni-table-body" class="divide-y divide-slate-100 dark:divide-[#253447]">
+                                                <!-- Dynamic via JS -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- Mobile Card List View -->
+                                    <div id="admin-alumni-mobile-list" class="md:hidden divide-y divide-slate-100 dark:divide-[#253447] p-2 space-y-2">
+                                        <!-- Dynamic via JS -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Modal Detail Profil Alumni -->
+                            <div id="admin-alumni-detail-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 hidden">
+                                <div class="bg-white dark:bg-[#15202d] rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto border border-slate-100 dark:border-[#253447] animate-scale-in">
+                                    <!-- Modal Header -->
+                                    <div class="p-4 border-b border-slate-100 dark:border-[#253447] flex items-center justify-between sticky top-0 bg-white/95 dark:bg-[#15202d]/95 backdrop-blur-xs z-10">
+                                        <div class="flex items-center space-x-2">
+                                            <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-sm shadow-xs">
+                                                <i class="fa-solid fa-id-card"></i>
+                                            </div>
+                                            <div>
+                                                <h3 class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100">Biodata Lengkap Alumni</h3>
+                                                <p class="text-[10px] text-slate-400">Arsip Direktori Pesantren</p>
+                                            </div>
+                                        </div>
+                                        <button type="button" onclick="closeAdminAlumniDetailModal()" class="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-[#1c2836] flex items-center justify-center transition">
+                                            <i class="fa-solid fa-xmark text-sm"></i>
+                                        </button>
+                                    </div>
+
+                                    <!-- Modal Body -->
+                                    <div id="admin-alumni-detail-body" class="p-4 space-y-4 text-xs">
+                                        <!-- Rendered dynamically via JS -->
+                                    </div>
+
+                                    <!-- Modal Footer -->
+                                    <div class="p-3.5 border-t border-slate-100 dark:border-[#253447] flex items-center justify-end gap-2 bg-slate-50/50 dark:bg-[#1c2836]/30">
+                                        <button type="button" onclick="closeAdminAlumniDetailModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c2836] transition">
+                                            Tutup
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -21014,8 +21267,8 @@
     <script src="js/ppdb.js"></script>
     <script src="js/ibadah.js"></script>
     <script src="js/jadwal-sholat.js"></script>
-    <script src="js/admin.js?v=34"></script>
-    <script src="js/roles.js?v=33"></script>
+    <script src="js/admin.js?v=35"></script>
+    <script src="js/roles.js?v=34"></script>
     <script src="js/alumni.js"></script>
     <script src="js/auth.js?v=30"></script>
     <script src="js/pegawai.js?v=30"></script>

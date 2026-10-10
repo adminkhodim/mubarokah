@@ -1356,8 +1356,18 @@ function doPost(e) {
       return createJsonResponse(getAlumniTestimonials());
     }
 
+    if (action === "alumni.getAll" || action === "alumni.list") {
+      return createJsonResponse(getAllAlumniData());
+    }
+
     if (action === "alumni.create") {
       return createJsonResponse(saveAlumniData(payload));
+    }
+
+    if (action === "alumni.delete") {
+      const rowIndex = payload.rowIndex || (payload.data && payload.data.rowIndex);
+      const nama = payload.nama || (payload.data && payload.data.nama);
+      return createJsonResponse(deleteAlumniData(rowIndex, nama));
     }
 
     if (action === "auditSecurityStatus") {
@@ -2080,6 +2090,10 @@ function doGet(e) {
 
     if (action === "alumni.getTestimonials") {
       return createJsonResponse(getAlumniTestimonials());
+    }
+
+    if (action === "alumni.getAll" || action === "alumni.list") {
+      return createJsonResponse(getAllAlumniData());
     }
 
     if (action === "getPengaturan") {
@@ -5808,6 +5822,113 @@ function getAlumniTestimonials() {
     return results;
   } catch (e) {
     return [];
+  }
+}
+
+function getAllAlumniData() {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    let sheet = ss.getSheetByName(ALUMNI_SHEET_NAME);
+    if (!sheet) {
+      sheet = ss.insertSheet(ALUMNI_SHEET_NAME);
+      const headers = [
+        "Timestamp", "Nama Lengkap", "Jenis Kelamin", "No WhatsApp", "Media Sosial",
+        "Tahun Masuk", "Tahun Lulus", "Program Terakhir", "Kesibukan", "Instansi/Perusahaan",
+        "Kesan & Pesan", "Provinsi", "Kabupaten", "Kecamatan", "Desa/Kelurahan", "Alamat Lengkap", "Latitude", "Longitude",
+        "Foto", "Izin Publikasi"
+      ];
+      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+      sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold").setBackground("#dcfce7");
+      sheet.setFrozenRows(1);
+      return { success: true, data: [] };
+    }
+
+    const data = sheet.getDataRange().getValues();
+    if (data.length <= 1) return { success: true, data: [] };
+
+    const headers = data[0];
+    const idxTimestamp = headers.indexOf("Timestamp");
+    const idxNama = headers.indexOf("Nama Lengkap");
+    const idxJk = headers.indexOf("Jenis Kelamin");
+    const idxWa = headers.indexOf("No WhatsApp");
+    const idxMedsos = headers.indexOf("Media Sosial");
+    const idxMasuk = headers.indexOf("Tahun Masuk");
+    const idxLulus = headers.indexOf("Tahun Lulus");
+    const idxProgram = headers.indexOf("Program Terakhir");
+    const idxKesibukan = headers.indexOf("Kesibukan");
+    const idxInstansi = headers.indexOf("Instansi/Perusahaan");
+    const idxKesan = headers.indexOf("Kesan & Pesan");
+    const idxProv = headers.indexOf("Provinsi");
+    const idxKab = headers.indexOf("Kabupaten");
+    const idxKec = headers.indexOf("Kecamatan");
+    const idxDesa = headers.indexOf("Desa/Kelurahan");
+    const idxAlamat = headers.indexOf("Alamat Lengkap");
+    const idxLat = headers.indexOf("Latitude");
+    const idxLng = headers.indexOf("Longitude");
+    const idxFoto = headers.indexOf("Foto");
+    const idxIzin = headers.indexOf("Izin Publikasi");
+
+    const list = [];
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const valNama = idxNama >= 0 ? row[idxNama] : row[1];
+      if (!valNama || String(valNama).trim() === "") continue;
+
+      list.push({
+        rowIndex: i + 1,
+        timestamp: idxTimestamp >= 0 ? row[idxTimestamp] : "",
+        nama: idxNama >= 0 ? String(row[idxNama] || "").trim() : "",
+        jk: idxJk >= 0 ? String(row[idxJk] || "").trim() : "",
+        wa: idxWa >= 0 ? String(row[idxWa] || "").trim() : "",
+        medsos: idxMedsos >= 0 ? String(row[idxMedsos] || "").trim() : "",
+        masuk: idxMasuk >= 0 ? String(row[idxMasuk] || "").trim() : "",
+        lulus: idxLulus >= 0 ? String(row[idxLulus] || "").trim() : "",
+        program: idxProgram >= 0 ? String(row[idxProgram] || "").trim() : "",
+        kesibukan: idxKesibukan >= 0 ? String(row[idxKesibukan] || "").trim() : "",
+        instansi: idxInstansi >= 0 ? String(row[idxInstansi] || "").trim() : "",
+        kesan: idxKesan >= 0 ? String(row[idxKesan] || "").trim() : "",
+        provinsi: idxProv >= 0 ? String(row[idxProv] || "").trim() : "",
+        kabupaten: idxKab >= 0 ? String(row[idxKab] || "").trim() : "",
+        kecamatan: idxKec >= 0 ? String(row[idxKec] || "").trim() : "",
+        desa: idxDesa >= 0 ? String(row[idxDesa] || "").trim() : "",
+        alamat: idxAlamat >= 0 ? String(row[idxAlamat] || "").trim() : "",
+        lat: idxLat >= 0 ? row[idxLat] : "",
+        lng: idxLng >= 0 ? row[idxLng] : "",
+        foto: idxFoto >= 0 ? String(row[idxFoto] || "").trim() : "",
+        izin: idxIzin >= 0 ? String(row[idxIzin] || "").trim() : "Tidak"
+      });
+    }
+
+    // Urutkan paling baru di atas
+    list.reverse();
+    return { success: true, data: list };
+  } catch (err) {
+    return { success: false, message: err.toString(), data: [] };
+  }
+}
+
+function deleteAlumniData(rowIndex, nama) {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    const sheet = ss.getSheetByName(ALUMNI_SHEET_NAME);
+    if (!sheet) return { success: false, message: "Sheet Data_Alumni tidak ditemukan." };
+    const r = parseInt(rowIndex);
+    if (r > 1 && r <= sheet.getLastRow()) {
+      sheet.deleteRow(r);
+      return { success: true, message: "Data alumni berhasil dihapus." };
+    }
+    if (nama) {
+      const data = sheet.getDataRange().getValues();
+      for (let i = 1; i < data.length; i++) {
+        if (data[i][1] && String(data[i][1]).trim().toLowerCase() === String(nama).trim().toLowerCase()) {
+          sheet.deleteRow(i + 1);
+          return { success: true, message: "Data alumni berhasil dihapus." };
+        }
+      }
+    }
+    return { success: false, message: "Baris data alumni tidak ditemukan." };
+  } catch (err) {
+    return { success: false, message: err.toString() };
   }
 }
 

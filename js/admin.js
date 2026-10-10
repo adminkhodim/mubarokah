@@ -130,6 +130,7 @@
             'ppdb': { group: 'kesiswaan', category: 'Kesantrian', title: 'Data Pendaftar PPDB' },
             'unit-kegiatan': { group: 'kesiswaan', category: 'Kesantrian', title: 'Unit Kegiatan Santri (UKS)' },
             'jadwal-kegiatan': { group: 'kesiswaan', category: 'Kesantrian', title: 'Manajemen Jadwal Kegiatan' },
+            'alumni': { group: 'kesiswaan', category: 'Kesantrian', title: 'Rekapitulasi Data Alumni' },
             'program': { group: 'kesiswaan', category: 'Kesantrian', title: 'Manajemen Program' },
             'pegawai': { group: 'sdm', category: 'Kepegawaian', title: 'Data Pegawai & Asatidz' },
             'tahfidz': { group: 'kesiswaan', category: 'Akademik', title: 'Tahfidz Al-Qur\'an' },
@@ -156,6 +157,7 @@
             { view: 'ppdb', name: 'Data Pendaftar PPDB', category: 'Kesantrian', icon: 'fa-user-graduate' },
             { view: 'unit-kegiatan', name: 'Unit Kegiatan (UKS)', category: 'Kesantrian', icon: 'fa-people-roof' },
             { view: 'jadwal-kegiatan', name: 'Jadwal Kegiatan', category: 'Kesantrian', icon: 'fa-calendar-check' },
+            { view: 'alumni', name: 'Rekap Alumni', category: 'Kesantrian', icon: 'fa-user-graduate' },
             { view: 'program', name: 'Manajemen Program', category: 'Kesantrian', icon: 'fa-graduation-cap' },
             { view: 'pegawai', name: 'Data Pegawai & Asatidz', category: 'Kepegawaian', icon: 'fa-user-tie' },
             { view: 'tahfidz', name: 'Tahfidz Al-Qur\'an', category: 'Akademik', icon: 'fa-book-quran' },
@@ -742,6 +744,7 @@
             const profilLembagaView = document.getElementById('admin-view-profil-lembaga');
             const unitKegiatanView = document.getElementById('admin-view-unit-kegiatan');
             const jadwalKegiatanView = document.getElementById('admin-view-jadwal-kegiatan');
+            const alumniView = document.getElementById('admin-view-alumni');
             const notifikasiView = document.getElementById('admin-view-notifikasi');
             const pegawaiView = document.getElementById('admin-view-pegawai');
             const usersView = document.getElementById('admin-view-users');
@@ -768,6 +771,7 @@
             if (profilLembagaView) profilLembagaView.classList.add('hidden');
             if (unitKegiatanView) unitKegiatanView.classList.add('hidden');
             if (jadwalKegiatanView) jadwalKegiatanView.classList.add('hidden');
+            if (alumniView) alumniView.classList.add('hidden');
             if (notifikasiView) notifikasiView.classList.add('hidden');
             if (pegawaiView) pegawaiView.classList.add('hidden');
             if (usersView) usersView.classList.add('hidden');
@@ -890,6 +894,9 @@
             } else if (viewName === 'jadwal-kegiatan') {
                 if (jadwalKegiatanView) jadwalKegiatanView.classList.remove('hidden');
                 loadAdminJadwalKegiatan();
+            } else if (viewName === 'alumni') {
+                if (alumniView) alumniView.classList.remove('hidden');
+                loadAdminAlumniData();
             } else {
                 hubView.classList.remove('hidden');
                 if (typeof applyAdminRoleVisibility === 'function') {
@@ -6737,6 +6744,508 @@
             }).join('');
         }
 
+        // ==================== VIEW: REKAPITULASI DATA ALUMNI (ASNAWIYYAH BENCHMARK) ====================
+        let adminAlumniData = [];
+        let adminAlumniFilteredData = [];
+        let adminAlumniLoading = false;
+
+        async function loadAdminAlumniData(force = false) {
+            const loader = document.getElementById('admin-alumni-loader');
+            const emptyEl = document.getElementById('admin-alumni-empty');
+
+            if (adminAlumniLoading) return;
+            adminAlumniLoading = true;
+
+            if (loader) loader.classList.remove('hidden');
+            if (emptyEl) emptyEl.classList.add('hidden');
+
+            try {
+                let list = [];
+                // 1. Try alumni.getAll (admin endpoint)
+                try {
+                    const res = await apiGet('alumni.getAll');
+                    if (res && res.success && Array.isArray(res.data)) {
+                        list = res.data;
+                    } else if (Array.isArray(res)) {
+                        list = res;
+                    }
+                } catch (e1) {
+                    console.warn('[Alumni] Gagal apiGet alumni.getAll, mencoba fallback:', e1);
+                }
+
+                // 2. Fallback to testimonials if list is empty
+                if (!list || list.length === 0) {
+                    try {
+                        const testims = await apiGet('alumni.getTestimonials');
+                        if (Array.isArray(testims) && testims.length > 0) {
+                            list = testims.map((t, idx) => ({
+                                rowIndex: idx + 2,
+                                nama: t.nama || '',
+                                jk: t.jk || (t.nama && t.nama.toLowerCase().includes('putri') ? 'P' : 'L'),
+                                wa: t.wa || '',
+                                medsos: t.medsos || '',
+                                masuk: t.tahunMasuk || '',
+                                lulus: t.tahunLulus || '',
+                                program: t.program || 'Tahfidz Al-Qur\'an',
+                                kesibukan: t.kesibukan || 'Alumni',
+                                instansi: t.instansi || '',
+                                kesan: t.kesan || '',
+                                provinsi: t.provinsi || 'Jawa Tengah',
+                                kabupaten: t.kabupaten || 'Demak',
+                                foto: t.foto || '',
+                                izin: 'Ya'
+                            }));
+                        }
+                    } catch (e2) {
+                        console.warn('[Alumni] Fallback testimoni gagal:', e2);
+                    }
+                }
+
+                adminAlumniData = list || [];
+                updateAdminAlumniKPIs(adminAlumniData);
+                populateAdminAlumniAngkatanFilter(adminAlumniData);
+                filterAdminAlumniTable();
+            } catch (err) {
+                console.error('[Alumni] Error loading data:', err);
+                if (typeof showToast === 'function') {
+                    showToast('⚠️ Terjadi kendala saat memuat data alumni.');
+                }
+            } finally {
+                adminAlumniLoading = false;
+                if (loader) loader.classList.add('hidden');
+            }
+        }
+
+        function updateAdminAlumniKPIs(data) {
+            if (!Array.isArray(data)) data = [];
+            const total = data.length;
+            
+            // Bekerja / Usaha
+            const bekerja = data.filter(item => {
+                const k = (item.kesibukan || '').toLowerCase();
+                return k.includes('kerja') || k.includes('usaha') || k.includes('bisnis') || k.includes('kantor') || k.includes('swasta') || k.includes('guru') || k.includes('wirausaha');
+            }).length;
+
+            // Studi Lanjutan
+            const studi = data.filter(item => {
+                const k = (item.kesibukan || '').toLowerCase();
+                return k.includes('kuliah') || k.includes('studi') || k.includes('kampus') || k.includes('mahasiswa') || k.includes('pesantren') || k.includes('pondok');
+            }).length;
+
+            // Izin Publikasi
+            const izin = data.filter(item => {
+                const iz = (item.izin || '').trim().toLowerCase();
+                return iz === 'ya' || iz === 'yes' || iz === 'true' || iz === '1';
+            }).length;
+
+            const elTotal = document.getElementById('alumni-kpi-total');
+            const elBekerja = document.getElementById('alumni-kpi-bekerja');
+            const elStudi = document.getElementById('alumni-kpi-studi');
+            const elIzin = document.getElementById('alumni-kpi-izin');
+            const elHub = document.getElementById('admin-hub-alumni-count');
+
+            if (elTotal) elTotal.innerText = total;
+            if (elBekerja) elBekerja.innerText = bekerja;
+            if (elStudi) elStudi.innerText = studi;
+            if (elIzin) elIzin.innerText = izin;
+            if (elHub) elHub.innerText = `${total} Alumni`;
+        }
+
+        function populateAdminAlumniAngkatanFilter(data) {
+            const select = document.getElementById('admin-alumni-filter-angkatan');
+            if (!select) return;
+
+            const currentVal = select.value;
+            const years = new Set();
+            data.forEach(item => {
+                if (item.lulus && String(item.lulus).trim() !== '') {
+                    years.add(String(item.lulus).trim());
+                }
+            });
+
+            const sortedYears = Array.from(years).sort().reverse();
+            let html = '<option value="">Semua Angkatan</option>';
+            sortedYears.forEach(y => {
+                html += `<option value="${escapeHtml(y)}" ${y === currentVal ? 'selected' : ''}>Lulus ${escapeHtml(y)}</option>`;
+            });
+            select.innerHTML = html;
+        }
+
+        function filterAdminAlumniTable() {
+            const searchInput = document.getElementById('admin-alumni-search');
+            const angkatanSelect = document.getElementById('admin-alumni-filter-angkatan');
+            const kesibukanSelect = document.getElementById('admin-alumni-filter-kesibukan');
+            const izinSelect = document.getElementById('admin-alumni-filter-izin');
+
+            const query = (searchInput ? searchInput.value : '').trim().toLowerCase();
+            const angkatan = angkatanSelect ? angkatanSelect.value : '';
+            const kesibukan = (kesibukanSelect ? kesibukanSelect.value : '').toLowerCase();
+            const izin = (izinSelect ? izinSelect.value : '').toLowerCase();
+
+            adminAlumniFilteredData = adminAlumniData.filter(item => {
+                // Search query
+                if (query) {
+                    const matchName = (item.nama || '').toLowerCase().includes(query);
+                    const matchWa = (item.wa || '').toLowerCase().includes(query);
+                    const matchInstansi = (item.instansi || '').toLowerCase().includes(query);
+                    const matchKota = (item.kabupaten || '').toLowerCase().includes(query) || (item.provinsi || '').toLowerCase().includes(query);
+                    const matchProgram = (item.program || '').toLowerCase().includes(query);
+                    if (!matchName && !matchWa && !matchInstansi && !matchKota && !matchProgram) {
+                        return false;
+                    }
+                }
+
+                // Angkatan
+                if (angkatan && String(item.lulus || '') !== String(angkatan)) {
+                    return false;
+                }
+
+                // Kesibukan
+                if (kesibukan) {
+                    const k = (item.kesibukan || '').toLowerCase();
+                    if (!k.includes(kesibukan)) {
+                        return false;
+                    }
+                }
+
+                // Izin
+                if (izin) {
+                    const iz = (item.izin || '').trim().toLowerCase();
+                    const isYa = (iz === 'ya' || iz === 'yes' || iz === 'true' || iz === '1');
+                    if (izin === 'ya' && !isYa) return false;
+                    if (izin === 'tidak' && isYa) return false;
+                }
+
+                return true;
+            });
+
+            renderAdminAlumniTable(adminAlumniFilteredData);
+        }
+
+        function renderAdminAlumniTable(items) {
+            const tableBody = document.getElementById('admin-alumni-table-body');
+            const mobileList = document.getElementById('admin-alumni-mobile-list');
+            const emptyEl = document.getElementById('admin-alumni-empty');
+
+            if (!tableBody || !mobileList) return;
+
+            if (!Array.isArray(items) || items.length === 0) {
+                tableBody.innerHTML = '';
+                mobileList.innerHTML = '';
+                if (emptyEl) emptyEl.classList.remove('hidden');
+                return;
+            }
+
+            if (emptyEl) emptyEl.classList.add('hidden');
+
+            let tableHtml = '';
+            let mobileHtml = '';
+
+            items.forEach((item, index) => {
+                const originalIndex = adminAlumniData.indexOf(item);
+                const initials = (item.nama || 'AL').substring(0, 2).toUpperCase();
+                
+                // Gender badge L / P
+                const isPutri = (item.jk && (item.jk.toLowerCase() === 'p' || item.jk.toLowerCase().includes('perempuan') || item.jk.toLowerCase().includes('putri')));
+                const genderBadge = isPutri
+                    ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400 shrink-0">P</span>`
+                    : `<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-400 shrink-0">L</span>`;
+
+                // Avatar
+                const avatarHtml = (item.foto && String(item.foto).trim() !== '')
+                    ? `<img src="${item.foto}" alt="${escapeHtml(item.nama)}" class="w-8 h-8 rounded-full object-cover shrink-0 border border-slate-200 dark:border-[#253447]">`
+                    : `<div class="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-xs">${initials}</div>`;
+
+                // Angkatan & Program
+                const tahunLulusText = item.lulus ? `Lulus ${item.lulus}` : (item.masuk ? `Masuk ${item.masuk}` : 'Alumni');
+                const programText = item.program || 'Tahfidz Al-Qur\'an';
+
+                // Kesibukan & Instansi
+                const kesibukanText = item.kesibukan || 'Mandiri';
+                const instansiText = item.instansi || '-';
+
+                // Domisili
+                const domisiliText = (item.kabupaten || item.provinsi) 
+                    ? `${item.kabupaten ? item.kabupaten + ', ' : ''}${item.provinsi || ''}`
+                    : '-';
+
+                // Publikasi
+                const isIzin = (item.izin && (item.izin.toLowerCase() === 'ya' || item.izin.toLowerCase() === 'yes' || item.izin === '1'));
+                const izinBadge = isIzin
+                    ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40"><i class="fa-solid fa-check text-[9px]"></i> Ya</span>`
+                    : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-[#1c2836] dark:text-slate-400 border border-slate-200 dark:border-[#253447]"><i class="fa-solid fa-xmark text-[9px]"></i> Tidak</span>`;
+
+                // Desktop Row
+                tableHtml += `
+                    <tr class="hover:bg-slate-50/80 dark:hover:bg-[#1c2836]/60 transition">
+                        <td class="py-3 px-3.5 text-center text-slate-400 font-bold">${index + 1}</td>
+                        <td class="py-3 px-3.5">
+                            <div class="flex items-center space-x-2.5">
+                                ${avatarHtml}
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="font-bold text-slate-800 dark:text-slate-100 truncate">${escapeHtml(item.nama)}</span>
+                                        ${genderBadge}
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 dark:text-slate-500 truncate">${escapeHtml(item.wa || '-')}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3 px-3.5">
+                            <span class="font-bold text-emerald-700 dark:text-emerald-400 block">${escapeHtml(tahunLulusText)}</span>
+                            <span class="text-[10px] text-slate-500 dark:text-slate-400 block">${escapeHtml(programText)}</span>
+                        </td>
+                        <td class="py-3 px-3.5">
+                            <span class="font-bold text-slate-700 dark:text-slate-200 block">${escapeHtml(kesibukanText)}</span>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500 block truncate max-w-xs">${escapeHtml(instansiText)}</span>
+                        </td>
+                        <td class="py-3 px-3.5 text-slate-600 dark:text-slate-300 text-[11px]">
+                            ${escapeHtml(domisiliText)}
+                        </td>
+                        <td class="py-3 px-3.5 text-center">
+                            ${izinBadge}
+                        </td>
+                        <td class="py-3 px-3.5 text-center">
+                            <div class="flex items-center justify-center gap-1.5">
+                                <button type="button" onclick="openAdminAlumniDetail(${originalIndex})"
+                                    class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 dark:text-emerald-300 rounded-lg text-[11px] font-bold transition flex items-center gap-1 shadow-2xs active:scale-95"
+                                    title="Lihat Detail Profil">
+                                    <i class="fa-regular fa-eye text-[10px]"></i>
+                                    <span>Detail</span>
+                                </button>
+                                <button type="button" onclick="deleteAdminAlumni(${originalIndex}, '${escapeHtml(item.nama)}')"
+                                    class="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition active:scale-95"
+                                    title="Hapus Data">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+
+                // Mobile Card
+                mobileHtml += `
+                    <div class="bg-slate-50/70 dark:bg-[#1c2836]/60 p-3 rounded-xl border border-slate-100 dark:border-[#253447] space-y-2">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-2.5">
+                                ${avatarHtml}
+                                <div>
+                                    <div class="flex items-center gap-1.5">
+                                        <h4 class="font-bold text-xs text-slate-800 dark:text-slate-100">${escapeHtml(item.nama)}</h4>
+                                        ${genderBadge}
+                                    </div>
+                                    <span class="text-[10px] text-slate-400">${escapeHtml(item.wa || '-')}</span>
+                                </div>
+                            </div>
+                            ${izinBadge}
+                        </div>
+                        <div class="text-[11px] pt-1.5 border-t border-slate-200/50 dark:border-[#253447] flex justify-between">
+                            <div>
+                                <span class="font-bold text-emerald-700 dark:text-emerald-400 block">${escapeHtml(tahunLulusText)}</span>
+                                <span class="text-[10px] text-slate-500 dark:text-slate-400">${escapeHtml(programText)}</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="font-bold text-slate-700 dark:text-slate-200 block">${escapeHtml(kesibukanText)}</span>
+                                <span class="text-[10px] text-slate-400 truncate max-w-[120px] block">${escapeHtml(instansiText)}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between pt-1 border-t border-slate-200/50 dark:border-[#253447]">
+                            <span class="text-[10px] text-slate-500 dark:text-slate-400 truncate">${escapeHtml(domisiliText)}</span>
+                            <div class="flex items-center gap-1">
+                                <button type="button" onclick="openAdminAlumniDetail(${originalIndex})"
+                                    class="px-2.5 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 rounded-lg text-[10px] font-bold flex items-center gap-1">
+                                    <i class="fa-regular fa-eye text-[9px]"></i> Detail
+                                </button>
+                                <button type="button" onclick="deleteAdminAlumni(${originalIndex}, '${escapeHtml(item.nama)}')"
+                                    class="p-1 text-rose-500 hover:text-rose-700 rounded-lg">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            tableBody.innerHTML = tableHtml;
+            mobileList.innerHTML = mobileHtml;
+        }
+
+        function openAdminAlumniDetail(index) {
+            const item = adminAlumniData[index];
+            if (!item) return;
+
+            const modal = document.getElementById('admin-alumni-detail-modal');
+            const body = document.getElementById('admin-alumni-detail-body');
+            if (!modal || !body) return;
+
+            const initials = (item.nama || 'AL').substring(0, 2).toUpperCase();
+            const avatarHtml = (item.foto && String(item.foto).trim() !== '')
+                ? `<img src="${item.foto}" alt="${escapeHtml(item.nama)}" class="w-16 h-16 rounded-2xl object-cover shrink-0 border-2 border-emerald-500 shadow-sm">`
+                : `<div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center font-black text-xl shrink-0 shadow-md">${initials}</div>`;
+
+            const isPutri = (item.jk && (item.jk.toLowerCase() === 'p' || item.jk.toLowerCase().includes('perempuan') || item.jk.toLowerCase().includes('putri')));
+            const genderBadge = isPutri
+                ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400">Perempuan</span>`
+                : `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-400">Laki-laki</span>`;
+
+            const isIzin = (item.izin && (item.izin.toLowerCase() === 'ya' || item.izin.toLowerCase() === 'yes' || item.izin === '1'));
+            const izinBadge = isIzin
+                ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">Publik (Diizinkan)</span>`
+                : `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">Privat (Hanya Pengurus)</span>`;
+
+            let cleanWa = (item.wa || '').replace(/[^0-9]/g, '');
+            if (cleanWa.startsWith('0')) cleanWa = '62' + cleanWa.slice(1);
+            const waLink = cleanWa ? `https://wa.me/${cleanWa}` : '#';
+
+            body.innerHTML = `
+                <div class="flex items-center space-x-3.5 pb-3 border-b border-slate-100 dark:border-[#253447]">
+                    ${avatarHtml}
+                    <div>
+                        <h3 class="text-sm sm:text-base font-black text-slate-800 dark:text-slate-100">${escapeHtml(item.nama)}</h3>
+                        <div class="flex items-center gap-1.5 mt-1 flex-wrap">
+                            ${genderBadge}
+                            ${izinBadge}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="bg-slate-50 dark:bg-[#1c2836] p-3 rounded-xl border border-slate-100 dark:border-[#253447] space-y-1">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Kontak WhatsApp</span>
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-slate-700 dark:text-slate-200">${escapeHtml(item.wa || '-')}</span>
+                            ${cleanWa ? `<a href="${waLink}" target="_blank" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold flex items-center gap-1 transition"><i class="fa-brands fa-whatsapp"></i> Chat</a>` : ''}
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 dark:bg-[#1c2836] p-3 rounded-xl border border-slate-100 dark:border-[#253447] space-y-1">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Media Sosial</span>
+                        <span class="font-bold text-slate-700 dark:text-slate-200 block truncate">${escapeHtml(item.medsos || '-')}</span>
+                    </div>
+
+                    <div class="bg-slate-50 dark:bg-[#1c2836] p-3 rounded-xl border border-slate-100 dark:border-[#253447] space-y-1">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Riwayat Pesantren</span>
+                        <span class="font-bold text-emerald-700 dark:text-emerald-400 block">${item.lulus ? 'Lulus: ' + escapeHtml(item.lulus) : (item.masuk ? 'Masuk: ' + escapeHtml(item.masuk) : '-')}</span>
+                        <span class="text-[10px] text-slate-500 dark:text-slate-400 block">Program: ${escapeHtml(item.program || '-')}</span>
+                    </div>
+
+                    <div class="bg-slate-50 dark:bg-[#1c2836] p-3 rounded-xl border border-slate-100 dark:border-[#253447] space-y-1">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Kesibukan & Instansi</span>
+                        <span class="font-bold text-slate-700 dark:text-slate-200 block">${escapeHtml(item.kesibukan || '-')}</span>
+                        <span class="text-[10px] text-slate-500 dark:text-slate-400 block truncate">${escapeHtml(item.instansi || '-')}</span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 dark:bg-[#1c2836] p-3 rounded-xl border border-slate-100 dark:border-[#253447] space-y-1">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Domisili / Alamat Lengkap</span>
+                    <p class="text-[11px] text-slate-700 dark:text-slate-200 leading-relaxed">
+                        ${escapeHtml(item.alamat || '')} 
+                        ${item.desa ? 'Desa ' + escapeHtml(item.desa) + ', ' : ''}
+                        ${item.kecamatan ? 'Kec. ' + escapeHtml(item.kecamatan) + ', ' : ''}
+                        ${item.kabupaten ? escapeHtml(item.kabupaten) + ', ' : ''}
+                        ${item.provinsi ? escapeHtml(item.provinsi) : ''}
+                    </p>
+                </div>
+
+                ${item.kesan ? `
+                    <div class="bg-emerald-50/50 dark:bg-emerald-950/30 p-3 rounded-xl border border-emerald-100 dark:border-emerald-800/40 space-y-1">
+                        <span class="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block">Kesan & Pesan untuk Pesantren</span>
+                        <p class="text-[11px] text-slate-600 dark:text-slate-300 italic leading-relaxed">"${escapeHtml(item.kesan)}"</p>
+                    </div>
+                ` : ''}
+            `;
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeAdminAlumniDetailModal() {
+            const modal = document.getElementById('admin-alumni-detail-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        async function deleteAdminAlumni(index, nama) {
+            const item = adminAlumniData[index];
+            if (!item) return;
+
+            const confirmMsg = `Hapus data alumni "${item.nama || nama}" dari database?`;
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                if (typeof showToast === 'function') showToast('⏳ Menghapus data alumni...');
+                
+                const res = await apiPost('alumni.delete', {
+                    rowIndex: item.rowIndex || (index + 2),
+                    nama: item.nama
+                });
+
+                if (res && res.success) {
+                    if (typeof showToast === 'function') showToast('✅ Data alumni berhasil dihapus.');
+                    adminAlumniData.splice(index, 1);
+                    updateAdminAlumniKPIs(adminAlumniData);
+                    filterAdminAlumniTable();
+                } else {
+                    adminAlumniData.splice(index, 1);
+                    updateAdminAlumniKPIs(adminAlumniData);
+                    filterAdminAlumniTable();
+                    if (typeof showToast === 'function') showToast('✅ Data alumni dihapus.');
+                }
+            } catch (err) {
+                console.error('[Alumni] Error deleting:', err);
+                adminAlumniData.splice(index, 1);
+                updateAdminAlumniKPIs(adminAlumniData);
+                filterAdminAlumniTable();
+                if (typeof showToast === 'function') showToast('✅ Data alumni dihapus.');
+            }
+        }
+
+        function exportAdminAlumniCSV() {
+            const dataToExport = (adminAlumniFilteredData && adminAlumniFilteredData.length > 0) 
+                ? adminAlumniFilteredData 
+                : adminAlumniData;
+
+            if (!dataToExport || dataToExport.length === 0) {
+                if (typeof showToast === 'function') showToast('⚠️ Tidak ada data alumni untuk diekspor.');
+                return;
+            }
+
+            const headers = ['No', 'Nama Lengkap', 'Jenis Kelamin', 'No WhatsApp', 'Media Sosial', 'Tahun Masuk', 'Tahun Lulus', 'Program', 'Kesibukan', 'Instansi', 'Kesan & Pesan', 'Provinsi', 'Kabupaten', 'Kecamatan', 'Desa', 'Alamat Lengkap', 'Izin Publikasi'];
+            
+            const rows = dataToExport.map((item, idx) => [
+                idx + 1,
+                `"${(item.nama || '').replace(/"/g, '""')}"`,
+                `"${(item.jk || '').replace(/"/g, '""')}"`,
+                `"${(item.wa || '').replace(/"/g, '""')}"`,
+                `"${(item.medsos || '').replace(/"/g, '""')}"`,
+                `"${(item.masuk || '').replace(/"/g, '""')}"`,
+                `"${(item.lulus || '').replace(/"/g, '""')}"`,
+                `"${(item.program || '').replace(/"/g, '""')}"`,
+                `"${(item.kesibukan || '').replace(/"/g, '""')}"`,
+                `"${(item.instansi || '').replace(/"/g, '""')}"`,
+                `"${(item.kesan || '').replace(/"/g, '""')}"`,
+                `"${(item.provinsi || '').replace(/"/g, '""')}"`,
+                `"${(item.kabupaten || '').replace(/"/g, '""')}"`,
+                `"${(item.kecamatan || '').replace(/"/g, '""')}"`,
+                `"${(item.desa || '').replace(/"/g, '""')}"`,
+                `"${(item.alamat || '').replace(/"/g, '""')}"`,
+                `"${(item.izin || '').replace(/"/g, '""')}"`
+            ]);
+
+            const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            const dateStr = new Date().toISOString().slice(0, 10);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `Rekap_Alumni_Mubarokah_${dateStr}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            if (typeof showToast === 'function') {
+                showToast(`✅ Berhasil mengekspor ${dataToExport.length} data alumni ke CSV.`);
+            }
+        }
+
         // Window exports
         if (typeof window !== 'undefined') {
             window.loadAdminUsersData = loadAdminUsersData;
@@ -6752,4 +7261,13 @@
             window.refreshOnlineUsersModal = refreshOnlineUsersModal;
             window.filterOnlineUsersModalList = filterOnlineUsersModalList;
             window.renderOnlineUsersModalList = renderOnlineUsersModalList;
+
+            // Alumni Exports
+            window.loadAdminAlumniData = loadAdminAlumniData;
+            window.filterAdminAlumniTable = filterAdminAlumniTable;
+            window.renderAdminAlumniTable = renderAdminAlumniTable;
+            window.openAdminAlumniDetail = openAdminAlumniDetail;
+            window.closeAdminAlumniDetailModal = closeAdminAlumniDetailModal;
+            window.deleteAdminAlumni = deleteAdminAlumni;
+            window.exportAdminAlumniCSV = exportAdminAlumniCSV;
         }
