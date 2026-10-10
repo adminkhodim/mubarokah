@@ -2750,6 +2750,7 @@
                 nama: 'Teater "SEMUT"',
                 kategori: "Divisi Teater Santri",
                 jadwal: "2x Semesta / Tahun",
+                pembina: "Ust. Rifqi Hamdan, S.Pd.",
                 deskripsi: "Unit kegiatan santri yang berfokus pada pementasan drama atau teater. Ditujukan sebagai wadah kreativitas untuk melatih mental dan rasa percaya diri santri saat berada di tengah masyarakat.",
                 gambar: "https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?q=80&w=800&auto=format&fit=crop",
                 urutan: 1,
@@ -2760,6 +2761,7 @@
                 nama: 'Mading "EL-Fata"',
                 kategori: "Karya Literasi",
                 jadwal: "Awal Bulan Hijriyah",
+                pembina: "Usth. Nurul Aini, S.Hum.",
                 deskripsi: "Unit kegiatan yang berfokus pada kreasi majalah dinding sebagai salah satu media untuk menampilkan karya seni, tulisan, dan kreativitas santri yang terbit secara berkala setiap awal bulan Hijriyah.",
                 gambar: "https://images.unsplash.com/photo-1516979187457-637abb4f9353?q=80&w=800&auto=format&fit=crop",
                 urutan: 2,
@@ -2770,6 +2772,7 @@
                 nama: 'Perpustakaan "Bait Al-Hikmah"',
                 kategori: "Pusat Baca Santri",
                 jadwal: "Harian",
+                pembina: "Ust. M. Syukron, S.Pd.I.",
                 deskripsi: "Perpustakaan santri yang dibangun guna melestarikan budaya membaca di kalangan santri serta menjadi jembatan penghubung antara santri dengan wawasan dunia luar lewat koleksi buku yang tersedia.",
                 gambar: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?q=80&w=800&auto=format&fit=crop",
                 urutan: 3,
@@ -2780,6 +2783,7 @@
                 nama: 'Rebana "Az-Zahra"',
                 kategori: "Seni Musik Islami",
                 jadwal: "Malam Jumat & Event",
+                pembina: "Ust. Ahmad Fauzi",
                 deskripsi: "Unit kegiatan seni musik dengan aliran Hadroh Banjari Kontemporer (terbang, tam, darbuka, jidor). Ditampilkan rutin pada malam Jumat saat acara diba'an dan sebagai pembuka acara-acara penting di pesantren.",
                 gambar: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=800&auto=format&fit=crop",
                 urutan: 4,
@@ -2789,14 +2793,57 @@
                 id: "UKS_05_PERS",
                 nama: "Divisi PERS Santri",
                 kategori: "Media & Publikasi",
-                jadwal: "Dokumentasi",
-                deskripsi: "Divisi khusus yang berkonsentrasi pada media sosial resmi pesantren (Facebook, Instagram, YouTube, Twitter/X). Berperan mengabadikan dan mempublikasikan seluruh kegiatan serta event pesantren untuk mengenalkan kegiatan santri ke masyarakat luas.",
+                jadwal: "Dokumentasi & Redaksi",
+                pembina: "Ust. Ilham Wahyudi, S.Kom.",
+                deskripsi: "Divisi khusus yang berkonsentrasi pada media sosial resmi pesantren (Facebook, Instagram, YouTube, Twitter/X). Berperan mengabadikan dan mempublikasikan seluruh kegiatan serta event pesantren.",
                 gambar: "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?q=80&w=800&auto=format&fit=crop",
                 urutan: 5,
+                status: "Aktif"
+            },
+            {
+                id: "UKS_06_PAGAR_NUSA",
+                nama: "Pencak Silat Pagar Nusa",
+                kategori: "Seni Bela Diri",
+                jadwal: "Setiap Ahad Pagi",
+                pembina: "Ust. Khoirul Anam, S.Pd.",
+                deskripsi: "Wadah olah raga beladiri warisan ulama nusantara untuk membentuk ketangkasan fisik, disiplin mental, serta penjagaan diri santri berlandaskan akhlakul karimah.",
+                gambar: "https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=800&auto=format&fit=crop",
+                urutan: 6,
+                status: "Aktif"
+            },
+            {
+                id: "UKS_07_KALIGRAFI",
+                nama: "Seni Khat & Kaligrafi",
+                kategori: "Karya Literasi",
+                jadwal: "Selasa & Kamis Sore",
+                pembina: "Ust. Zainul Arifin",
+                deskripsi: "Pelatihan seni penulisan mushaf kaligrafi Arab (Naskhi, Tsuluts, Diwani, Riq'ah) guna menumbuhkan ketekunan, estetika Islam, dan orisinalitas karya seni santri.",
+                gambar: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?q=80&w=800&auto=format&fit=crop",
+                urutan: 7,
                 status: "Aktif"
             }
         ];
         let filteredUnitKegiatanData = [];
+
+        function updateAdminUksKpis() {
+            const list = Array.isArray(mockUnitKegiatanData) ? mockUnitKegiatanData : [];
+            const total = list.length;
+            const aktif = list.filter(item => item.status === "Aktif").length;
+            const bidangSet = new Set(list.map(item => (item.kategori || '').trim()).filter(Boolean));
+            const bidang = bidangSet.size;
+            const pembinaSet = new Set(list.map(item => (item.pembina || '').trim()).filter(Boolean));
+            const pembina = pembinaSet.size;
+
+            const elTotal = document.getElementById('uks-kpi-total');
+            const elAktif = document.getElementById('uks-kpi-aktif');
+            const elBidang = document.getElementById('uks-kpi-bidang');
+            const elPembina = document.getElementById('uks-kpi-pembina');
+
+            if (elTotal) elTotal.innerText = total;
+            if (elAktif) elAktif.innerText = aktif;
+            if (elBidang) elBidang.innerText = bidang;
+            if (elPembina) elPembina.innerText = pembina;
+        }
 
         async function loadUnitKegiatan() {
             try {
@@ -2844,17 +2891,18 @@
                 const imgUrl = item.gambar || "https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?q=80&w=800&auto=format&fit=crop";
 
                 return `
-                    <div class="bg-slate-50 p-4 md:p-5 rounded-3xl border border-slate-100 flex flex-col ${flexDir} gap-4 items-center">
-                        <div class="w-full md:w-48 h-36 rounded-2xl overflow-hidden shrink-0 border border-slate-200">
+                    <div class="bg-slate-50 dark:bg-[#1a2634] p-4 md:p-5 rounded-3xl border border-slate-100 dark:border-[#253447] flex flex-col ${flexDir} gap-4 items-center">
+                        <div class="w-full md:w-48 h-36 rounded-2xl overflow-hidden shrink-0 border border-slate-200 dark:border-[#253447]">
                             <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(item.nama)}" class="w-full h-full object-cover">
                         </div>
                         <div class="space-y-1.5 w-full">
                             <div class="flex items-center justify-between">
-                                <span class="bg-amber-100 text-amber-800 text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase">${escapeHtml(item.kategori || 'Unit Kegiatan')}</span>
+                                <span class="bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase border border-amber-200/60 dark:border-amber-800/40">${escapeHtml(item.kategori || 'Unit Kegiatan')}</span>
                                 <span class="text-[10px] text-slate-400 font-semibold"><i class="fa-solid fa-calendar-check mr-1"></i>${escapeHtml(item.jadwal || '-')}</span>
                             </div>
-                            <h3 class="text-sm md:text-base font-bold text-slate-800">${escapeHtml(item.nama)}</h3>
-                            <p class="text-xs text-slate-600 leading-relaxed">${escapeHtml(item.deskripsi)}</p>
+                            <h3 class="text-sm md:text-base font-bold text-slate-800 dark:text-slate-100">${escapeHtml(item.nama)}</h3>
+                            ${item.pembina ? `<p class="text-[11px] font-semibold text-teal-700 dark:text-teal-400"><i class="fa-solid fa-user-tie mr-1"></i>Pembina: ${escapeHtml(item.pembina)}</p>` : ''}
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${escapeHtml(item.deskripsi)}</p>
                         </div>
                     </div>
                 `;
@@ -2862,6 +2910,8 @@
         }
 
         function renderAdminUnitKegiatanList(itemsToRender = null) {
+            updateAdminUksKpis();
+
             const container = document.getElementById('admin-uks-cards-container');
             const countBadge = document.getElementById('admin-uks-list-count');
             const hubBadge = document.getElementById('admin-hub-unit-kegiatan-count');
@@ -2885,39 +2935,44 @@
 
             list.forEach((item) => {
                 const card = document.createElement('div');
-                card.className = "p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-3 flex flex-col justify-between";
+                card.className = "p-4 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] space-y-3.5 flex flex-col justify-between shadow-xs hover:shadow-md hover:border-teal-500/40 dark:hover:border-teal-500/40 transition duration-200";
 
                 const statusBadge = item.status === "Aktif"
-                    ? `<span class="text-[9px] font-extrabold bg-teal-100 text-teal-800 px-2.5 py-0.5 rounded-md uppercase">Aktif</span>`
-                    : `<span class="text-[9px] font-extrabold bg-slate-200 text-slate-600 px-2.5 py-0.5 rounded-md uppercase">Nonaktif</span>`;
+                    ? `<span class="text-[9px] font-extrabold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40 px-2 py-0.5 rounded-md uppercase">Aktif</span>`
+                    : `<span class="text-[9px] font-extrabold bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-[#283a4e] px-2 py-0.5 rounded-md uppercase">Nonaktif</span>`;
 
                 const imgUrl = item.gambar || "https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?q=80&w=800&auto=format&fit=crop";
 
                 card.innerHTML = `
                     <div class="space-y-2.5">
                         <div class="flex items-start gap-3">
-                            <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(item.nama)}" class="w-20 h-16 object-cover rounded-xl border border-slate-200 shrink-0 bg-slate-100">
+                            <div class="w-20 h-16 rounded-xl border border-slate-200 dark:border-[#253447] overflow-hidden shrink-0 bg-slate-100 dark:bg-[#1c2836] shadow-2xs">
+                                <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(item.nama)}" class="w-full h-full object-cover">
+                            </div>
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center space-x-2">
-                                    <span class="text-[9px] font-extrabold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md uppercase shrink-0">${escapeHtml(item.kategori || 'UKS')}</span>
+                                <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
+                                    <span class="text-[9px] font-extrabold bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40 px-2 py-0.5 rounded-md uppercase shrink-0">${escapeHtml(item.kategori || 'UKS')}</span>
                                     ${statusBadge}
-                                    <span class="text-[10px] text-slate-400 font-bold ml-auto">#${item.urutan || 1}</span>
+                                    <span class="text-[10px] text-slate-400 dark:text-slate-500 font-bold ml-auto">#${item.urutan || 1}</span>
                                 </div>
-                                <h4 class="text-xs md:text-sm font-bold text-slate-800 mt-1 truncate" title="${escapeHtml(item.nama)}">${escapeHtml(item.nama)}</h4>
-                                <p class="text-[10px] text-slate-500 font-semibold"><i class="fa-solid fa-clock text-slate-400 mr-1"></i>${escapeHtml(item.jadwal || '-')}</p>
+                                <h4 class="text-xs md:text-sm font-bold text-slate-800 dark:text-slate-100 mt-1 truncate" title="${escapeHtml(item.nama)}">${escapeHtml(item.nama)}</h4>
+                                <div class="flex flex-col gap-0.5 mt-0.5">
+                                    <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate"><i class="fa-solid fa-clock text-slate-400 dark:text-slate-500 mr-1"></i>${escapeHtml(item.jadwal || '-')}</p>
+                                    ${item.pembina ? `<p class="text-[10px] text-teal-700 dark:text-teal-400 font-semibold truncate"><i class="fa-solid fa-user-tie mr-1 text-teal-600 dark:text-teal-400"></i>${escapeHtml(item.pembina)}</p>` : ''}
+                                </div>
                             </div>
                         </div>
-                        <p class="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">${escapeHtml(item.deskripsi || '')}</p>
+                        <p class="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">${escapeHtml(item.deskripsi || '')}</p>
                     </div>
 
-                    <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 mt-2">
-                        <button onclick="toggleAdminUnitKegiatanStatus('${item.id}', '${item.status === 'Aktif' ? 'Nonaktif' : 'Aktif'}')" class="text-[10px] px-3 py-1.5 rounded-lg font-bold bg-slate-200 text-slate-700 hover:bg-slate-300 transition">
+                    <div class="flex justify-end gap-1.5 pt-2.5 border-t border-slate-100 dark:border-[#253447] mt-2">
+                        <button onclick="toggleAdminUnitKegiatanStatus('${item.id}', '${item.status === 'Aktif' ? 'Nonaktif' : 'Aktif'}')" class="text-[10px] px-2.5 py-1.5 rounded-lg font-bold bg-slate-100 dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#253447] transition">
                             ${item.status === 'Aktif' ? '<i class="fa-solid fa-eye-slash mr-1"></i> Nonaktifkan' : '<i class="fa-solid fa-eye mr-1"></i> Aktifkan'}
                         </button>
-                        <button onclick='editAdminUnitKegiatan(${JSON.stringify(item)})' class="text-[10px] px-3 py-1.5 rounded-lg font-bold bg-teal-50 text-teal-700 hover:bg-teal-100 transition">
+                        <button onclick='editAdminUnitKegiatan(${JSON.stringify(item)})' class="text-[10px] px-2.5 py-1.5 rounded-lg font-bold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900/60 border border-teal-200/50 dark:border-teal-800/40 transition">
                             <i class="fa-solid fa-pen mr-1"></i> Edit
                         </button>
-                        <button onclick="deleteAdminUnitKegiatan('${item.id}')" class="text-[10px] px-3 py-1.5 rounded-lg font-bold bg-rose-50 text-rose-700 hover:bg-rose-100 transition">
+                        <button onclick="deleteAdminUnitKegiatan('${item.id}')" class="text-[10px] px-2.5 py-1.5 rounded-lg font-bold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200/50 dark:border-rose-800/40 transition">
                             <i class="fa-solid fa-trash mr-1"></i> Hapus
                         </button>
                     </div>
@@ -2937,8 +2992,9 @@
                 const nama = (item.nama || '').toLowerCase();
                 const kategori = (item.kategori || '').toLowerCase();
                 const jadwal = (item.jadwal || '').toLowerCase();
+                const pembina = (item.pembina || '').toLowerCase();
                 const deskripsi = (item.deskripsi || '').toLowerCase();
-                return nama.includes(query) || kategori.includes(query) || jadwal.includes(query) || deskripsi.includes(query);
+                return nama.includes(query) || kategori.includes(query) || jadwal.includes(query) || pembina.includes(query) || deskripsi.includes(query);
             });
 
             renderAdminUnitKegiatanList(filtered);
@@ -2971,6 +3027,7 @@
             const nama = document.getElementById('admin-uks-nama').value.trim();
             const kategori = document.getElementById('admin-uks-kategori').value.trim();
             const jadwal = document.getElementById('admin-uks-jadwal').value.trim();
+            const pembina = (document.getElementById('admin-uks-pembina')?.value || '').trim();
             const urutan = Number(document.getElementById('admin-uks-urutan').value) || 1;
             const status = document.getElementById('admin-uks-status').value;
             const deskripsi = document.getElementById('admin-uks-deskripsi').value.trim();
@@ -3006,6 +3063,7 @@
                     nama: nama,
                     kategori: kategori,
                     jadwal: jadwal,
+                    pembina: pembina,
                     urutan: urutan,
                     status: status,
                     deskripsi: deskripsi,
@@ -3066,6 +3124,9 @@
             document.getElementById('admin-uks-nama').value = item.nama || "";
             document.getElementById('admin-uks-kategori').value = item.kategori || "";
             document.getElementById('admin-uks-jadwal').value = item.jadwal || "";
+            if (document.getElementById('admin-uks-pembina')) {
+                document.getElementById('admin-uks-pembina').value = item.pembina || "";
+            }
             document.getElementById('admin-uks-urutan').value = item.urutan || 1;
             document.getElementById('admin-uks-status').value = item.status || "Aktif";
             document.getElementById('admin-uks-deskripsi').value = item.deskripsi || "";
@@ -3094,6 +3155,9 @@
             document.getElementById('adminUnitKegiatanForm').reset();
             document.getElementById('admin-uks-id').value = "";
             document.getElementById('admin-uks-old-img').value = "";
+            if (document.getElementById('admin-uks-pembina')) {
+                document.getElementById('admin-uks-pembina').value = "";
+            }
             document.getElementById('admin-uks-urutan').value = 1;
             document.getElementById('admin-uks-status').value = "Aktif";
 
@@ -3144,6 +3208,21 @@
             } catch (err) {
                 showToast("❌ Gagal menghapus unit kegiatan: " + err.message);
             }
+        }
+
+        // Export UKS functions to window
+        if (typeof window !== 'undefined') {
+            window.loadUnitKegiatan = loadUnitKegiatan;
+            window.renderPublicUnitKegiatanList = renderPublicUnitKegiatanList;
+            window.renderAdminUnitKegiatanList = renderAdminUnitKegiatanList;
+            window.filterAdminUnitKegiatanList = filterAdminUnitKegiatanList;
+            window.previewAdminUksImage = previewAdminUksImage;
+            window.submitAdminUnitKegiatan = submitAdminUnitKegiatan;
+            window.editAdminUnitKegiatan = editAdminUnitKegiatan;
+            window.resetAdminUnitKegiatanForm = resetAdminUnitKegiatanForm;
+            window.toggleAdminUnitKegiatanStatus = toggleAdminUnitKegiatanStatus;
+            window.deleteAdminUnitKegiatan = deleteAdminUnitKegiatan;
+            window.updateAdminUksKpis = updateAdminUksKpis;
         }
 
         // ==================== DASHBOARD ADMIN: MANAJEMEN PROGRAM (CMS) ====================

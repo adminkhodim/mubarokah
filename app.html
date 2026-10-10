@@ -11733,98 +11733,188 @@
                             <!-- ================= VIEW 6: MODUL MANAJEMEN UNIT KEGIATAN SANTRI (UKS) ================= -->
                             <div id="admin-view-unit-kegiatan" class="hidden space-y-4">
                                 <!-- Header Sub-View -->
-                                <div
-                                    class="bg-white p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
-                                    <div class="flex items-center space-x-2.5">
+                                <div class="bg-white dark:bg-[#15202d] px-3.5 py-2.5 md:px-4 md:py-3 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] flex flex-wrap items-center justify-between gap-2.5 animate-fade-in-up stagger-1">
+                                    <div class="flex items-center space-x-2.5 min-w-0">
                                         <button type="button" onclick="backFromAdminModule()"
-                                            class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-lg flex items-center justify-center transition active:scale-95 shrink-0"
+                                            class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl flex items-center justify-center transition active:scale-95 shrink-0"
                                             title="Kembali">
                                             <i class="fa-solid fa-arrow-left text-xs"></i>
                                         </button>
-                                        <div>
-                                            <span
-                                                class="text-[10px] font-extrabold text-teal-700 uppercase tracking-widest block">Dashboard
-                                                Admin</span>
-                                            <h2
-                                                class="text-sm md:text-base font-bold text-slate-800 dark:text-slate-100">
-                                                Manajemen Unit Kegiatan Santri (UKS)</h2>
+                                        <div class="min-w-0">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-[10px] font-extrabold text-teal-700 dark:text-teal-400 uppercase tracking-widest block">Dashboard Admin</span>
+                                                <span class="hidden sm:inline-flex px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200/60 dark:border-teal-800/40">
+                                                    Ekstrakurikuler
+                                                </span>
+                                            </div>
+                                            <h2 class="text-sm md:text-base font-black text-slate-800 dark:text-slate-100 truncate">
+                                                Manajemen Unit Kegiatan Santri (UKS)
+                                            </h2>
                                         </div>
                                     </div>
-                                    <div class="flex items-center space-x-2">
+                                    <div class="flex items-center gap-1.5 flex-wrap ml-auto">
                                         <button type="button" onclick="loadUnitKegiatan()"
-                                            class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 active:scale-95">
-                                            <i class="fa-solid fa-rotate text-xs"></i>
+                                            class="px-2.5 sm:px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#1c2836] dark:hover:bg-[#253447] dark:text-slate-300 rounded-xl text-[11px] font-bold transition flex items-center space-x-1 border border-slate-200 dark:border-[#283a4e] active:scale-95"
+                                            title="Refresh Data">
+                                            <i class="fa-solid fa-arrows-rotate text-xs"></i>
                                             <span class="hidden sm:inline">Refresh</span>
                                         </button>
                                     </div>
                                 </div>
 
+                                <!-- 4 KARTU MAKRO KPI DATA UNIT KEGIATAN SANTRI (UKS) - PERSIS ASNAWIYYAH -->
+                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
+                                    <!-- 1. Total Unit UKS (Deep Teal Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#0f766e] to-[#0d9488] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-teal-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-2 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs uppercase">TOTAL UNIT UKS</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-shapes"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="uks-kpi-total">0</span>
+                                                <span class="text-xs font-bold text-white/80">Unit ↑</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Katalog ekstrakurikuler</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-teal-800 font-black shadow-xs shrink-0 text-[9px]">Katalog UKS</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 2. Unit Aktif (Emerald Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#22c55e] to-[#16a34a] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-emerald-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-3 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs uppercase">UNIT AKTIF</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-circle-check"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="uks-kpi-aktif">0</span>
+                                                <span class="text-xs font-bold text-white/80">Aktif</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Kegiatan aktif berjalan</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-emerald-800 font-black shadow-xs shrink-0 text-[9px]">Berjalan</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 3. Bidang Peminatan (Indigo Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#6366f1] to-[#4f46e5] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-indigo-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-4 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs uppercase">BIDANG PEMINATAN</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-graduation-cap"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="uks-kpi-bidang">0</span>
+                                                <span class="text-xs font-bold text-white/80">Bidang</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Seni, literasi, olahraga</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-indigo-800 font-black shadow-xs shrink-0 text-[9px]">Peminatan</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 4. Pembina Terdata (Amber / Orange Gradient) -->
+                                    <div class="bg-gradient-to-br from-[#f59e0b] to-[#ea580c] text-white p-3 md:p-3.5 rounded-2xl shadow-lg shadow-amber-500/20 flex flex-col justify-between space-y-1.5 transition-all duration-300 animate-fade-in-up stagger-5 hover:-translate-y-0.5">
+                                        <div class="flex items-start justify-between">
+                                            <span class="text-[11px] font-medium text-white/90 block truncate drop-shadow-2xs uppercase">PEMBINA TERDATA</span>
+                                            <div class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] shrink-0 backdrop-blur-xs shadow-2xs">
+                                                <i class="fa-solid fa-user-tie"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-2xs flex items-center gap-1">
+                                                <span id="uks-kpi-pembina">0</span>
+                                                <span class="text-xs font-bold text-white/80">Pembina</span>
+                                            </h4>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-white/90 pt-1 border-t border-white/10">
+                                            <span class="truncate font-normal text-[10px] opacity-90">Asatidz & pelatih UKS</span>
+                                            <span class="px-2 py-0.5 rounded-full bg-white text-amber-800 font-black shadow-xs shrink-0 text-[9px]">Pendamping</span>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- FORM TAMBAH / EDIT UNIT KEGIATAN -->
-                                <section
-                                    class="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-100 space-y-4">
-                                    <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                                <section class="bg-white dark:bg-[#15202d] p-4 md:p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] space-y-4 animate-fade-in-up stagger-6">
+                                    <div class="flex justify-between items-center border-b border-slate-100 dark:border-[#253447] pb-3">
                                         <h3 id="admin-uks-form-title"
-                                            class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center">
-                                            <i class="fa-solid fa-plus-circle text-teal-600 mr-2"></i> Tambah Unit
-                                            Kegiatan Baru
+                                            class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center">
+                                            <i class="fa-solid fa-circle-plus text-teal-600 dark:text-teal-400 mr-2"></i> Tambah Unit Kegiatan Baru
                                         </h3>
                                         <button id="admin-uks-cancel-edit-btn" onclick="resetAdminUnitKegiatanForm()"
                                             type="button"
-                                            class="hidden text-xs text-rose-600 hover:underline font-semibold flex items-center gap-1">
+                                            class="hidden text-xs text-rose-600 dark:text-rose-400 hover:underline font-semibold flex items-center gap-1 transition">
                                             <i class="fa-solid fa-xmark"></i> Batal Edit
                                         </button>
                                     </div>
 
-                                    <form id="adminUnitKegiatanForm" onsubmit="submitAdminUnitKegiatan(event)"
-                                        class="space-y-4">
+                                    <form id="adminUnitKegiatanForm" onsubmit="submitAdminUnitKegiatan(event)" class="space-y-4">
                                         <input type="hidden" id="admin-uks-id">
                                         <input type="hidden" id="admin-uks-old-img">
 
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <!-- Nama Unit Kegiatan -->
                                             <div>
-                                                <label
-                                                    class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Nama
-                                                    / Judul Unit Kegiatan <span class="text-rose-500">*</span></label>
+                                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                                                    Nama / Judul Unit Kegiatan <span class="text-rose-500">*</span>
+                                                </label>
                                                 <input type="text" id="admin-uks-nama" required
                                                     placeholder='Contoh: Teater "SEMUT", Mading "EL-Fata"'
-                                                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-teal-600 focus:outline-none bg-slate-50 focus:bg-white transition">
+                                                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs focus:ring-2 focus:ring-teal-600 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-[#15202d] transition">
                                             </div>
 
                                             <!-- Kategori / Divisi -->
                                             <div>
-                                                <label
-                                                    class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Kategori
-                                                    / Divisi Naungan <span class="text-rose-500">*</span></label>
+                                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                                                    Kategori / Divisi Naungan <span class="text-rose-500">*</span>
+                                                </label>
                                                 <input type="text" id="admin-uks-kategori" required
                                                     placeholder="Contoh: Divisi Teater Santri, Karya Literasi, Seni Musik Islami"
-                                                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-teal-600 focus:outline-none bg-slate-50 focus:bg-white transition">
+                                                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs focus:ring-2 focus:ring-teal-600 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-[#15202d] transition">
                                             </div>
 
                                             <!-- Jadwal / Frekuensi Kegiatan -->
                                             <div>
-                                                <label
-                                                    class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Jadwal
-                                                    / Frekuensi Waktu <span class="text-rose-500">*</span></label>
+                                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                                                    Jadwal / Frekuensi Waktu <span class="text-rose-500">*</span>
+                                                </label>
                                                 <input type="text" id="admin-uks-jadwal" required
                                                     placeholder="Contoh: 2x Semesta / Tahun, Awal Bulan Hijriyah, Malam Jumat & Event"
-                                                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-teal-600 focus:outline-none bg-slate-50 focus:bg-white transition">
+                                                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs focus:ring-2 focus:ring-teal-600 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-[#15202d] transition">
+                                            </div>
+
+                                            <!-- Pembina / Pelatih Pendamping -->
+                                            <div>
+                                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                                                    Pembina / Pelatih Pendamping
+                                                </label>
+                                                <input type="text" id="admin-uks-pembina"
+                                                    placeholder="Contoh: Ust. Ahmad Fauzi, S.Pd. / Pelatih"
+                                                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs focus:ring-2 focus:ring-teal-600 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-[#15202d] transition">
                                             </div>
 
                                             <!-- Urutan & Status -->
                                             <div class="grid grid-cols-2 gap-3">
                                                 <div>
-                                                    <label
-                                                        class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Urutan
-                                                        Tampil</label>
+                                                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Urutan Tampil</label>
                                                     <input type="number" id="admin-uks-urutan" min="1" value="1"
-                                                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-teal-600 focus:outline-none bg-slate-50 focus:bg-white transition">
+                                                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs focus:ring-2 focus:ring-teal-600 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-[#15202d] transition">
                                                 </div>
                                                 <div>
-                                                    <label
-                                                        class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Status</label>
+                                                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Status</label>
                                                     <select id="admin-uks-status"
-                                                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:ring-2 focus:ring-teal-600 focus:outline-none bg-slate-50 focus:bg-white transition">
+                                                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-semibold focus:ring-2 focus:ring-teal-600 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-[#15202d] transition">
                                                         <option value="Aktif">Aktif</option>
                                                         <option value="Nonaktif">Nonaktif</option>
                                                     </select>
@@ -11832,34 +11922,27 @@
                                             </div>
 
                                             <!-- Upload Foto / Gambar -->
-                                            <div class="md:col-span-2">
-                                                <label
-                                                    class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Foto
-                                                    Kegiatan / Dokumentasi</label>
-                                                <div
-                                                    class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                                            <div class="md:col-span-1">
+                                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Foto Kegiatan / Dokumentasi</label>
+                                                <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
                                                     <input type="file" id="admin-uks-file" accept="image/*"
                                                         onchange="previewAdminUksImage(event)"
-                                                        class="w-full sm:flex-1 text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 cursor-pointer">
-                                                    <div
-                                                        class="w-20 h-16 rounded-xl border border-slate-200 overflow-hidden shrink-0 bg-slate-50 flex items-center justify-center">
-                                                        <img id="admin-uks-preview-img" src="" alt="Preview"
-                                                            class="w-full h-full object-cover hidden">
-                                                        <span id="admin-uks-preview-placeholder"
-                                                            class="text-[10px] text-slate-400 text-center px-1">Pratinjau
-                                                            Foto</span>
+                                                        class="w-full sm:flex-1 text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-teal-50 dark:file:bg-teal-950/60 file:text-teal-700 dark:file:text-teal-300 hover:file:bg-teal-100 cursor-pointer">
+                                                    <div class="w-16 h-12 rounded-xl border border-slate-200 dark:border-[#253447] overflow-hidden shrink-0 bg-slate-50 dark:bg-[#1c2836] flex items-center justify-center">
+                                                        <img id="admin-uks-preview-img" src="" alt="Preview" class="w-full h-full object-cover hidden">
+                                                        <span id="admin-uks-preview-placeholder" class="text-[9px] text-slate-400 text-center px-1">Pratinjau Foto</span>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             <!-- Deskripsi Kegiatan -->
                                             <div class="md:col-span-2">
-                                                <label
-                                                    class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Deskripsi
-                                                    Lengkap Kegiatan <span class="text-rose-500">*</span></label>
+                                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                                                    Deskripsi Lengkap Kegiatan <span class="text-rose-500">*</span>
+                                                </label>
                                                 <textarea id="admin-uks-deskripsi" rows="3" required
                                                     placeholder="Tuliskan deskripsi fokus kegiatan, tujuan, dan perannya di pesantren..."
-                                                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-teal-600 focus:outline-none bg-slate-50 focus:bg-white transition resize-none"></textarea>
+                                                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs focus:ring-2 focus:ring-teal-600 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-[#15202d] transition resize-none"></textarea>
                                             </div>
                                         </div>
 
@@ -11874,43 +11957,40 @@
                                 </section>
 
                                 <!-- DAFTAR UNIT KEGIATAN -->
-                                <section
-                                    class="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-100 space-y-3">
-                                    <div
-                                        class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-3">
+                                <section class="bg-white dark:bg-[#15202d] p-4 md:p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447] space-y-3 animate-fade-in-up stagger-7">
+                                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 dark:border-[#253447] pb-3">
                                         <div class="flex items-center space-x-2">
-                                            <h3
-                                                class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center">
-                                                <i class="fa-solid fa-list-check text-teal-600 mr-2"></i> Daftar Unit
-                                                Kegiatan Santri
+                                            <h3 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center">
+                                                <i class="fa-solid fa-list-check text-teal-600 dark:text-teal-400 mr-2"></i> Daftar Unit Kegiatan Santri
                                             </h3>
                                             <span id="admin-uks-list-count"
-                                                class="text-[11px] font-bold text-teal-800 bg-teal-50 px-2.5 py-0.5 rounded-lg">0
-                                                Unit</span>
+                                                class="text-[11px] font-bold text-teal-800 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 px-2.5 py-0.5 rounded-lg border border-teal-200/60 dark:border-teal-800/40">
+                                                0 Unit
+                                            </span>
                                         </div>
                                         <div class="w-full sm:w-64">
-                                            <input type="text" id="admin-uks-search"
-                                                oninput="filterAdminUnitKegiatanList()"
-                                                placeholder="Cari nama atau kategori..."
-                                                class="w-full px-3 py-1.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-600 focus:outline-none transition">
+                                            <div class="relative">
+                                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                                <input type="text" id="admin-uks-search" oninput="filterAdminUnitKegiatanList()"
+                                                    placeholder="Cari nama, kategori, jadwal..."
+                                                    class="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-[#253447] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-[#15202d] focus:ring-2 focus:ring-teal-600 focus:outline-none transition">
+                                            </div>
                                         </div>
                                     </div>
 
                                     <!-- Loader & State -->
-                                    <div id="admin-uks-loader"
-                                        class="hidden py-8 text-center text-xs text-slate-500 space-y-2">
+                                    <div id="admin-uks-loader" class="hidden py-8 text-center text-xs text-slate-500 space-y-2">
                                         <i class="fa-solid fa-spinner fa-spin text-xl text-teal-600"></i>
                                         <p>Memuat data unit kegiatan...</p>
                                     </div>
 
                                     <!-- Container Grid Card List -->
-                                    <div id="admin-uks-cards-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div id="admin-uks-cards-container" class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                                         <!-- Rendered by JavaScript -->
                                     </div>
 
-                                    <div id="admin-uks-empty-state"
-                                        class="hidden py-8 text-center text-xs text-slate-400 space-y-2">
-                                        <i class="fa-solid fa-people-roof text-3xl text-slate-300"></i>
+                                    <div id="admin-uks-empty-state" class="hidden py-8 text-center text-xs text-slate-400 space-y-2">
+                                        <i class="fa-solid fa-people-roof text-3xl text-slate-300 dark:text-slate-600"></i>
                                         <p>Belum ada data unit kegiatan.</p>
                                     </div>
                                 </section>
@@ -20579,7 +20659,7 @@
     <script src="js/ppdb.js"></script>
     <script src="js/ibadah.js"></script>
     <script src="js/jadwal-sholat.js"></script>
-    <script src="js/admin.js?v=31"></script>
+    <script src="js/admin.js?v=32"></script>
     <script src="js/roles.js?v=30"></script>
     <script src="js/alumni.js"></script>
     <script src="js/auth.js?v=30"></script>
