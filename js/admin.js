@@ -3814,14 +3814,14 @@
 
             list.forEach((item, index) => {
                 const status = String(item.status || "draft").toLowerCase();
-                let statusBadgeClass = "bg-amber-100 text-amber-800 border-amber-200";
+                let statusBadgeClass = "bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/50";
                 let statusLabel = "Draft";
 
                 if (status === "published") {
-                    statusBadgeClass = "bg-emerald-100 text-emerald-800 border-emerald-200";
+                    statusBadgeClass = "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/50";
                     statusLabel = "Published";
                 } else if (status === "archived") {
-                    statusBadgeClass = "bg-slate-100 text-slate-700 border-slate-200";
+                    statusBadgeClass = "bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-[#253447]";
                     statusLabel = "Archived";
                 }
 
@@ -3830,51 +3830,51 @@
 
                 // Desktop Row
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50/80 transition duration-150";
+                tr.className = "hover:bg-slate-50/80 dark:hover:bg-[#1c2836]/60 transition duration-150 border-b border-slate-100 dark:border-[#253447]";
                 tr.innerHTML = `
                     <td class="py-3 px-3">
                         <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200">
+                            <div class="w-10 h-10 rounded-xl overflow-hidden bg-slate-100 dark:bg-[#1c2836] shrink-0 border border-slate-200 dark:border-[#253447]">
                                 <img src="${escapeHtml(item.image || '')}" alt="${escapeHtml(item.name || '')}" class="w-full h-full object-cover">
                             </div>
                             <div class="min-w-0">
-                                <h4 class="font-bold text-slate-800 text-xs truncate">${escapeHtml(item.name || '-')}</h4>
-                                <span class="text-[10px] font-mono text-slate-400">ID: ${escapeHtml(item.id || '-')}</span>
+                                <h4 class="font-bold text-slate-800 dark:text-slate-100 text-xs truncate">${escapeHtml(item.name || '-')}</h4>
+                                <span class="text-[10px] font-mono text-slate-400 dark:text-slate-500">ID: ${escapeHtml(item.id || '-')}</span>
                             </div>
                         </div>
                     </td>
-                    <td class="py-3 px-3 text-slate-600 font-semibold text-[11px]">${escapeHtml(item.badge || '-')}</td>
+                    <td class="py-3 px-3 text-slate-600 dark:text-slate-300 font-semibold text-[11px]">${escapeHtml(item.badge || '-')}</td>
                     <td class="py-3 px-3">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${statusBadgeClass}">${statusLabel}</span>
+                        <span class="px-2.5 py-0.5 rounded-md text-[10px] font-bold ${statusBadgeClass}">${statusLabel}</span>
                     </td>
-                    <td class="py-3 px-3 font-mono text-xs font-bold text-slate-600">v${escapeHtml(item.version || 1)}</td>
-                    <td class="py-3 px-3 text-[11px] text-slate-400">
+                    <td class="py-3 px-3 font-mono text-xs font-bold text-slate-600 dark:text-slate-300">v${escapeHtml(item.version || 1)}</td>
+                    <td class="py-3 px-3 text-[11px] text-slate-500 dark:text-slate-400">
                         <div>${updatedDateStr}</div>
-                        <div class="text-[10px] text-slate-500">Oleh: ${escapeHtml(updatedByStr)}</div>
+                        <div class="text-[10px] text-slate-400 dark:text-slate-500">Oleh: ${escapeHtml(updatedByStr)}</div>
                     </td>
                     <td class="py-3 px-3 text-center">
                         <div class="flex items-center justify-center space-x-1.5">
-                            <button type="button" onclick="openAdminProgramEditor('${item.id}')" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-xs font-semibold border border-amber-200/80 transition shadow-sm" title="Edit Program">
+                            <button type="button" onclick="openAdminProgramEditor('${item.id}')" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-950/70 text-amber-700 dark:text-amber-300 rounded-lg text-xs font-semibold border border-amber-200/80 dark:border-amber-800/50 transition shadow-xs" title="Edit Program">
                                 <i class="fa-solid fa-pen mr-1"></i> Edit
                             </button>
-                            <button type="button" onclick="openAdminProgramPreview('${item.id}')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold border border-slate-200 transition shadow-sm" title="Preview Tampilan">
+                            <button type="button" onclick="openAdminProgramPreview('${item.id}')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] dark:hover:bg-[#253447] text-slate-700 dark:text-slate-200 rounded-lg text-xs font-semibold border border-slate-200 dark:border-[#253447] transition shadow-xs" title="Preview Tampilan">
                                 <i class="fa-solid fa-eye"></i>
                             </button>
                             ${status === 'draft' ? `
-                                <button type="button" onclick="handleAdminProgramPublish('${item.id}', ${item.version || 1})" ${!isAdmin ? 'disabled title="Hanya Admin yang dapat mempublikasikan"' : 'title="Publikasikan Program"'} class="px-2.5 py-1 ${isAdmin ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'} rounded-lg text-xs font-semibold border transition shadow-sm">
+                                <button type="button" onclick="handleAdminProgramPublish('${item.id}', ${item.version || 1})" ${!isAdmin ? 'disabled title="Hanya Admin yang dapat mempublikasikan"' : 'title="Publikasikan Program"'} class="px-2.5 py-1 ${isAdmin ? 'bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/50' : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'} rounded-lg text-xs font-semibold transition shadow-xs">
                                     <i class="fa-solid fa-paper-plane mr-1"></i> Publish
                                 </button>
                             ` : ''}
                             ${status === 'published' ? `
-                                <button type="button" onclick="handleAdminProgramUnpublish('${item.id}', ${item.version || 1})" ${!isAdmin ? 'disabled' : ''} class="px-2.5 py-1 ${isAdmin ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200' : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'} rounded-lg text-xs font-semibold border transition shadow-sm" title="Kembalikan ke Draft">
+                                <button type="button" onclick="handleAdminProgramUnpublish('${item.id}', ${item.version || 1})" ${!isAdmin ? 'disabled' : ''} class="px-2.5 py-1 ${isAdmin ? 'bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/50' : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'} rounded-lg text-xs font-semibold transition shadow-xs" title="Kembalikan ke Draft">
                                     Unpublish
                                 </button>
-                                <button type="button" onclick="handleAdminProgramArchive('${item.id}', ${item.version || 1})" ${!isAdmin ? 'disabled' : ''} class="px-2.5 py-1 ${isAdmin ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200' : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'} rounded-lg text-xs font-semibold border transition shadow-sm" title="Arsipkan Program">
+                                <button type="button" onclick="handleAdminProgramArchive('${item.id}', ${item.version || 1})" ${!isAdmin ? 'disabled' : ''} class="px-2.5 py-1 ${isAdmin ? 'bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-950/70 text-rose-700 dark:text-rose-300 border border-rose-200/80 dark:border-rose-800/50' : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'} rounded-lg text-xs font-semibold transition shadow-xs" title="Arsipkan Program">
                                     Arsipkan
                                 </button>
                             ` : ''}
                             ${status === 'archived' ? `
-                                <button type="button" onclick="handleAdminProgramUnpublish('${item.id}', ${item.version || 1})" ${!isAdmin ? 'disabled' : ''} class="px-2.5 py-1 ${isAdmin ? 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200' : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'} rounded-lg text-xs font-semibold border transition shadow-sm" title="Pulihkan ke Draft">
+                                <button type="button" onclick="handleAdminProgramUnpublish('${item.id}', ${item.version || 1})" ${!isAdmin ? 'disabled' : ''} class="px-2.5 py-1 ${isAdmin ? 'bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/50' : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'} rounded-lg text-xs font-semibold transition shadow-xs" title="Pulihkan ke Draft">
                                     Pulihkan
                                 </button>
                             ` : ''}
@@ -3885,47 +3885,47 @@
 
                 // Mobile Card View
                 const card = document.createElement('div');
-                card.className = "bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2.5";
+                card.className = "bg-white dark:bg-[#15202d] p-3.5 rounded-2xl border border-slate-200/80 dark:border-[#253447] space-y-2.5 shadow-xs";
                 card.innerHTML = `
                     <div class="flex justify-between items-start gap-2">
                         <div class="flex items-center space-x-2.5 min-w-0">
-                            <div class="w-12 h-12 rounded-xl overflow-hidden bg-slate-200 shrink-0 border border-slate-200">
+                            <div class="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 dark:bg-[#1c2836] shrink-0 border border-slate-200 dark:border-[#253447]">
                                 <img src="${escapeHtml(item.image || '')}" alt="${escapeHtml(item.name || '')}" class="w-full h-full object-cover">
                             </div>
                             <div class="min-w-0">
-                                <span class="text-[9px] font-bold text-slate-400 uppercase">v${escapeHtml(item.version || 1)} • ${escapeHtml(item.badge || '')}</span>
-                                <h4 class="font-bold text-slate-800 text-xs truncate">${escapeHtml(item.name || '')}</h4>
-                                <span class="text-[10px] font-mono text-slate-400">ID: ${escapeHtml(item.id || '')}</span>
+                                <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">v${escapeHtml(item.version || 1)} • ${escapeHtml(item.badge || '')}</span>
+                                <h4 class="font-bold text-slate-800 dark:text-slate-100 text-xs truncate">${escapeHtml(item.name || '')}</h4>
+                                <span class="text-[10px] font-mono text-slate-400 dark:text-slate-500">ID: ${escapeHtml(item.id || '')}</span>
                             </div>
                         </div>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold border shrink-0 ${statusBadgeClass}">${statusLabel}</span>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold shrink-0 ${statusBadgeClass}">${statusLabel}</span>
                     </div>
-                    <div class="pt-2 border-t border-slate-200/60 text-[11px] text-slate-500 flex justify-between">
+                    <div class="pt-2 border-t border-slate-100 dark:border-[#253447] text-[11px] text-slate-500 dark:text-slate-400 flex justify-between">
                         <span>Update: ${updatedDateStr}</span>
                         <span>Oleh: ${escapeHtml(updatedByStr)}</span>
                     </div>
                     <div class="pt-2 flex flex-wrap gap-1.5 justify-end">
-                        <button type="button" onclick="openAdminProgramEditor('${item.id}')" class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-xs font-semibold border border-amber-200">
+                        <button type="button" onclick="openAdminProgramEditor('${item.id}')" class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-950/70 text-amber-700 dark:text-amber-300 rounded-lg text-xs font-semibold border border-amber-200/80 dark:border-amber-800/50">
                             <i class="fa-solid fa-pen mr-1"></i> Edit
                         </button>
-                        <button type="button" onclick="openAdminProgramPreview('${item.id}')" class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold border border-slate-200">
+                        <button type="button" onclick="openAdminProgramPreview('${item.id}')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] dark:hover:bg-[#253447] text-slate-700 dark:text-slate-200 rounded-lg text-xs font-semibold border border-slate-200 dark:border-[#253447]">
                             <i class="fa-solid fa-eye mr-1"></i> Preview
                         </button>
                         ${status === 'draft' && isAdmin ? `
-                            <button type="button" onclick="handleAdminProgramPublish('${item.id}', ${item.version || 1})" class="px-3 py-1.5 bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-sm">
+                            <button type="button" onclick="handleAdminProgramPublish('${item.id}', ${item.version || 1})" class="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold shadow-sm">
                                 <i class="fa-solid fa-paper-plane mr-1"></i> Publish
                             </button>
                         ` : ''}
                         ${status === 'published' && isAdmin ? `
-                            <button type="button" onclick="handleAdminProgramUnpublish('${item.id}', ${item.version || 1})" class="px-3 py-1.5 bg-amber-600 text-white rounded-lg text-xs font-bold shadow-sm">
+                            <button type="button" onclick="handleAdminProgramUnpublish('${item.id}', ${item.version || 1})" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold shadow-sm">
                                 Unpublish
                             </button>
-                            <button type="button" onclick="handleAdminProgramArchive('${item.id}', ${item.version || 1})" class="px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-bold shadow-sm">
+                            <button type="button" onclick="handleAdminProgramArchive('${item.id}', ${item.version || 1})" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold shadow-sm">
                                 Arsipkan
                             </button>
                         ` : ''}
                         ${status === 'archived' && isAdmin ? `
-                            <button type="button" onclick="handleAdminProgramUnpublish('${item.id}', ${item.version || 1})" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold shadow-sm">
+                            <button type="button" onclick="handleAdminProgramUnpublish('${item.id}', ${item.version || 1})" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-sm">
                                 Pulihkan
                             </button>
                         ` : ''}
