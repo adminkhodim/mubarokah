@@ -112,9 +112,15 @@
             // Eksekusi paralel tanpa blocking waterfall
             loadBanners();
             loadNews();
-            loadGaleri();
-            loadPengaturan();
-            loadUnitKegiatan();
+            if (typeof loadGaleri === 'function') {
+                loadGaleri();
+            }
+            if (typeof loadPengaturan === 'function') {
+                loadPengaturan();
+            }
+            if (typeof loadUnitKegiatan === 'function') {
+                loadUnitKegiatan();
+            }
             loadNotifikasi();
             if (typeof renderCalendar === 'function') {
                 try {
@@ -664,18 +670,22 @@
             };
 
             document.querySelectorAll('.nav-desk-btn').forEach(btn => {
-                btn.classList.remove('bg-teal-800', 'bg-brand-800', 'text-white');
-                btn.classList.add('text-teal-100', 'hover:bg-teal-800/80', 'hover:text-white');
+                btn.classList.remove('bg-teal-800', 'bg-brand-800', 'text-white', 'shadow-sm');
+                btn.classList.add('text-slate-700', 'dark:text-slate-200', 'hover:text-teal-700', 'hover:bg-slate-100');
             });
             const targetDeskId = PARENT_DESK_MAP[tabId];
             if (targetDeskId) {
                 const activeDeskBtn = document.getElementById(targetDeskId);
                 if (activeDeskBtn) {
-                    activeDeskBtn.classList.remove('text-teal-100', 'hover:bg-teal-800/80');
-                    activeDeskBtn.classList.add('bg-teal-800', 'text-white');
+                    activeDeskBtn.classList.remove('text-slate-700', 'dark:text-slate-200', 'hover:text-teal-700', 'hover:bg-slate-100');
+                    activeDeskBtn.classList.add('bg-teal-800', 'text-white', 'shadow-sm');
                 }
             }
             closeMobileDrawer();
+
+            if (typeof window.refreshScrollAnimations === 'function') {
+                window.refreshScrollAnimations(targetTab);
+            }
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -748,7 +758,9 @@
         function renderAllNewsViews(newsArray) {
             renderNews(newsArray);
             renderHeadlineNews(newsArray);
-            renderAdminNewsList();
+            if (typeof renderAdminNewsList === 'function') {
+                renderAdminNewsList();
+            }
         }
 
         function renderNews(newsArray) {
@@ -840,49 +852,59 @@
                     const bigViews = (Number(bigNews.views) || 0).toLocaleString('id-ID');
 
                     let html = `
-                        <!-- Featured Big News -->
-                        <div class="grid grid-cols-12 gap-6 bg-white dark:bg-[#15202d] p-5 rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm">
-                            <div class="col-span-6 rounded-xl overflow-hidden cursor-pointer" onclick="bacaBerita('${bigNews.news_id || bigNews.slug}')">
-                                <img src="${bigThumb}" alt="${bigNews.judul}" class="w-full h-full object-cover hover:scale-105 transition duration-300">
-                            </div>
-                            <div class="col-span-6 flex flex-col justify-between py-1">
-                                <div class="space-y-2">
-                                    <span class="text-xs font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
-                                        <span>${bigNews.kategori} • ${bigNews.tanggal}</span>
-                                        <span>•</span>
-                                        <span><i class="fa-solid fa-eye text-emerald-600 dark:text-emerald-400 mr-1"></i> ${bigViews} pembaca</span>
-                                    </span>
-                                    <h4 onclick="bacaBerita('${bigNews.news_id || bigNews.slug}')"
-                                        class="font-bold text-base text-slate-900 dark:text-slate-100 leading-snug hover:text-emerald-700 dark:hover:text-emerald-400 transition cursor-pointer line-clamp-2">
-                                        ${bigNews.judul}
-                                    </h4>
-                                    <p class="text-xs text-slate-500 dark:text-slate-300 line-clamp-3">
-                                        ${plainContent}
-                                    </p>
+                        <!-- Featured Big News (Ar-Rawdhah Editorial Style) -->
+                        <div class="group cursor-pointer bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/90 dark:border-[#253447] shadow-[0_4px_16px_rgba(0,0,0,0.04)] hover:shadow-xl transition-all duration-300 overflow-hidden" onclick="bacaBerita('${bigNews.news_id || bigNews.slug}')">
+                            <div class="relative aspect-[16/9] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+                                <img src="${bigThumb}" alt="${escapeHtml(bigNews.judul)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                <div class="absolute top-3.5 left-3.5">
+                                    <span class="px-3 py-1 rounded-full bg-[#022c22]/90 backdrop-blur-md text-white text-[11px] font-bold shadow-md uppercase tracking-wider">${escapeHtml(bigNews.kategori)}</span>
                                 </div>
-                                <button onclick="bacaBerita('${bigNews.news_id || bigNews.slug}')"
-                                    class="text-xs font-bold text-slate-800 dark:text-slate-200 hover:text-emerald-700 dark:hover:text-emerald-400 inline-flex items-center gap-1 pt-3">
-                                    Baca Selengkapnya <span>→</span>
-                                </button>
+                            </div>
+                            <div class="p-5 sm:p-6 space-y-2.5">
+                                <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                    <i class="fa-regular fa-calendar text-[#022c22] dark:text-emerald-400"></i>
+                                    <span>${escapeHtml(bigNews.tanggal || 'Terkini')}</span>
+                                    <span>•</span>
+                                    <span><i class="fa-solid fa-eye text-[#022c22] dark:text-emerald-400 mr-1"></i> ${bigViews} pembaca</span>
+                                </div>
+                                <h4 class="font-extrabold text-base sm:text-lg text-[#022c22] dark:text-white group-hover:text-emerald-700 transition-colors leading-snug line-clamp-2">
+                                    ${escapeHtml(bigNews.judul)}
+                                </h4>
+                                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
+                                    ${escapeHtml(plainContent)}
+                                </p>
+                                <div class="pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between">
+                                    <span class="inline-flex items-center gap-1.5 text-xs font-bold text-[#022c22] dark:text-emerald-400 group-hover:translate-x-1 transition-transform">
+                                        <span>Baca Selengkapnya</span>
+                                        <i class="fa-solid fa-arrow-right text-[11px]"></i>
+                                    </span>
+                                    <span class="text-[11px] text-slate-400">3 menit baca</span>
+                                </div>
                             </div>
                         </div>
                     `;
 
                     if (topHeadline.length > 1) {
-                        html += `<div class="grid grid-cols-2 gap-4 mt-6">`;
+                        html += `<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">`;
                         for (let i = 1; i < topHeadline.length; i++) {
                             const smallNews = topHeadline[i];
+                            const smallThumb = smallNews.gambar || defaultThumb;
                             const smallViews = (Number(smallNews.views) || 0).toLocaleString('id-ID');
                             html += `
                                 <div onclick="bacaBerita('${smallNews.news_id || smallNews.slug}')"
-                                    class="bg-white dark:bg-[#15202d] p-4 rounded-xl border border-slate-200/70 dark:border-[#253447] hover:border-slate-300 dark:hover:border-slate-600 transition cursor-pointer">
-                                    <div class="flex items-center justify-between text-[11px] font-medium text-slate-400 dark:text-slate-400">
-                                        <span>${smallNews.kategori} • ${smallNews.tanggal}</span>
-                                        <span><i class="fa-solid fa-eye text-emerald-600 dark:text-emerald-400 mr-0.5"></i> ${smallViews}</span>
+                                    class="group cursor-pointer bg-white dark:bg-[#15202d] p-4 rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-xs hover:shadow-md hover:border-emerald-300 transition-all flex gap-3.5 items-center">
+                                    <div class="relative w-20 h-20 sm:w-22 sm:h-22 rounded-xl overflow-hidden shrink-0 bg-slate-100">
+                                        <img src="${smallThumb}" alt="${escapeHtml(smallNews.judul)}" class="w-full h-full object-cover group-hover:scale-108 transition-transform duration-300">
                                     </div>
-                                    <h5 class="font-bold text-xs text-slate-800 dark:text-slate-100 mt-1 line-clamp-2 hover:text-emerald-700 dark:hover:text-emerald-400">
-                                        ${smallNews.judul}
-                                    </h5>
+                                    <div class="flex-1 min-w-0 space-y-1">
+                                        <div class="flex items-center gap-2 text-[10.5px] text-slate-500 font-medium">
+                                            <span class="px-2 py-0.5 rounded-md font-bold uppercase text-[9.5px] bg-emerald-50 text-emerald-800">${escapeHtml(smallNews.kategori)}</span>
+                                            <span>${escapeHtml(smallNews.tanggal || '')}</span>
+                                        </div>
+                                        <h5 class="font-bold text-xs text-slate-800 dark:text-slate-100 group-hover:text-[#022c22] dark:group-hover:text-emerald-400 transition-colors line-clamp-2 leading-snug">
+                                            ${escapeHtml(smallNews.judul)}
+                                        </h5>
+                                    </div>
                                 </div>
                             `;
                         }
@@ -1160,14 +1182,57 @@
         }
 
         // ==================== SLIDER BANNER BERANDA (OPTIMIZED SWR) ====================
+        const defaultMubarokahBanners = [
+            {
+                id: 'banner-01',
+                nama: 'Halaqah Tahfidzul Qur\'an',
+                gambar: 'https://res.cloudinary.com/wnfvwyak/image/upload/v1790920911/byr3zh2wjn2i69gh9pae.jpg',
+                tipeAksi: 'tab',
+                targetAksi: 'profil',
+                urutan: 1,
+                status: 'Aktif'
+            },
+            {
+                id: 'banner-02',
+                nama: 'Gedung & Masjid Jami\'',
+                gambar: 'https://res.cloudinary.com/wnfvwyak/image/upload/v1790918867/cxzwtkmktykpr69bfgod.jpg',
+                tipeAksi: 'tab',
+                targetAksi: 'galeri',
+                urutan: 2,
+                status: 'Aktif'
+            },
+            {
+                id: 'banner-03',
+                nama: 'Kompleks Asrama Santri',
+                gambar: 'https://res.cloudinary.com/wnfvwyak/image/upload/v1790918503/rqytgghfzti7rflurav6.jpg',
+                tipeAksi: 'tab',
+                targetAksi: 'profil',
+                urutan: 3,
+                status: 'Aktif'
+            }
+        ];
+
+        if (typeof mockBannerData === 'undefined') {
+            window.mockBannerData = defaultMubarokahBanners;
+        } else {
+            mockBannerData = defaultMubarokahBanners;
+        }
+
         const MAIN_BANNER_CACHE_KEY = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.storage && APP_CONFIG.storage.keys)
             ? APP_CONFIG.storage.keys.bannerCache
             : 'mubarokah_banner_cache';
 
         function optimizeImageUrl(url, width = 1000) {
             if (!url || typeof url !== 'string') return '';
+            // Google Drive direct link
+            if (url.includes('googleusercontent.com/d/') || url.includes('drive.google.com/file/d/')) {
+                const idMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                if (idMatch && idMatch[1]) {
+                    return `https://lh3.googleusercontent.com/d/${idMatch[1]}=w${width}`;
+                }
+            }
             // Google Drive direct user content
-            if (url.includes('googleusercontent.com')) {
+            if (url.includes('googleusercontent.com') && !url.includes('/d/')) {
                 const cleanUrl = url.split('=')[0];
                 return `${cleanUrl}=w${width}-rw`;
             }
@@ -1223,6 +1288,10 @@
                     if (newDataStr !== oldDataStr) {
                         renderHeroSlider();
                         if (typeof renderAdminBannerList === 'function') renderAdminBannerList();
+                    } else {
+                        if (typeof syncHeroBannerShowcase === 'function') {
+                            syncHeroBannerShowcase(response.data.filter(b => b.status === "Aktif"));
+                        }
                     }
                 }
             } catch (err) {
@@ -1251,6 +1320,9 @@
             ];
 
             const activeBanners = mockBannerData.filter(b => b.status === "Aktif");
+            if (typeof syncHeroBannerShowcase === 'function') {
+                syncHeroBannerShowcase(activeBanners);
+            }
             const labelMap = { ppdb: 'Pendaftaran', kabar: 'Berita', 'program-pilihan': 'Program', profil: 'Profil', galeri: 'Galeri', alumni: 'Alumni', beranda: 'Beranda', 'jadwal-kegiatan': 'Jadwal', 'unit-kegiatan': 'Unit', poskestren: 'Poskestren' };
 
             sliderPairs.forEach(({ slider, dots, type }) => {
@@ -2176,3 +2248,240 @@
         window.checkHomePosterPopup = checkHomePosterPopup;
         window.closeHomePoster = closeHomePoster;
         window.openNotifFromPoster = openNotifFromPoster;
+
+        // ==================== HERO BANNER SHOWCASE SYNC (DESKTOP & RESPONSIVE) ====================
+        let currentHeroPhotoIdx = 0;
+        let heroPhotoAutoTimer = null;
+        let currentHeroBanners = [];
+
+        function syncHeroBannerShowcase(banners) {
+            const thumbContainer = document.getElementById('hero-thumbnails-container');
+            const cardContainer = document.getElementById('hero-card-main-container');
+
+            let activeList = [];
+            if (Array.isArray(banners) && banners.length > 0) {
+                activeList = banners.filter(b => b.status === "Aktif");
+            } else if (Array.isArray(mockBannerData) && mockBannerData.length > 0) {
+                activeList = mockBannerData.filter(b => b.status === "Aktif");
+            }
+
+            if (activeList.length === 0) return;
+
+            // Urutkan secara presisi sesuai nomor urutan di database Google Sheet (1, 2, 3...)
+            activeList.sort((a, b) => (Number(a.urutan) || 0) - (Number(b.urutan) || 0));
+
+            // Ambil 5 banner sesuai data tabel Banner yang telah diupload (Urutan 1 sampai 5)
+            currentHeroBanners = activeList.slice(0, 5);
+            if (currentHeroBanners.length === 0) return;
+
+            if (thumbContainer) {
+                thumbContainer.innerHTML = '';
+                const defaultFallbackHero = 'https://res.cloudinary.com/wnfvwyak/image/upload/v1790920911/byr3zh2wjn2i69gh9pae.jpg';
+                currentHeroBanners.forEach((b, i) => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.id = 'hero-thumb-' + i;
+                    btn.setAttribute('aria-label', b.nama || `Pilih slide ${i+1}`);
+                    btn.title = b.nama || `Banner ${i+1}`;
+                    btn.className = (i === 0) 
+                        ? 'relative w-[62px] sm:w-[72px] md:w-[78px] lg:w-[82px] aspect-[16/10] rounded-lg sm:rounded-xl overflow-hidden cursor-pointer transition-all duration-300 ring-2 ring-white ring-offset-2 ring-offset-[#022c22] scale-105 shadow-md opacity-100 flex-shrink-0'
+                        : 'relative w-[62px] sm:w-[72px] md:w-[78px] lg:w-[82px] aspect-[16/10] rounded-lg sm:rounded-xl overflow-hidden cursor-pointer transition-all duration-300 opacity-55 hover:opacity-90 border border-white/30 flex-shrink-0';
+                    btn.onclick = () => {
+                        setHeroPhoto(i);
+                        startHeroPhotoAutoTimer();
+                    };
+                    const thumbImg = document.createElement('img');
+                    thumbImg.referrerPolicy = 'no-referrer';
+                    thumbImg.src = optimizeImageUrl(b.gambar, 200);
+                    thumbImg.alt = escapeHtml(b.nama || 'Thumbnail');
+                    thumbImg.className = 'w-full h-full object-cover';
+                    thumbImg.onerror = () => {
+                        if (b.gambar && thumbImg.src !== b.gambar) {
+                            thumbImg.src = b.gambar;
+                        } else {
+                            thumbImg.src = defaultFallbackHero;
+                        }
+                    };
+                    btn.appendChild(thumbImg);
+                    thumbContainer.appendChild(btn);
+                });
+            }
+
+            if (cardContainer && !cardContainer.dataset.hoverBound) {
+                cardContainer.dataset.hoverBound = 'true';
+                cardContainer.addEventListener('mouseenter', () => {
+                    if (heroPhotoAutoTimer) clearInterval(heroPhotoAutoTimer);
+                });
+                cardContainer.addEventListener('mouseleave', () => {
+                    startHeroPhotoAutoTimer();
+                });
+            }
+
+            if (thumbContainer && !thumbContainer.dataset.hoverBound) {
+                thumbContainer.dataset.hoverBound = 'true';
+                thumbContainer.addEventListener('mouseenter', () => {
+                    if (heroPhotoAutoTimer) clearInterval(heroPhotoAutoTimer);
+                });
+                thumbContainer.addEventListener('mouseleave', () => {
+                    startHeroPhotoAutoTimer();
+                });
+            }
+
+            setHeroPhoto(0);
+            startHeroPhotoAutoTimer();
+        }
+
+        function startHeroPhotoAutoTimer() {
+            if (heroPhotoAutoTimer) clearInterval(heroPhotoAutoTimer);
+            if (currentHeroBanners && currentHeroBanners.length > 1) {
+                heroPhotoAutoTimer = setInterval(() => {
+                    const nextIdx = (currentHeroPhotoIdx + 1) % currentHeroBanners.length;
+                    setHeroPhoto(nextIdx);
+                }, 4500);
+            }
+        }
+
+        function prevHeroPhoto() {
+            if (!currentHeroBanners || currentHeroBanners.length === 0) return;
+            const prevIdx = (currentHeroPhotoIdx - 1 + currentHeroBanners.length) % currentHeroBanners.length;
+            setHeroPhoto(prevIdx);
+            startHeroPhotoAutoTimer();
+        }
+
+        function nextHeroPhoto() {
+            if (!currentHeroBanners || currentHeroBanners.length === 0) return;
+            const nextIdx = (currentHeroPhotoIdx + 1) % currentHeroBanners.length;
+            setHeroPhoto(nextIdx);
+            startHeroPhotoAutoTimer();
+        }
+
+        function setHeroPhoto(idx, customSrc, customBadge) {
+            if (!currentHeroBanners || currentHeroBanners.length === 0) return;
+            if (idx < 0 || idx >= currentHeroBanners.length) idx = 0;
+            currentHeroPhotoIdx = idx;
+            const banner = currentHeroBanners[idx];
+            if (!banner) return;
+
+            const imgSrc = customSrc || banner.gambar;
+            const badgeText = customBadge || banner.nama || 'Kegiatan Pesantren';
+
+            const img = document.getElementById('hero-main-photo-preview');
+            const badgeEl = document.getElementById('hero-photo-badge');
+            const subbadgeEl = document.getElementById('hero-photo-subbadge');
+            const cardContainer = document.getElementById('hero-card-main-container');
+            const bgPreview = document.getElementById('hero-bg-preview');
+
+            if (img) {
+                img.style.opacity = '0.35';
+                img.style.transform = 'scale(1.03)';
+                img.referrerPolicy = 'no-referrer';
+                img.onerror = () => {
+                    if (img.src !== banner.gambar) {
+                        img.src = banner.gambar;
+                    } else {
+                        img.src = 'https://res.cloudinary.com/wnfvwyak/image/upload/v1790920911/byr3zh2wjn2i69gh9pae.jpg';
+                    }
+                };
+                setTimeout(() => {
+                    img.src = optimizeImageUrl(imgSrc, 900);
+                    img.alt = banner.nama || 'Foto Banner Pesantren';
+                    img.style.opacity = '1';
+                    img.style.transform = 'scale(1)';
+                }, 160);
+            }
+
+            if (bgPreview && customSrc) {
+                bgPreview.src = optimizeImageUrl(customSrc, 1200);
+            }
+
+            if (badgeEl) {
+                badgeEl.textContent = badgeText;
+            }
+            if (subbadgeEl) {
+                const labelMap = { ppdb: 'PPDB Online', kabar: 'Berita', 'program-pilihan': 'Kurikulum', profil: 'Profil Ma\'had', galeri: 'Dokumentasi', alumni: 'Alumni', beranda: 'Beranda', 'jadwal-kegiatan': 'Jadwal', 'unit-kegiatan': 'Unit' };
+                const label = banner.tipeAksi === 'tab' ? (labelMap[banner.targetAksi] || banner.targetAksi) : (banner.tipeAksi === 'url' ? 'Tautan Resmi' : 'PPTQ Roudlotul Mubarokah');
+                subbadgeEl.textContent = label || 'PPTQ Roudlotul Mubarokah';
+            }
+
+            if (cardContainer) {
+                cardContainer.onclick = function() {
+                    if (banner.tipeAksi === 'tab' && banner.targetAksi) {
+                        switchTab(banner.targetAksi);
+                    } else if (banner.tipeAksi === 'url' && banner.targetAksi) {
+                        window.open(banner.targetAksi, '_blank');
+                    }
+                };
+            }
+
+            currentHeroBanners.forEach((_, i) => {
+                const btn = document.getElementById('hero-thumb-' + i);
+                if (btn) {
+                    if (i === idx) {
+                        btn.className = 'relative w-[62px] sm:w-[72px] md:w-[78px] lg:w-[82px] aspect-[16/10] rounded-lg sm:rounded-xl overflow-hidden cursor-pointer transition-all duration-300 ring-2 ring-white ring-offset-2 ring-offset-[#022c22] scale-105 shadow-md opacity-100 flex-shrink-0';
+                        btn.style.cssText = '';
+                    } else {
+                        btn.className = 'relative w-[62px] sm:w-[72px] md:w-[78px] lg:w-[82px] aspect-[16/10] rounded-lg sm:rounded-xl overflow-hidden cursor-pointer transition-all duration-300 opacity-55 hover:opacity-90 border border-white/30 flex-shrink-0';
+                        btn.style.cssText = '';
+                    }
+                }
+            });
+        }
+
+        window.setHeroPhoto = setHeroPhoto;
+        window.prevHeroPhoto = prevHeroPhoto;
+        window.nextHeroPhoto = nextHeroPhoto;
+        window.syncHeroBannerShowcase = syncHeroBannerShowcase;
+
+        // Interactive Profil Photo Slider (Ar-Rawdhah Style)
+        const profilPhotos = [
+            "https://res.cloudinary.com/wnfvwyak/image/upload/v1790918867/cxzwtkmktykpr69bfgod.jpg",
+            "https://res.cloudinary.com/wnfvwyak/image/upload/v1790920911/byr3zh2wjn2i69gh9pae.jpg",
+            "https://res.cloudinary.com/wnfvwyak/image/upload/v1790918503/rqytgghfzti7rflurav6.jpg"
+        ];
+        let currentProfilPhotoIdx = 0;
+
+        function setProfilPhoto(idx) {
+            if (idx < 0 || idx >= profilPhotos.length) idx = 0;
+            currentProfilPhotoIdx = idx;
+            const imgEl = document.getElementById('profil-slide-img');
+            const counterEl = document.getElementById('profil-counter-text');
+            const dotsContainer = document.getElementById('profil-dots-container');
+
+            if (imgEl) {
+                imgEl.style.opacity = '0.3';
+                setTimeout(() => {
+                    imgEl.src = profilPhotos[currentProfilPhotoIdx];
+                    imgEl.style.opacity = '1';
+                }, 150);
+            }
+
+            if (counterEl) {
+                counterEl.textContent = `${currentProfilPhotoIdx + 1} / ${profilPhotos.length}`;
+            }
+
+            if (dotsContainer) {
+                const buttons = dotsContainer.querySelectorAll('button');
+                buttons.forEach((btn, i) => {
+                    if (i === currentProfilPhotoIdx) {
+                        btn.className = 'h-2 rounded-full transition-all duration-300 w-6 bg-[#F47B20] shadow-sm';
+                    } else {
+                        btn.className = 'h-2 rounded-full transition-all duration-300 w-2 bg-white/60 hover:bg-white';
+                    }
+                });
+            }
+        }
+
+        function prevProfilPhoto() {
+            const nextIdx = (currentProfilPhotoIdx - 1 + profilPhotos.length) % profilPhotos.length;
+            setProfilPhoto(nextIdx);
+        }
+
+        function nextProfilPhoto() {
+            const nextIdx = (currentProfilPhotoIdx + 1) % profilPhotos.length;
+            setProfilPhoto(nextIdx);
+        }
+
+        window.setProfilPhoto = setProfilPhoto;
+        window.prevProfilPhoto = prevProfilPhoto;
+        window.nextProfilPhoto = nextProfilPhoto;
+

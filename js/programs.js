@@ -222,31 +222,89 @@
                 return;
             }
 
-            container.innerHTML = RUNTIME_PROGRAM_DATA.map(prog => {
+            const cleanStr = (s) => (s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+            container.innerHTML = RUNTIME_PROGRAM_DATA.slice(0, 4).map((prog, index) => {
                 const theme = getProgramUiTheme(prog);
-                return `
-                <div onclick="switchTab('${prog.id}')"
-                    class="group bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer">
-                    <div class="relative h-48 overflow-hidden">
-                        <img src="${prog.image}" alt="${prog.name}"
-                            class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                        <span
-                            class="absolute top-4 left-4 ${theme.berandaBadgeStyle} text-xs font-semibold px-3 py-1 rounded-full backdrop-blur">
-                            ${prog.badge}
-                        </span>
-                    </div>
-                    <div class="p-6 space-y-3">
-                        <h3 class="font-bold text-lg text-slate-900 dark:text-slate-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition">
-                            ${prog.name}</h3>
-                        <p class="text-xs text-slate-500 dark:text-slate-300 leading-relaxed">
-                            ${prog.description}
-                        </p>
-                        <ul class="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 pt-2">
-                            ${prog.highlights.slice(0, 3).map(item => `<li class="flex items-center gap-2">✓ ${item}</li>`).join('')}
-                        </ul>
-                    </div>
-                </div>
-            `}).join('');
+                const isPrimary = (index === 0);
+                const icon = theme.headerIcon || (
+                    prog.id === 'ma-tahfidz' ? 'fa-graduation-cap' :
+                    prog.id === 'tahfidz-anak' ? 'fa-book-quran' :
+                    prog.id === 'reguler-putra-putri' ? 'fa-book-open-reader' : 'fa-user-graduate'
+                );
+                const fallbackImg = 'https://images.unsplash.com/photo-1585036156171-384164a8c675?q=80&w=800&auto=format&fit=crop';
+                const imgSrc = prog.image || fallbackImg;
+
+                if (isPrimary) {
+                    return `
+                    <div onclick="switchTab('${prog.id}')" class="group relative rounded-2xl overflow-hidden flex flex-col justify-between cursor-pointer transition-all duration-300 hover-lift bg-[#022c22] text-white shadow-[0_12px_30px_rgba(2,44,34,0.28)] ring-2 ring-emerald-600/30">
+                        <!-- Foto Program -->
+                        <div class="relative h-44 sm:h-48 w-full overflow-hidden bg-slate-900">
+                            <img src="${imgSrc}" alt="${cleanStr(prog.name)}"
+                                referrerpolicy="no-referrer"
+                                onerror="this.onerror=null; this.src='${fallbackImg}';"
+                                class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none"></div>
+                            <div class="absolute top-3 left-3 z-10">
+                                <span class="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-emerald-300 border border-white/20 shadow-sm">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                    ${cleanStr(prog.badge || prog.name)}
+                                </span>
+                            </div>
+                        </div>
+                        <!-- Konten -->
+                        <div class="p-5 sm:p-6 flex-1 flex flex-col justify-between space-y-3">
+                            <div>
+                                <div class="flex items-center gap-3 mb-2.5">
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 bg-white/20 text-white ring-2 ring-white/30">
+                                        <i class="fa-solid ${icon} text-base transition-transform duration-300 group-hover:scale-110"></i>
+                                    </div>
+                                    <h3 class="text-base sm:text-[17px] font-bold leading-snug text-white">${cleanStr(prog.name)}</h3>
+                                </div>
+                                <p class="text-xs sm:text-[13px] leading-relaxed text-emerald-100/95 line-clamp-3">${cleanStr(prog.description)}</p>
+                            </div>
+                            <div class="pt-4 border-t border-white/10 flex items-center justify-between text-xs font-semibold">
+                                <span class="text-emerald-200">Lihat Kurikulum</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-emerald-200 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"></i>
+                            </div>
+                        </div>
+                    </div>`;
+                } else {
+                    return `
+                    <div onclick="switchTab('${prog.id}')" class="group relative rounded-2xl overflow-hidden flex flex-col justify-between cursor-pointer transition-all duration-300 hover-lift bg-white dark:bg-[#15202d] text-slate-800 dark:text-slate-100 border border-slate-200/90 dark:border-[#253447] shadow-[0_4px_16px_rgba(0,0,0,0.04)] hover:border-emerald-300 dark:hover:border-emerald-500/50 hover:shadow-[0_12px_28px_rgba(2,44,34,0.1)]">
+                        <!-- Foto Program -->
+                        <div class="relative h-44 sm:h-48 w-full overflow-hidden bg-slate-900">
+                            <img src="${imgSrc}" alt="${cleanStr(prog.name)}"
+                                referrerpolicy="no-referrer"
+                                onerror="this.onerror=null; this.src='${fallbackImg}';"
+                                class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none"></div>
+                            <div class="absolute top-3 left-3 z-10">
+                                <span class="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-emerald-300 border border-white/20 shadow-sm">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                    ${cleanStr(prog.badge || prog.name)}
+                                </span>
+                            </div>
+                        </div>
+                        <!-- Konten -->
+                        <div class="p-5 sm:p-6 flex-1 flex flex-col justify-between space-y-3">
+                            <div>
+                                <div class="flex items-center gap-3 mb-2.5">
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400 group-hover:bg-[#022c22] group-hover:text-white">
+                                        <i class="fa-solid ${icon} text-base transition-transform duration-300 group-hover:scale-110"></i>
+                                    </div>
+                                    <h3 class="text-base sm:text-[17px] font-bold leading-snug text-[#022c22] dark:text-white group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition">${cleanStr(prog.name)}</h3>
+                                </div>
+                                <p class="text-xs sm:text-[13px] leading-relaxed text-slate-600 dark:text-slate-300 line-clamp-3">${cleanStr(prog.description)}</p>
+                            </div>
+                            <div class="pt-4 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                                <span>Lihat Kurikulum</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"></i>
+                            </div>
+                        </div>
+                    </div>`;
+                }
+            }).join('');
         }
 
         function renderProgramPilihanGrid() {

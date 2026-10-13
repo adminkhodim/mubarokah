@@ -52,6 +52,49 @@
     opacity: 0;
   }
 
+  /* ========================================================================= */
+  /* SMOOTH SCROLL REVEAL ANIMATIONS (MUNCUL DARI BAWAH SECARA HALUS)          */
+  /* ========================================================================= */
+  html.has-scroll-anim .reveal-on-scroll,
+  html.has-scroll-anim .scroll-reveal {
+    opacity: 0;
+    transform: translateY(36px);
+    transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, transform;
+  }
+
+  html.has-scroll-anim .reveal-on-scroll.is-revealed,
+  html.has-scroll-anim .scroll-reveal.is-revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Stagger Delays for Cards & Child Elements */
+  html.has-scroll-anim .reveal-delay-1 { transition-delay: 0.08s; }
+  html.has-scroll-anim .reveal-delay-2 { transition-delay: 0.16s; }
+  html.has-scroll-anim .reveal-delay-3 { transition-delay: 0.24s; }
+  html.has-scroll-anim .reveal-delay-4 { transition-delay: 0.32s; }
+  html.has-scroll-anim .reveal-delay-5 { transition-delay: 0.40s; }
+
+  /* Subtle scale variation for cards if needed */
+  html.has-scroll-anim .reveal-scale {
+    transform: translateY(36px) scale(0.97);
+  }
+  html.has-scroll-anim .reveal-scale.is-revealed {
+    transform: translateY(0) scale(1);
+  }
+
+  /* Accessible fallback for reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    html.has-scroll-anim .reveal-on-scroll,
+    html.has-scroll-anim .scroll-reveal,
+    html.has-scroll-anim .reveal-scale {
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
+  }
+
   /* Utility Class no-scrollbar */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -389,5 +432,30 @@ body:has(#page-admin:not(.hidden)) footer {
 /* Sembunyikan bilah pratinjau peran pada dashboard utama agar ringkas identik Asnawiyyah */
 #admin-role-switcher-container {
   display: none !important;
+}
+
+/* ========================================================================= */
+/* CONTINUOUS SEAMLESS MARQUEE SLIDER FOR DEWAN GURU & TENAGA PENDIDIK      */
+/* ========================================================================= */
+@keyframes teacherMarqueeScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.teacher-marquee-container {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+.teacher-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: teacherMarqueeScroll 28s linear infinite;
+  will-change: transform;
+}
+
+.teacher-marquee-container:hover .teacher-marquee-track,
+.teacher-marquee-track:hover {
+  animation-play-state: paused !important;
 }
 

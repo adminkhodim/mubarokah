@@ -1,509 +1,499 @@
-        // ==================== PROGRAM DATA SOURCE (CANONICAL v1.0) ====================
-        const PROGRAM_DATA = [
-            {
-                id: "tahfidz-anak",
-                name: "Pesantren Tahfidz Anak",
-                badge: "Anak-Anak",
-                berandaBadgeStyle: "bg-emerald-800/90 text-white",
-                pilihanBadgeStyle: "bg-amber-500 text-brand-dark",
-                headerBadge: "Usia Sekolah Dasar / MI (6 – 12 Tahun)",
-                headerTheme: "from-brand-900 via-brand-800 to-emerald-800",
-                headerIcon: "fa-child-reaching",
-                image: "https://images.unsplash.com/photo-1585036156171-384164a8c675?q=80&w=800&auto=format&fit=crop",
-                description: "Pembentukan karakter dan hafalan Al-Qur'an sejak dini dengan metode fun & intensif.",
-                highlights: [
-                    "Target Hafalan 5–10 Juz",
-                    "Metode Fun Tahfidz & Kisah Nabi"
-                ],
-                detail: {
-                    tagline: "\"Membentuk Generasi Qur'ani Sejak Dini dengan Metode Khas, Ramah Anak, dan Berakhlak Mulia\"",
-                    summary: "Program khusus anak-anak yang memadukan pendidikan tahfidz Al-Qur'an intensif dengan pembentukan karakter/adab harian. Anak-anak dibimbing agar proses menghafal terasa menyenangkan (<span class=\"italic font-semibold text-brand-700\">fun & friendly environment</span>) tanpa mengabaikan kualitas tajwid dan keabsahan bacaan.",
-                    video: "https://www.youtube.com/embed/ZQZqPcAlrk0?rel=0",
-                    videoTitle: "Video Profil Program Tahfidz Anak",
-                    keunggulan: [
-                        {
-                            title: "Metode Bimbingan Intensif",
-                            desc: "Pendampingan <i>talaqqi</i> dan <i>muraja'ah</i> secara privat atau kelompok kecil agar hafalan kuat.",
-                            icon: "fa-book-quran",
-                            iconBg: "bg-brand-100 text-brand-700"
-                        },
-                        {
-                            title: "Kurikulum Adab & Fiqih Dasar",
-                            desc: "Selain menghafal, santri diajarkan tata cara ibadah harian, doa-doa, dan akhlakul karimah.",
-                            icon: "fa-hands-praying",
-                            iconBg: "bg-amber-100 text-amber-800"
-                        },
-                        {
-                            title: "Pendampingan Pengasuh",
-                            desc: "Pengawasan 24 jam oleh asatidz/asatidzah yang sabar dan berpengalaman mengasuh anak-anak.",
-                            icon: "fa-user-shield",
-                            iconBg: "bg-blue-100 text-blue-700"
-                        }
-                    ],
-                    targetOutput: [
-                        "Memiliki Aqidah yang benar.",
-                        "Mampu membaca Al Quran dengan baik dan benar.",
-                        "Memiliki hafalan Al-Quran dengan tahsin yang benar.",
-                        "Menguasai ilmu dasar Tahsin dan Tajwid Al-Qur'an.",
-                        "Mampu menghafal Dzikir serta doa-doa harian.",
-                        "Memiliki pondasi logika, pengetahuan umum dan kecakapan berbahasa yang baik."
-                    ],
-                    gallery: [
-                        {
-                            image: "https://images.unsplash.com/photo-1585036156171-384164a8c675?q=80&w=1200&auto=format&fit=crop",
-                            caption: "Suasana Bimbingan Tahfidz Anak",
-                            sliderId: "tahfidz-photo-slider"
-                        }
-                    ],
-                    fasilitas: [
-                        { text: "Asrama yang aman, bersih, dan ramah anak.", icon: "fa-bed", iconColor: "text-brand-700" },
-                        { text: "Ruang kelas / halaqah hafalan yang nyaman.", icon: "fa-chalkboard-user", iconColor: "text-brand-700" },
-                        { text: "Area bermain, olahraga, & refreshing pekanan.", icon: "fa-icons", iconColor: "text-brand-700" }
-                    ],
-                    prosedur: {
-                        items: [
-                            "Berusia Minimal 6 Tahun (Kelas 1 SD/MI)",
-                            "Melakukan registrasi pendaftaran secara Online terlebih dahulu melalui sistem PPDB kami.",
-                            "Validasi dan kelengkapan persyaratan dilaksanakan di kantor pesantren setelah berhasil mendaftar secara Online.",
-                            "Ta'aruf wali satri dan masuk pesantren sesuai tanggal masuk yang telah ditentukan."
-                        ],
-                        image: "https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=800&auto=format&fit=crop",
-                        imageAlt: "Santri Anak"
-                    },
-                    persyaratan: [
-                        {
-                            title: "Fotocopy Akta Kelahiran",
-                            desc: "Menyerahkan Fotocopy Akta Kelahiran sebanyak 1 lembar, serta menunjukkan Akta Kelahiran yang asli.",
-                            icon: "fa-copy"
-                        },
-                        {
-                            title: "Fotocopy Kartu Keluarga",
-                            desc: "Menyerahkan Fotocopy Kartu Keluarga Terbaru sebanyak 2 lembar.",
-                            icon: "fa-copy"
-                        },
-                        {
-                            title: "Pas Foto",
-                            desc: "Menyerahkan Pas foto berwarna Berpeci (PA) Berjilbab (PI) dengan ukuran 3x4 dan 2x3 Sebanyak 2 Lembar.",
-                            icon: "fa-camera"
-                        },
-                        {
-                            title: "Membayar Biaya Pendaftaran",
-                            desc: "Membayar biaya pendaftaran sebesar Rp.",
-                            icon: "fa-money-bill"
-                        }
-                    ],
-                    biaya: {
-                        pendaftaran: {
-                            nominal: "Rp.7.500.000",
-                            items: [
-                                "Pendaftaran",
-                                "Peralatan Tidur (Kasur)",
-                                "Peralatan Mandi",
-                                "Sewa Locker",
-                                "Seragam Pondok (6 Stel)",
-                                "Dana Pengembangan Pendidikan",
-                                "Syahriyah Bulan pertama",
-                                "Jariyah Pesantren"
-                            ]
-                        },
-                        syahriyah: {
-                            nominal: "Rp.900.000",
-                            items: [
-                                "Makan 3x",
-                                "Pendidikan",
-                                "Kebersihan",
-                                "Kesehatan",
-                                "Listrik & Air"
-                            ],
-                            excludedItems: [
-                                "Uang Saku"
-                            ]
-                        }
-                    },
-                    cta: {
-                        title: "Pendaftaran Santri Baru Telah Dibuka",
-                        description: "Segera daftarkan putra/putri Anda untuk mendapatkan bimbingan hafalan Al-Qur'an terbaik sejak dini.",
-                        waLink: "https://wa.me/6281234567890?text=Assalamu'alaikum,%20saya%20ingin%20konsultasi%20mengenai%20Program%20Tahfidz%20Anak",
-                        waBtnClass: "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400/30",
-                        waText: "Konsultasi via WhatsApp Admin Tahfidz Anak"
-                    }
+// ==================== PROGRAM DATA SOURCE (CANONICAL v2.0 - SYNCED WITH OFFICIAL DB) ====================
+const PROGRAM_DATA = [
+    {
+        "id": "ma-tahfidz",
+        "name": "MA Tahfidz",
+        "badge": "MA Tahfidz",
+        "image": "https://lh3.googleusercontent.com/d/1y7pB1cPvSRd9DJ2B7p5zHN2CZ_UhH-S2",
+        "description": "Pendidikan Menengah Atas unggulan memadukan kurikulum nasional dan nilai-nilai Al-Qur'an.",
+        "highlights": [
+            "Kurikulum Terintegrasi",
+            "Tahfidz & Adab"
+        ],
+        "detail": {
+            "tagline": "\"Membangun Fondasi Keilmuan dan Karakter Islami Sejak Dini\"",
+            "summary": "Program MA Tahfidz yang memadukan pendidikan formal (kurikulum nasional) dengan pendidikan agama Islam yang mendalam, termasuk tahfidz dasar dan pembentukan karakter/adab harian yang menyenangkan.",
+            "video": "https://www.youtube.com/embed/videoseries?list=PL_XQ&rel=0",
+            "videoTitle": "Video Profil MA Tahfidz",
+            "keunggulan": [
+                {
+                    "title": "Kurikulum Terpadu",
+                    "desc": "Memadukan materi umum dan diniyah dengan pendekatan belajar aktif dan menyenangkan.",
+                    "icon": "fa-book-quran",
+                    "iconBg": "bg-brand-100 text-brand-700"
+                },
+                {
+                    "title": "Program MA Tahfidz",
+                    "desc": "Bimbingan hafalan Al-Qur'an secara Intensif dan Terpadu.",
+                    "icon": "fa-scroll",
+                    "iconBg": "bg-amber-100 text-amber-800"
+                },
+                {
+                    "title": "Penguatan Adab Harian",
+                    "desc": "Menanamkan nilai-nilai akhlakul karimah dalam setiap aktivitas harian siswa.",
+                    "icon": "fa-star-and-crescent",
+                    "iconBg": "bg-emerald-100 text-emerald-800"
+                }
+            ],
+            "targetOutput": [
+                "Menguasai materi pendidikan dasar nasional dengan baik.",
+                "Mampu membaca Al-Qur'an dengan tartil.",
+                "Mendampingi menunju Hafalan 30 Juz.",
+                "Menjadikan adab Islami sebagai karakter harian.",
+                "Memiliki dasar-dasar kemandirian dan keberanian."
+            ],
+            "fasilitas": [
+                {
+                    "text": "Asrama Santri bersih dan Nyaman. Ruang belajar Intensif di lingkungan pesantren.",
+                    "icon": "fa-check",
+                    "iconColor": "text-brand-700"
+                }
+            ],
+            "gallery": [
+                {
+                    "sliderId": "galeri-ma-tahfidz-1",
+                    "image": "https://images.unsplash.com/photo-1585036156171-384164a8c675?q=80&w=1200&auto=format&fit=crop",
+                    "caption": "Kegiatan Belajar SD Islam Unggulan Asnawiyyah"
+                }
+            ],
+            "prosedur": {
+                "items": [],
+                "image": "https://images.unsplash.com/photo-1585036156171-384164a8c675?q=80&w=800&auto=format&fit=crop",
+                "imageAlt": "Prosedur PPDB"
+            },
+            "persyaratan": [
+                {
+                    "title": "Batas Usia",
+                    "desc": "Lulusan MTs/SMP pada bulan Juli tahun ajaran baru.",
+                    "icon": "fa-copy"
+                },
+                {
+                    "title": "Berkas Administrasi",
+                    "desc": "Fotokopi KK, Akte Kelahiran, dan Pas Foto ukuran 3x4.",
+                    "icon": "fa-copy"
+                },
+                {
+                    "title": "Kesiapan Mengikuti Program",
+                    "desc": "Bersedia mematuhi tata tertib sekolah dan program pembiasaan Islami.",
+                    "icon": "fa-copy"
+                }
+            ],
+            "biaya": {
+                "pendaftaran": {
+                    "nominal": "Rp.500.000",
+                    "note": "Dibayarkan sekali saat daftar ulang",
+                    "items": []
+                },
+                "syahriyah": {
+                    "nominal": "Rp.200.000",
+                    "note": "Iuran Rutin bulanan Santri",
+                    "items": [],
+                    "excludedItems": []
                 }
             },
-            {
-                id: "dewasa-putra",
-                name: "Pesantren Dewasa Putra",
-                badge: "Dewasa Putra",
-                berandaBadgeStyle: "bg-slate-900/90 text-white",
-                pilihanBadgeStyle: "bg-brand-600 text-white",
-                headerBadge: "Lulusan SMA / MA / Mahasiswa / Umum (Dewasa)",
-                headerTheme: "from-brand-900 via-brand-800 to-emerald-800",
-                headerIcon: "fa-user-graduate",
-                image: "https://images.unsplash.com/photo-1542810634-71277d95dcbb?q=80&w=800&auto=format&fit=crop",
-                description: "Pendalaman kitab kuning, tahsin Al-Qur'an, dan kajian syariah intensif khusus santri putra.",
-                highlights: [
-                    "Ijazah Sanad Tahfidz & Formal",
-                    "Lingkungan Bahasa Arab Aktif"
-                ],
-                detail: {
-                    tagline: "\"Mendidik Generasi Muda Putra yang Berjiwa Al-Qur'an, Menguasai Literasi Syariah, dan Berakhlak Mulia\"",
-                    summary: "Program karantina dan pembinaan intensif khusus santri putra dewasa yang memadukan tahfidz Al-Qur'an 30 juz, tahsin ber-sanad, pendalaman kitab turats (kitab kuning), serta pembentukan jiwa kepemimpinan Islam dan kedisiplinan beribadah.",
-                    video: "https://www.youtube.com/embed/ZQZqPcAlrk0?rel=0",
-                    videoTitle: "Video Profil Program Dewasa Putra",
-                    keunggulan: [
-                        {
-                            title: "Tahfidz & Tahsin Sanad",
-                            desc: "Setoran hafalan harian yang teratur dan bimbingan membaca Al-Qur'an dengan tajwid ber-sanad.",
-                            icon: "fa-book-quran",
-                            iconBg: "bg-brand-100 text-brand-700"
-                        },
-                        {
-                            title: "Kajian Kitab Turats",
-                            desc: "Pendalaman Fiqih, Nahwu-Shorof, Hadits, dan Tafsir Al-Qur'an secara bersistem dan mutashil.",
-                            icon: "fa-scroll",
-                            iconBg: "bg-amber-100 text-amber-800"
-                        },
-                        {
-                            title: "Kemandirian & Kepemimpinan",
-                            desc: "Pembekalan mental, kepemimpinan, dan kesiapan untuk berkhidmat kepada masyarakat luas.",
-                            icon: "fa-compass-drafting",
-                            iconBg: "bg-blue-100 text-blue-700"
-                        }
-                    ],
-                    targetOutput: [
-                        "Memiliki Aqidah Ahlussunnah wal Jama'ah yang lurus dan kuat.",
-                        "Mampu membaca dan menghafal Al-Qur'an secara tartil, fasih, dan ber-sanad.",
-                        "Menguasai dasar-dasar ilmu syariah dan literatur kitab kuning.",
-                        "Istiqamah dalam shalat berjamaah, zikir, dan wirid harian pesantren.",
-                        "Memiliki karakter kepemimpinan, kemandirian, dan etika Islami.",
-                        "Siap menjadi teladan serta pembimbing keagamaan di lingkungan masyarakat."
-                    ],
-                    gallery: [
-                        {
-                            image: "https://images.unsplash.com/photo-1542810634-71277d95dcbb?q=80&w=1200&auto=format&fit=crop",
-                            caption: "Suasana Pengajian Kitab & Tahfidz Dewasa Putra",
-                            sliderId: "dewasa-putra-photo-slider"
-                        }
-                    ],
-                    fasilitas: [
-                        { text: "Asrama khusus putra yang kondusif dan tertib.", icon: "fa-building", iconColor: "text-brand-700" },
-                        { text: "Masjid utama & ruang halaqah khusus santri dewasa.", icon: "fa-mosque", iconColor: "text-brand-700" },
-                        { text: "Perpustakaan kitab turats & fasilitas pendukung.", icon: "fa-book", iconColor: "text-brand-700" }
-                    ],
-                    prosedur: {
-                        items: [
-                            "Lulusan SMA / MA / Sederajat atau Usia Dewasa",
-                            "Melakukan registrasi pendaftaran secara Online terlebih dahulu melalui sistem PPDB kami.",
-                            "Validasi berkas dan tes wawancara / tes baca Al-Qur'an di kantor sekretariat pesantren.",
-                            "Orientasi santri baru dan penempatan kamar asrama sesuai jadwal yang ditentukan."
-                        ],
-                        image: "https://images.unsplash.com/photo-1542810634-71277d95dcbb?q=80&w=800&auto=format&fit=crop",
-                        imageAlt: "Santri Putra"
-                    },
-                    persyaratan: [
-                        {
-                            title: "Fotocopy KTP & Kartu Keluarga",
-                            desc: "Menyerahkan Fotocopy KTP pendaftar dan Kartu Keluarga masing-masing sebanyak 2 lembar.",
-                            icon: "fa-address-card"
-                        },
-                        {
-                            title: "Fotocopy Ijazah Terakhir",
-                            desc: "Menyerahkan Fotocopy Ijazah SMA/MA/Sederajat atau pendidikan terakhir sebanyak 2 lembar.",
-                            icon: "fa-graduation-cap"
-                        },
-                        {
-                            title: "Pas Foto",
-                            desc: "Menyerahkan Pas foto berwarna berpeci/kemeja putih ukuran 3x4 dan 2x3 sebanyak 2 lembar.",
-                            icon: "fa-camera"
-                        },
-                        {
-                            title: "Membayar Biaya Pendaftaran",
-                            desc: "Membayar biaya pendaftaran sesuai ketentuan yang berlaku.",
-                            icon: "fa-money-bill"
-                        }
-                    ],
-                    biaya: {
-                        pendaftaran: {
-                            nominal: "Rp.1.665.000",
-                            items: [
-                                "Pendaftaran",
-                                "Peralatan Tidur (Kasur)",
-                                "Peralatan Mandi",
-                                "Sewa Locker",
-                                "Seragam Pondok (6 Stel)",
-                                "Dana Pengembangan Pendidikan",
-                                "Syahriyah Bulan pertama",
-                                "Jariyah Pesantren"
-                            ]
-                        },
-                        syahriyah: {
-                            nominal: "Rp.380.000",
-                            items: [
-                                "Makan 3x",
-                                "Pendidikan",
-                                "Kebersihan",
-                                "Kesehatan",
-                                "Listrik & Air"
-                            ],
-                            excludedItems: [
-                                "Uang Saku"
-                            ]
-                        }
-                    },
-                    cta: {
-                        title: "Pendaftaran Santri Baru Telah Dibuka",
-                        description: "Bergabunglah bersama keluarga besar santri Dewasa Putra untuk menjadi muhafizh Al-Qur'an berkarakter mulia.",
-                        waLink: "https://wa.me/6281234567890?text=Assalamu'alaikum,%20saya%20ingin%20konsultasi%20mengenai%20Program%20Pesantren%20Dewasa%20Putra",
-                        waBtnClass: "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400/30",
-                        waText: "Konsultasi via WhatsApp Admin Dewasa Putra"
-                    }
-                }
-            },
-            {
-                id: "dewasa-putri",
-                name: "Pesantren Dewasa Putri",
-                badge: "Dewasa Putri",
-                berandaBadgeStyle: "bg-emerald-700/90 text-white",
-                pilihanBadgeStyle: "bg-purple-600 text-white",
-                headerBadge: "Lulusan SMA / MA / Mahasiswi / Umum (Dewasa)",
-                headerTheme: "from-brand-900 via-brand-800 to-purple-950",
-                headerIcon: "fa-person-dress",
-                headerCategoryColor: "text-purple-700",
-                image: "https://images.unsplash.com/photo-1584286595398-a59f21d313f5?q=80&w=800&auto=format&fit=crop",
-                description: "Program tahfidz, fikih wanita, dan pendalaman ilmu syariah dalam lingkungan asrama putri yang asri.",
-                highlights: [
-                    "Kompleks Asrama Khusus & Asri",
-                    "Program Pengkaderan Da'iyah"
-                ],
-                detail: {
-                    tagline: "\"Mencetak Muslimah Muhafizhah yang Bersyahsiyah Islamiyah, Menguasai Fikih Wanita, dan Berakhlak Mulia\"",
-                    summary: "Program khusus santriwati dewasa yang dirancang untuk percepatan hafalan Al-Qur'an, perbaikan kualitas bacaan (tahsin), kajian fikih nisa (fikih wanita), serta pembekalan adab dan kemandirian muslimah dalam lingkungan asrama putri yang asri dan terjaga.",
-                    video: "https://www.youtube.com/embed/ZQZqPcAlrk0?rel=0",
-                    videoTitle: "Video Profil Program Dewasa Putri",
-                    keunggulan: [
-                        {
-                            title: "Tahfidz & Tahsin Sanad",
-                            desc: "Metode <i>talaqqi</i> intensif bersama Ibu Nyai dan Asatidzah terpercaya secara disiplin.",
-                            icon: "fa-book-quran",
-                            iconBg: "bg-purple-100 text-purple-700"
-                        },
-                        {
-                            title: "Kajian Fikih Nisa & Adab",
-                            desc: "Pendalaman hukum-hukum kewanitaan, ibadah harian, serta etika kepribadian muslimah.",
-                            icon: "fa-person-breastfeeding",
-                            iconBg: "bg-amber-100 text-amber-800"
-                        },
-                        {
-                            title: "Lingkungan Steril & Asri",
-                            desc: "Asrama khusus putri dengan privasi terjaga, aman, dan iklim belajar yang menyenangkan.",
-                            icon: "fa-shield-cat",
-                            iconBg: "bg-emerald-100 text-emerald-700"
-                        }
-                    ],
-                    targetOutput: [
-                        "Memiliki Aqidah yang lurus dan pemahaman syariat yang benar.",
-                        "Mampu membaca dan menghafal Al-Qur'an secara fasih dan tartil.",
-                        "Menguasai Fikih Wanita (Fikih Nisa) dan tata cara ibadah praktis muslimah.",
-                        "Mampu mengamalkan doa-doa harian, zikir, dan wirid rutin santri.",
-                        "Memiliki kepribadian muslimah yang anggun, mandiri, dan berakhlakul karimah.",
-                        "Siap membina keluarga Qur'ani serta berperan aktif dalam syiar kebaikan."
-                    ],
-                    gallery: [
-                        {
-                            image: "https://images.unsplash.com/photo-1584286595398-a59f21d313f5?q=80&w=1200&auto=format&fit=crop",
-                            caption: "Suasana Bimbingan Tahfidz & Fikih Nisa Dewasa Putri",
-                            sliderId: "dewasa-putri-photo-slider"
-                        }
-                    ],
-                    fasilitas: [
-                        { text: "Asrama putri yang bersih, nyaman, dan terjaga.", icon: "fa-house-user", iconColor: "text-purple-700" },
-                        { text: "Majlis halaqah & ruang kelas khusus santriwati.", icon: "fa-chalkboard-user", iconColor: "text-purple-700" },
-                        { text: "Dapur mandiri & area penunjang kegiatan putri.", icon: "fa-kitchen-set", iconColor: "text-purple-700" }
-                    ],
-                    prosedur: {
-                        items: [
-                            "Lulusan SMA / MA / Sederajat atau Usia Dewasa",
-                            "Melakukan registrasi pendaftaran secara Online terlebih dahulu melalui sistem PPDB kami.",
-                            "Validasi berkas dan tes wawancara / tes baca Al-Qur'an secara luring/daring.",
-                            "Orientasi santriwati baru dan penempatan asrama putri sesuai jadwal yang ditentukan."
-                        ],
-                        image: "https://images.unsplash.com/photo-1584286595398-a59f21d313f5?q=80&w=800&auto=format&fit=crop",
-                        imageAlt: "Santriwati Putri"
-                    },
-                    persyaratan: [
-                        {
-                            title: "Fotocopy KTP & Kartu Keluarga",
-                            desc: "Menyerahkan Fotocopy KTP pendaftar dan Kartu Keluarga masing-masing sebanyak 2 lembar.",
-                            icon: "fa-address-card"
-                        },
-                        {
-                            title: "Fotocopy Ijazah Terakhir",
-                            desc: "Menyerahkan Fotocopy Ijazah SMA/MA/Sederajat atau pendidikan terakhir sebanyak 2 lembar.",
-                            icon: "fa-graduation-cap"
-                        },
-                        {
-                            title: "Pas Foto",
-                            desc: "Menyerahkan Pas foto berwarna berjilbab ukuran 3x4 dan 2x3 sebanyak 2 lembar.",
-                            icon: "fa-camera"
-                        },
-                        {
-                            title: "Membayar Biaya Pendaftaran",
-                            desc: "Membayar biaya pendaftaran sesuai ketentuan yang berlaku.",
-                            icon: "fa-money-bill"
-                        }
-                    ],
-                    biaya: {
-                        pendaftaran: {
-                            nominal: "Rp.1.800.000",
-                            items: [
-                                "Pendaftaran",
-                                "Peralatan Tidur (Kasur)",
-                                "Peralatan Mandi",
-                                "Sewa Locker",
-                                "Seragam Pondok Putri (6 Stel)",
-                                "Dana Pengembangan Pendidikan",
-                                "Syahriyah Bulan pertama",
-                                "Jariyah Pesantren"
-                            ]
-                        },
-                        syahriyah: {
-                            nominal: "Rp.405.000",
-                            items: [
-                                "Makan 3x",
-                                "Pendidikan & Bimbingan Asatidzah",
-                                "Kebersihan",
-                                "Kesehatan",
-                                "Listrik & Air"
-                            ],
-                            excludedItems: [
-                                "Uang Saku"
-                            ]
-                        }
-                    },
-                    cta: {
-                        title: "Pendaftaran Santriwati Baru Telah Dibuka",
-                        description: "Raih mahkota hafizhah dan ilmu syariah bersama keluarga besar santriwati Dewasa Putri.",
-                        waLink: "https://wa.me/6281234567890?text=Assalamu'alaikum,%20saya%20ingin%20konsultasi%20mengenai%20Program%20Pesantren%20Dewasa%20Putri",
-                        waBtnClass: "bg-purple-700 hover:bg-purple-600 text-white border-purple-400/30",
-                        waText: "Konsultasi via WhatsApp Admin Dewasa Putri"
-                    }
-                }
-            },
-            {
-                id: "sd-islam",
-                name: "SD Islam Unggulan",
-                badge: "SD Islam",
-                berandaBadgeStyle: "bg-blue-600/90 text-white",
-                pilihanBadgeStyle: "bg-blue-500 text-white",
-                headerBadge: "Usia Sekolah Dasar (6 – 12 Tahun)",
-                headerTheme: "from-blue-900 via-blue-800 to-cyan-800",
-                headerIcon: "fa-school",
-                headerCategoryColor: "text-blue-700",
-                image: "https://images.unsplash.com/photo-1585036156171-384164a8c675?q=80&w=800&auto=format&fit=crop",
-                description: "Pendidikan dasar unggulan memadukan kurikulum nasional dan nilai-nilai Al-Qur'an.",
-                highlights: [
-                    "Kurikulum Terintegrasi",
-                    "Tahfidz Dasar & Adab"
-                ],
-                detail: {
-                    tagline: "\"Membangun Fondasi Keilmuan dan Karakter Islami Sejak Dini\"",
-                    summary: "Program SD Islam Unggulan yang memadukan pendidikan formal (kurikulum nasional) dengan pendidikan agama Islam yang mendalam, termasuk tahfidz dasar dan pembentukan karakter/adab harian yang menyenangkan.",
-                    video: "https://www.youtube.com/embed/ZQZqPcAlrk0?rel=0",
-                    videoTitle: "Video Profil SD Islam Unggulan",
-                    keunggulan: [
-                        {
-                            title: "Kurikulum Terpadu",
-                            desc: "Memadukan materi umum dan diniyah dengan pendekatan belajar aktif dan menyenangkan.",
-                            icon: "fa-book-open",
-                            iconBg: "bg-blue-100 text-blue-700"
-                        },
-                        {
-                            title: "Program Tahfidz Dini",
-                            desc: "Bimbingan hafalan surah-surah pendek dan juz amma sejak dini.",
-                            icon: "fa-book-quran",
-                            iconBg: "bg-amber-100 text-amber-800"
-                        },
-                        {
-                            title: "Penguatan Adab Harian",
-                            desc: "Menanamkan nilai-nilai akhlakul karimah dalam setiap aktivitas harian siswa.",
-                            icon: "fa-child-reaching",
-                            iconBg: "bg-emerald-100 text-emerald-700"
-                        }
-                    ],
-                    targetOutput: [
-                        "Menguasai materi pendidikan dasar nasional dengan baik.",
-                        "Mampu membaca Al-Qur'an dengan tartil.",
-                        "Memiliki hafalan Juz 30 (Juz Amma).",
-                        "Menjadikan adab Islami sebagai karakter harian.",
-                        "Memiliki dasar-dasar kemandirian dan keberanian."
-                    ],
-                    gallery: [
-                        {
-                            image: "https://images.unsplash.com/photo-1585036156171-384164a8c675?q=80&w=1200&auto=format&fit=crop",
-                            caption: "Kegiatan Belajar Pendidikan Formal",
-                            sliderId: "sd-islam-photo-slider"
-                        }
-                    ],
-                    fasilitas: [
-                        { text: "Ruang kelas ber-AC, multimedia, dan nyaman.", icon: "fa-school", iconColor: "text-blue-700" },
-                        { text: "Area bermain dan olahraga yang aman.", icon: "fa-futbol", iconColor: "text-blue-700" },
-                        { text: "Perpustakaan mini dan sudut baca di setiap kelas.", icon: "fa-book", iconColor: "text-blue-700" }
-                    ],
-                    prosedur: {
-                        items: [
-                            "Anak usia minimal 6 tahun pada bulan Juli.",
-                            "Melakukan registrasi pendaftaran secara Online.",
-                            "Mengikuti tes observasi kesiapan belajar anak.",
-                            "Wawancara dengan wali murid."
-                        ],
-                        image: "https://images.unsplash.com/photo-1585036156171-384164a8c675?q=80&w=800&auto=format&fit=crop",
-                        imageAlt: "Siswa SD Islam Unggulan"
-                    },
-                    persyaratan: [
-                        {
-                            title: "Fotocopy Akte & KK",
-                            desc: "Menyerahkan Fotocopy Akte Kelahiran dan Kartu Keluarga masing-masing 2 lembar.",
-                            icon: "fa-address-card"
-                        },
-                        {
-                            title: "Pas Foto Berwarna",
-                            desc: "Menyerahkan Pas foto berwarna ukuran 3x4 sebanyak 4 lembar.",
-                            icon: "fa-camera"
-                        },
-                        {
-                            title: "Membayar Biaya Pendaftaran",
-                            desc: "Membayar biaya pendaftaran sesuai ketentuan.",
-                            icon: "fa-money-bill"
-                        }
-                    ],
-                    biaya: {
-                        pendaftaran: {
-                            nominal: "Rp.1.500.000",
-                            items: [
-                                "Pendaftaran & Observasi",
-                                "Seragam Sekolah (4 Stel)",
-                                "Buku Paket Semester 1",
-                                "Dana Pengembangan Sarana"
-                            ]
-                        },
-                        syahriyah: {
-                            nominal: "Rp.250.000",
-                            items: [
-                                "SPP Bulanan",
-                                "Ekstrakurikuler Dasar"
-                            ],
-                            excludedItems: [
-                                "Katering Makan Siang",
-                                "Antar Jemput"
-                            ]
-                        }
-                    },
-                    cta: {
-                        title: "Pendaftaran Siswa Baru SD Islam Telah Dibuka",
-                        description: "Daftarkan putra-putri Anda untuk mendapatkan pendidikan dasar unggulan yang memadukan keilmuan umum dan Al-Qur'an.",
-                        waLink: "https://wa.me/6281234567890?text=Assalamu'alaikum,%20saya%20ingin%20konsultasi%20mengenai%20Pendaftaran%20SD%20Islam%20Unggulan",
-                        waBtnClass: "bg-blue-700 hover:bg-blue-600 text-white border-blue-400/30",
-                        waText: "Konsultasi via WhatsApp"
-                    }
-                }
+            "cta": {
+                "title": "Pendaftaran Santri Baru Dibuka",
+                "description": "",
+                "waLink": "https://wa.me/6285741212946",
+                "waBtnClass": "bg-emerald-600 hover:bg-emerald-500 text-white",
+                "waText": "Konsultasi via WA"
             }
-        ];
+        }
+    },
+    {
+        "id": "tahfidz-anak",
+        "name": "Pesantren Tahfidz Anak",
+        "badge": "Anak-Anak",
+        "image": "https://lh3.googleusercontent.com/d/1hur-4m0AooKRUqJwwKKBXkaJ8LktC4i6",
+        "description": "Program khusus hafalan Al-Qur'an untuk anak-anak dengan metode seru dan menyenangkan.",
+        "highlights": [
+            "Metode Muri-Q & Tajwid Aisyah",
+            "Target 30 Juz Mutqin Usia Belia",
+            "Pendampingan Pengasuh 24 Jam"
+        ],
+        "detail": {
+            "tagline": "Mencetak Generasi Rabbani Berjiwa Qur'ani Sejak Dini",
+            "summary": "Program Pesantren Tahfidz Anak didesain khusus untuk membentuk karakter santri usia sekolah dasar agar mencintai Al-Qur'an melalui suasana belajar yang hangat, ramah anak, dan terstruktur. Fokus utama kami tidak hanya hafalan, tetapi juga pembentukan akhlakul karimah.",
+            "video": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+            "videoTitle": "Dokumentasi Kegiatan Santri Tahfidz Anak",
+            "keunggulan": [
+                {
+                    "title": "Metode Seru & Ramah Anak",
+                    "desc": "Menghafal dengan pendekatan fun learning, muraja'ah bersama, dan metode visual audio yang efektif.",
+                    "icon": "fa-book-quran",
+                    "iconBg": "bg-brand-100 text-brand-700"
+                },
+                {
+                    "title": "Target Mutqin 30 Juz",
+                    "desc": "Kurikulum bertahap yang disesuaikan dengan kemampuan anak tanpa tekanan psikologis berlebih.",
+                    "icon": "fa-scroll",
+                    "iconBg": "bg-amber-100 text-amber-800"
+                },
+                {
+                    "title": "Fasilitas Khusus Anak",
+                    "desc": "Kamar tidur ber-AC, tempat bermain edukatif, serta asupan gizi seimbang untuk tumbuh kembang.",
+                    "icon": "fa-star-and-crescent",
+                    "iconBg": "bg-emerald-100 text-emerald-800"
+                }
+            ],
+            "targetOutput": [
+                "Hafal 30 Juz Al-Qur'an dengan Tajwid & Makhraj yang Benar",
+                "Memiliki Kebiasaan Shalat Fardhu & Sunnah Berjamaah",
+                "Mampu Membaca Doa-Doa Harian & Adab Islama",
+                "Karakter Mandiri, Disiplin, dan Santun kepada Orang Tua",
+                "Khatam Ziyadah & Muraja'ah Rutin Setiap Pekan",
+                "Berprestasi dalam Musabaqah Hifdzil Qur'an (MHQ)"
+            ],
+            "fasilitas": [
+                {
+                    "text": "Gedung Asrama AC & Kasur Busa Berkualitas",
+                    "icon": "fa-check",
+                    "iconColor": "text-brand-700"
+                },
+                {
+                    "text": "Makan 3x Sehari Menu Seimbang & Higienis",
+                    "icon": "fa-check",
+                    "iconColor": "text-brand-700"
+                },
+                {
+                    "text": "Klinik Poskestren & Layanan Kesehatan Santri",
+                    "icon": "fa-check",
+                    "iconColor": "text-brand-700"
+                }
+            ],
+            "gallery": [
+                {
+                    "sliderId": "galeri-tahfidz-anak-1",
+                    "image": "https://lh3.googleusercontent.com/d/1qwLCzI8t7eXuBfnAhdSUyJ5ZUCUXqel9",
+                    "caption": "Setoran Hafalan Pagi Bersama Ustadz"
+                },
+                {
+                    "sliderId": "galeri-tahfidz-anak-2",
+                    "image": "https://lh3.googleusercontent.com/d/1OoR8jyrKYZjiIHRF3SRj8f3mEit88LM-",
+                    "caption": "Kegiatan Olahraga & Edukasi Luar Ruangan"
+                },
+                {
+                    "sliderId": "galeri-tahfidz-anak-3",
+                    "image": "https://lh3.googleusercontent.com/d/1vDnwASz0MDwPTNT2hwkG7n8boZLAIdM5",
+                    "caption": "Suasana Asrama yang Nyaman & Bersih"
+                }
+            ],
+            "prosedur": {
+                "items": [
+                    "Pendaftaran Online: Mengisi formulir calon santri melalui situs resmi PPDB.",
+                    "Tes Pemetaan (Observasi): Tes kelancaran membaca Al-Qur'an dan wawancara orang tua.",
+                    "Pengumuman Hasil: Pengumuman kelulusan melalui WhatsApp & Akun PPDB.",
+                    "Daftar Ulang & Masuk Asrama: Penyelesaian administrasi dan kedatangan santri baru."
+                ],
+                "image": "https://lh3.googleusercontent.com/d/16V_yh-qwzEmR4EVxXkBpI_-QjPN7wuVf",
+                "imageAlt": "Prosedur PPDB"
+            },
+            "persyaratan": [
+                {
+                    "title": "Berusia 7 - 12 Tahun",
+                    "desc": "Lulus atau sedang menempuh tingkat SD/MI sederajat.",
+                    "icon": "fa-copy"
+                },
+                {
+                    "title": "Fotokopi Akta & KK",
+                    "desc": "Menyerahkan dokumen administrasi kependudukan lengkap 2 lembar.",
+                    "icon": "fa-copy"
+                },
+                {
+                    "title": "Pas Foto Terbaru",
+                    "desc": "Foto berwarna 3x4 sebanyak 4 lembar berlatar biru.",
+                    "icon": "fa-copy"
+                },
+                {
+                    "title": "Surat Sehat Dokter",
+                    "desc": "Bebas dari penyakit menular atau kondisi kronis tertentu.",
+                    "icon": "fa-copy"
+                }
+            ],
+            "biaya": {
+                "pendaftaran": {
+                    "nominal": "Rp 250.000",
+                    "note": "Sekali saat pendaftaran",
+                    "items": []
+                },
+                "syahriyah": {
+                    "nominal": "Rp 1.200.000",
+                    "note": "Per bulan (Asrama + Makan + Pendidikan)",
+                    "items": [],
+                    "excludedItems": []
+                }
+            },
+            "cta": {
+                "title": "Ingin Anak Anda Hafal Al-Qur'an Sejak Dini?",
+                "description": "Segera daftarkan putra/putri Anda. Kuota terbatas untuk 30 santri baru setiap angkatan.",
+                "waLink": "https://wa.me/62882002478236?text=Halo%20Admin%2C%20saya%20ingin%20bertanya%20tentang%20Program%20Tahfidz%20Anak",
+                "waBtnClass": "bg-emerald-600 hover:bg-emerald-500 text-white",
+                "waText": "Konsultasi PPDB via WhatsApp"
+            }
+        }
+    },
+    {
+        "id": "reguler-putra-putri",
+        "name": "Pesantren Reguler Putra Putri",
+        "badge": "Reguler Putra Putri",
+        "image": "https://lh3.googleusercontent.com/d/1027DIX4V3hF2fuK2V5Sfk7i7nPpBOUNL",
+        "description": "Program intensif tahfidz dan pendalaman kitab kuning untuk santri dewasa putra.",
+        "highlights": [
+            "Kombinasi Tahfidz & Dirasah Islamiyah",
+            "Sanad Al-Qur'an s/d Rasulullah SAW",
+            "Lingkungan Kondusif & Bebas Gadget"
+        ],
+        "detail": {
+            "tagline": "Membentuk Huffazh Berwawasan Luas & Berakhlak Qur'ani",
+            "summary": "Program Dewasa Putra dirancang bagi lulusan SMP/SMA/Mahasiswa/Umum yang ingin fokus menghafal Al-Qur'an 30 Juz secara intensif disertai dengan pengusaan ilmu tajwid sanad, bahasa Arab dasar, dan pemahaman kitab-kitab turats (kitab kuning).",
+            "video": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+            "videoTitle": "Suasana Belajar & Setoran Santri Dewasa Putra",
+            "keunggulan": [
+                {
+                    "title": "Bimbingan Muqri' Bersanad",
+                    "desc": "Diampu langsung oleh ustadz pengajar yang memiliki sanad Al-Qur'an muttashil.",
+                    "icon": "fa-book-quran",
+                    "iconBg": "bg-brand-100 text-brand-700"
+                },
+                {
+                    "title": "Kurikulum Terintegrasi",
+                    "desc": "Perpaduan efisien antara program Ziyadah (hafalan baru), Muraja'ah, dan Kajian Fiqih/Nahwu.",
+                    "icon": "fa-scroll",
+                    "iconBg": "bg-amber-100 text-amber-800"
+                },
+                {
+                    "title": "Disiplin & Kemandirian High-Level",
+                    "desc": "Pola hidup terstruktur untuk melatih kedisiplinan, kepemimpinan, dan mental da'i.",
+                    "icon": "fa-star-and-crescent",
+                    "iconBg": "bg-emerald-100 text-emerald-800"
+                }
+            ],
+            "targetOutput": [
+                "Setoran 30 Juz Lulus Ujian Imtihan Sanad / Syahadah",
+                "Menguasai Ilmu Tajwid Qira'at Imam 'Ashim Riwayat Hafsh",
+                "Memahami Fiqih Ibadah Dasar & Bahasa Arab Praktis",
+                "Kesiapan Menjadi Imam Masjid & Pengajar Al-Qur'an",
+                "Tradisi Muraja'ah Mandiri Minimal 1-2 Juz Per Hari",
+                "Karakter Beradab, Tawadhu, dan Berjiwa Kepemimpinan"
+            ],
+            "fasilitas": [
+                {
+                    "text": "Asrama Khusus Putra dengan Lemari & Kasur Mandiri",
+                    "icon": "fa-check",
+                    "iconColor": "text-brand-700"
+                },
+                {
+                    "text": "Masjid Utama 2 Lantai untuk Halaqah & Shalat",
+                    "icon": "fa-check",
+                    "iconColor": "text-brand-700"
+                },
+                {
+                    "text": "Perpustakaan Kitab Turats & Ruang Baca",
+                    "icon": "fa-check",
+                    "iconColor": "text-brand-700"
+                }
+            ],
+            "gallery": [
+                {
+                    "sliderId": "galeri-reguler-putra-putri-1",
+                    "image": "https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=800&auto=format&fit=crop",
+                    "caption": "Halaqah Tahfidz Pagi di Masjid Utama"
+                },
+                {
+                    "sliderId": "galeri-reguler-putra-putri-2",
+                    "image": "https://images.unsplash.com/photo-1580582932707-520aed937b7b?q=80&w=800&auto=format&fit=crop",
+                    "caption": "Kajian Kitab Kuning Bersama Pengasuh"
+                },
+                {
+                    "sliderId": "galeri-reguler-putra-putri-3",
+                    "image": "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=800&auto=format&fit=crop",
+                    "caption": "Kegiatan Rihlah & Olahraga Sunnah"
+                }
+            ],
+            "prosedur": {
+                "items": [
+                    "Pendaftaran Online: Mengisi biodata diri dan memilih opsi program dewasa putra.",
+                    "Tes Tahsin & Al-Qur'an: Ujian kelancaran membaca Al-Qur'an secara virtual/luring.",
+                    "Wawancara Komitmen: Wawancara komitmen menghafal dan menaati tata tertib pesantren.",
+                    "Daftar Ulang: Penyelesaian administrasi dan orientasi kehidupan asrama."
+                ],
+                "image": "https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=800&auto=format&fit=crop",
+                "imageAlt": "Prosedur PPDB"
+            },
+            "persyaratan": [
+                {
+                    "title": "Usia Minimal 13 Tahun",
+                    "desc": "Lulusan SMP/SMA/Mahasiswa/Umum yang bertekad kuat.",
+                    "icon": "fa-copy"
+                },
+                {
+                    "title": "Lancar Membaca Al-Qur'an",
+                    "desc": "Memiliki dasar tajwid & makhraj membaca Al-Qur'an yang cukup.",
+                    "icon": "fa-copy"
+                },
+                {
+                    "title": "Dokumen Identitas",
+                    "desc": "Fotokopi KTP/Kartu Pelajar, KK, dan ijazah terakhir.",
+                    "icon": "fa-copy"
+                },
+                {
+                    "title": "Surat Komitmen Waktu",
+                    "desc": "Bersedia mengikuti seluruh rangkaian program tanpa gangguan.",
+                    "icon": "fa-copy"
+                }
+            ],
+            "biaya": {
+                "pendaftaran": {
+                    "nominal": "Rp 300.000",
+                    "note": "Sekali saat pendaftaran & tes",
+                    "items": []
+                },
+                "syahriyah": {
+                    "nominal": "Rp 1.100.000",
+                    "note": "Per bulan (Asrama + Makan 3x + Bimbingan)",
+                    "items": [],
+                    "excludedItems": []
+                }
+            },
+            "cta": {
+                "title": "Siap Menjadi Hafiz Al-Qur'an Berpendidikan & Bersanad?",
+                "description": "Segera daftarkan diri Anda atau putra Anda. Gelombang pendaftaran aktif dibuka.",
+                "waLink": "https://wa.me/6285741212946?text=Halo%20Admin%2C%20saya%20ingin%20bertanya%20tentang%20Program%20Reguler%20Putra",
+                "waBtnClass": "bg-emerald-600 hover:bg-emerald-500 text-white",
+                "waText": "Daftar Dewasa Putra via WA"
+            }
+        }
+    },
+    {
+        "id": "tahfidz-dewasa",
+        "name": "Pesantren Tahfidz Dewasa",
+        "badge": "Tahfidz Dewasa",
+        "image": "https://lh3.googleusercontent.com/d/1BU9wUZdtI3eCG4fzchEWiJefR4O2gtbh",
+        "description": "Program intensif tahfidz Al-Qur'an dan fiqih wanita untuk santri dewasa.",
+        "highlights": [
+            "Asrama Khusus & Steril Khusus Putri",
+            "Bimbingan Musyrifah Hafizhah Bersanad",
+            "Kajian Nisa'iyyah & Keterampilan Muslimah"
+        ],
+        "detail": {
+            "tagline": "Mencetak Haafizhah Shalihat, Pendidik Generasi Masa Depan",
+            "summary": "Program Dewasa Putri difokuskan untuk membantu mahasiswi/alumni/umum menghafal Al-Qur'an dalam lingkungan asrama putri yang sangat aman, privat, dan kondusif. Didampingi ustadzah haafizhah bersanad serta dibekali pemahaman fikih wanita.",
+            "video": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+            "videoTitle": "Profil & Kegiatan Asrama Tahfidz Dewasa Putri",
+            "keunggulan": [
+                {
+                    "title": "Privasi & Keamanan Terjaga",
+                    "desc": "Lingkungan kompleks putri terpisah penuh dengan sistem keamanan 24 jam.",
+                    "icon": "fa-book-quran",
+                    "iconBg": "bg-brand-100 text-brand-700"
+                },
+                {
+                    "title": "Musyrifah Pengajar Khusus Putri",
+                    "desc": "Halaqah setoran dan muraja'ah diampu oleh ustadzah lulusan Al-Azhar & Pesantren Sanad.",
+                    "icon": "fa-scroll",
+                    "iconBg": "bg-amber-100 text-amber-800"
+                },
+                {
+                    "title": "Kajian Fiqih An-Nisa'",
+                    "desc": "Kajian rutin hukum-hukum wanita, kepengurusan rumah tangga muslimah, & adab.",
+                    "icon": "fa-star-and-crescent",
+                    "iconBg": "bg-emerald-100 text-emerald-800"
+                }
+            ],
+            "targetOutput": [
+                "Khatam Hafalan 30 Juz Lulus Syahadah & Ujian Ziyadah",
+                "Pemahaman Tajwid Rasm Utsmani & Fiqih Wanita (Fiqh An-Nisa')",
+                "Kebiasaan Ibadah Sunnah, Shalat Malam, & Dzikir Al-Ma'tsurat",
+                "Keterampilan Tata Kelola Kebersihan, Tata Busana, & Adab",
+                "Kemampuan Menjadi Pengajar Al-Qur'an di Rumah / Lembaga",
+                "Karakter Anggun, Guarded, dan Berilmu Syar'i"
+            ],
+            "fasilitas": [
+                {
+                    "text": "Asrama Putri Privat Khusus Ber-AC & Kamar Mandi Dalam",
+                    "icon": "fa-check",
+                    "iconColor": "text-brand-700"
+                },
+                {
+                    "text": "Dapur Mandiri & Katering Pilihan Sehat",
+                    "icon": "fa-check",
+                    "iconColor": "text-brand-700"
+                },
+                {
+                    "text": "Aula Pertemuan & Ruang Belajar Nyaman",
+                    "icon": "fa-check",
+                    "iconColor": "text-brand-700"
+                }
+            ],
+            "gallery": [
+                {
+                    "sliderId": "galeri-dewasa-putri-1",
+                    "image": "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=800&auto=format&fit=crop",
+                    "caption": "Halaqah Setoran Putri Bersama Ustadzah"
+                },
+                {
+                    "sliderId": "galeri-dewasa-putri-2",
+                    "image": "https://lh3.googleusercontent.com/d/1CehPTakxt3v5fk6gds5j43OUxtMlc3cU",
+                    "caption": "Kajian Rutin Fiqih Wanita di Aula Putri"
+                },
+                {
+                    "sliderId": "galeri-dewasa-putri-3",
+                    "image": "https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=800&auto=format&fit=crop",
+                    "caption": "Taman Asrama Putri yang Asri"
+                }
+            ],
+            "prosedur": {
+                "items": [
+                    "Pendaftaran Online: Mengisi formulir calon santri putri di portal PPDB.",
+                    "Tes Tahsin Virtual: Ujian kelancaran membaca Al-Qur'an oleh Tim Ustadzah.",
+                    "Wawancara Orang Tua/Wali: Wawancara kesiapan serta komitmen asrama.",
+                    "Masuk Asrama Putri: Penyelesaian registrasi dan penempatan kamar."
+                ],
+                "image": "https://lh3.googleusercontent.com/d/16N91839M3MLwwyHJ7-yR6__BVO_rmo0m",
+                "imageAlt": "Prosedur PPDB"
+            },
+            "persyaratan": [
+                {
+                    "title": "Usia Minimal 13 Tahun",
+                    "desc": "SMP/SMA/Mahasiswi/Umum yang berkeinginan kuat.",
+                    "icon": "fa-copy"
+                },
+                {
+                    "title": "Lancar Membaca Al-Qur'an",
+                    "desc": "Memiliki dasar tajwid membaca Al-Qur'an yang baik.",
+                    "icon": "fa-copy"
+                },
+                {
+                    "title": "Dokumen Administrasi",
+                    "desc": "Fotokopi KTP/KK/Kartu Pelajar & Pas Foto Jilbab Rapi.",
+                    "icon": "fa-copy"
+                },
+                {
+                    "title": "Izin Orang Tua/Suami",
+                    "desc": "Mendapat persetujuan tertulis dari wali resmi.",
+                    "icon": "fa-copy"
+                }
+            ],
+            "biaya": {
+                "pendaftaran": {
+                    "nominal": "Rp 300.000",
+                    "note": "Sekali saat pendaftaran & tes",
+                    "items": []
+                },
+                "syahriyah": {
+                    "nominal": "Rp 1.150.000",
+                    "note": "Per bulan (Asrama AC + Makan 3x + Bimbingan)",
+                    "items": [],
+                    "excludedItems": []
+                }
+            },
+            "cta": {
+                "title": "Wujudkan Cita-Cita Menjadi Haafizhah Qur'an?",
+                "description": "Daftarkan diri Anda di Program Pesantren Dewasa Putri.",
+                "waLink": "https://wa.me/6285741212946?text=Halo%20Admin%2C%20saya%20ingin%20bertanya%20tentang%20Program%20Dewasa%20Putri",
+                "waBtnClass": "bg-emerald-600 hover:bg-emerald-500 text-white",
+                "waText": "Daftar Dewasa Putri via WA"
+            }
+        }
+    }
+];

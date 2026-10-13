@@ -15,5 +15,8 @@
   },
   "devDependencies": {
     "tailwindcss": "^3.4.19"
+  },
+  "dependencies": {
+    "pdf-lib": "^1.17.1"
   }
 }
