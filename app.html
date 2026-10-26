@@ -8833,6 +8833,10 @@
                                             <option value="ALL">Semua Muhafiz</option>
                                         </select>
 
+                                        <button type="button" onclick="openTahfidzCurriculumModal()" class="tahfidz-admin-action px-2.5 py-1.5 bg-cyan-50 hover:bg-cyan-100 text-cyan-800 dark:bg-cyan-950/60 dark:hover:bg-cyan-900/60 dark:text-cyan-300 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 border border-cyan-200 dark:border-cyan-800/60 active:scale-95" title="Kelola Urutan Kurikulum Setoran Hafalan Per Program">
+                                            <i class="fa-solid fa-graduation-cap text-xs text-cyan-600"></i>
+                                            <span>Atur Kurikulum</span>
+                                        </button>
                                         <button type="button" onclick="openTahfidzHalaqahModal(1)" class="tahfidz-admin-action px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 dark:text-emerald-300 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 border border-emerald-200 dark:border-emerald-800/60 active:scale-95" title="Kelola Halaqah & Plotting Santri">
                                             <i class="fa-solid fa-users-gear text-xs"></i>
                                             <span>Kelola Halaqah</span>
@@ -18227,6 +18231,142 @@
         </div>
     </div>
 
+    <!-- ==================== MODAL TAHFIDZ: KELOLA KURIKULUM & URUTAN 30 JUZ ==================== -->
+    <div id="modal-tahfidz-curriculum" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 hidden">
+        <div class="bg-white dark:bg-[#15202d] w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-[#253447] flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200">
+            <!-- Modal Header -->
+            <div class="px-5 py-3.5 bg-slate-50 dark:bg-[#1c2836] border-b border-slate-100 dark:border-[#253447] flex justify-between items-center shrink-0">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-9 h-9 rounded-2xl bg-cyan-100 text-cyan-700 dark:bg-cyan-950/80 dark:text-cyan-300 flex items-center justify-center font-bold text-sm shadow-sm">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                            <span>Kelola Kurikulum & Urutan Setoran Hafalan</span>
+                            <span id="curriculum-active-program-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-800 dark:bg-cyan-950/80 dark:text-cyan-300">MA Tahfidz</span>
+                        </h3>
+                        <p class="text-[11px] text-slate-400">Atur urutan alur setoran 30 Juz Al-Qur'an per Program Pesantren</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeTahfidzCurriculumModal()" class="w-8 h-8 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-[#253447] flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-4 sm:p-5 overflow-y-auto space-y-4 text-xs flex-1 custom-scrollbar">
+                <!-- Row 1: Pilih Program Pesantren -->
+                <div class="bg-slate-50 dark:bg-[#1c2836] p-3.5 rounded-2xl border border-slate-200 dark:border-[#283a4e] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <label class="text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider block mb-1">
+                            <i class="fa-solid fa-layer-group text-cyan-600 mr-1.5"></i>Pilih Program Pesantren:
+                        </label>
+                        <p class="text-[11px] text-slate-400">Kurikulum yang diatur akan diterapkan otomatis pada seluruh santri di program ini</p>
+                    </div>
+                    <div class="min-w-[220px]">
+                        <select id="curriculum-program-select" onchange="onCurriculumProgramChange(this.value)" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#15202d] text-slate-800 dark:text-slate-100 font-bold text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                            <!-- Populated dynamically via JS -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Row 2: Preset Cepat -->
+                <div>
+                    <label class="text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider block mb-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-amber-500 mr-1.5"></i>Pilih Model / Preset Kurikulum:
+                    </label>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <!-- Preset A Card -->
+                        <div onclick="applyCurriculumPreset('PRESET_A')" id="card-preset-A" class="p-3 rounded-2xl border-2 cursor-pointer transition relative hover:shadow-sm">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-extrabold text-xs text-slate-800 dark:text-slate-100">Preset A (Tradisi Pesantren)</span>
+                                <span id="badge-check-preset-A" class="w-4 h-4 rounded-full bg-cyan-600 text-white flex items-center justify-center text-[9px] hidden"><i class="fa-solid fa-check"></i></span>
+                            </div>
+                            <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-snug">Diawali Juz 30 (Juz 'Amma), lalu berurutan maju Juz 1 s/d 29.</p>
+                            <span class="inline-block mt-2 px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-cyan-700 dark:text-cyan-300">Anak & Pemula</span>
+                        </div>
+
+                        <!-- Preset B Card -->
+                        <div onclick="applyCurriculumPreset('PRESET_B')" id="card-preset-B" class="p-3 rounded-2xl border-2 cursor-pointer transition relative hover:shadow-sm">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-extrabold text-xs text-slate-800 dark:text-slate-100">Preset B (Mundur–Maju)</span>
+                                <span id="badge-check-preset-B" class="w-4 h-4 rounded-full bg-cyan-600 text-white flex items-center justify-center text-[9px] hidden"><i class="fa-solid fa-check"></i></span>
+                            </div>
+                            <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-snug">Juz 30 s/d 21 (10 Juz Akhir), lalu dilanjutkan Juz 1 s/d 20.</p>
+                            <span class="inline-block mt-2 px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-purple-700 dark:text-purple-300">Remaja</span>
+                        </div>
+
+                        <!-- Preset C Card -->
+                        <div onclick="applyCurriculumPreset('PRESET_C')" id="card-preset-C" class="p-3 rounded-2xl border-2 cursor-pointer transition relative hover:shadow-sm">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-extrabold text-xs text-slate-800 dark:text-slate-100">Preset C (Berurutan Maju)</span>
+                                <span id="badge-check-preset-C" class="w-4 h-4 rounded-full bg-cyan-600 text-white flex items-center justify-center text-[9px] hidden"><i class="fa-solid fa-check"></i></span>
+                            </div>
+                            <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-snug">Mulai urut mushaf dari Juz 1 s/d Juz 30.</p>
+                            <span class="inline-block mt-2 px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-emerald-700 dark:text-emerald-300">MA & Dewasa</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 3: Visualisasi & Reordering 30 Juz -->
+                <div class="space-y-2">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pt-1">
+                        <div>
+                            <span class="text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider block">
+                                <i class="fa-solid fa-arrow-down-1-9 text-cyan-600 mr-1.5"></i>Urutan 30 Juz Setoran:
+                            </span>
+                            <span class="text-[10px] text-slate-400">Gunakan tombol panah ⬅️ ➡️ pada tiap kartu untuk menyesuaikan urutan secara kustom</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" onclick="reverseCurriculumOrder()" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] dark:hover:bg-[#253447] text-[10px] font-semibold text-slate-600 dark:text-slate-300 transition flex items-center gap-1" title="Balik Urutan">
+                                <i class="fa-solid fa-arrow-right-arrow-left text-[9px]"></i>
+                                <span>Balik Urutan</span>
+                            </button>
+                            <button type="button" onclick="resetCurriculumOrderToDefault()" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] dark:hover:bg-[#253447] text-[10px] font-semibold text-slate-600 dark:text-slate-300 transition flex items-center gap-1" title="Reset Urutan">
+                                <i class="fa-solid fa-rotate-left text-[9px]"></i>
+                                <span>Reset Default</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Container Grid 30 Juz -->
+                    <div id="curriculum-juz-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-2 p-2.5 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200 dark:border-[#283a4e] max-h-72 overflow-y-auto custom-scrollbar">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Row 4: Ringkasan Alur Setoran -->
+                <div class="p-3 rounded-2xl bg-cyan-50/60 dark:bg-cyan-950/30 border border-cyan-100 dark:border-cyan-900/40">
+                    <span class="text-[10px] font-bold text-cyan-800 dark:text-cyan-300 uppercase block mb-1">
+                        <i class="fa-solid fa-route mr-1"></i>Ringkasan Alur Setoran:
+                    </span>
+                    <p id="curriculum-preview-text" class="text-xs font-mono font-bold text-cyan-950 dark:text-cyan-200 leading-relaxed break-words">
+                        <!-- Populated by JS -->
+                    </p>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-5 py-3.5 bg-slate-50 dark:bg-[#1c2836] border-t border-slate-100 dark:border-[#253447] flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="copyCurriculumToAllPrograms()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-[#253447] dark:hover:bg-[#2e4056] text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition flex items-center gap-1.5" title="Salin urutan ini ke semua program pesantren">
+                        <i class="fa-solid fa-copy text-xs text-slate-500"></i>
+                        <span>Terapkan ke Semua Program</span>
+                    </button>
+                </div>
+                <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    <button type="button" onclick="closeTahfidzCurriculumModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-[#253447] text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition">
+                        Batal
+                    </button>
+                    <button type="button" id="btn-save-tahfidz-curriculum" onclick="saveTahfidzCurriculumSettings()" class="px-5 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5 active:scale-95">
+                        <i class="fa-solid fa-floppy-disk" id="btn-save-curriculum-icon"></i>
+                        <span id="btn-save-curriculum-text">Simpan Kurikulum</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ==================== MODAL TPQ: TARGET INDIVIDUAL ==================== -->
     <div id="modal-tpq-target"
         class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 md:p-4 hidden">
@@ -21406,7 +21546,7 @@
     <script src="js/alumni.js"></script>
     <script src="js/auth.js?v=30"></script>
     <script src="js/pegawai.js?v=30"></script>
-    <script src="js/tahfidz.js?v=30"></script>
+    <script src="js/tahfidz.js?v=31"></script>
     <script src="js/tpq.js?v=31"></script>
     <script src="js/sorogan.js?v=30"></script>
     <script src="js/presensi.js?v=30"></script>

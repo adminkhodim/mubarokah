@@ -186,13 +186,490 @@ const SURAH_JUZ_REFERENCE = {
     30: "An-Naba' 1 - An-Nas 6 (Juz 'Amma)"
 };
 
-// Urutan Kurikulum Tahfidz Pesantren: Juz 30, kemudian Juz 1 s/d 29 (Khatam di Juz 29 Hlm 20)
-const JUZ_CURRICULUM_ORDER = [
-    30,
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-    11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-    21, 22, 23, 24, 25, 26, 27, 28, 29
-];
+// Model / Preset Kurikulum 30 Juz PPTQ Roudlotul Mubarokah
+const TAHFIDZ_CURRICULUM_PRESETS = {
+    PRESET_A: {
+        id: 'PRESET_A',
+        name: 'Preset A (Tradisi Pesantren)',
+        badge: 'Anak & Pemula',
+        desc: 'Diawali Juz 30 (Juz \'Amma), lalu berurutan maju Juz 1 s/d 29.',
+        order: [
+            30,
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+            11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+            21, 22, 23, 24, 25, 26, 27, 28, 29
+        ]
+    },
+    PRESET_B: {
+        id: 'PRESET_B',
+        name: 'Preset B (Mundur–Maju)',
+        badge: 'Remaja',
+        desc: 'Juz 30 s/d 21 (10 Juz Akhir), lalu dilanjutkan Juz 1 s/d 20.',
+        order: [
+            30, 29, 28, 27, 26, 25, 24, 23, 22, 21,
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+            11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+        ]
+    },
+    PRESET_C: {
+        id: 'PRESET_C',
+        name: 'Preset C (Berurutan Maju)',
+        badge: 'MA & Dewasa',
+        desc: 'Mulai urut mushaf dari Juz 1 s/d Juz 30.',
+        order: [
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+            11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+            21, 22, 23, 24, 25, 26, 27, 28, 29, 30
+        ]
+    }
+};
+
+const TAHFIDZ_CURRICULUM_STORAGE_KEY = 'MUBAROKAH_TAHFIDZ_CURRICULUM_PROGRAMS_V1';
+
+// Default Fallback Global (Preset A: Juz 30 lalu Juz 1 s/d 29)
+const JUZ_CURRICULUM_ORDER = [...TAHFIDZ_CURRICULUM_PRESETS.PRESET_A.order];
+
+// Active State for Curriculum Modal
+let activeCurriculumProgram = 'MA Tahfidz';
+let activeCurriculumOrder = [...TAHFIDZ_CURRICULUM_PRESETS.PRESET_A.order];
+
+/**
+ * Mengambil map konfigurasi kurikulum per program dari localStorage
+ */
+function getTahfidzCurriculumMap() {
+    try {
+        const raw = localStorage.getItem(TAHFIDZ_CURRICULUM_STORAGE_KEY);
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === 'object') return parsed;
+        }
+    } catch (e) {
+        console.warn("Gagal parse kurikulum dari localStorage:", e);
+    }
+    return {};
+}
+
+/**
+ * Mendapatkan array 30 Juz kurikulum untuk program tertentu
+ * Otomatis memetakan preset kurikulum bawaan:
+ * - MA Tahfidz / Dewasa -> PRESET_C (Maju 1 s/d 30)
+ * - Remaja -> PRESET_B (Mundur-Maju: 30-21 lalu 1-20)
+ * - Anak / Pemula -> PRESET_A (Juz 30 lalu 1 s/d 29)
+ * Jika admin telah mengatur khusus di menu Kurikulum, preferensi admin yang digunakan.
+ */
+function getCurriculumOrderForProgram(programName) {
+    const map = getTahfidzCurriculumMap();
+    const pName = (programName || '').trim();
+    if (pName && map[pName] && Array.isArray(map[pName].order) && map[pName].order.length === 30) {
+        return map[pName].order;
+    }
+    if (pName) {
+        const matchKey = Object.keys(map).find(k => k.toLowerCase() === pName.toLowerCase());
+        if (matchKey && Array.isArray(map[matchKey].order) && map[matchKey].order.length === 30) {
+            return map[matchKey].order;
+        }
+    }
+
+    // Default kurikulum bawaan per Program Pesantren PPTQ Roudlotul Mubarokah
+    const lower = pName.toLowerCase();
+    if (lower.includes('ma tahfidz') || lower.includes('dewasa') || lower.includes('takhassus')) {
+        return [...TAHFIDZ_CURRICULUM_PRESETS.PRESET_C.order];
+    }
+    if (lower.includes('remaja')) {
+        return [...TAHFIDZ_CURRICULUM_PRESETS.PRESET_B.order];
+    }
+    if (lower.includes('anak') || lower.includes('pemula') || lower.includes('dasar')) {
+        return [...TAHFIDZ_CURRICULUM_PRESETS.PRESET_A.order];
+    }
+
+    return [...TAHFIDZ_CURRICULUM_PRESETS.PRESET_A.order];
+}
+
+/**
+ * Mendapatkan nama Program Pesantren santri secara akurat
+ * Mengutamakan program tersimpan dan cross-reference ke Master Data Santri
+ */
+function getTahfidzStudentProgram(st) {
+    if (!st) return 'Tahfidz';
+
+    // 1. Cek langsung properti program pada objek santri
+    const directProgram = st.program || st.programPesantren || (st.student && (st.student.program || st.student.programPesantren));
+    if (directProgram && typeof directProgram === 'string' && directProgram.trim() !== '' && directProgram.trim().toLowerCase() !== 'bil hifdhi' && directProgram.trim().toLowerCase() !== 'bil hifdzi') {
+        return directProgram.trim();
+    }
+
+    // 2. Cross-reference ke memory adminStudentsData jika tersedia
+    const targetId = String(st.studentId || st.nis || (st.student && (st.student.studentId || st.student.nis)) || '').trim().toLowerCase();
+    const targetNis = String(st.nis || (st.student && st.student.nis) || '').trim().toLowerCase();
+
+    if (typeof window !== 'undefined' && Array.isArray(window.adminStudentsData) && (targetId || targetNis)) {
+        const found = window.adminStudentsData.find(s => {
+            const sId = String(s.studentId || s.id || '').trim().toLowerCase();
+            const sNis = String(s.nis || '').trim().toLowerCase();
+            return (targetId && (sId === targetId || sNis === targetId)) ||
+                   (targetNis && (sNis === targetNis || sId === targetNis));
+        });
+        if (found && (found.program || found.programPesantren)) {
+            return (found.program || found.programPesantren).trim();
+        }
+    }
+
+    // 3. Cross-reference ke cache localStorage mubarokah_admin_students
+    try {
+        const cached = localStorage.getItem('mubarokah_admin_students') || localStorage.getItem('ASNAWIYYAH_STUDENTS_CACHE');
+        if (cached && (targetId || targetNis)) {
+            const list = JSON.parse(cached);
+            if (Array.isArray(list)) {
+                const found = list.find(s => {
+                    const sId = String(s.studentId || s.id || '').trim().toLowerCase();
+                    const sNis = String(s.nis || '').trim().toLowerCase();
+                    return (targetId && (sId === targetId || sNis === targetId)) ||
+                           (targetNis && (sNis === targetNis || sId === targetNis));
+                });
+                if (found && (found.program || found.programPesantren)) {
+                    return (found.program || found.programPesantren).trim();
+                }
+            }
+        }
+    } catch (e) {}
+
+    // 4. Fallback ke kategori halaqah jika ada
+    if (st.kategori && typeof st.kategori === 'string' && st.kategori.trim() !== '' && st.kategori !== 'Semua Kategori') {
+        return st.kategori.trim();
+    }
+
+    return 'Tahfidz';
+}
+
+/**
+ * Daftar program pesantren yang tersedia untuk pengaturan kurikulum
+ */
+function getCurriculumAvailablePrograms() {
+    let list = [];
+    if (typeof PROGRAM_DATA !== 'undefined' && Array.isArray(PROGRAM_DATA)) {
+        list = PROGRAM_DATA.map(p => ({ id: p.id, name: p.name }));
+    }
+    if (!Array.isArray(list) || list.length === 0) {
+        list = [
+            { id: 'prog-ma-tahfidz', name: 'MA Tahfidz' },
+            { id: 'prog-pesantren-tahfidz-anak', name: 'Pesantren Tahfidz Anak' },
+            { id: 'prog-pesantren-tahfidz-dewasa', name: 'Pesantren Tahfidz Dewasa' },
+            { id: 'prog-pesantren-reguler', name: 'Pesantren Reguler Putra Putri' }
+        ];
+    }
+    return list;
+}
+
+/**
+ * Buka modal kelola kurikulum
+ */
+function openTahfidzCurriculumModal() {
+    const modal = document.getElementById('modal-tahfidz-curriculum');
+    if (!modal) return;
+
+    const progSelect = document.getElementById('curriculum-program-select');
+    const programs = getCurriculumAvailablePrograms();
+
+    if (progSelect && programs.length > 0) {
+        progSelect.innerHTML = programs.map(p => {
+            const name = p.name || p.nama || p.id;
+            return `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`;
+        }).join('');
+
+        // Pilih program pertama jika belum ada yang terpilih
+        if (!activeCurriculumProgram || !programs.some(p => (p.name || p.nama) === activeCurriculumProgram)) {
+            activeCurriculumProgram = programs[0].name || programs[0].nama || 'MA Tahfidz';
+        }
+        progSelect.value = activeCurriculumProgram;
+    } else if (progSelect) {
+        activeCurriculumProgram = 'MA Tahfidz';
+        progSelect.innerHTML = `<option value="MA Tahfidz">MA Tahfidz</option>`;
+    }
+
+    loadCurriculumForSelectedProgram(activeCurriculumProgram);
+    modal.classList.remove('hidden');
+}
+
+/**
+ * Tutup modal kelola kurikulum
+ */
+function closeTahfidzCurriculumModal() {
+    const modal = document.getElementById('modal-tahfidz-curriculum');
+    if (modal) modal.classList.add('hidden');
+}
+
+/**
+ * Handler saat admin mengganti pilihan program di dropdown
+ */
+function onCurriculumProgramChange(progName) {
+    activeCurriculumProgram = (progName || '').trim();
+    loadCurriculumForSelectedProgram(activeCurriculumProgram);
+}
+
+/**
+ * Memuat konfigurasi kurikulum untuk program terpilih
+ */
+function loadCurriculumForSelectedProgram(progName) {
+    const badge = document.getElementById('curriculum-active-program-badge');
+    if (badge) badge.innerText = progName || 'Tahfidz';
+
+    // Ambil order aktif untuk program ini
+    activeCurriculumOrder = [...getCurriculumOrderForProgram(progName)];
+
+    // Render ulang kartu preset highlight, grid 30 juz, dan ringkasan
+    updateCurriculumPresetHighlights();
+    renderCurriculumGrid();
+    updateCurriculumPreviewText();
+}
+
+/**
+ * Deteksi dan beri highlight pada kartu preset yang cocok dengan order aktif
+ */
+function updateCurriculumPresetHighlights() {
+    const cardA = document.getElementById('card-preset-A');
+    const cardB = document.getElementById('card-preset-B');
+    const cardC = document.getElementById('card-preset-C');
+    const checkA = document.getElementById('badge-check-preset-A');
+    const checkB = document.getElementById('badge-check-preset-B');
+    const checkC = document.getElementById('badge-check-preset-C');
+
+    const isMatch = (presetOrder) => {
+        if (!Array.isArray(activeCurriculumOrder) || activeCurriculumOrder.length !== 30) return false;
+        return presetOrder.every((j, idx) => j === activeCurriculumOrder[idx]);
+    };
+
+    const isA = isMatch(TAHFIDZ_CURRICULUM_PRESETS.PRESET_A.order);
+    const isB = isMatch(TAHFIDZ_CURRICULUM_PRESETS.PRESET_B.order);
+    const isC = isMatch(TAHFIDZ_CURRICULUM_PRESETS.PRESET_C.order);
+
+    const activeClass = "p-3 rounded-2xl border-2 border-cyan-500 bg-cyan-50/70 dark:bg-cyan-950/40 cursor-pointer transition relative shadow-sm";
+    const inactiveClass = "p-3 rounded-2xl border-2 border-slate-200 dark:border-[#283a4e] bg-white dark:bg-[#15202d] cursor-pointer transition relative hover:shadow-sm";
+
+    if (cardA) cardA.className = isA ? activeClass : inactiveClass;
+    if (cardB) cardB.className = isB ? activeClass : inactiveClass;
+    if (cardC) cardC.className = isC ? activeClass : inactiveClass;
+
+    if (checkA) checkA.classList.toggle('hidden', !isA);
+    if (checkB) checkB.classList.toggle('hidden', !isB);
+    if (checkC) checkC.classList.toggle('hidden', !isC);
+}
+
+/**
+ * Terapkan preset kurikulum (PRESET_A, PRESET_B, atau PRESET_C)
+ */
+function applyCurriculumPreset(presetKey) {
+    if (!TAHFIDZ_CURRICULUM_PRESETS[presetKey]) return;
+    activeCurriculumOrder = [...TAHFIDZ_CURRICULUM_PRESETS[presetKey].order];
+    updateCurriculumPresetHighlights();
+    renderCurriculumGrid();
+    updateCurriculumPreviewText();
+}
+
+/**
+ * Render Grid 30 Juz interaktif dengan kontrol geser (reordering)
+ */
+function renderCurriculumGrid() {
+    const grid = document.getElementById('curriculum-juz-grid');
+    if (!grid) return;
+
+    if (!Array.isArray(activeCurriculumOrder) || activeCurriculumOrder.length !== 30) {
+        activeCurriculumOrder = [...TAHFIDZ_CURRICULUM_PRESETS.PRESET_A.order];
+    }
+
+    grid.innerHTML = activeCurriculumOrder.map((juz, idx) => {
+        const surahInfo = SURAH_JUZ_REFERENCE[juz] || '';
+        const shortSurah = surahInfo.split('-')[0].trim();
+        const isFirst = idx === 0;
+        const isLast = idx === activeCurriculumOrder.length - 1;
+
+        return `
+        <div class="p-2 rounded-xl bg-white dark:bg-[#15202d] border border-slate-200 dark:border-[#283a4e] flex flex-col justify-between shadow-xs transition hover:border-cyan-400 group">
+            <div class="flex items-center justify-between mb-1">
+                <span class="w-5 h-5 rounded-full bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300 flex items-center justify-center font-bold text-[10px]">
+                    ${idx + 1}
+                </span>
+                <span class="font-extrabold text-xs text-slate-800 dark:text-slate-100">
+                    Juz ${juz}
+                </span>
+            </div>
+            <p class="text-[9px] text-slate-400 truncate mb-2" title="${escapeHtml(surahInfo)}">
+                ${escapeHtml(shortSurah)}
+            </p>
+            <div class="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-[#253447]">
+                <button type="button" onclick="moveCurriculumJuz(${idx}, -1)" ${isFirst ? 'disabled class="opacity-20 cursor-not-allowed text-slate-400 p-1"' : 'class="p-1 text-slate-500 hover:text-cyan-600 dark:text-slate-400 dark:hover:text-cyan-300 transition active:scale-90"'} title="Geser ke kiri / urutan sebelumnya">
+                    <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                </button>
+                <span class="text-[9px] text-slate-400 font-mono">Ke-${idx + 1}</span>
+                <button type="button" onclick="moveCurriculumJuz(${idx}, 1)" ${isLast ? 'disabled class="opacity-20 cursor-not-allowed text-slate-400 p-1"' : 'class="p-1 text-slate-500 hover:text-cyan-600 dark:text-slate-400 dark:hover:text-cyan-300 transition active:scale-90"'} title="Geser ke kanan / urutan selanjutnya">
+                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </button>
+            </div>
+        </div>
+        `;
+    }).join('');
+}
+
+/**
+ * Pindahkan / tukar posisi juz di index dengan index + direction
+ */
+function moveCurriculumJuz(index, direction) {
+    const targetIdx = index + direction;
+    if (targetIdx < 0 || targetIdx >= activeCurriculumOrder.length) return;
+
+    // Swap elemen
+    const temp = activeCurriculumOrder[index];
+    activeCurriculumOrder[index] = activeCurriculumOrder[targetIdx];
+    activeCurriculumOrder[targetIdx] = temp;
+
+    updateCurriculumPresetHighlights();
+    renderCurriculumGrid();
+    updateCurriculumPreviewText();
+}
+
+/**
+ * Balik urutan 30 Juz
+ */
+function reverseCurriculumOrder() {
+    activeCurriculumOrder.reverse();
+    updateCurriculumPresetHighlights();
+    renderCurriculumGrid();
+    updateCurriculumPreviewText();
+}
+
+/**
+ * Reset urutan kembali ke Default (Preset A)
+ */
+function resetCurriculumOrderToDefault() {
+    applyCurriculumPreset('PRESET_A');
+}
+
+/**
+ * Perbarui teks pratinjau ringkasan alur
+ */
+function updateCurriculumPreviewText() {
+    const preview = document.getElementById('curriculum-preview-text');
+    if (!preview) return;
+
+    if (!Array.isArray(activeCurriculumOrder) || activeCurriculumOrder.length === 0) {
+        preview.innerText = "-";
+        return;
+    }
+
+    preview.innerHTML = activeCurriculumOrder.map((j, idx) => {
+        return `<span class="inline-block px-1.5 py-0.5 m-0.5 rounded bg-cyan-100/70 dark:bg-cyan-900/50 text-cyan-900 dark:text-cyan-200 text-[10px]">${idx + 1}. Juz ${j}</span>`;
+    }).join(' <i class="fa-solid fa-arrow-right text-[8px] text-cyan-400 mx-0.5"></i> ');
+}
+
+/**
+ * Simpan pengaturan kurikulum untuk program aktif
+ */
+async function saveTahfidzCurriculumSettings() {
+    if (!activeCurriculumProgram) {
+        if (typeof showToast === 'function') showToast("⚠️ Pilih program pesantren terlebih dahulu.");
+        return;
+    }
+
+    // Validasi 30 juz unik & lengkap
+    const setJuz = new Set(activeCurriculumOrder.map(Number));
+    if (setJuz.size !== 30 || activeCurriculumOrder.length !== 30) {
+        if (typeof showToast === 'function') showToast("⚠️ Urutan kurikulum harus memuat seluruh 30 Juz (1 s/d 30) tanpa duplikat.");
+        return;
+    }
+
+    const btn = document.getElementById('btn-save-tahfidz-curriculum');
+    const icon = document.getElementById('btn-save-curriculum-icon');
+    const text = document.getElementById('btn-save-curriculum-text');
+
+    if (btn) btn.disabled = true;
+    if (icon) icon.className = "fa-solid fa-spinner fa-spin";
+    if (text) text.innerText = "Menyimpan...";
+
+    try {
+        const curMap = getTahfidzCurriculumMap();
+        curMap[activeCurriculumProgram] = {
+            order: [...activeCurriculumOrder],
+            updatedAt: new Date().toISOString()
+        };
+
+        // 1. Simpan ke localStorage
+        localStorage.setItem(TAHFIDZ_CURRICULUM_STORAGE_KEY, JSON.stringify(curMap));
+
+        // 2. Dual-write ke Google Apps Script backend jika online
+        if (typeof apiPost === 'function') {
+            try {
+                apiPost('saveTahfidzCurriculumSettings', {
+                    curriculumMap: curMap
+                }).catch(e => console.warn("[API POST CURRICULUM WARN]", e));
+            } catch (apiErr) {}
+        }
+
+        // 3. Perbarui tampilan UI tabel santri
+        if (typeof renderTahfidzStudentTable === 'function') {
+            renderTahfidzStudentTable();
+        }
+
+        if (typeof showToast === 'function') {
+            showToast(`✅ Kurikulum program "${activeCurriculumProgram}" berhasil disimpan!`);
+        } else {
+            alert(`Kurikulum program "${activeCurriculumProgram}" berhasil disimpan!`);
+        }
+
+        closeTahfidzCurriculumModal();
+    } catch (err) {
+        console.error("Gagal simpan kurikulum:", err);
+        if (typeof showToast === 'function') {
+            showToast(`❌ Terjadi kendala saat menyimpan: ${err.message || err}`);
+        }
+    } finally {
+        if (btn) btn.disabled = false;
+        if (icon) icon.className = "fa-solid fa-floppy-disk";
+        if (text) text.innerText = "Simpan Kurikulum";
+    }
+}
+
+/**
+ * Salin dan terapkan urutan kurikulum aktif ke seluruh program pesantren
+ */
+function copyCurriculumToAllPrograms() {
+    if (!confirm(`Terapkan urutan kurikulum ini ke SELURUH program pesantren?`)) {
+        return;
+    }
+
+    const programs = getCurriculumAvailablePrograms();
+    const curMap = getTahfidzCurriculumMap();
+
+    programs.forEach(p => {
+        const name = p.name || p.nama || p.id;
+        if (name) {
+            curMap[name] = {
+                order: [...activeCurriculumOrder],
+                updatedAt: new Date().toISOString()
+            };
+        }
+    });
+
+    localStorage.setItem(TAHFIDZ_CURRICULUM_STORAGE_KEY, JSON.stringify(curMap));
+
+    if (typeof apiPost === 'function') {
+        try {
+            apiPost('saveTahfidzCurriculumSettings', {
+                curriculumMap: curMap
+            }).catch(e => console.warn("[API POST CURRICULUM WARN]", e));
+        } catch (apiErr) {}
+    }
+
+    if (typeof renderTahfidzStudentTable === 'function') {
+        renderTahfidzStudentTable();
+    }
+
+    if (typeof showToast === 'function') {
+        showToast("✅ Berhasil menerapkan kurikulum ke seluruh Program Pesantren!");
+    } else {
+        alert("Berhasil menerapkan kurikulum ke seluruh Program Pesantren!");
+    }
+
+    closeTahfidzCurriculumModal();
+}
 
 // Metadata Lengkap 114 Surah Al-Qur'an (Jumlah Ayat, Halaman Standar Mushaf Pojok, & Pemetaan Juz)
 const QURAN_114_SURAHS = [
@@ -313,10 +790,11 @@ const QURAN_114_SURAHS = [
 ];
 
 /**
- * Mendapatkan indeks urutan rank kurikulum tahfidz (0 = Juz 30 ... 29 = Juz 20)
+ * Mendapatkan indeks urutan rank kurikulum tahfidz (0 s/d 29) berdasarkan program santri
  */
-function getJuzCurriculumIndex(juz) {
-    const idx = JUZ_CURRICULUM_ORDER.indexOf(Number(juz));
+function getJuzCurriculumIndex(juz, programName = null) {
+    const order = getCurriculumOrderForProgram(programName);
+    const idx = order.indexOf(Number(juz));
     return idx !== -1 ? idx : 0;
 }
 
@@ -336,13 +814,13 @@ function parseTahfidzLatestPage(halVal) {
 }
 
 /**
- * Menghitung capaian kumulatif tuntas (halaman) & persentase berbasis kurikulum
+ * Menghitung capaian kumulatif tuntas (halaman) & persentase berbasis kurikulum program
  */
-function getCurriculumProgress(juz, hal) {
-    const r = getJuzCurriculumIndex(juz);
+function getCurriculumProgress(juz, hal, programName = null) {
+    const r = getJuzCurriculumIndex(juz, programName);
     const h = parseTahfidzLatestPage(hal);
     const totalTuntas = r * 20 + h;
-    const isKhatam = (Number(juz) === 29 && h >= 20) || totalTuntas >= 600;
+    const isKhatam = (r >= 29 && h >= 20) || totalTuntas >= 600;
     const percent = isKhatam ? 100 : Math.min(100, Math.max(1, Math.round((totalTuntas / 600) * 100)));
     return { rank: r, totalTuntas, percent, isKhatam };
 }
@@ -355,12 +833,13 @@ function getCurriculumProgress(juz, hal) {
 function calculateTahfidzMetricsHelper(options = {}) {
     const currentJuz = Number(options.currentJuz || 1);
     const currentHal = Number(options.currentHal || 1);
+    const programName = options.programName || null;
     const stats = options.stats || {};
     const riwayat = options.riwayat || [];
     const target = options.target || {};
 
     // 1. Capaian Juz Sekarang
-    const curProg = getCurriculumProgress(currentJuz, currentHal);
+    const curProg = getCurriculumProgress(currentJuz, currentHal, programName);
     const percent = stats.progressPercent || curProg.percent;
 
     // 2. Total Juz Kurikulum yang Ditempuh (Opsi 1: Menampilkan total juz yang sudah dilewati sesuai kurikulum)
@@ -375,7 +854,7 @@ function calculateTahfidzMetricsHelper(options = {}) {
         let maxHlmZiyadah = 1;
         ziyadahLogs.forEach(log => {
             const j = Number(log.juz || 1);
-            const rk = getJuzCurriculumIndex(j);
+            const rk = getJuzCurriculumIndex(j, programName);
             const h = parseTahfidzLatestPage(log.halamanList);
             if (rk > maxRankZiyadah || (rk === maxRankZiyadah && h > maxHlmZiyadah)) {
                 maxRankZiyadah = rk;
@@ -1171,9 +1650,10 @@ function renderTahfidzStudentTable() {
             const cap = st.capaian || {};
             const mur = st.murojaah || {};
 
+            const studentProgram = getTahfidzStudentProgram(st);
             const currentJuz = Number(cap.juzAktif) || Number(st.progress?.currentJuz) || 30;
             const currentHal = Number(cap.halamanTerakhir) || Number(st.progress?.currentHalaman) || 1;
-            const curProg = getCurriculumProgress(currentJuz, currentHal);
+            const curProg = getCurriculumProgress(currentJuz, currentHal, studentProgram);
             const isKhatam = Boolean(st.progress?.isKhatam) || curProg.isKhatam || (Number(cap.totalHalamanTuntas || st.progress?.totalHalamanTuntas || 0) >= 600);
             const percent = isKhatam ? 100 : curProg.percent;
             const onTrackStatus = st.progress?.onTrackStatus || 'Belum Setor';
@@ -1203,11 +1683,19 @@ function renderTahfidzStudentTable() {
                         </div>
                         <div class="min-w-0 flex-1">
                             <h4 class="font-extrabold text-xs text-slate-800 dark:text-slate-100 truncate" title="${escapeHtml(st.name)}">${escapeHtml(st.name)}</h4>
-                            <p class="text-[9.5px] text-slate-400 truncate">NIS: ${escapeHtml(st.nis || '-')} • Bil Hifdhi</p>
-                            <span class="inline-flex items-center gap-1 px-1.5 py-0.2 mt-0.5 rounded text-[8.5px] font-bold max-w-full truncate ${inHal ? 'bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300' : 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40'}" title="${escapeHtml(halaqahName)}">
-                                <span class="w-1.5 h-1.5 rounded-full shrink-0 ${inHal ? 'bg-emerald-500' : 'bg-amber-400'}"></span>
-                                <span class="truncate">${escapeHtml(halaqahName)}</span>
-                            </span>
+                            <p class="text-[9.5px] text-slate-400 truncate">NIS: ${escapeHtml(st.nis || '-')} • <span class="font-bold text-emerald-700 dark:text-emerald-400">${escapeHtml(studentProgram)}</span></p>
+                            <div class="mt-0.5 flex items-center gap-1.5 flex-wrap">
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[8.5px] font-bold max-w-full truncate ${inHal ? 'bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300' : 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40'}" title="${escapeHtml(halaqahName)}">
+                                    <span class="w-1.5 h-1.5 rounded-full shrink-0 ${inHal ? 'bg-emerald-500' : 'bg-amber-400'}"></span>
+                                    <span class="truncate">${escapeHtml(halaqahName)}</span>
+                                </span>
+                                ${isExcused ? `
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8.5px] font-black ${presStatus === 'SAKIT' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-800' : (presStatus === 'PULANG' ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300 border border-purple-300 dark:border-purple-800' : 'bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-300 dark:border-blue-800')}" title="${escapeHtml(presData?.keterangan || presStatus)}">
+                                        <i class="fa-solid ${presStatus === 'SAKIT' ? 'fa-notes-medical' : (presStatus === 'PULANG' ? 'fa-house-user' : 'fa-clipboard-user')} text-[7.5px]"></i>
+                                        <span>${presStatus === 'SAKIT' ? '🏥 Sakit' : (presStatus === 'PULANG' ? '🏠 Pulang' : '📝 Izin')}</span>
+                                    </span>
+                                ` : ''}
+                            </div>
                         </div>
                     </div>
                 </td>
@@ -1349,9 +1837,10 @@ function renderTahfidzStudentTable() {
             const cap = st.capaian || {};
             const mur = st.murojaah || {};
 
+            const studentProgram = getTahfidzStudentProgram(st);
             const currentJuz = Number(cap.juzAktif) || Number(st.progress?.currentJuz) || 30;
             const currentHal = Number(cap.halamanTerakhir) || Number(st.progress?.currentHalaman) || 1;
-            const curProg = getCurriculumProgress(currentJuz, currentHal);
+            const curProg = getCurriculumProgress(currentJuz, currentHal, studentProgram);
             const isKhatam = Boolean(st.progress?.isKhatam) || curProg.isKhatam || (Number(cap.totalHalamanTuntas || st.progress?.totalHalamanTuntas || 0) >= 600);
             const percent = isKhatam ? 100 : curProg.percent;
             const targetZ = st.target?.ziyadahSesi || 1;
@@ -1378,7 +1867,14 @@ function renderTahfidzStudentTable() {
                         </div>
                         <div class="min-w-0">
                             <h4 class="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">${escapeHtml(st.name)}</h4>
-                            <p class="text-[10px] text-slate-400">NIS: ${escapeHtml(st.nis || '-')} • <span class="${inHal ? 'text-emerald-600 font-semibold' : 'text-amber-600 dark:text-amber-400 font-semibold'}">${escapeHtml(halaqahName)}</span> ${isExcused ? `<span class="ml-1 px-1.5 py-0.2 rounded text-[8px] font-black ${presStatus === 'SAKIT' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300' : (presStatus === 'PULANG' ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300')}">${presStatus === 'SAKIT' ? '🏥 Sakit' : (presStatus === 'PULANG' ? '🏠 Pulang' : '📝 Izin')}</span>` : ''}</p>
+                            <p class="text-[10px] text-slate-400">NIS: ${escapeHtml(st.nis || '-')} • <span class="font-bold text-emerald-700 dark:text-emerald-400">${escapeHtml(studentProgram)}</span></p>
+                            <div class="mt-0.5 flex items-center gap-1.5 text-[9px] flex-wrap">
+                                <span class="inline-flex items-center gap-1 font-semibold ${inHal ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}">
+                                    <span class="w-1.5 h-1.5 rounded-full shrink-0 ${inHal ? 'bg-emerald-500' : 'bg-amber-400'}"></span>
+                                    <span class="truncate">${escapeHtml(halaqahName)}</span>
+                                </span>
+                                ${isExcused ? `<span class="ml-1 px-1.5 py-0.2 rounded text-[8px] font-black ${presStatus === 'SAKIT' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300' : (presStatus === 'PULANG' ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300')}">${presStatus === 'SAKIT' ? '🏥 Sakit' : (presStatus === 'PULANG' ? '🏠 Pulang' : '📝 Izin')}</span>` : ''}
+                            </div>
                         </div>
                     </div>
                     <button type="button" onclick="openTahfidzCatatModal('${st.studentId}')" class="px-2.5 py-1 bg-emerald-600 text-white font-bold text-xs rounded-lg shadow-sm">
@@ -2703,8 +3199,9 @@ async function openTahfidzStudentDetail(studentId, viewerRole = null) {
         const elAvatar = document.getElementById('tahfidz-detail-avatar');
         const halaqahName = existingStudent.halaqah?.namaHalaqah || existingStudent.halaqah || 'Halaqah Utama';
 
+        const progName = getTahfidzStudentProgram(existingStudent);
         if (elName) elName.innerText = existingStudent.name || "Santri";
-        if (elNis) elNis.innerText = `NIS: ${existingStudent.nis || '-'} • Bil Hifdhi • ${escapeHtml(halaqahName)}`;
+        if (elNis) elNis.innerText = `NIS: ${existingStudent.nis || '-'} • ${progName} • ${escapeHtml(halaqahName)}`;
         if (elAvatar) {
             const initials = (existingStudent.name || 'Santri').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
             elAvatar.innerHTML = existingStudent.photoUrl ? `<img src="${escapeHtml(existingStudent.photoUrl)}" class="w-full h-full object-cover rounded-2xl">` : initials;
@@ -3058,8 +3555,9 @@ function renderTahfidzStudentDetailView() {
     const elAvatar = document.getElementById('tahfidz-detail-avatar');
     const halaqahName = st.halaqah?.namaHalaqah || st.halaqah || 'Halaqah Utama';
 
+    const progName = getTahfidzStudentProgram(st);
     if (elName) elName.innerText = st.name || "Santri";
-    if (elNis) elNis.innerText = `NIS: ${st.nis || '-'} • Bil Hifdhi • ${escapeHtml(halaqahName)}`;
+    if (elNis) elNis.innerText = `NIS: ${st.nis || '-'} • ${progName} • ${escapeHtml(halaqahName)}`;
     if (elAvatar) {
         const initials = (st.name || 'Santri').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
         elAvatar.innerHTML = st.photoUrl ? `<img src="${escapeHtml(st.photoUrl)}" class="w-full h-full object-cover rounded-2xl">` : initials;
@@ -3073,11 +3571,12 @@ function renderTahfidzStudentDetailView() {
 
     const curJuzNo = Number(stats.progressJuz || st.progress?.currentJuz || 30);
     const curHalNo = Number(stats.progressHalaman || st.progress?.currentHalaman || 1);
-    const curJuzIdx = stats.curriculumJuzIndex || (getJuzCurriculumIndex(curJuzNo) + 1);
+    const curJuzIdx = stats.curriculumJuzIndex || (getJuzCurriculumIndex(curJuzNo, progName) + 1);
 
     const unifiedMetrics = calculateTahfidzMetricsHelper({
         currentJuz: curJuzNo,
         currentHal: curHalNo,
+        programName: progName,
         stats: stats,
         riwayat: res.riwayat || [],
         target: res.target || st.target || {}
@@ -6109,14 +6608,29 @@ window.setTahfidzStudentPresensi = setTahfidzStudentPresensi;
 window.updateTahfidzStudentPresensiKet = updateTahfidzStudentPresensiKet;
 window.setAllTahfidzPresensi = setAllTahfidzPresensi;
 window.saveTahfidzPresensi = saveTahfidzPresensi;
+window.saveTahfidzPresensiRecords = saveTahfidzPresensiRecords;
 window.getStudentPresensiStatus = getStudentPresensiStatus;
 window.getStudentPresensiData = getStudentPresensiData;
 
-// Kurikulum Tahfidz [Juz 30, 1..29] & Navigasi Posisi
+// Kurikulum Tahfidz Fleksibel 30 Juz, Navigasi Posisi, & Program
 window.JUZ_CURRICULUM_ORDER = JUZ_CURRICULUM_ORDER;
+window.TAHFIDZ_CURRICULUM_PRESETS = TAHFIDZ_CURRICULUM_PRESETS;
 window.getJuzCurriculumIndex = getJuzCurriculumIndex;
 window.getCurriculumProgress = getCurriculumProgress;
 window.getNextCurriculumPosition = getNextCurriculumPosition;
+window.getTahfidzStudentProgram = getTahfidzStudentProgram;
+window.getCurriculumOrderForProgram = getCurriculumOrderForProgram;
+window.getTahfidzCurriculumMap = getTahfidzCurriculumMap;
+window.getCurriculumAvailablePrograms = getCurriculumAvailablePrograms;
+window.openTahfidzCurriculumModal = openTahfidzCurriculumModal;
+window.closeTahfidzCurriculumModal = closeTahfidzCurriculumModal;
+window.onCurriculumProgramChange = onCurriculumProgramChange;
+window.applyCurriculumPreset = applyCurriculumPreset;
+window.moveCurriculumJuz = moveCurriculumJuz;
+window.reverseCurriculumOrder = reverseCurriculumOrder;
+window.resetCurriculumOrderToDefault = resetCurriculumOrderToDefault;
+window.saveTahfidzCurriculumSettings = saveTahfidzCurriculumSettings;
+window.copyCurriculumToAllPrograms = copyCurriculumToAllPrograms;
 
 // Inisialisasi Database Sheets
 window.triggerInitTahfidzSheets = triggerInitTahfidzSheets;
