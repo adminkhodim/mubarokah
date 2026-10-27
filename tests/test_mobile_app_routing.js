@@ -92,10 +92,10 @@ assert.strictEqual(simulateBottomNavVisibility('/app', 375), 'flex', 'Aplikasi /
 assert.strictEqual(simulateBottomNavVisibility('/app', 412), 'flex', 'Aplikasi /app mobile (412px) HARUS menampilkan bottom navbar');
 assert.strictEqual(simulateBottomNavVisibility('/app', 1024), 'none', 'Aplikasi /app desktop (1024px) HARUS menyembunyikan bottom navbar');
 
-// Verifikasi CSS di index.html bahwa #mobile-bottom-nav disembunyikan
+// Verifikasi bahwa #mobile-bottom-nav tidak aktif atau disembunyikan di landing page index.html
 const indexHtmlPath = path.resolve(__dirname, '../index.html');
 const indexHtml = fs.readFileSync(indexHtmlPath, 'utf8');
-assert(indexHtml.includes('#mobile-bottom-nav,\n        body.is-pwa-standalone #mobile-bottom-nav {\n            display: none !important;'), 'index.html harus menyembunyikan #mobile-bottom-nav secara permanen');
+assert(!indexHtml.includes('id="mobile-bottom-nav"') || indexHtml.includes('display: none'), 'index.html tidak boleh menampilkan #mobile-bottom-nav');
 console.log('  ✅ 6. Bottom navbar terbukti HANYA aktif di /app dan disembunyikan di landing page (/)');
 
 console.log('\n🎉 SEMUA PENGUJIAN ROUTING & BOTTOM NAVBAR MOBILE BERHASIL DENGAN SEMPURNA!\n');

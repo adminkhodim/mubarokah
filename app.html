@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/">
     <title>SIMTren Mubarokah | Sistem Informasi Manajemen & Operasional Pesantren</title>
 
     <!-- Metadata Internal Application -->
@@ -21813,6 +21814,20 @@
                 activateAdminView();
             }
         })();
+    </script>
+    <!-- Service Worker PWA -->
+    <script>
+        if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js?v=57').then(registration => {
+                    if (typeof registration.update === 'function') {
+                        registration.update();
+                    }
+                }).catch(err => {
+                    console.log('ServiceWorker pendaftaran gagal:', err);
+                });
+            });
+        }
     </script>
 </body>
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mubarokah-cache-v56';
+const CACHE_NAME = 'mubarokah-cache-v57';
 
 const PRECACHE_URLS = [
   '/',
@@ -90,8 +90,15 @@ self.addEventListener('fetch', event => {
         return response;
       })
       .catch(() => {
-        // Jika offline, cari di cache
-        return caches.match(event.request);
+        // Jika offline atau jaringan gagal, cari di cache
+        return caches.match(event.request).then(cachedResponse => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          if (event.request.mode === 'navigate') {
+            return caches.match('/index.html') || caches.match('/');
+          }
+        });
       })
   );
 });
