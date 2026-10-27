@@ -562,7 +562,10 @@
                 if (deskNavMenu) deskNavMenu.style.removeProperty('display');
                 if (deskActionMenu) deskActionMenu.style.removeProperty('display');
                 if (mobileBottomNav) {
-                    if (window.innerWidth < 768) {
+                    const isAppRoute = window.location.pathname === '/app' || 
+                                       window.location.pathname.startsWith('/app/') || 
+                                       window.location.pathname.endsWith('app.html');
+                    if (isAppRoute && window.innerWidth < 768) {
                         mobileBottomNav.style.setProperty('display', 'flex', 'important');
                     } else {
                         mobileBottomNav.style.setProperty('display', 'none', 'important');

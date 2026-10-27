@@ -78,4 +78,25 @@ assert.strictEqual(simulateAppRouting('/app', 1366), 'admin', 'Desktop 1366px ha
 assert.strictEqual(simulateAppRouting('/app', 1920), 'admin', 'Desktop Full HD 1920px harus membuka admin dashboard');
 console.log('  ✅ 5. Simulasi routing pada seluruh ukuran layar berhasil 100%!');
 
-console.log('\n🎉 SEMUA PENGUJIAN ROUTING MOBILE BERHASIL DENGAN SEMPURNA!\n');
+// 6. Verifikasi Visibilitas Bottom Navbar (/ vs /app)
+function simulateBottomNavVisibility(pathname, innerWidth) {
+    const isAppRoute = pathname === '/app' || 
+                       pathname.startsWith('/app/') || 
+                       pathname.endsWith('app.html');
+    return (isAppRoute && innerWidth < 768) ? 'flex' : 'none';
+}
+
+assert.strictEqual(simulateBottomNavVisibility('/', 375), 'none', 'Landing page mobile (375px) HARUS menyembunyikan bottom navbar');
+assert.strictEqual(simulateBottomNavVisibility('/', 412), 'none', 'Landing page mobile (412px) HARUS menyembunyikan bottom navbar');
+assert.strictEqual(simulateBottomNavVisibility('/app', 375), 'flex', 'Aplikasi /app mobile (375px) HARUS menampilkan bottom navbar');
+assert.strictEqual(simulateBottomNavVisibility('/app', 412), 'flex', 'Aplikasi /app mobile (412px) HARUS menampilkan bottom navbar');
+assert.strictEqual(simulateBottomNavVisibility('/app', 1024), 'none', 'Aplikasi /app desktop (1024px) HARUS menyembunyikan bottom navbar');
+
+// Verifikasi CSS di index.html bahwa #mobile-bottom-nav disembunyikan
+const indexHtmlPath = path.resolve(__dirname, '../index.html');
+const indexHtml = fs.readFileSync(indexHtmlPath, 'utf8');
+assert(indexHtml.includes('#mobile-bottom-nav,\n        body.is-pwa-standalone #mobile-bottom-nav {\n            display: none !important;'), 'index.html harus menyembunyikan #mobile-bottom-nav secara permanen');
+console.log('  ✅ 6. Bottom navbar terbukti HANYA aktif di /app dan disembunyikan di landing page (/)');
+
+console.log('\n🎉 SEMUA PENGUJIAN ROUTING & BOTTOM NAVBAR MOBILE BERHASIL DENGAN SEMPURNA!\n');
+

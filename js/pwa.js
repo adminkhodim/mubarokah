@@ -143,8 +143,12 @@
         }
 
         // LAYAR MOBILE (< 768px):
+        const isAppRoute = window.location.pathname === '/app' || 
+                           window.location.pathname.startsWith('/app/') || 
+                           window.location.pathname.endsWith('app.html');
+
         if (standalone) {
-            // MODE 3: GAMBAR 3 (Mobile Setelah Diinstal / PWA Standalone)
+            // MODE 3: (Mobile Setelah Diinstal / PWA Standalone)
             document.body.classList.add('is-pwa-standalone');
             if (portalContent) {
                 portalContent.classList.add('hidden');
@@ -155,10 +159,17 @@
                 mobileApp.classList.add('block');
             }
             if (banner) banner.classList.add('hidden');
-            if (bottomNav) bottomNav.style.setProperty('display', 'flex', 'important');
+            // Bottom navbar hanya muncul pada /app
+            if (bottomNav) {
+                if (isAppRoute) {
+                    bottomNav.style.setProperty('display', 'flex', 'important');
+                } else {
+                    bottomNav.style.setProperty('display', 'none', 'important');
+                }
+            }
             updateNavInstallButtons(false);
         } else {
-            // MODE 2: GAMBAR 2 (Mobile Web Sebelum Diinstal / Browser Ponsel)
+            // MODE 2: (Mobile Web Sebelum Diinstal / Browser Ponsel)
             document.body.classList.remove('is-pwa-standalone');
             if (portalContent) {
                 portalContent.classList.remove('hidden');
@@ -168,8 +179,14 @@
                 mobileApp.classList.add('hidden');
                 mobileApp.classList.remove('block');
             }
-            // Tampilkan bottom navbar di Mobile Web
-            if (bottomNav) bottomNav.style.setProperty('display', 'flex', 'important');
+            // Bottom navbar hanya muncul pada /app, disembunyikan pada landing page (/)
+            if (bottomNav) {
+                if (isAppRoute) {
+                    bottomNav.style.setProperty('display', 'flex', 'important');
+                } else {
+                    bottomNav.style.setProperty('display', 'none', 'important');
+                }
+            }
             updateNavInstallButtons(true);
             if (!isBannerDismissed()) {
                 showFloatingInstallBanner();

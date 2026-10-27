@@ -84,26 +84,15 @@
         body.is-pwa-standalone #top-basmalah-strip {
             display: none !important;
         }
-        @media (max-width: 767px) {
-            #mobile-bottom-nav {
-                display: flex !important;
-            }
-            main {
-                margin-bottom: 4.5rem !important;
-            }
-            #floating-whatsapp-container {
-                bottom: 5.25rem !important;
-            }
+        /* Bottom Navbar HANYA KHUSUS untuk Aplikasi (/app), pada Landing Page (/) selalu disembunyikan */
+        #mobile-bottom-nav,
+        body.is-pwa-standalone #mobile-bottom-nav {
+            display: none !important;
         }
-        @media (min-width: 768px) {
-            #mobile-bottom-nav,
-            body.is-pwa-standalone #mobile-bottom-nav {
-                display: none !important;
-            }
-            main,
-            body.is-pwa-standalone main {
-                margin-bottom: 0 !important;
-            }
+        main,
+        body.is-pwa-standalone main {
+            margin-bottom: 0 !important;
+        }
             body.is-pwa-standalone #beranda-mobile-app { display: none !important; }
             body.is-pwa-standalone #beranda-portal-content { display: block !important; }
 
