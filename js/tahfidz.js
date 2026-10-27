@@ -1427,7 +1427,9 @@ function populateTahfidzFilters() {
         let optHtml = `<option value="ALL">Semua Halaqah</option>`;
         (ASNTahfidz.data.halaqahs || []).forEach(h => {
             if (h && h.namaHalaqah) {
-                optHtml += `<option value="${escapeHtml(h.namaHalaqah)}">${escapeHtml(h.namaHalaqah)}</option>`;
+                const del = (typeof getHalaqahDelegation === 'function') ? getHalaqahDelegation(h) : (h.delegation || null);
+                const suffix = del ? ` (Diampu Badal: ${del.namaBadal})` : '';
+                optHtml += `<option value="${escapeHtml(h.namaHalaqah)}">${escapeHtml(h.namaHalaqah)}${escapeHtml(suffix)}</option>`;
             }
         });
         optHtml += `<option value="UNASSIGNED">Belum Masuk Halaqah</option>`;
@@ -1606,7 +1608,55 @@ function filterTahfidzList() {
 
     renderTahfidzStudentTable();
     renderTahfidzSummaryCards(hal);
+    updateTahfidzBadalNotice(hal);
     applyTahfidzRolePermissions();
+}
+
+/**
+ * Update Banner Notifikasi Delegasi Badal Aktif pada Tabel Santri
+ */
+function updateTahfidzBadalNotice(halFilter) {
+    const noticeEl = document.getElementById('tahfidz-active-badal-notice');
+    if (!noticeEl) return;
+
+    if (!halFilter || halFilter === 'ALL' || halFilter === 'UNASSIGNED') {
+        noticeEl.innerHTML = '';
+        noticeEl.classList.add('hidden');
+        return;
+    }
+
+    const halaqahs = ASNTahfidz.data?.halaqahs || [];
+    const targetHal = halaqahs.find(h => 
+        (h.namaHalaqah && h.namaHalaqah.toLowerCase() === String(halFilter).toLowerCase()) ||
+        (h.halaqahId && String(h.halaqahId).toLowerCase() === String(halFilter).toLowerCase())
+    );
+
+    const del = targetHal && (typeof getHalaqahDelegation === 'function' ? getHalaqahDelegation(targetHal) : (targetHal.delegation || null));
+
+    if (del) {
+        noticeEl.innerHTML = `
+        <div class="mb-3 p-3 bg-amber-50 dark:bg-amber-950/40 rounded-2xl border border-amber-200 dark:border-amber-800/60 flex items-start gap-3 shadow-xs animate-fade-in-up">
+            <div class="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center text-sm shrink-0 mt-0.5 shadow-xs">
+                <i class="fa-solid fa-arrows-rotate"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-amber-200 text-amber-900 dark:bg-amber-900 dark:text-amber-200">
+                        Pendelegasian Badal Aktif
+                    </span>
+                    <span class="text-xs font-bold text-amber-950 dark:text-amber-100">
+                        Halaqah ini hari ini diampu oleh Ustadz Badal: <span class="underline font-black text-amber-800 dark:text-amber-300">${escapeHtml(del.namaBadal)}</span> (${escapeHtml(del.sesi === 'FULL_DAY' ? 'Seharian Penuh' : del.sesi)})
+                    </span>
+                </div>
+                ${del.catatanBadal ? `<p class="mt-1 text-[11px] text-amber-800 dark:text-amber-300 italic"><i class="fa-solid fa-quote-left mr-1 opacity-60"></i>${escapeHtml(del.catatanBadal)}</p>` : ''}
+            </div>
+        </div>
+        `;
+        noticeEl.classList.remove('hidden');
+    } else {
+        noticeEl.innerHTML = '';
+        noticeEl.classList.add('hidden');
+    }
 }
 
 /**
@@ -1637,6 +1687,7 @@ function renderTahfidzStudentTable() {
             const initials = (st.name || 'Santri').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'SN';
             const inHal = isStudentInHalaqah(st);
             const halaqahName = inHal ? (st.halaqah?.namaHalaqah || 'Halaqah Aktif') : 'Belum Masuk Halaqah';
+            const stDelegation = inHal && (typeof getHalaqahDelegation === 'function' ? getHalaqahDelegation(st.halaqah || halaqahName) : null);
             const targetZ = st.target?.ziyadahSesi || 1;
             const targetZPekan = st.target?.ziyadahPekan || 10;
             const targetZBulan = st.target?.ziyadahBulan || 40;
@@ -1689,6 +1740,12 @@ function renderTahfidzStudentTable() {
                                     <span class="w-1.5 h-1.5 rounded-full shrink-0 ${inHal ? 'bg-emerald-500' : 'bg-amber-400'}"></span>
                                     <span class="truncate">${escapeHtml(halaqahName)}</span>
                                 </span>
+                                ${stDelegation ? `
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[8px] font-extrabold bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200 border border-amber-300/80 dark:border-amber-700 truncate" title="Diampu Ustadz Badal: ${escapeHtml(stDelegation.namaBadal)} (${escapeHtml(stDelegation.sesi === 'FULL_DAY' ? 'Seharian' : stDelegation.sesi)})">
+                                    <i class="fa-solid fa-arrows-rotate text-[7px] text-amber-600 dark:text-amber-400"></i>
+                                    <span class="truncate">Badal: ${escapeHtml(stDelegation.namaBadal)}</span>
+                                </span>
+                                ` : ''}
                                 ${isExcused ? `
                                     <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8.5px] font-black ${presStatus === 'SAKIT' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-800' : (presStatus === 'PULANG' ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300 border border-purple-300 dark:border-purple-800' : 'bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-300 dark:border-blue-800')}" title="${escapeHtml(presData?.keterangan || presStatus)}">
                                         <i class="fa-solid ${presStatus === 'SAKIT' ? 'fa-notes-medical' : (presStatus === 'PULANG' ? 'fa-house-user' : 'fa-clipboard-user')} text-[7.5px]"></i>
@@ -1832,6 +1889,7 @@ function renderTahfidzStudentTable() {
             const initials = (st.name || 'Santri').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'SN';
             const inHal = isStudentInHalaqah(st);
             const halaqahName = inHal ? (st.halaqah?.namaHalaqah || 'Halaqah Aktif') : 'Belum Masuk Halaqah';
+            const stDelegation = inHal && (typeof getHalaqahDelegation === 'function' ? getHalaqahDelegation(st.halaqah || halaqahName) : null);
             const last = st.setoranTerakhir;
             const isUlang = last && (last.statusSetoran === 'ULANG' || last.nilai === 'DHAIF');
             const cap = st.capaian || {};
@@ -1873,6 +1931,12 @@ function renderTahfidzStudentTable() {
                                     <span class="w-1.5 h-1.5 rounded-full shrink-0 ${inHal ? 'bg-emerald-500' : 'bg-amber-400'}"></span>
                                     <span class="truncate">${escapeHtml(halaqahName)}</span>
                                 </span>
+                                ${stDelegation ? `
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[8px] font-extrabold bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200 border border-amber-300/80 dark:border-amber-700" title="Diampu Ustadz Badal: ${escapeHtml(stDelegation.namaBadal)}">
+                                    <i class="fa-solid fa-arrows-rotate text-[7px] text-amber-600 dark:text-amber-400"></i>
+                                    <span>Badal: ${escapeHtml(stDelegation.namaBadal)}</span>
+                                </span>
+                                ` : ''}
                                 ${isExcused ? `<span class="ml-1 px-1.5 py-0.2 rounded text-[8px] font-black ${presStatus === 'SAKIT' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300' : (presStatus === 'PULANG' ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300')}">${presStatus === 'SAKIT' ? '🏥 Sakit' : (presStatus === 'PULANG' ? '🏠 Pulang' : '📝 Izin')}</span>` : ''}
                             </div>
                         </div>
@@ -4854,6 +4918,9 @@ function renderTahfidzHalaqahCards() {
         const muhafizName = h.muhafiz || 'Ustadz Pembina';
         const targetKurikulum = h.targetKurikulum || 'Tahfidz 30 Juz';
         const safeDeleteName = escapeHtml(muhafizName).replace(/'/g, "\\'");
+        const delegation = (typeof getHalaqahDelegation === 'function') 
+            ? getHalaqahDelegation(h) 
+            : (h.delegation || null);
 
         return `
         <div class="p-4 bg-slate-50 dark:bg-[#1c2836] rounded-2xl border border-slate-200 dark:border-[#283a4e] space-y-3 relative group transition hover:border-emerald-500/50">
@@ -4870,6 +4937,17 @@ function renderTahfidzHalaqahCards() {
                     <span class="inline-block mt-2 px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
                         <i class="fa-solid fa-flag text-[9px] mr-1"></i>${escapeHtml(targetKurikulum)}
                     </span>
+                    ${delegation ? `
+                    <div class="mt-2.5 px-2.5 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60 flex items-center justify-between text-[10.5px]">
+                        <span class="inline-flex items-center gap-1.5 font-bold text-amber-900 dark:text-amber-200 truncate">
+                            <i class="fa-solid fa-arrows-rotate text-amber-600 dark:text-amber-400 text-[10px]"></i>
+                            <span>Diampu Badal Hari Ini: <b class="underline decoration-amber-400">${escapeHtml(delegation.namaBadal)}</b></span>
+                        </span>
+                        <span class="ml-1 px-1.5 py-0.2 rounded text-[8.5px] font-black uppercase bg-amber-200/80 text-amber-950 dark:bg-amber-900 dark:text-amber-200 shrink-0">
+                            ${escapeHtml(delegation.sesi === 'FULL_DAY' ? 'Seharian' : delegation.sesi)}
+                        </span>
+                    </div>
+                    ` : ''}
                 </div>
                 <div class="flex items-center space-x-1.5 shrink-0">
                     <button type="button" onclick="deleteTahfidzHalaqahConfirm('${h.halaqahId}', '${safeDeleteName}')" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-300 flex items-center justify-center text-[10px] transition" title="Hapus Halaqah">
@@ -6634,5 +6712,8 @@ window.copyCurriculumToAllPrograms = copyCurriculumToAllPrograms;
 
 // Inisialisasi Database Sheets
 window.triggerInitTahfidzSheets = triggerInitTahfidzSheets;
+
+// Badal & Izin Asatidz Notice
+window.updateTahfidzBadalNotice = updateTahfidzBadalNotice;
 
 

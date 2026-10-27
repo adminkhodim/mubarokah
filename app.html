@@ -8693,9 +8693,37 @@
                                             <i class="fa-solid fa-print text-xs"></i>
                                             <span class="hidden sm:inline">Cetak</span>
                                         </button>
+                                        <button type="button" onclick="openIzinAsatidzModal()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm active:scale-95 shrink-0" title="Ajukan Izin Mengajar / Pendelegasian Badal">
+                                            <i class="fa-solid fa-user-clock text-xs"></i>
+                                            <span>Izin Asatidz</span>
+                                        </button>
                                         <button type="button" onclick="openTahfidzCatatModal()" class="tahfidz-admin-action px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm active:scale-95 shrink-0">
                                             <i class="fa-solid fa-plus text-xs"></i>
                                             <span>Catat Setoran</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- BANNER NOTIFIKASI PERSETUJUAN IZIN ASATIDZ (PENGASUH & ADMIN) -->
+                                <div id="banner-pengasuh-izin-asatidz" class="hidden p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-50 via-amber-100/60 to-orange-50 dark:from-amber-950/40 dark:via-amber-900/30 dark:to-[#1c2836] border border-amber-200 dark:border-amber-800/80 text-amber-900 dark:text-amber-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs transition animate-fade-in-up">
+                                    <div class="flex items-start sm:items-center gap-3">
+                                        <div class="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-lg shrink-0 shadow-sm">
+                                            <i class="fa-solid fa-stamp"></i>
+                                        </div>
+                                        <div>
+                                            <div class="flex items-center gap-2 flex-wrap">
+                                                <h4 class="font-bold text-xs sm:text-sm text-amber-950 dark:text-amber-100">Persetujuan Izin Asatidz Dibutuhkan</h4>
+                                                <span id="banner-pengasuh-izin-badge" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-100">0 Menunggu</span>
+                                            </div>
+                                            <p id="banner-pengasuh-izin-text" class="text-xs text-amber-800/90 dark:text-amber-300/90 mt-0.5">
+                                                Ada pengajuan izin mengajar yang memerlukan restu Pengasuh untuk mengaktifkan Badal Halaqah santri.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2 shrink-0 justify-end">
+                                        <button type="button" onclick="openIzinAsatidzModal('APPROVAL')" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow-sm transition flex items-center gap-1.5 active:scale-95">
+                                            <i class="fa-solid fa-stamp text-xs"></i>
+                                            <span>Tinjau & Beri Restu</span>
                                         </button>
                                     </div>
                                 </div>
@@ -8866,6 +8894,9 @@
                                             <span id="admin-tahfidz-count" class="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-lg">0 Santri</span>
                                         </div>
                                     </div>
+
+                                    <!-- BANNER PEMBERITAHUAN PENDELEGASIAN BADAL AKTIF -->
+                                    <div id="tahfidz-active-badal-notice" class="hidden"></div>
 
                                     <!-- DESKTOP TABLE (TABLE-FIXED 100% UTUH) -->
                                     <div class="hidden md:block overflow-x-hidden">
@@ -18367,6 +18398,212 @@
         </div>
     </div>
 
+    <!-- ==================== MODAL TAHFIDZ: PERIZINAN ASATIDZ & DELEGASI BADAL ==================== -->
+    <div id="modal-izin-asatidz" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 md:p-4 hidden">
+        <div class="bg-white dark:bg-[#15202d] w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-[#253447] flex flex-col max-h-[94vh] transform transition-all animate-fade-in-up">
+            <!-- Modal Header -->
+            <div class="px-5 py-4 bg-slate-50 dark:bg-[#1c2836] border-b border-slate-100 dark:border-[#253447] flex justify-between items-center shrink-0">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-9 h-9 bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 rounded-xl flex items-center justify-center text-base font-bold">
+                        <i class="fa-solid fa-user-clock"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Perizinan Asatidz & Kelangsungan Halaqah</h3>
+                        <p class="text-[10px] text-slate-400">Pengajuan izin berhalangan mengajar & penunjukan Ustadz Badal</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeIzinAsatidzModal()" class="w-8 h-8 rounded-full bg-slate-200/60 dark:bg-slate-700 hover:bg-slate-300 text-slate-500 dark:text-slate-300 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Modal Sub-Navigation Tabs -->
+            <div class="px-5 py-2.5 bg-slate-100/70 dark:bg-[#15202d] border-b border-slate-200/80 dark:border-[#253447] flex items-center gap-1.5 shrink-0 overflow-x-auto">
+                <button type="button" id="tab-btn-izin-form" onclick="switchIzinAsatidzTab('FORM')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-emerald-600 text-white shadow-xs">
+                    <i class="fa-solid fa-paper-plane text-[10px]"></i>
+                    <span>Ajukan Izin</span>
+                </button>
+                <button type="button" id="tab-btn-izin-my" onclick="switchIzinAsatidzTab('MY_HISTORY')" class="px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-[#253447]">
+                    <i class="fa-solid fa-list-check text-[10px]"></i>
+                    <span>Izin Saya</span>
+                    <span id="badge-count-izin-my" class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200">0</span>
+                </button>
+                <button type="button" id="tab-btn-izin-badal" onclick="switchIzinAsatidzTab('DELEGATIONS')" class="px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-[#253447]">
+                    <i class="fa-solid fa-handshake-angle text-[10px]"></i>
+                    <span>Amanah Badal</span>
+                    <span id="badge-count-izin-badal" class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">0</span>
+                </button>
+                <button type="button" id="tab-btn-izin-approval" onclick="switchIzinAsatidzTab('APPROVAL')" class="hidden px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-amber-800 dark:text-amber-200 hover:bg-amber-100/70 dark:hover:bg-amber-950/60 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80">
+                    <i class="fa-solid fa-stamp text-[10px]"></i>
+                    <span>Restu Pengasuh</span>
+                    <span id="badge-count-izin-approval" class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-amber-500 text-white">0</span>
+                </button>
+            </div>
+
+            <!-- Tab Pane 1: Form Pengajuan Izin -->
+            <div id="pane-izin-asatidz-form" class="flex flex-col flex-1 overflow-hidden">
+                <form id="form-izin-asatidz" onsubmit="submitIzinAsatidzForm(event)" class="flex flex-col flex-1 overflow-hidden">
+                    <div class="p-5 overflow-y-auto space-y-4 custom-scrollbar text-xs">
+                        <!-- Banner Edukasi: Sistem Badal & Halaqah -->
+                        <div class="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-2.5">
+                            <div class="w-7 h-7 rounded-xl bg-amber-100 dark:bg-amber-900/80 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0 text-xs">
+                                <i class="fa-solid fa-circle-info"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <span class="font-extrabold text-[11px] uppercase tracking-wider block text-amber-800 dark:text-amber-200">Kelangsungan Halaqah Tahfidz:</span>
+                                <p class="text-[11px] text-amber-800/90 dark:text-amber-300/90 mt-0.5 leading-relaxed">
+                                    Santri halaqah binaan Anda akan otomatis dialihkan sementara ke <strong>Ustadz Badal</strong> yang Anda pilih saat izin disetujui Pengasuh. Pastikan telah berkomunikasi sebelumnya dengan Ustadz Badal.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Row 1: Nama Asatidz Pemohon -->
+                        <div>
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                Nama Asatidz Pemohon <span class="text-rose-500">*</span>
+                            </label>
+                            <input type="text" id="izin-asatidz-nama" required placeholder="Nama lengkap Asatidz" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white transition" />
+                        </div>
+
+                        <!-- Row 2: Rentang Tanggal Izin -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                    Tanggal Mulai <span class="text-rose-500">*</span>
+                                </label>
+                                <input type="date" id="izin-asatidz-tgl-mulai" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white transition" />
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                    Tanggal Selesai <span class="text-rose-500">*</span>
+                                </label>
+                                <input type="date" id="izin-asatidz-tgl-selesai" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white transition" />
+                            </div>
+                        </div>
+
+                        <!-- Row 3: Sesi Halaqah / Waktu (Quick Chips) -->
+                        <div>
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                                Sesi yang Berhalangan <span class="text-rose-500">*</span>
+                            </label>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                <button type="button" data-sesi="FULL_DAY" onclick="setIzinAsatidzSesi('FULL_DAY')" class="izin-asatidz-sesi-btn px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border-2 border-emerald-500 bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200 shadow-xs">
+                                    <i class="fa-solid fa-sun text-[10px]"></i>
+                                    <span>Seharian</span>
+                                </button>
+                                <button type="button" data-sesi="SUBUH" onclick="setIzinAsatidzSesi('SUBUH')" class="izin-asatidz-sesi-btn px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 border border-slate-200 dark:border-[#253447] bg-slate-50 dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 hover:bg-slate-100">
+                                    <i class="fa-regular fa-sun text-[10px]"></i>
+                                    <span>Subuh</span>
+                                </button>
+                                <button type="button" data-sesi="ASHAR" onclick="setIzinAsatidzSesi('ASHAR')" class="izin-asatidz-sesi-btn px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 border border-slate-200 dark:border-[#253447] bg-slate-50 dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 hover:bg-slate-100">
+                                    <i class="fa-solid fa-cloud-sun text-[10px]"></i>
+                                    <span>Ashar</span>
+                                </button>
+                                <button type="button" data-sesi="MAGHRIB" onclick="setIzinAsatidzSesi('MAGHRIB')" class="izin-asatidz-sesi-btn px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 border border-slate-200 dark:border-[#253447] bg-slate-50 dark:bg-[#1c2836] text-slate-700 dark:text-slate-300 hover:bg-slate-100">
+                                    <i class="fa-solid fa-moon text-[10px]"></i>
+                                    <span>Maghrib</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Row 4: Kategori Izin & Ustadz Badal -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                    Kategori Izin <span class="text-rose-500">*</span>
+                                </label>
+                                <select id="izin-asatidz-kategori" onchange="setIzinAsatidzKategori(this.value)" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white transition">
+                                    <option value="SAKIT">Sakit / Berobat</option>
+                                    <option value="URUSAN_KELUARGA">Kepentingan Mendesak Keluarga</option>
+                                    <option value="TUGAS_PONDOK">Tugas Luar / Delegasi Pesantren</option>
+                                    <option value="CUTI">Cuti Terjadwal</option>
+                                    <option value="LAINNYA">Lainnya</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                    Pilih Ustadz Badal (Pengganti) <span class="text-rose-500">*</span>
+                                </label>
+                                <select id="izin-asatidz-badal" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white transition">
+                                    <option value="">-- Pilih Ustadz Badal --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Row 5: Keterangan / Alasan Izin -->
+                        <div>
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                Alasan / Keterangan Izin <span class="text-rose-500">*</span>
+                            </label>
+                            <textarea id="izin-asatidz-alasan" required rows="2" placeholder="Contoh: Demam tinggi, perlu istirahat dan berobat ke klinik..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-normal focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white transition"></textarea>
+                        </div>
+
+                        <!-- Row 6: Pesan Khusus Materi Hafalan untuk Badal -->
+                        <div>
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                Pesan / Arahan untuk Ustadz Badal <span class="text-slate-400 font-normal">(Opsional)</span>
+                            </label>
+                            <textarea id="izin-asatidz-catatan-badal" rows="2" placeholder="Contoh: Santri halaqah saya fokus muraja'ah Juz 30 dan ziyadah Surah An-Naba' halaman 1..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-normal focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white transition"></textarea>
+                        </div>
+
+                        <!-- Row 7: Lampiran Bukti / Surat Dokter (Opsional) -->
+                        <div>
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                Tautan Bukti / Surat Dokter <span class="text-slate-400 font-normal">(Opsional)</span>
+                            </label>
+                            <input type="url" id="izin-asatidz-lampiran" placeholder="https://..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#253447] text-xs font-normal focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 focus:bg-white transition" />
+                        </div>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="px-5 py-3.5 bg-slate-50 dark:bg-[#1c2836] border-t border-slate-100 dark:border-[#253447] flex items-center justify-end gap-2.5 shrink-0">
+                        <button type="button" onclick="closeIzinAsatidzModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-[#253447] text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition">
+                            Batal
+                        </button>
+                        <button type="submit" id="btn-submit-izin-asatidz" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5 active:scale-95">
+                            <i class="fa-solid fa-paper-plane text-xs" id="btn-submit-izin-icon"></i>
+                            <span id="btn-submit-izin-text">Kirim Pengajuan Izin</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tab Pane 2: Riwayat Izin Saya -->
+            <div id="pane-izin-asatidz-my" class="flex flex-col flex-1 overflow-hidden hidden">
+                <div class="p-5 overflow-y-auto space-y-3 custom-scrollbar text-xs flex-1" id="izin-asatidz-my-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Tab Pane 3: Amanah Badal Saya -->
+            <div id="pane-izin-asatidz-badal" class="flex flex-col flex-1 overflow-hidden hidden">
+                <div class="p-5 overflow-y-auto space-y-3 custom-scrollbar text-xs flex-1" id="izin-asatidz-badal-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Tab Pane 4: Persetujuan Pengasuh (Supervisi & Restu Masyayikh) -->
+            <div id="pane-izin-asatidz-approval" class="flex flex-col flex-1 overflow-hidden hidden">
+                <div class="px-5 py-3 bg-amber-50/70 dark:bg-amber-950/30 border-b border-amber-200/60 dark:border-amber-900/40 text-amber-900 dark:text-amber-200 text-xs flex items-center justify-between shrink-0">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-crown text-amber-600 text-sm"></i>
+                        <div>
+                            <span class="font-bold block">Supervisi Persetujuan Pengasuh</span>
+                            <span class="text-[10px] text-amber-800/80 dark:text-amber-300/80">Izin yang disetujui akan mengaktifkan hak delegasi halaqah bagi Ustadz Badal</span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="loadIzinAsatidzHistory()" class="px-2.5 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 text-[11px] font-bold flex items-center gap-1 transition">
+                        <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+                <div class="p-5 overflow-y-auto space-y-3.5 custom-scrollbar text-xs flex-1" id="izin-asatidz-approval-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ==================== MODAL TPQ: TARGET INDIVIDUAL ==================== -->
     <div id="modal-tpq-target"
         class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 md:p-4 hidden">
@@ -21546,7 +21783,8 @@
     <script src="js/alumni.js"></script>
     <script src="js/auth.js?v=30"></script>
     <script src="js/pegawai.js?v=30"></script>
-    <script src="js/tahfidz.js?v=31"></script>
+    <script src="js/izin-asatidz.js?v=1"></script>
+    <script src="js/tahfidz.js?v=32"></script>
     <script src="js/tpq.js?v=31"></script>
     <script src="js/sorogan.js?v=30"></script>
     <script src="js/presensi.js?v=30"></script>
