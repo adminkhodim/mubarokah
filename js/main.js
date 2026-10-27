@@ -565,9 +565,13 @@
                     const isAppRoute = window.location.pathname === '/app' || 
                                        window.location.pathname.startsWith('/app/') || 
                                        window.location.pathname.endsWith('app.html');
-                    if (isAppRoute && window.innerWidth < 768) {
+                    const isStandalone = document.body.classList.contains('is-pwa-standalone') || 
+                                         (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+                    if ((isAppRoute || isStandalone) && window.innerWidth < 768) {
                         mobileBottomNav.style.setProperty('display', 'flex', 'important');
-                    } else {
+                    } else if (window.innerWidth >= 768) {
+                        mobileBottomNav.style.setProperty('display', 'none', 'important');
+                    } else if (!isAppRoute && !isStandalone) {
                         mobileBottomNav.style.setProperty('display', 'none', 'important');
                     }
                 }

@@ -90,12 +90,13 @@
            - Menyembunyikan #beranda-portal-content (Landing Page Luar)
            - Menampilkan #beranda-mobile-app (Widget Sholat, 8 Ikon Layanan, Banner Slider, Headline)
            - Menampilkan #mobile-bottom-nav (Dok 5 tab: Beranda, Ibadah, Berita, Kalender, Pengaturan)
-           - Menyembunyikan Smart Install Banner */
+           - Menyembunyikan Smart Install Banner & Tombol WA Mengambang */
         @media all and (display-mode: standalone) and (max-width: 767px) {
             #beranda-portal-content { display: none !important; }
             #beranda-mobile-app { display: block !important; }
             #mobile-bottom-nav { display: flex !important; }
             #pwa-smart-install-banner { display: none !important; }
+            #floating-whatsapp-container { display: none !important; }
             main { margin-bottom: 4.5rem !important; }
         }
         body.is-pwa-standalone #beranda-portal-content {
@@ -108,6 +109,9 @@
             display: flex !important;
         }
         body.is-pwa-standalone #pwa-smart-install-banner {
+            display: none !important;
+        }
+        body.is-pwa-standalone #floating-whatsapp-container {
             display: none !important;
         }
         body.is-pwa-standalone main {
@@ -9571,7 +9575,7 @@
     <script>
         if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=40').then(registration => {
+                navigator.serviceWorker.register('sw.js?v=56').then(registration => {
                     if (typeof registration.update === 'function') {
                         registration.update();
                     }
@@ -9584,7 +9588,7 @@
     </script>
 
     <!-- PWA Smart Install Controller -->
-    <script src="js/pwa.js?v=4" defer></script>
+    <script src="js/pwa.js?v=5" defer></script>
 
     <!-- Data & API Core -->
     <script src="data-maulid-dibai.js" defer></script>
@@ -9604,7 +9608,7 @@
     <!-- Main Controller & Navigation -->
     <script src="js/roles.js?v=30" defer></script>
     <script src="js/auth.js?v=30" defer></script>
-    <script src="js/main.js?v=41" defer></script>
+    <script src="js/main.js?v=42" defer></script>
     <script src="js/scroll-animations.js?v=2" defer></script>
 
     <!-- Dewan Guru Marquee Controller -->

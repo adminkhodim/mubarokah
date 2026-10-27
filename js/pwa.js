@@ -124,6 +124,7 @@
         const mobileApp = document.getElementById('beranda-mobile-app');
         const banner = document.getElementById('pwa-smart-install-banner');
         const bottomNav = document.getElementById('mobile-bottom-nav');
+        const floatingWa = document.getElementById('floating-whatsapp-container');
 
         if (isDesktop) {
             // MODE 1: DESKTOP (>= 768px) -> Tampilkan Portal Institusional Lengkap
@@ -138,6 +139,7 @@
             }
             if (banner) banner.classList.add('hidden');
             if (bottomNav) bottomNav.style.setProperty('display', 'none', 'important');
+            if (floatingWa) floatingWa.style.removeProperty('display');
             updateNavInstallButtons(false);
             return;
         }
@@ -159,6 +161,8 @@
                 mobileApp.classList.add('block');
             }
             if (banner) banner.classList.add('hidden');
+            // Tombol WA Mengambang disembunyikan di PWA Terinstal agar tidak menutupi UI/navbar
+            if (floatingWa) floatingWa.style.setProperty('display', 'none', 'important');
             // Bottom navbar aktif di mode standalone (baik di / maupun di /app)
             if (bottomNav) {
                 bottomNav.style.setProperty('display', 'flex', 'important');
@@ -167,6 +171,7 @@
         } else {
             // MODE 2: (Mobile Web Sebelum Diinstal / Browser Ponsel)
             document.body.classList.remove('is-pwa-standalone');
+            if (floatingWa) floatingWa.style.removeProperty('display');
             if (portalContent) {
                 portalContent.classList.remove('hidden');
                 portalContent.classList.add('block');
