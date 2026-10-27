@@ -562,7 +562,7 @@
                 if (deskNavMenu) deskNavMenu.style.removeProperty('display');
                 if (deskActionMenu) deskActionMenu.style.removeProperty('display');
                 if (mobileBottomNav) {
-                    if (document.body.classList.contains('is-pwa-standalone') && window.innerWidth < 768) {
+                    if (window.innerWidth < 768) {
                         mobileBottomNav.style.setProperty('display', 'flex', 'important');
                     } else {
                         mobileBottomNav.style.setProperty('display', 'none', 'important');

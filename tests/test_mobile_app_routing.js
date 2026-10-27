@@ -19,7 +19,7 @@ const appHtml = fs.readFileSync(appHtmlPath, 'utf8');
 
 assert(appHtml.includes('const isMobile = window.innerWidth < 1024;'), 'app.html harus memiliki deteksi isMobile (< 1024px)');
 assert(appHtml.includes("switchTab('pengaturan', false);"), 'app.html harus mengarahkan mobile ke tab pengaturan');
-assert(appHtml.includes("src=\"js/main.js?v=31\""), 'Versi js/main.js di app.html harus di-bump ke v=31');
+assert(/src="js\/main\.js\?v=(3[1-9]|[4-9]\d+)"/.test(appHtml), 'Versi js/main.js di app.html harus di-bump ke v=31 atau lebih tinggi');
 console.log('  ✅ 1. app.html berhasil mengintegrasikan deteksi isMobile dan routing ke pengaturan');
 
 // 2. Verifikasi logika di js/main.js
@@ -42,8 +42,8 @@ console.log('  ✅ 3. js/auth.js tervalidasi menggunakan breakpoint 1024px');
 const swJsPath = path.resolve(__dirname, '../sw.js');
 const swJs = fs.readFileSync(swJsPath, 'utf8');
 
-assert(swJs.includes("CACHE_NAME = 'mubarokah-cache-v52'"), 'sw.js harus dibump ke mubarokah-cache-v52');
-console.log('  ✅ 4. sw.js cache name diperbarui ke v52');
+assert(/CACHE_NAME = 'mubarokah-cache-v(5[2-9]|[6-9]\d+)'/.test(swJs), 'sw.js harus dibump ke mubarokah-cache-v52 atau lebih tinggi');
+console.log('  ✅ 4. sw.js cache name diperbarui ke v52+');
 
 // 5. Simulasi Logika Routing
 function simulateAppRouting(pathname, innerWidth) {

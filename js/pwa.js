@@ -168,8 +168,8 @@
                 mobileApp.classList.add('hidden');
                 mobileApp.classList.remove('block');
             }
-            // Sembunyikan bottom navbar di Mobile Web biasa (khusus mobile setelah diinstal)
-            if (bottomNav) bottomNav.style.setProperty('display', 'none', 'important');
+            // Tampilkan bottom navbar di Mobile Web
+            if (bottomNav) bottomNav.style.setProperty('display', 'flex', 'important');
             updateNavInstallButtons(true);
             if (!isBannerDismissed()) {
                 showFloatingInstallBanner();

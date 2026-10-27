@@ -84,21 +84,14 @@
         body.is-pwa-standalone #top-basmalah-strip {
             display: none !important;
         }
-        /* Bottom Navbar HANYA KHUSUS untuk Mobile Setelah Diinstal (PWA Standalone) */
-        #mobile-bottom-nav {
-            display: none !important;
-        }
-        main {
-            margin-bottom: 0 !important;
-        }
         @media (max-width: 767px) {
-            body.is-pwa-standalone #mobile-bottom-nav {
+            #mobile-bottom-nav {
                 display: flex !important;
             }
-            body.is-pwa-standalone main {
+            main {
                 margin-bottom: 4.5rem !important;
             }
-            body.is-pwa-standalone #floating-whatsapp-container {
+            #floating-whatsapp-container {
                 bottom: 5.25rem !important;
             }
         }
@@ -9587,7 +9580,7 @@
     <!-- Main Controller & Navigation -->
     <script src="js/roles.js?v=30" defer></script>
     <script src="js/auth.js?v=30" defer></script>
-    <script src="js/main.js?v=40" defer></script>
+    <script src="js/main.js?v=41" defer></script>
     <script src="js/scroll-animations.js?v=2" defer></script>
 
     <!-- Dewan Guru Marquee Controller -->
