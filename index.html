@@ -66,35 +66,74 @@
     <!-- Adaptasi Cerdas Tampilan 3-Mode (Desktop, Mobile Web, dan Mobile PWA) -->
     <!-- Adaptasi Cerdas Tampilan 3-Mode (Desktop, Mobile Web, dan Mobile PWA) -->
     <style>
-        @media all and (display-mode: standalone) and (max-width: 767px) {
-            #beranda-mobile-app { display: block !important; }
-            #beranda-portal-content { display: none !important; }
-            #pwa-smart-install-banner { display: none !important; }
-            #mobile-bottom-nav { display: flex !important; }
-            #top-announcement-bar, #top-basmalah-strip { display: none !important; }
-            main { margin-bottom: 4.5rem !important; }
+        /* ==========================================================================
+           ADAPTASI TAMPILAN MOBILE: SEBELUM DIINSTAL vs SETELAH DIINSTAL (PERSIS ASNAWIYYAH)
+           ========================================================================== */
+        /* Mode 1: Mobile Web Sebelum Diinstal (Browser Chrome/Safari Biasa di Layar < 768px):
+           - Menampilkan konten portal profil institusional (#beranda-portal-content)
+           - Menyembunyikan #beranda-mobile-app
+           - Menyembunyikan #mobile-bottom-nav agar tidak mengganggu pembacaan web */
+        #beranda-portal-content {
+            display: block;
         }
-        body.is-pwa-standalone #beranda-mobile-app {
-            display: block !important;
+        #beranda-mobile-app {
+            display: none;
+        }
+        #mobile-bottom-nav {
+            display: none;
+        }
+        main {
+            margin-bottom: 0;
+        }
+
+        /* Mode 2: Mobile Setelah Diinstal (PWA Standalone di Layar Utama HP - Persis Asnawiyyah):
+           - Menyembunyikan #beranda-portal-content (Landing Page Luar)
+           - Menampilkan #beranda-mobile-app (Widget Sholat, 8 Ikon Layanan, Banner Slider, Headline)
+           - Menampilkan #mobile-bottom-nav (Dok 5 tab: Beranda, Ibadah, Berita, Kalender, Pengaturan)
+           - Menyembunyikan Smart Install Banner */
+        @media all and (display-mode: standalone) and (max-width: 767px) {
+            #beranda-portal-content { display: none !important; }
+            #beranda-mobile-app { display: block !important; }
+            #mobile-bottom-nav { display: flex !important; }
+            #pwa-smart-install-banner { display: none !important; }
+            main { margin-bottom: 4.5rem !important; }
         }
         body.is-pwa-standalone #beranda-portal-content {
             display: none !important;
         }
-        body.is-pwa-standalone #top-announcement-bar,
-        body.is-pwa-standalone #top-basmalah-strip {
-            display: none !important;
+        body.is-pwa-standalone #beranda-mobile-app {
+            display: block !important;
         }
-        /* Bottom Navbar HANYA KHUSUS untuk Aplikasi (/app), pada Landing Page (/) selalu disembunyikan */
-        #mobile-bottom-nav,
         body.is-pwa-standalone #mobile-bottom-nav {
+            display: flex !important;
+        }
+        body.is-pwa-standalone #pwa-smart-install-banner {
             display: none !important;
         }
-        main,
         body.is-pwa-standalone main {
-            margin-bottom: 0 !important;
+            margin-bottom: 4.5rem !important;
         }
-            body.is-pwa-standalone #beranda-mobile-app { display: none !important; }
-            body.is-pwa-standalone #beranda-portal-content { display: block !important; }
+
+        /* Layar Desktop / Tablet Lebar (>= 768px):
+           Selalu tampilkan konten portal institusional dan sembunyikan mobile app */
+        @media (min-width: 768px) {
+            #beranda-portal-content,
+            body.is-pwa-standalone #beranda-portal-content {
+                display: block !important;
+            }
+            #beranda-mobile-app,
+            body.is-pwa-standalone #beranda-mobile-app {
+                display: none !important;
+            }
+            #mobile-bottom-nav,
+            body.is-pwa-standalone #mobile-bottom-nav {
+                display: none !important;
+            }
+            main,
+            body.is-pwa-standalone main {
+                margin-bottom: 0 !important;
+            }
+        }
 
             /* Floating Capsule Navbar: Mengapung tepat di depan latar hijau Hero section */
             #main-desktop-header {
@@ -9549,7 +9588,7 @@
     </script>
 
     <!-- PWA Smart Install Controller -->
-    <script src="js/pwa.js" defer></script>
+    <script src="js/pwa.js?v=4" defer></script>
 
     <!-- Data & API Core -->
     <script src="data-maulid-dibai.js" defer></script>

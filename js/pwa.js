@@ -148,13 +148,7 @@
                            window.location.pathname.endsWith('app.html');
 
         if (standalone) {
-            // MODE 3: (Mobile Setelah Diinstal / PWA Standalone)
-            // Jika aplikasi standalone dibuka di landing page (/), otomatis arahkan ke aplikasi /app
-            if (!isAppRoute && window.innerWidth < 1024) {
-                window.location.replace('/app?source=pwa');
-                return;
-            }
-
+            // MODE 3: (Mobile Setelah Diinstal / PWA Standalone - Persis Asnawiyyah)
             document.body.classList.add('is-pwa-standalone');
             if (portalContent) {
                 portalContent.classList.add('hidden');
@@ -165,13 +159,9 @@
                 mobileApp.classList.add('block');
             }
             if (banner) banner.classList.add('hidden');
-            // Bottom navbar hanya muncul pada /app
+            // Bottom navbar aktif di mode standalone (baik di / maupun di /app)
             if (bottomNav) {
-                if (isAppRoute) {
-                    bottomNav.style.setProperty('display', 'flex', 'important');
-                } else {
-                    bottomNav.style.setProperty('display', 'none', 'important');
-                }
+                bottomNav.style.setProperty('display', 'flex', 'important');
             }
             updateNavInstallButtons(false);
         } else {
@@ -185,7 +175,8 @@
                 mobileApp.classList.add('hidden');
                 mobileApp.classList.remove('block');
             }
-            // Bottom navbar hanya muncul pada /app, disembunyikan pada landing page (/)
+            // Bottom navbar pada landing page (/) disembunyikan saat belum diinstal,
+            // namun pada /app tetap aktif
             if (bottomNav) {
                 if (isAppRoute) {
                     bottomNav.style.setProperty('display', 'flex', 'important');
