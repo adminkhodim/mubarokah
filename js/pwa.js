@@ -149,6 +149,12 @@
 
         if (standalone) {
             // MODE 3: (Mobile Setelah Diinstal / PWA Standalone)
+            // Jika aplikasi standalone dibuka di landing page (/), otomatis arahkan ke aplikasi /app
+            if (!isAppRoute && window.innerWidth < 1024) {
+                window.location.replace('/app?source=pwa');
+                return;
+            }
+
             document.body.classList.add('is-pwa-standalone');
             if (portalContent) {
                 portalContent.classList.add('hidden');
