@@ -963,7 +963,7 @@ const ASNIdentity = {
                 }
             }
         } else if (['SUPER_ADMIN', 'ADMIN', 'BENDAHARA', 'PENGURUS', 'ASATIDZ', 'PEGAWAI', 'EDITOR'].includes(this.currentRole)) {
-            if (window.innerWidth >= 768) {
+            if (window.innerWidth >= 1024) {
                 const pagePengaturan = document.getElementById('page-pengaturan');
                 if (pagePengaturan && !pagePengaturan.classList.contains('hidden')) {
                     setTimeout(() => {
@@ -1917,7 +1917,7 @@ async function handleAdminVerifyOtp(e) {
             if (typeof showToast === 'function') {
                 showToast('Login Admin Berhasil!');
             }
-            if (window.innerWidth >= 768) {
+            if (window.innerWidth >= 1024) {
                 if (typeof switchTab === 'function') switchTab('admin');
                 if (typeof showAdminView === 'function') showAdminView('hub');
             }

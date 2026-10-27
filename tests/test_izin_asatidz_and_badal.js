@@ -79,7 +79,7 @@ console.log('\n--- 2. Pengujian PWA Cache (sw.js) ---');
 const swPath = path.resolve(__dirname, '../sw.js');
 const swCode = fs.readFileSync(swPath, 'utf8');
 
-assert(swCode.includes("CACHE_NAME = 'mubarokah-cache-v51'"), 'CACHE_NAME harus diperbarui ke mubarokah-cache-v51');
+assert(/mubarokah-cache-v(5[1-9]|[6-9]\d)/.test(swCode), 'CACHE_NAME harus mubarokah-cache-v51 atau lebih baru');
 assert(swCode.includes("'/js/izin-asatidz.js'"), 'Asset /js/izin-asatidz.js harus ada dalam daftar PRECACHE_URLS');
 console.log('  ✅ 2.1 sw.js mencakup /js/izin-asatidz.js dan cache version mubarokah-cache-v51');
 

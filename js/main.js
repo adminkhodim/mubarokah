@@ -211,7 +211,12 @@
                 switchTab('poskestren', false);
             } else if (path === '/app' || path.startsWith('/app/') || path.endsWith('app.html')) {
                 if (document.getElementById('page-admin')) {
-                    switchTab('admin', false);
+                    const isMobile = window.innerWidth < 1024;
+                    if (isMobile) {
+                        switchTab('pengaturan', false);
+                    } else {
+                        switchTab('admin', false);
+                    }
                 } else {
                     window.location.href = window.location.protocol === 'file:' ? 'app.html' : '/app';
                 }
@@ -220,7 +225,7 @@
                     window.location.href = window.location.protocol === 'file:' ? 'app.html' : '/app';
                     return;
                 }
-                const isMobile = window.innerWidth < 768;
+                const isMobile = window.innerWidth < 1024;
                 if (isMobile) {
                     window.history.replaceState({ tab: 'pengaturan' }, '', '/');
                     switchTab('pengaturan', false);
@@ -228,7 +233,7 @@
                     switchTab('admin', false);
                 }
             } else if (path === '/pengaturan') {
-                const isMobile = window.innerWidth < 768;
+                const isMobile = window.innerWidth < 1024;
                 const isAdmin = (typeof checkIsAdminLoggedIn === 'function')
                     ? checkIsAdminLoggedIn()
                     : ((typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn) || (typeof ASNIdentity !== 'undefined' && (ASNIdentity.currentRole === 'admin' || ASNIdentity.currentRole === 'editor')));
@@ -405,7 +410,7 @@
                 ? checkIsAdminLoggedIn()
                 : ((typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn) || (typeof ASNIdentity !== 'undefined' && (ASNIdentity.currentRole === 'admin' || ASNIdentity.currentRole === 'editor')));
 
-            if (tabId === 'admin' && window.innerWidth < 768 && !isUserAdmin) {
+            if (tabId === 'admin' && window.innerWidth < 1024 && !isUserAdmin) {
                 if (updateUrl) {
                     window.history.replaceState({ tab: 'pengaturan' }, '', '/');
                 }
@@ -413,7 +418,7 @@
                 return;
             }
 
-            if (tabId === 'pengaturan' && window.innerWidth >= 768) {
+            if (tabId === 'pengaturan' && window.innerWidth >= 1024) {
                 if (isUserAdmin) {
                     switchTab('admin', updateUrl);
                     return;
@@ -421,7 +426,7 @@
             }
 
             // Pada mobile, navigasi ke tab 'pengaturan' tidak memodifikasi URL browser (tetap di URL saat ini / bersih tanpa /pengaturan)
-            if (tabId === 'pengaturan' && window.innerWidth < 768) {
+            if (tabId === 'pengaturan' && window.innerWidth < 1024) {
                 updateUrl = false;
             }
 
