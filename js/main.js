@@ -211,12 +211,7 @@
                 switchTab('poskestren', false);
             } else if (path === '/app' || path.startsWith('/app/') || path.endsWith('app.html')) {
                 if (document.getElementById('page-admin')) {
-                    const isMobile = window.innerWidth < 1024;
-                    if (isMobile) {
-                        switchTab('pengaturan', false);
-                    } else {
-                        switchTab('admin', false);
-                    }
+                    switchTab('beranda', false);
                 } else {
                     window.location.href = window.location.protocol === 'file:' ? 'app.html' : '/app';
                 }
@@ -225,16 +220,7 @@
                     window.location.href = window.location.protocol === 'file:' ? 'app.html' : '/admin';
                     return;
                 }
-                const isMobile = window.innerWidth < 1024;
-                const isUserAdmin = (typeof checkIsAdminLoggedIn === 'function')
-                    ? checkIsAdminLoggedIn()
-                    : ((typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn) || (typeof ASNIdentity !== 'undefined' && (ASNIdentity.currentRole === 'admin' || ASNIdentity.currentRole === 'editor')));
-
-                if (isMobile && !isUserAdmin) {
-                    switchTab('pengaturan', false);
-                } else {
-                    switchTab('admin', false);
-                }
+                switchTab('admin', false);
             } else if (path === '/pengaturan') {
                 const isMobile = window.innerWidth < 1024;
                 const isAdmin = (typeof checkIsAdminLoggedIn === 'function')
@@ -434,7 +420,7 @@
             }
 
             if (updateUrl) {
-                let targetUrl = '/';
+                let targetUrl = (window.location.pathname.startsWith('/app') || window.location.pathname.endsWith('app.html')) ? '/app' : '/';
                 if (customUrl) {
                     targetUrl = customUrl;
                 } else if (tabId === 'profil') targetUrl = '/tentang-kami/';

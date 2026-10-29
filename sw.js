@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 
-const CACHE_NAME = 'mubarokah-cache-v61';
+const CACHE_NAME = 'mubarokah-cache-v62';
 
 const PRECACHE_URLS = [
   '/',
