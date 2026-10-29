@@ -4,7 +4,16 @@
     "module": "commonjs",
     "allowJs": true,
     "checkJs": false,
-    "lib": ["es2022", "dom", "webworker"]
+    "lib": [
+      "es2022",
+      "dom",
+      "webworker"
+    ]
   },
-  "exclude": ["node_modules", "legacy", "*.bak", "**/*.bak"]
+  "exclude": [
+    "node_modules",
+    "legacy",
+    "*.bak",
+    "**/*.bak"
+  ]
 }
