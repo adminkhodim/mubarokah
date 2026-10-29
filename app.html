@@ -25563,25 +25563,68 @@
     <script src="js/panduan.js?v=30"></script>
 
     <!-- Main Controller & Navigation -->
-    <script src="js/main.js?v=43"></script>
+    <script src="js/main.js?v=44"></script>
     <script>
         // Pastikan view yang tepat langsung diprioritaskan saat membuka app.html
         (function () {
-            function activateAdminView() {
+            function activateAppView() {
+                if (typeof handleClientRouting === 'function') {
+                    handleClientRouting();
+                    return;
+                }
                 if (typeof switchTab === 'function') {
                     const path = window.location.pathname.replace(/\/+$/, '') || '/';
-                    const isMobile = window.innerWidth < 1024;
                     if (path === '/admin' || path.startsWith('/admin/') || path === '/administrator' || path.startsWith('/administrator/')) {
                         switchTab('admin', false);
+                    } else if (path === '/app/ibadah' || path.startsWith('/app/ibadah/')) {
+                        if (path === '/app/ibadah/quran') switchTab('quran-index', false);
+                        else if (path === '/app/ibadah/quran/baca') switchTab('quran-detail', false);
+                        else if (path === '/app/ibadah/quran/halaman') switchTab('quran-page', false);
+                        else if (path === '/app/ibadah/maulid') switchTab('maulid-hub', false);
+                        else if (path === '/app/ibadah/maulid/ad-dibai') switchTab('maulid-index', false);
+                        else if (path === '/app/ibadah/maulid/ad-dibai/baca') switchTab('maulid-detail', false);
+                        else if (path === '/app/ibadah/burdah') switchTab('burdah-index', false);
+                        else if (path === '/app/ibadah/tahlil-dan-yasin') switchTab('tahlil-yasin', false);
+                        else if (path === '/app/ibadah/jadwal-sholat') {
+                            if (typeof openJadwalSholatPage === 'function') openJadwalSholatPage();
+                            else switchTab('jadwal-sholat', false);
+                        } else switchTab('ibadah', false);
+                    } else if (path === '/app/berita' || path.startsWith('/app/berita/') || path === '/app/kabar') {
+                        const slug = path.split('/app/berita/')[1];
+                        if (slug && typeof bacaBerita === 'function') {
+                            bacaBerita(slug, true);
+                        } else {
+                            switchTab('kabar', false);
+                        }
+                    } else if (path === '/app/kalender') {
+                        switchTab('kalender', false);
+                    } else if (path === '/app/pengaturan') {
+                        switchTab('pengaturan', false);
+                    } else if (path === '/app/notifikasi') {
+                        switchTab('notifikasi', false);
+                    } else if (path === '/app/profil') {
+                        switchTab('profil', false);
+                    } else if (path === '/app/program') {
+                        switchTab('program-pilihan', false);
+                    } else if (path === '/app/jadwal') {
+                        switchTab('jadwal-kegiatan', false);
+                    } else if (path === '/app/unit') {
+                        switchTab('unit-kegiatan', false);
+                    } else if (path === '/app/ma-tahfidz') {
+                        switchTab('ma-tahfidz', false);
+                    } else if (path === '/app/alumni') {
+                        switchTab('alumni', false);
+                    } else if (path === '/app/galeri') {
+                        switchTab('galeri', false);
                     } else {
                         switchTab('beranda', false);
                     }
                 }
             }
             if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', activateAdminView);
+                document.addEventListener('DOMContentLoaded', activateAppView);
             } else {
-                activateAdminView();
+                activateAppView();
             }
         })();
     </script>
@@ -25589,7 +25632,7 @@
     <script>
         if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=62').then(registration => {
+                navigator.serviceWorker.register('sw.js?v=63').then(registration => {
                     if (typeof registration.update === 'function') {
                         registration.update();
                     }

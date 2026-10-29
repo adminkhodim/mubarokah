@@ -211,9 +211,51 @@
                 switchTab('poskestren', false);
             } else if (path === '/app' || path.startsWith('/app/') || path.endsWith('app.html')) {
                 if (document.getElementById('page-admin')) {
-                    switchTab('beranda', false);
+                    if (path === '/app/ibadah' || path.startsWith('/app/ibadah/')) {
+                        if (path === '/app/ibadah/quran') switchTab('quran-index', false);
+                        else if (path === '/app/ibadah/quran/baca') switchTab('quran-detail', false);
+                        else if (path === '/app/ibadah/quran/halaman') switchTab('quran-page', false);
+                        else if (path === '/app/ibadah/maulid') switchTab('maulid-hub', false);
+                        else if (path === '/app/ibadah/maulid/ad-dibai') switchTab('maulid-index', false);
+                        else if (path === '/app/ibadah/maulid/ad-dibai/baca') switchTab('maulid-detail', false);
+                        else if (path === '/app/ibadah/burdah') switchTab('burdah-index', false);
+                        else if (path === '/app/ibadah/tahlil-dan-yasin') switchTab('tahlil-yasin', false);
+                        else if (path === '/app/ibadah/jadwal-sholat') {
+                            if (typeof openJadwalSholatPage === 'function') openJadwalSholatPage();
+                            else switchTab('jadwal-sholat', false);
+                        } else switchTab('ibadah', false);
+                    } else if (path === '/app/berita' || path.startsWith('/app/berita/') || path === '/app/kabar') {
+                        const slug = path.split('/app/berita/')[1];
+                        if (slug) {
+                            bacaBerita(slug, true);
+                        } else {
+                            switchTab('kabar', false);
+                        }
+                    } else if (path === '/app/kalender') {
+                        switchTab('kalender', false);
+                    } else if (path === '/app/pengaturan') {
+                        switchTab('pengaturan', false);
+                    } else if (path === '/app/notifikasi') {
+                        switchTab('notifikasi', false);
+                    } else if (path === '/app/profil') {
+                        switchTab('profil', false);
+                    } else if (path === '/app/program') {
+                        switchTab('program-pilihan', false);
+                    } else if (path === '/app/jadwal') {
+                        switchTab('jadwal-kegiatan', false);
+                    } else if (path === '/app/unit') {
+                        switchTab('unit-kegiatan', false);
+                    } else if (path === '/app/ma-tahfidz') {
+                        switchTab('ma-tahfidz', false);
+                    } else if (path === '/app/alumni') {
+                        switchTab('alumni', false);
+                    } else if (path === '/app/galeri') {
+                        switchTab('galeri', false);
+                    } else {
+                        switchTab('beranda', false);
+                    }
                 } else {
-                    window.location.href = window.location.protocol === 'file:' ? 'app.html' : '/app';
+                    window.location.href = window.location.protocol === 'file:' ? 'app.html' : path;
                 }
             } else if (path === '/administrator' || path === '/admin') {
                 if (!document.getElementById('page-admin')) {
@@ -342,9 +384,51 @@
                 switchTab('quran-page', false);
             } else if (path === '/app' || path.startsWith('/app/') || path.endsWith('app.html')) {
                 if (document.getElementById('page-admin')) {
-                    switchTab('admin', false);
+                    if (path === '/app/ibadah' || path.startsWith('/app/ibadah/')) {
+                        if (path === '/app/ibadah/quran') switchTab('quran-index', false);
+                        else if (path === '/app/ibadah/quran/baca') switchTab('quran-detail', false);
+                        else if (path === '/app/ibadah/quran/halaman') switchTab('quran-page', false);
+                        else if (path === '/app/ibadah/maulid') switchTab('maulid-hub', false);
+                        else if (path === '/app/ibadah/maulid/ad-dibai') switchTab('maulid-index', false);
+                        else if (path === '/app/ibadah/maulid/ad-dibai/baca') switchTab('maulid-detail', false);
+                        else if (path === '/app/ibadah/burdah') switchTab('burdah-index', false);
+                        else if (path === '/app/ibadah/tahlil-dan-yasin') switchTab('tahlil-yasin', false);
+                        else if (path === '/app/ibadah/jadwal-sholat') {
+                            if (typeof openJadwalSholatPage === 'function') openJadwalSholatPage();
+                            else switchTab('jadwal-sholat', false);
+                        } else switchTab('ibadah', false);
+                    } else if (path === '/app/berita' || path.startsWith('/app/berita/') || path === '/app/kabar') {
+                        const slug = path.split('/app/berita/')[1];
+                        if (slug) {
+                            bacaBerita(slug, true);
+                        } else {
+                            switchTab('kabar', false);
+                        }
+                    } else if (path === '/app/kalender') {
+                        switchTab('kalender', false);
+                    } else if (path === '/app/pengaturan') {
+                        switchTab('pengaturan', false);
+                    } else if (path === '/app/notifikasi') {
+                        switchTab('notifikasi', false);
+                    } else if (path === '/app/profil') {
+                        switchTab('profil', false);
+                    } else if (path === '/app/program') {
+                        switchTab('program-pilihan', false);
+                    } else if (path === '/app/jadwal') {
+                        switchTab('jadwal-kegiatan', false);
+                    } else if (path === '/app/unit') {
+                        switchTab('unit-kegiatan', false);
+                    } else if (path === '/app/ma-tahfidz') {
+                        switchTab('ma-tahfidz', false);
+                    } else if (path === '/app/alumni') {
+                        switchTab('alumni', false);
+                    } else if (path === '/app/galeri') {
+                        switchTab('galeri', false);
+                    } else {
+                        switchTab('beranda', false);
+                    }
                 } else {
-                    window.location.href = window.location.protocol === 'file:' ? 'app.html' : '/app';
+                    window.location.href = window.location.protocol === 'file:' ? 'app.html' : path;
                 }
             } else if (path === '/administrator' || path === '/admin') {
                 if (!document.getElementById('page-admin')) {
@@ -414,45 +498,84 @@
                 }
             }
 
-            // Pada mobile, navigasi ke tab 'pengaturan' tidak memodifikasi URL browser (tetap di URL saat ini / bersih tanpa /pengaturan)
-            if (tabId === 'pengaturan' && window.innerWidth < 1024) {
+            const isAppContext = window.location.pathname.startsWith('/app') || 
+                                 window.location.pathname.endsWith('app.html') ||
+                                 (typeof isStandalone === 'function' && isStandalone()) ||
+                                 (document.getElementById('page-admin') && !document.getElementById('hero-carousel'));
+
+            // Pada web portal mobile biasa non-app, jangan ubah URL saat membuka pengaturan
+            if (!isAppContext && tabId === 'pengaturan' && window.innerWidth < 1024) {
                 updateUrl = false;
             }
 
             if (updateUrl) {
-                let targetUrl = (window.location.pathname.startsWith('/app') || window.location.pathname.endsWith('app.html')) ? '/app' : '/';
+                let targetUrl = isAppContext ? '/app' : '/';
                 if (customUrl) {
                     targetUrl = customUrl;
-                } else if (tabId === 'profil') targetUrl = '/tentang-kami/';
-                else if (tabId === 'sejarah-berdirinya') targetUrl = '/sejarah-berdirinya';
-                else if (tabId === 'tujuan-visi-misi') targetUrl = '/tujuan-visi-misi';
-                else if (tabId === 'struktur-kepengurusan') targetUrl = '/struktur-kepengurusan';
-                else if (tabId === 'kabar') targetUrl = '/berita/';
-                else if (tabId === 'program-pilihan') targetUrl = '/pendidikan/semua-program-pilihan/';
-                else if (tabId === 'ma-tahfidz' || tabId === 'sd-islam') targetUrl = '/pendidikan/ma-tahfidz/';
-                else if (tabId === 'tahfidz-anak') targetUrl = '/pendidikan/pesantren-tahfidz-anak/';
-                else if (tabId === 'reguler-putra-putri' || tabId === 'dewasa-putra') targetUrl = '/pendidikan/pesantren-reguler-putra-putri/';
-                else if (tabId === 'tahfidz-dewasa' || tabId === 'dewasa-putri') targetUrl = '/pendidikan/pesantren-tahfidz-dewasa/';
-                else if (tabId === 'jadwal-kegiatan') targetUrl = '/kehidupan-santri/jadwal-kegiatan/';
-                else if (tabId === 'unit-kegiatan') targetUrl = '/kehidupan-santri/unit-kegiatan/';
-                else if (tabId === 'poskestren') targetUrl = '/kehidupan-santri/poskestren/';
-                else if (tabId === 'admin') targetUrl = '/admin';
-                else if (tabId === 'pengaturan') targetUrl = '/pengaturan';
-                else if (tabId === 'notifikasi') targetUrl = '/notifikasi';
-                else if (tabId === 'alumni') targetUrl = '/kehidupan-santri/ikatan-alumni/';
-                else if (tabId === 'form-alumni') targetUrl = '/kehidupan-santri/ikatan-alumni/form-data-alumni/';
-                else if (tabId === 'layanan-hub') targetUrl = '/layanan/';
-                else if (tabId === 'galeri') targetUrl = '/layanan/galeri/';
-                else if (tabId === 'kalender') targetUrl = '/layanan/kalender/';
-                else if (tabId === 'ibadah') targetUrl = '/layanan/portal-ibadah/';
-                else if (tabId === 'quran-index') targetUrl = '/layanan/portal-ibadah/quran/';
-                else if (tabId === 'quran-detail') targetUrl = '/layanan/portal-ibadah/quran/baca/';
-                else if (tabId === 'maulid-hub') targetUrl = '/layanan/portal-ibadah/maulid/';
-                else if (tabId === 'maulid-index') targetUrl = '/layanan/portal-ibadah/maulid/ad-dibai/';
-                else if (tabId === 'maulid-detail') targetUrl = '/layanan/portal-ibadah/maulid/ad-dibai/baca/';
-                else if (tabId === 'burdah-index') targetUrl = '/layanan/portal-ibadah/burdah/';
-                else if (tabId === 'tahlil-yasin') targetUrl = '/layanan/portal-ibadah/tahlil-dan-yasin/';
-                else if (tabId === 'quran-page') targetUrl = '/layanan/portal-ibadah/quran/halaman/';
+                } else if (isAppContext) {
+                    // ==========================================
+                    // 1. RUTE SUB-SLUG KONSISTEN APLIKASI MOBILE (/app/...)
+                    // ==========================================
+                    if (tabId === 'beranda') targetUrl = '/app';
+                    else if (tabId === 'ibadah') targetUrl = '/app/ibadah';
+                    else if (tabId === 'jadwal-sholat') targetUrl = '/app/ibadah/jadwal-sholat';
+                    else if (tabId === 'quran-index') targetUrl = '/app/ibadah/quran';
+                    else if (tabId === 'quran-detail') targetUrl = '/app/ibadah/quran/baca';
+                    else if (tabId === 'quran-page') targetUrl = '/app/ibadah/quran/halaman';
+                    else if (tabId === 'maulid-hub') targetUrl = '/app/ibadah/maulid';
+                    else if (tabId === 'maulid-index') targetUrl = '/app/ibadah/maulid/ad-dibai';
+                    else if (tabId === 'maulid-detail') targetUrl = '/app/ibadah/maulid/ad-dibai/baca';
+                    else if (tabId === 'burdah-index') targetUrl = '/app/ibadah/burdah';
+                    else if (tabId === 'tahlil-yasin') targetUrl = '/app/ibadah/tahlil-dan-yasin';
+                    else if (tabId === 'kabar') targetUrl = '/app/berita';
+                    else if (tabId === 'kalender') targetUrl = '/app/kalender';
+                    else if (tabId === 'pengaturan') targetUrl = '/app/pengaturan';
+                    else if (tabId === 'notifikasi') targetUrl = '/app/notifikasi';
+                    else if (tabId === 'profil') targetUrl = '/app/profil';
+                    else if (tabId === 'program-pilihan') targetUrl = '/app/program';
+                    else if (tabId === 'jadwal-kegiatan') targetUrl = '/app/jadwal';
+                    else if (tabId === 'unit-kegiatan') targetUrl = '/app/unit';
+                    else if (tabId === 'ma-tahfidz' || tabId === 'sd-islam') targetUrl = '/app/ma-tahfidz';
+                    else if (tabId === 'alumni' || tabId === 'form-alumni') targetUrl = '/app/alumni';
+                    else if (tabId === 'galeri') targetUrl = '/app/galeri';
+                    else if (tabId === 'admin') targetUrl = '/admin';
+                    else targetUrl = '/app';
+                } else {
+                    // ==========================================
+                    // 2. RUTE WEB PORTAL PUBLIK (SEO-FRIENDLY)
+                    // ==========================================
+                    if (tabId === 'profil') targetUrl = '/tentang-kami/';
+                    else if (tabId === 'sejarah-berdirinya') targetUrl = '/sejarah-berdirinya';
+                    else if (tabId === 'tujuan-visi-misi') targetUrl = '/tujuan-visi-misi';
+                    else if (tabId === 'struktur-kepengurusan') targetUrl = '/struktur-kepengurusan';
+                    else if (tabId === 'kabar') targetUrl = '/berita/';
+                    else if (tabId === 'program-pilihan') targetUrl = '/pendidikan/semua-program-pilihan/';
+                    else if (tabId === 'ma-tahfidz' || tabId === 'sd-islam') targetUrl = '/pendidikan/ma-tahfidz/';
+                    else if (tabId === 'tahfidz-anak') targetUrl = '/pendidikan/pesantren-tahfidz-anak/';
+                    else if (tabId === 'reguler-putra-putri' || tabId === 'dewasa-putra') targetUrl = '/pendidikan/pesantren-reguler-putra-putri/';
+                    else if (tabId === 'tahfidz-dewasa' || tabId === 'dewasa-putri') targetUrl = '/pendidikan/pesantren-tahfidz-dewasa/';
+                    else if (tabId === 'jadwal-kegiatan') targetUrl = '/kehidupan-santri/jadwal-kegiatan/';
+                    else if (tabId === 'unit-kegiatan') targetUrl = '/kehidupan-santri/unit-kegiatan/';
+                    else if (tabId === 'poskestren') targetUrl = '/kehidupan-santri/poskestren/';
+                    else if (tabId === 'admin') targetUrl = '/admin';
+                    else if (tabId === 'pengaturan') targetUrl = '/pengaturan';
+                    else if (tabId === 'notifikasi') targetUrl = '/notifikasi';
+                    else if (tabId === 'alumni') targetUrl = '/kehidupan-santri/ikatan-alumni/';
+                    else if (tabId === 'form-alumni') targetUrl = '/kehidupan-santri/ikatan-alumni/form-data-alumni/';
+                    else if (tabId === 'layanan-hub') targetUrl = '/layanan/';
+                    else if (tabId === 'galeri') targetUrl = '/layanan/galeri/';
+                    else if (tabId === 'kalender') targetUrl = '/layanan/kalender/';
+                    else if (tabId === 'ibadah') targetUrl = '/layanan/portal-ibadah/';
+                    else if (tabId === 'quran-index') targetUrl = '/layanan/portal-ibadah/quran/';
+                    else if (tabId === 'quran-detail') targetUrl = '/layanan/portal-ibadah/quran/baca/';
+                    else if (tabId === 'maulid-hub') targetUrl = '/layanan/portal-ibadah/maulid/';
+                    else if (tabId === 'maulid-index') targetUrl = '/layanan/portal-ibadah/maulid/ad-dibai/';
+                    else if (tabId === 'maulid-detail') targetUrl = '/layanan/portal-ibadah/maulid/ad-dibai/baca/';
+                    else if (tabId === 'burdah-index') targetUrl = '/layanan/portal-ibadah/burdah/';
+                    else if (tabId === 'tahlil-yasin') targetUrl = '/layanan/portal-ibadah/tahlil-dan-yasin/';
+                    else if (tabId === 'quran-page') targetUrl = '/layanan/portal-ibadah/quran/halaman/';
+                    else if (tabId === 'beranda') targetUrl = '/';
+                }
 
                 if (window.location.pathname !== targetUrl && (
                     tabId === 'profil' || tabId === 'sejarah-berdirinya' || tabId === 'tujuan-visi-misi' || tabId === 'struktur-kepengurusan' ||
@@ -1099,7 +1222,8 @@
             }
 
             if (!skipHistory) {
-                const canonicalUrl = `/berita/${news.slug}`;
+                const isAppContext = window.location.pathname.startsWith('/app') || window.location.pathname.endsWith('app.html');
+                const canonicalUrl = isAppContext ? `/app/berita/${news.slug}` : `/berita/${news.slug}`;
                 if (window.location.pathname !== canonicalUrl) {
                     window.history.pushState({ id: news.news_id }, news.judul, canonicalUrl);
                 }
@@ -1178,8 +1302,10 @@
         function kembaliDariBerita() {
             if (window.location.pathname.startsWith('/berita/')) {
                 window.history.pushState(null, '', '/');
+            } else if (window.location.pathname.startsWith('/app/berita/')) {
+                window.history.pushState(null, '', '/app/berita');
             }
-            switchTab(previousTabBeforeNews || 'beranda');
+            switchTab(previousTabBeforeNews || (window.location.pathname.startsWith('/app') ? 'kabar' : 'beranda'));
         }
 
         // ==================== SLIDER BANNER BERANDA (OPTIMIZED SWR) ====================
