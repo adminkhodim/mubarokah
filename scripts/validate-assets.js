@@ -10,7 +10,7 @@ function validateFileAssets(filename) {
 
   while ((match = regex.exec(content)) !== null) {
     const url = match[1];
-    if (!url.startsWith('http') && !url.startsWith('data:') && !url.startsWith('#') && !url.startsWith('blob:')) {
+    if (!url.startsWith('http') && !url.startsWith('data:') && !url.startsWith('#') && !url.startsWith('blob:') && !url.startsWith('javascript:') && !url.startsWith('tel:') && !url.startsWith('mailto:')) {
       localAssets.push(url);
     }
   }

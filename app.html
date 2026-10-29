@@ -35,8 +35,8 @@
     <!-- PWA & Mobile Web App Setup -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f766e">
-    <link rel="icon" type="image/png" href="assets/img/splash-logo.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="assets/img/splash-logo.png">
+    <link rel="icon" type="image/png" href="assets/img/icon-192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/img/apple-touch-icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Mubarokah">
@@ -60,7 +60,7 @@
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <!-- Compiled & Minified Tailwind CSS -->
-    <link rel="stylesheet" href="css/styles.min.css?v=40">
+    <link rel="stylesheet" href="css/styles.min.css?v=47">
 
     <!-- Central Tenant Configuration Contract -->
     <script src="js/app-config.js"></script>
@@ -1157,11 +1157,11 @@
                         <div class="space-y-3">
                             <h4 class="text-xs font-bold uppercase tracking-wider text-white">Program Pendidikan</h4>
                             <ul class="text-xs space-y-2 text-slate-400">
-                                <li><a href="javascript:void(0)" onclick="switchTab('ma-tahfidz')" class="hover:text-emerald-400 transition">MA Tahfidz (Aliyah)</a></li>
-                                <li><a href="javascript:void(0)" onclick="switchTab('tahfidz-anak')" class="hover:text-emerald-400 transition">Tahfidz Anak Usia Dini</a></li>
-                                <li><a href="javascript:void(0)" onclick="switchTab('reguler-putra-putri')" class="hover:text-emerald-400 transition">Pesantren Reguler</a></li>
-                                <li><a href="javascript:void(0)" onclick="switchTab('tahfidz-dewasa')" class="hover:text-emerald-400 transition">Tahfidz Dewasa & Mahasiswa</a></li>
-                                <li><a href="javascript:void(0)" onclick="switchTab('ppdb')" class="hover:text-amber-400 transition font-bold">Pendaftaran Santri Baru</a></li>
+                                <li><button type="button" onclick="switchTab('ma-tahfidz')" class="hover:text-emerald-400 transition text-left">MA Tahfidz (Aliyah)</button></li>
+                                <li><button type="button" onclick="switchTab('tahfidz-anak')" class="hover:text-emerald-400 transition text-left">Tahfidz Anak Usia Dini</button></li>
+                                <li><button type="button" onclick="switchTab('reguler-putra-putri')" class="hover:text-emerald-400 transition text-left">Pesantren Reguler</button></li>
+                                <li><button type="button" onclick="switchTab('tahfidz-dewasa')" class="hover:text-emerald-400 transition text-left">Tahfidz Dewasa & Mahasiswa</button></li>
+                                <li><button type="button" onclick="switchTab('ppdb')" class="hover:text-amber-400 transition font-bold text-left">Pendaftaran Santri Baru</button></li>
                             </ul>
                         </div>
 
@@ -1194,11 +1194,11 @@
                     <div class="border-t border-slate-800 pt-6 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-3">
                         <p>© 2026 PPTQ Roudlotul Mubarokah. Hak Cipta Dilindungi Undang-Undang.</p>
                         <div class="flex items-center space-x-4">
-                            <a href="javascript:void(0)" onclick="switchTab('profil')" class="hover:text-slate-300 transition">Tentang Kami</a>
+                            <button type="button" onclick="switchTab('profil')" class="hover:text-slate-300 transition">Tentang Kami</button>
                             <span>•</span>
-                            <a href="javascript:void(0)" onclick="switchTab('panduan')" class="hover:text-slate-300 transition">Panduan Sistem</a>
+                            <button type="button" onclick="switchTab('panduan')" class="hover:text-slate-300 transition">Panduan Sistem</button>
                             <span>•</span>
-                            <a href="javascript:void(0)" onclick="switchTab('ppdb')" class="text-amber-400 hover:text-amber-300 transition font-bold">Portal PPDB</a>
+                            <button type="button" onclick="switchTab('ppdb')" class="text-amber-400 hover:text-amber-300 transition font-bold">Portal PPDB</button>
                         </div>
                     </div>
                 </div>
@@ -21748,24 +21748,8 @@
     </div>
 
     <!-- ==================== APPLICATION SCRIPTS & MODULES ==================== -->
-    <!-- Service Worker PWA -->
-    <script>
-        if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=40').then(registration => {
-                    if (typeof registration.update === 'function') {
-                        registration.update();
-                    }
-                    console.log('ServiceWorker PWA berhasil didaftarkan dengan scope:', registration.scope);
-                }).catch(err => {
-                    console.log('ServiceWorker pendaftaran gagal:', err);
-                });
-            });
-        }
-    </script>
-
     <!-- PWA Smart Install Controller -->
-    <script src="js/pwa.js?v=4"></script>
+    <script src="js/pwa.js?v=5"></script>
 
     <!-- Data & API Core -->
     <script src="data-maulid-dibai.js"></script>
@@ -21775,7 +21759,7 @@
     <script src="js/data-programs.js"></script>
 
     <!-- Logic Modules -->
-    <script src="js/programs.js?v=30"></script>
+    <script src="js/programs.js?v=32"></script>
     <script src="js/ppdb.js"></script>
     <script src="js/ibadah.js"></script>
     <script src="js/jadwal-sholat.js"></script>
@@ -21794,7 +21778,7 @@
     <script src="js/panduan.js?v=30"></script>
 
     <!-- Main Controller & Navigation -->
-    <script src="js/main.js?v=32"></script>
+    <script src="js/main.js?v=42"></script>
     <script>
         // Pastikan view yang tepat langsung diprioritaskan saat membuka app.html
         (function() {
@@ -21819,7 +21803,7 @@
     <script>
         if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=57').then(registration => {
+                navigator.serviceWorker.register('sw.js?v=58').then(registration => {
                     if (typeof registration.update === 'function') {
                         registration.update();
                     }

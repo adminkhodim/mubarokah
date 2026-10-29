@@ -1,11 +1,17 @@
-const CACHE_NAME = 'mubarokah-cache-v57';
+/// <reference lib="webworker" />
+
+const CACHE_NAME = 'mubarokah-cache-v58';
 
 const PRECACHE_URLS = [
   '/',
   '/index.html',
+  '/app',
+  '/app.html',
   '/manifest.json',
   '/css/styles.min.css',
   '/js/app-config.js',
+  '/js/lazy-loader.js',
+  '/js/scroll-animations.js',
   '/data-maulid-dibai.js',
   '/data-qasidah-burdah.js',
   '/data-tahlil-yasin.js',
@@ -31,6 +37,9 @@ const PRECACHE_URLS = [
   '/js/panduan.js',
   '/js/main.js',
   '/assets/img/splash-logo.png',
+  '/assets/img/icon-192.png',
+  '/assets/img/icon-512.png',
+  '/assets/img/apple-touch-icon.png',
   '/assets/img/header-logo.png',
   '/assets/img/hero-santri.png',
   '/assets/audio/mecca_56_22.mp3',
@@ -60,7 +69,7 @@ self.addEventListener('activate', event => {
           return caches.delete(cacheName);
         })
       );
-    }).then(() => clients.claim())
+    }).then(() => self.clients.claim())
   );
 });
 
@@ -74,28 +83,35 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     fetch(event.request)
       .then(response => {
-        // Jangan cache respon yang tidak valid
-        if(!response || response.status !== 200 || response.type !== 'basic') {
+        // Jangan cache respon yang tidak valid (dukung basic dan cors untuk font/icon)
+        if (!response || response.status !== 200 || (response.type !== 'basic' && response.type !== 'cors')) {
           return response;
         }
-        
+
         // Kloning respons karena stream hanya bisa dibaca sekali
-        var responseToCache = response.clone();
-        
+        const responseToCache = response.clone();
+
         caches.open(CACHE_NAME)
           .then(cache => {
             cache.put(event.request, responseToCache);
           });
-          
+
         return response;
       })
       .catch(() => {
-        // Jika offline atau jaringan gagal, cari di cache
-        return caches.match(event.request).then(cachedResponse => {
+        // Jika offline atau jaringan gagal, cari di cache (ignoreSearch agar query parameter ?v=xx dan ?source=pwa cocok)
+        return caches.match(event.request, { ignoreSearch: true }).then(cachedResponse => {
           if (cachedResponse) {
             return cachedResponse;
           }
           if (event.request.mode === 'navigate') {
+            try {
+              const reqUrl = new URL(event.request.url);
+              const path = reqUrl.pathname.replace(/\/+$/, '') || '/';
+              if (path === '/app' || path.startsWith('/app/') || path.endsWith('app.html') || path === '/admin' || path === '/administrator') {
+                return caches.match('/app.html') || caches.match('/app') || caches.match('/index.html') || caches.match('/');
+              }
+            } catch (e) { }
             return caches.match('/index.html') || caches.match('/');
           }
         });
