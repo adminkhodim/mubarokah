@@ -1,12 +1,13 @@
 /// <reference lib="webworker" />
 
-const CACHE_NAME = 'mubarokah-cache-v58';
+const CACHE_NAME = 'mubarokah-cache-v59';
 
 const PRECACHE_URLS = [
   '/',
   '/index.html',
   '/app',
   '/app.html',
+  '/admin',
   '/manifest.json',
   '/css/styles.min.css',
   '/js/app-config.js',

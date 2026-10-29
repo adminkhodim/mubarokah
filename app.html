@@ -21784,11 +21784,12 @@
         (function() {
             function activateAdminView() {
                 if (typeof switchTab === 'function') {
+                    const path = window.location.pathname.replace(/\/+$/, '') || '/';
                     const isMobile = window.innerWidth < 1024;
-                    if (isMobile) {
-                        switchTab('pengaturan', false);
-                    } else {
+                    if (path === '/admin' || path.startsWith('/admin/') || path === '/administrator' || path.startsWith('/administrator/')) {
                         switchTab('admin', false);
+                    } else {
+                        switchTab('pengaturan', false);
                     }
                 }
             }
@@ -21803,7 +21804,7 @@
     <script>
         if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=58').then(registration => {
+                navigator.serviceWorker.register('sw.js?v=59').then(registration => {
                     if (typeof registration.update === 'function') {
                         registration.update();
                     }

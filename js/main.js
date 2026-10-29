@@ -222,12 +222,15 @@
                 }
             } else if (path === '/administrator' || path === '/admin') {
                 if (!document.getElementById('page-admin')) {
-                    window.location.href = window.location.protocol === 'file:' ? 'app.html' : '/app';
+                    window.location.href = window.location.protocol === 'file:' ? 'app.html' : '/admin';
                     return;
                 }
                 const isMobile = window.innerWidth < 1024;
-                if (isMobile) {
-                    window.history.replaceState({ tab: 'pengaturan' }, '', '/');
+                const isUserAdmin = (typeof checkIsAdminLoggedIn === 'function')
+                    ? checkIsAdminLoggedIn()
+                    : ((typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn) || (typeof ASNIdentity !== 'undefined' && (ASNIdentity.currentRole === 'admin' || ASNIdentity.currentRole === 'editor')));
+
+                if (isMobile && !isUserAdmin) {
                     switchTab('pengaturan', false);
                 } else {
                     switchTab('admin', false);
@@ -400,9 +403,9 @@
         }
 
         function switchTab(tabId, updateUrl = true, customUrl = null) {
-            // Guard Decoupling: Jika tab admin diminta dari portal publik tanpa elemen page-admin, arahkan ke aplikasi internal app.html / /app
+            // Guard Decoupling: Jika tab admin diminta dari portal publik tanpa elemen page-admin, arahkan ke aplikasi internal /admin
             if (tabId === 'admin' && !document.getElementById('page-admin')) {
-                window.location.href = window.location.protocol === 'file:' ? 'app.html' : '/app';
+                window.location.href = window.location.protocol === 'file:' ? 'app.html' : '/admin';
                 return;
             }
 
@@ -447,7 +450,7 @@
                 else if (tabId === 'jadwal-kegiatan') targetUrl = '/kehidupan-santri/jadwal-kegiatan/';
                 else if (tabId === 'unit-kegiatan') targetUrl = '/kehidupan-santri/unit-kegiatan/';
                 else if (tabId === 'poskestren') targetUrl = '/kehidupan-santri/poskestren/';
-                else if (tabId === 'admin') targetUrl = '/administrator';
+                else if (tabId === 'admin') targetUrl = '/admin';
                 else if (tabId === 'pengaturan') targetUrl = '/pengaturan';
                 else if (tabId === 'notifikasi') targetUrl = '/notifikasi';
                 else if (tabId === 'alumni') targetUrl = '/kehidupan-santri/ikatan-alumni/';

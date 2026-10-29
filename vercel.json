@@ -1,27 +1,5 @@
 {
   "cleanUrls": true,
-  "redirects": [
-    {
-      "source": "/administrator",
-      "destination": "/app",
-      "permanent": false
-    },
-    {
-      "source": "/administrator/(.*)",
-      "destination": "/app",
-      "permanent": false
-    },
-    {
-      "source": "/admin",
-      "destination": "/app",
-      "permanent": false
-    },
-    {
-      "source": "/admin/(.*)",
-      "destination": "/app",
-      "permanent": false
-    }
-  ],
   "rewrites": [
     {
       "source": "/berita/:slug",
@@ -36,19 +14,19 @@
       "destination": "/app"
     },
     {
-      "source": "/administrator",
-      "destination": "/app"
-    },
-    {
-      "source": "/administrator/(.*)",
-      "destination": "/app"
-    },
-    {
       "source": "/admin",
       "destination": "/app"
     },
     {
       "source": "/admin/(.*)",
+      "destination": "/app"
+    },
+    {
+      "source": "/administrator",
+      "destination": "/app"
+    },
+    {
+      "source": "/administrator/(.*)",
       "destination": "/app"
     },
     {

@@ -670,12 +670,18 @@
 
             <!-- Tombol Aksi Kanan Kapsul Persis Ar-Rawdhah -->
             <div id="desk-action-menu" class="flex items-center gap-2 lg:gap-2.5 shrink-0">
-                <!-- Tombol Masuk SIMTren App (Disembunyikan di Dekstop) -->
-                <a href="app.html"
-                    class="hidden bg-slate-100 hover:bg-emerald-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-[#022c22] px-4 py-2 rounded-full font-bold text-xs transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 items-center gap-1.5 border border-slate-200/80 dark:border-slate-700 shadow-xs"
+                <!-- Tombol Masuk SIMTren App & Portal Admin -->
+                <a href="/app"
+                    class="hidden bg-slate-100 hover:bg-emerald-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-[#022c22] px-3.5 py-2 rounded-full font-bold text-xs transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 items-center gap-1.5 border border-slate-200/80 dark:border-slate-700 shadow-xs"
+                    title="Buka Aplikasi Santri & Wali (PWA)">
+                    <i class="fa-solid fa-mobile-screen-button text-[#022c22] dark:text-emerald-400 text-xs"></i>
+                    <span>Aplikasi Santri</span>
+                </a>
+                <a href="/admin"
+                    class="hidden bg-slate-100 hover:bg-emerald-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-[#022c22] px-3.5 py-2 rounded-full font-bold text-xs transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 items-center gap-1.5 border border-slate-200/80 dark:border-slate-700 shadow-xs"
                     title="Masuk ke Sistem Informasi Manajemen Pesantren (SIMTren)">
                     <i class="fa-solid fa-graduation-cap text-[#022c22] dark:text-emerald-400 text-xs"></i>
-                    <span>SIMTren App</span>
+                    <span>Portal Admin</span>
                 </a>
                 <!-- Tombol Notifikasi Desktop (Disembunyikan di Dekstop) -->
                 <button onclick="switchTab('notifikasi');"
@@ -898,10 +904,15 @@
                     <i class="fa-solid fa-user-plus"></i>
                     <span>Daftar PPDB Online</span>
                 </button>
-                <a href="app.html"
+                <a href="/app"
                     class="w-full py-2.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-extrabold text-xs shadow flex items-center justify-center space-x-2 border border-emerald-500/30 transition active:scale-95">
-                    <i class="fa-solid fa-graduation-cap"></i>
-                    <span>Masuk SIMTren / Khodim App</span>
+                    <i class="fa-solid fa-mobile-screen-button"></i>
+                    <span>Aplikasi Santri & Wali (PWA)</span>
+                </a>
+                <a href="/admin"
+                    class="w-full py-2 px-4 rounded-xl bg-teal-900/80 hover:bg-teal-800 text-teal-200 hover:text-white text-[11px] font-semibold flex items-center justify-center space-x-2 border border-teal-700/40 transition">
+                    <i class="fa-solid fa-lock"></i>
+                    <span>Portal Pengurus / Admin (SIMTren)</span>
                 </a>
             </div>
         </div>
@@ -9576,7 +9587,7 @@
     <script>
         if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=58').then(registration => {
+                navigator.serviceWorker.register('sw.js?v=59').then(registration => {
                     if (typeof registration.update === 'function') {
                         registration.update();
                     }

@@ -28,7 +28,14 @@ const server = http.createServer((req, res) => {
   // Routing rules matching vercel.json
   if (reqPath === '/' || reqPath === '') {
     reqPath = '/index.html';
-  } else if (reqPath === '/app' || reqPath === '/admin' || reqPath === '/administrator' || reqPath.startsWith('/app/')) {
+  } else if (
+    reqPath === '/app' ||
+    reqPath.startsWith('/app/') ||
+    reqPath === '/admin' ||
+    reqPath.startsWith('/admin/') ||
+    reqPath === '/administrator' ||
+    reqPath.startsWith('/administrator/')
+  ) {
     reqPath = '/app.html';
   }
 
@@ -63,5 +70,6 @@ server.listen(PORT, () => {
   console.log(`🚀 Mubarokah App Dev Server berjalan di:`);
   console.log(`   - Portal Publik: http://localhost:${PORT}/`);
   console.log(`   - SIMTren App:   http://localhost:${PORT}/app`);
+  console.log(`   - Portal Admin:  http://localhost:${PORT}/admin`);
   console.log(`====================================================\n`);
 });

@@ -6,6 +6,5 @@
     "checkJs": false,
     "lib": ["es2022", "dom", "webworker"]
   },
-  "exclude": ["node_modules", "legacy"]
+  "exclude": ["node_modules", "legacy", "*.bak", "**/*.bak"]
 }
-

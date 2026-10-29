@@ -8,9 +8,22 @@ function validateFileAssets(filename) {
   let match;
   const localAssets = [];
 
+  const knownRoutes = ['/', '/app', '/admin', '/administrator', '/berita', '/tentang-kami'];
+
   while ((match = regex.exec(content)) !== null) {
     const url = match[1];
-    if (!url.startsWith('http') && !url.startsWith('data:') && !url.startsWith('#') && !url.startsWith('blob:') && !url.startsWith('javascript:') && !url.startsWith('tel:') && !url.startsWith('mailto:')) {
+    if (
+      !url.startsWith('http') &&
+      !url.startsWith('data:') &&
+      !url.startsWith('#') &&
+      !url.startsWith('blob:') &&
+      !url.startsWith('javascript:') &&
+      !url.startsWith('tel:') &&
+      !url.startsWith('mailto:') &&
+      !knownRoutes.includes(url) &&
+      !url.startsWith('/app/') &&
+      !url.startsWith('/admin/')
+    ) {
       localAssets.push(url);
     }
   }
