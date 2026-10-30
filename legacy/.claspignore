@@ -1,7 +1,13 @@
 # Ignore all files by default
 **/*
 
-# Explicitly whitelist files for Google Apps Script
-!Code.gs
-!Index.html
+# Whitelist modular Google Apps Script domain files
+!00_Config_Security.gs
+!01_Router.gs
+!02_Auth_RBAC.gs
+!03_PPDB.gs
+!04_Tahfidz.gs
+!05_CMS.gs
+!06_MasterData.gs
+!07_Keuangan.gs
 !appsscript.json
