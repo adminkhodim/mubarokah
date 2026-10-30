@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 
-const CACHE_NAME = 'mubarokah-cache-v64';
+const CACHE_NAME = 'mubarokah-cache-v65';
 
 const PRECACHE_URLS = [
   '/',
@@ -11,6 +11,7 @@ const PRECACHE_URLS = [
   '/manifest.json',
   '/css/styles.min.css',
   '/js/app-config.js',
+  '/js/supabase-client.js',
   '/js/lazy-loader.js',
   '/js/scroll-animations.js',
   '/data-maulid-dibai.js',
@@ -84,6 +85,7 @@ self.addEventListener('fetch', event => {
   try {
     const reqUrl = new URL(event.request.url);
     const isApiOrSensitive = reqUrl.pathname.startsWith('/api/') ||
+                             reqUrl.hostname.includes('supabase.co') ||
                              reqUrl.hostname.includes('script.google.com') ||
                              reqUrl.hostname.includes('script.googleusercontent.com') ||
                              reqUrl.searchParams.has('action') ||

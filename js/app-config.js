@@ -85,6 +85,14 @@
             vercelTeamId: PENDING
         }),
 
+        // E2. Supabase Cloud Database (PostgreSQL Multi-Tenant Backend)
+        supabase: Object.freeze({
+            enabled: true,
+            url: "https://qyurpxbawyjijoqpijnw.supabase.co",
+            anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5dXJweGJhd3lqaWpvcXBpam53Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMyOTg3NjMsImV4cCI6MjEwODg3NDc2M30.lEUT2SWaOCVo0__dh5eVwcNirimV57LO9dxJVeAQKdM",
+            defaultTenantSlug: "mubarokah"
+        }),
+
         // F. Authentication
         authentication: Object.freeze({
             authApiUrl: (typeof window !== 'undefined' && (window.location.protocol === 'http:' || window.location.protocol === 'https:'))

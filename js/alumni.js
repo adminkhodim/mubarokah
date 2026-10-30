@@ -263,56 +263,70 @@
                 btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> <span>Simpan Data</span>';
             }
         }
-    
         async function loadAlumniTestimonials() {
             const container = document.getElementById('alumni-testimonials-container');
             if (!container) return;
 
+            // 1. Coba ambil testimoni dari Supabase terlebih dahulu (Strangler Fig Pattern)
+            if (typeof MubarokahSupabase !== 'undefined' && MubarokahSupabase.isEnabled()) {
+                try {
+                    const sbData = await MubarokahSupabase.fetchAlumniTestimonials();
+                    if (Array.isArray(sbData) && sbData.length > 0) {
+                        renderTestimonialsList(container, sbData);
+                        return;
+                    }
+                } catch (sbErr) {
+                    console.warn("[loadAlumniTestimonials] Supabase error, fallback ke Apps Script:", sbErr);
+                }
+            }
+
             try {
                 const data = await apiGet('alumni.getTestimonials');
-                
-                if (!data || data.length === 0) {
-                    container.innerHTML = '<div class="md:col-span-3 text-center text-xs text-slate-500 dark:text-slate-400 py-10">Belum ada testimoni terbaru.</div>';
-                    return;
-                }
-
-                container.innerHTML = '';
-                const colors = ['brand', 'purple', 'sky', 'rose', 'amber'];
-
-                data.forEach((item, index) => {
-                    const color = colors[index % colors.length];
-                    const inisial = item.nama.substring(0, 2).toUpperCase();
-                    
-                    const avatarHtml = item.foto && item.foto !== "" 
-                        ? `<img src="${item.foto}" alt="${item.nama}" class="w-12 h-12 rounded-full object-cover shrink-0 border-2 border-${color}-300">`
-                        : `<div class="w-12 h-12 bg-${color}-700 text-white rounded-full flex items-center justify-center font-bold text-sm shrink-0 border-2 border-${color}-300">${inisial}</div>`;
-
-                    let pekerjaan = item.instansi || item.kesibukan || 'Alumni';
-                    
-                    let cardHtml = `
-                        <div class="bg-slate-50 dark:bg-[#1c2836] p-4 rounded-2xl border border-slate-100 dark:border-[#253447] space-y-3 flex flex-col justify-between">
-                            <div class="space-y-2">
-                                <div class="flex items-center space-x-3">
-                                    ${avatarHtml}
-                                    <div>
-                                        <h4 class="text-xs md:text-sm font-bold text-slate-800 dark:text-slate-100 line-clamp-1">${escapeHtml(item.nama)}</h4>
-                                        <p class="text-[10px] text-${color}-700 font-semibold">Alumni Angkatan ${escapeHtml(item.tahunLulus || item.tahunMasuk || '-')}</p>
-                                    </div>
-                                </div>
-                                <span class="inline-block bg-${color}-100 text-${color}-800 text-[9px] font-extrabold px-2 py-0.5 rounded-md line-clamp-1">
-                                    ${escapeHtml(pekerjaan)}
-                                </span>
-                                <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed italic line-clamp-4">
-                                    "${escapeHtml(item.kesan)}"
-                                </p>
-                            </div>
-                        </div>
-                    `;
-                    container.innerHTML += cardHtml;
-                });
-
+                renderTestimonialsList(container, data);
             } catch (err) {
                 console.error(err);
                 container.innerHTML = '<div class="md:col-span-3 text-center text-xs text-rose-500 py-10">Gagal memuat testimoni.</div>';
             }
+        }
+
+        function renderTestimonialsList(container, data) {
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="md:col-span-3 text-center text-xs text-slate-500 dark:text-slate-400 py-10">Belum ada testimoni terbaru.</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            const colors = ['brand', 'purple', 'sky', 'rose', 'amber'];
+
+            data.forEach((item, index) => {
+                const color = colors[index % colors.length];
+                const inisial = (item.nama || 'AL').substring(0, 2).toUpperCase();
+                
+                const avatarHtml = item.foto && item.foto !== "" 
+                    ? `<img src="${item.foto}" alt="${escapeHtml(item.nama)}" class="w-12 h-12 rounded-full object-cover shrink-0 border-2 border-${color}-300">`
+                    : `<div class="w-12 h-12 bg-${color}-700 text-white rounded-full flex items-center justify-center font-bold text-sm shrink-0 border-2 border-${color}-300">${inisial}</div>`;
+
+                let pekerjaan = item.instansi || item.kesibukan || 'Alumni';
+                
+                let cardHtml = `
+                    <div class="bg-slate-50 dark:bg-[#1c2836] p-4 rounded-2xl border border-slate-100 dark:border-[#253447] space-y-3 flex flex-col justify-between">
+                        <div class="space-y-2">
+                            <div class="flex items-center space-x-3">
+                                ${avatarHtml}
+                                <div>
+                                    <h4 class="text-xs md:text-sm font-bold text-slate-800 dark:text-slate-100 line-clamp-1">${escapeHtml(item.nama)}</h4>
+                                    <p class="text-[10px] text-${color}-700 font-semibold">Alumni Angkatan ${escapeHtml(item.tahunLulus || item.tahunMasuk || '-')}</p>
+                                </div>
+                            </div>
+                            <span class="inline-block bg-${color}-100 text-${color}-800 text-[9px] font-extrabold px-2 py-0.5 rounded-md line-clamp-1">
+                                ${escapeHtml(pekerjaan)}
+                            </span>
+                            <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed italic line-clamp-4">
+                                "${escapeHtml(item.kesan || '')}"
+                            </p>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += cardHtml;
+            });
         }

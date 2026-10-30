@@ -847,6 +847,24 @@
                 console.warn('[loadNews] Error parsing local cache:', e);
             }
 
+            // SWR: Ambil data dari Supabase terlebih dahulu (Strangler Fig Pattern)
+            if (typeof MubarokahSupabase !== 'undefined' && MubarokahSupabase.isEnabled()) {
+                try {
+                    const sbNews = await MubarokahSupabase.fetchNews();
+                    if (Array.isArray(sbNews) && sbNews.length > 0) {
+                        mockNewsData = sbNews;
+                        try {
+                            localStorage.setItem(NEWS_CACHE_KEY, JSON.stringify(sbNews));
+                        } catch (storeErr) {}
+                        renderAllNewsViews(mockNewsData);
+                        checkPendingNewsRoute();
+                        return;
+                    }
+                } catch (sbErr) {
+                    console.warn("[loadNews] Supabase fetch error, fallback ke Apps Script:", sbErr);
+                }
+            }
+
             if (!isApiConfigured()) {
                 renderAllNewsViews(mockNewsData);
                 checkPendingNewsRoute();
@@ -1396,6 +1414,33 @@
                 }
             } catch (e) {
                 console.warn("Gagal membaca cache banner:", e);
+            }
+
+            // 2. REVALIDATE (STRANGLER FIG): Ambil data dari Supabase terlebih dahulu
+            if (typeof MubarokahSupabase !== 'undefined' && MubarokahSupabase.isEnabled()) {
+                try {
+                    const sbBanners = await MubarokahSupabase.fetchBanners();
+                    if (Array.isArray(sbBanners) && sbBanners.length > 0) {
+                        const newDataStr = JSON.stringify(sbBanners);
+                        const oldDataStr = localStorage.getItem(MAIN_BANNER_CACHE_KEY);
+
+                        localStorage.setItem(MAIN_BANNER_CACHE_KEY, newDataStr);
+                        mockBannerData = sbBanners;
+
+                        // Update UI jika ada perubahan data dari cache sebelumnya
+                        if (newDataStr !== oldDataStr) {
+                            renderHeroSlider();
+                            if (typeof renderAdminBannerList === 'function') renderAdminBannerList();
+                        } else {
+                            if (typeof syncHeroBannerShowcase === 'function') {
+                                syncHeroBannerShowcase(sbBanners.filter(b => b.status === "Aktif"));
+                            }
+                        }
+                        return; // Berhasil dimuat dari Supabase
+                    }
+                } catch (sbErr) {
+                    console.warn("[loadBanners] Supabase fetch error, fallback ke Apps Script:", sbErr);
+                }
             }
 
             if (!isApiConfigured()) return;
