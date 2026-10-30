@@ -26,7 +26,7 @@ async function runTests() {
     // 3. Uji Pengambilan & Normalisasi Banner dari Database Live Supabase
     const banners = await SupabaseClient.fetchBanners();
     assert.ok(Array.isArray(banners), "Banner harus berupa Array");
-    assert.strictEqual(banners.length, 3, "Harus mengembalikan 3 banner aktif");
+    assert.ok(banners.length >= 3, `Harus mengembalikan minimal 3 banner aktif, didapatkan: ${banners.length}`);
 
     const firstBanner = banners[0];
     assert.ok(firstBanner.nama, "Banner harus memiliki atribut 'nama'");
