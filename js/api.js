@@ -12,7 +12,7 @@
             const baseUrl = WEB_APP_URL;
             if (!baseUrl) throw new Error("API URL belum dikonfigurasi.");
 
-            const url = new URL(baseUrl);
+            const url = new URL(baseUrl, (typeof window !== 'undefined' && window.location.origin) ? window.location.origin : 'https://www.mubarokah.my.id');
             url.searchParams.set("action", action);
             Object.entries(params).forEach(([key, value]) => {
                 // Prevent client-side or arbitrary query param from overriding authoritative tenantId

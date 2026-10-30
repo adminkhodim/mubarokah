@@ -72,7 +72,9 @@
 
         // E. Infrastructure Pointers (External services - unpopulated until provisioned)
         infrastructure: Object.freeze({
-            apiBaseUrl: "https://script.google.com/macros/s/AKfycbz4To49WTzqN2r3M8M3H4_YyAbeMjfTWRgxLrz6-YXuf7oFAVZZ6okh14LTIkZdMj9qGg/exec",
+            apiBaseUrl: (typeof window !== 'undefined' && (window.location.protocol === 'http:' || window.location.protocol === 'https:'))
+                ? "/api/auth"
+                : "https://script.google.com/macros/s/AKfycbz4To49WTzqN2r3M8M3H4_YyAbeMjfTWRgxLrz6-YXuf7oFAVZZ6okh14LTIkZdMj9qGg/exec",
             appsScriptWebAppUrl: "https://script.google.com/macros/s/AKfycbz4To49WTzqN2r3M8M3H4_YyAbeMjfTWRgxLrz6-YXuf7oFAVZZ6okh14LTIkZdMj9qGg/exec",
             appsScriptProjectId: PENDING,
             spreadsheetId: PENDING,
@@ -85,7 +87,9 @@
 
         // F. Authentication
         authentication: Object.freeze({
-            authApiUrl: "https://script.google.com/macros/s/AKfycbz4To49WTzqN2r3M8M3H4_YyAbeMjfTWRgxLrz6-YXuf7oFAVZZ6okh14LTIkZdMj9qGg/exec",
+            authApiUrl: (typeof window !== 'undefined' && (window.location.protocol === 'http:' || window.location.protocol === 'https:'))
+                ? "/api/auth"
+                : "https://script.google.com/macros/s/AKfycbz4To49WTzqN2r3M8M3H4_YyAbeMjfTWRgxLrz6-YXuf7oFAVZZ6okh14LTIkZdMj9qGg/exec",
             googleClientId: PENDING
         }),
 

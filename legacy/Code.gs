@@ -5993,9 +5993,40 @@ const SHEET_USERS = "Users";
 const SHEET_OTP = "OTP_Cache";
 
 /**
- * Hash password menggunakan SHA-256 dengan Salt Server
+ * P2 SECURITY AUDIT FIX: Key Derivation Function PBKDF2-HMAC-SHA256
+ * Menghasilkan hash password berstandar industri dengan 5.000 iterasi dan salt unik per pengguna.
  */
-function hashPassword(password) {
+function computePbkdf2Sha256(password, salt, iterations) {
+  iterations = iterations || 5000;
+  const saltBytes = Utilities.newBlob(salt).getBytes();
+  const saltWithBlock = saltBytes.concat([0, 0, 0, 1]);
+
+  let u = Utilities.computeHmacSha256Signature(saltWithBlock, password);
+  let t = u.slice();
+
+  for (let i = 1; i < iterations; i++) {
+    u = Utilities.computeHmacSha256Signature(u, password);
+    for (let j = 0; j < 32; j++) {
+      t[j] ^= u[j];
+    }
+  }
+
+  return t.map(function(b) {
+    return (b < 0 ? b + 256 : b).toString(16).padStart(2, '0');
+  }).join('');
+}
+
+function constantTimeCompare(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) {
+    diff |= (a.charCodeAt(i) ^ b.charCodeAt(i));
+  }
+  return diff === 0;
+}
+
+function hashLegacyPassword(password) {
   const salt = getServerSecret("PASSWORD_SALT", "");
   const digest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(password) + salt, Utilities.Charset.UTF_8);
   return digest.map(function(b) {
@@ -6003,14 +6034,46 @@ function hashPassword(password) {
   }).join('');
 }
 
-/**
- * Verifikasi password dengan dukungan migrasi backward-compatibility
- */
+function hashPassword(password) {
+  const salt = Utilities.getUuid().replace(/-/g, "").substring(0, 16);
+  const iters = 5000;
+  const derived = computePbkdf2Sha256(String(password), salt, iters);
+  return "PBKDF2$sha256$" + iters + "$" + salt + "$" + derived;
+}
+
 function verifyPassword(inputPassword, storedPassword) {
-  if (!storedPassword) return false;
-  // Backward compatibility untuk data lama yang sempat tersimpan plain-text
-  if (storedPassword === inputPassword) return true;
-  return hashPassword(inputPassword) === storedPassword;
+  if (!storedPassword || !inputPassword) return false;
+  const storedStr = String(storedPassword).trim();
+
+  // 1. Format Standar Kuat: PBKDF2-HMAC-SHA256
+  if (storedStr.startsWith("PBKDF2$sha256$")) {
+    const parts = storedStr.split("$");
+    if (parts.length === 5) {
+      const iters = parseInt(parts[2], 10) || 5000;
+      const salt = parts[3];
+      const expectedKey = parts[4];
+      const actualKey = computePbkdf2Sha256(String(inputPassword), salt, iters);
+      return constantTimeCompare(actualKey, expectedKey);
+    }
+  }
+
+  // 2. Backward-Compatibility: Legacy SHA-256 Hash
+  const legacyHash = hashLegacyPassword(inputPassword);
+  if (constantTimeCompare(legacyHash, storedStr)) {
+    return true;
+  }
+
+  // 3. Fallback Data Lama: Plain-Text (hanya untuk migrasi awal)
+  if (storedStr === String(inputPassword)) {
+    return true;
+  }
+
+  return false;
+}
+
+function isPasswordUpgradeNeeded(storedPassword) {
+  if (!storedPassword) return true;
+  return !String(storedPassword).trim().startsWith("PBKDF2$sha256$");
 }
 
 function handleRequestOTP(data) {
@@ -6125,8 +6188,8 @@ function handleLogin(data) {
     if (usersData[i][1] === email) {
       const storedPassword = usersData[i][2];
       if (verifyPassword(password, storedPassword)) {
-        // Upgrade password plain-text menjadi hash secara otomatis jika ditemukan format lama
-        if (storedPassword === password) {
+        // Upgrade password plain-text atau hash lama menjadi hash PBKDF2 secara otomatis
+        if (isPasswordUpgradeNeeded(storedPassword)) {
           userSheet.getRange(i + 1, 3).setValue(hashPassword(password));
         }
         const tokenData = generateSessionToken(email, "user", 24 * 30);
@@ -10490,6 +10553,11 @@ function handleAuthApiAction(action, payload, e) {
           });
         }
 
+        // Auto-upgrade password hash lama ke PBKDF2 saat login berhasil
+        if (isPasswordUpgradeNeeded(admin.passwordHash)) {
+          setUserPasswordHash(admin.identityId, password);
+        }
+
         const ttlHours = getSessionTtlHoursForRole(admin.role);
         const session = createAuthSessionRecord(admin.identityId, admin.role, ttlHours);
         const tokenData = generateSessionToken(admin.email, admin.role, ttlHours, session.sessionId, admin.identityId);
@@ -10860,6 +10928,11 @@ function handleAuthApiAction(action, payload, e) {
         }
 
         const waliId = wali.identityId || wali.userId;
+        // Auto-upgrade password hash lama ke PBKDF2 saat login berhasil
+        if (isPasswordUpgradeNeeded(wali.passwordHash)) {
+          setUserPasswordHash(waliId, password);
+        }
+
         const ttlHours = getSessionTtlHoursForRole("WALI_SANTRI");
         const session = createAuthSessionRecord(waliId, "WALI_SANTRI", ttlHours);
         const tokenData = generateSessionToken(wali.email, "WALI_SANTRI", ttlHours, session.sessionId, waliId);
