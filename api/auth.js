@@ -5,6 +5,7 @@
  */
 
 const https = require('https');
+const authService = require('./lib/auth-service.js');
 
 const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4To49WTzqN2r3M8M3H4_YyAbeMjfTWRgxLrz6-YXuf7oFAVZZ6okh14LTIkZdMj9qGg/exec";
 
@@ -121,6 +122,58 @@ module.exports = async function handler(req, res) {
 
             if (!payload) {
                 payload = {};
+            }
+
+            const action = payload.action;
+            const reqInfo = {
+                ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress || '',
+                userAgent: req.headers['user-agent'] || ''
+            };
+
+            // ================================================================
+            // SUPABASE POSTGRESQL NATIVE AUTH (STRANGLER FIG PATTERN)
+            // ================================================================
+            if (action === 'auth.admin.loginWithPassword') {
+                try {
+                    const sbRes = await authService.loginAdminWithPassword(payload.email, payload.password, reqInfo);
+                    if (sbRes) {
+                        return res.status(200).json(sbRes);
+                    }
+                } catch (sbErr) {
+                    console.warn('[AUTH PROXY] Supabase admin login error, fallback to GAS:', sbErr.message);
+                }
+            } else if (action === 'auth.parent.loginWithPassword' || action === 'auth.wali.loginWithPassword') {
+                try {
+                    const identifier = payload.identifier || payload.phone || payload.email;
+                    const sbRes = await authService.loginParentWithPassword(identifier, payload.password, reqInfo);
+                    if (sbRes) {
+                        return res.status(200).json(sbRes);
+                    }
+                } catch (sbErr) {
+                    console.warn('[AUTH PROXY] Supabase parent login error, fallback to GAS:', sbErr.message);
+                }
+            } else if (action === 'auth.session') {
+                try {
+                    const token = payload.token || (req.headers.authorization && req.headers.authorization.replace(/^Bearer\s+/i, ''));
+                    const session = await authService.verifySessionToken(token);
+                    if (session && session.valid) {
+                        return res.status(200).json({
+                            success: true,
+                            valid: true,
+                            identity: session.identity,
+                            role: session.role
+                        });
+                    }
+                } catch (sbErr) {
+                    console.warn('[AUTH PROXY] Supabase session verify error, fallback to GAS:', sbErr.message);
+                }
+            } else if (action === 'auth.logout') {
+                try {
+                    const token = payload.token || (req.headers.authorization && req.headers.authorization.replace(/^Bearer\s+/i, ''));
+                    await authService.revokeSession(token);
+                } catch (sbErr) {
+                    console.warn('[AUTH PROXY] Supabase session revoke error:', sbErr.message);
+                }
             }
 
             result = await requestGoogleAppsScript(scriptUrl, 'POST', payload);

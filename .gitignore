@@ -31,3 +31,8 @@ credentials*.json
 *.bak
 scratch/
 .vercel
+
+# Migration Data (PII & sensitive student/financial records)
+migration_data/*.json
+migration_data/*.csv
+!migration_data/README.md
