@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 
-const CACHE_NAME = 'mubarokah-cache-v63';
+const CACHE_NAME = 'mubarokah-cache-v64';
 
 const PRECACHE_URLS = [
   '/',
@@ -79,6 +79,21 @@ self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET' || !event.request.url.startsWith('http')) {
     return;
   }
+
+  // P1 SECURITY: Pengecualian mutlak untuk endpoint API dan data dinamis/sensitif agar tidak tersimpan di CacheStorage browser
+  try {
+    const reqUrl = new URL(event.request.url);
+    const isApiOrSensitive = reqUrl.pathname.startsWith('/api/') ||
+                             reqUrl.hostname.includes('script.google.com') ||
+                             reqUrl.hostname.includes('script.googleusercontent.com') ||
+                             reqUrl.searchParams.has('action') ||
+                             reqUrl.searchParams.has('token') ||
+                             reqUrl.searchParams.has('id');
+    if (isApiOrSensitive) {
+      event.respondWith(fetch(event.request));
+      return;
+    }
+  } catch (err) { }
 
   // Network-first strategy: Ambil dari internet dulu, kalau gagal (offline) baru ambil dari cache
   event.respondWith(

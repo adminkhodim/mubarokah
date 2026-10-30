@@ -1394,6 +1394,13 @@ function doPost(e) {
     }
 
     if (action === "alumni.delete") {
+      const token = payload.token || (payload.data && payload.data.token) || null;
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["ADMIN", "SUPER_ADMIN", "PENGURUS"]);
+      } catch (authErr) {
+        return createJsonResponse({ success: false, status: "error", message: "Otorisasi gagal: " + authErr.message });
+      }
       const rowIndex = payload.rowIndex || (payload.data && payload.data.rowIndex);
       const nama = payload.nama || (payload.data && payload.data.nama);
       return createJsonResponse(deleteAlumniData(rowIndex, nama));
@@ -10519,7 +10526,6 @@ function handleAuthApiAction(action, payload, e) {
     if (action === "auth.admin.setPassword") {
       return withAuthScriptLock(() => {
         const password = String(payload.password || "").trim();
-        const email = String(payload.email || "").trim().toLowerCase();
         const token = payload.token || "";
 
         if (!password || password.length < 6) {
@@ -10529,32 +10535,52 @@ function handleAuthApiAction(action, payload, e) {
           });
         }
 
-        let adminId = "";
-        let adminEmail = email;
-
-        if (token) {
-          try {
-            const actor = authenticateSession(token);
-            if (actor && actor.identityId) {
-              adminId = actor.identityId;
-              if (actor.identity && actor.identity.email) adminEmail = actor.identity.email;
-            }
-          } catch (e) {}
-        }
-
-        if (!adminId && adminEmail) {
-          const admin = getAdminIdentityByEmail(adminEmail);
-          if (admin) adminId = admin.identityId;
-        }
-
-        if (!adminId && !adminEmail) {
+        // P0 SECURITY AUDIT FIX: Perubahan password admin WAJIB diautentikasi dengan token aktif yang sah.
+        // TIDAK BOLEH mengizinkan perubahan hanya dengan menyertakan email tanpa token!
+        if (!token) {
+          writeAuthAuditLog("PASSWORD_SET_UNAUTHORIZED_NO_TOKEN", "ANONYMOUS", "", "PASSWORD", false, requestId, {
+            attemptedEmail: payload.email || ""
+          });
           return createJsonResponse({
             success: false,
-            message: "Identitas akun admin tidak valid untuk perubahan kata sandi."
+            message: "Otorisasi gagal. Token sesi autentikasi admin wajib disertakan."
           });
         }
 
-        const success = setUserPasswordHash(adminId || adminEmail, password);
+        let actor = null;
+        try {
+          actor = authenticateSession(token);
+        } catch (authErr) {
+          writeAuthAuditLog("PASSWORD_SET_UNAUTHORIZED_INVALID_TOKEN", "ANONYMOUS", "", "PASSWORD", false, requestId, {
+            error: authErr.message
+          });
+          return createJsonResponse({
+            success: false,
+            message: "Sesi admin tidak valid atau telah kedaluwarsa. Silakan login kembali."
+          });
+        }
+
+        if (!actor || !actor.identityId) {
+          return createJsonResponse({
+            success: false,
+            message: "Identitas akun admin tidak valid."
+          });
+        }
+
+        // Hanya role ADMIN, SUPER_ADMIN, atau pengurus sah yang boleh mengubah password akun admin
+        const callerRole = String(actor.role || (actor.identity && actor.identity.role) || "").toUpperCase();
+        if (callerRole !== "ADMIN" && callerRole !== "SUPER_ADMIN" && callerRole !== "PENGURUS") {
+          writeAuthAuditLog("PASSWORD_SET_FORBIDDEN_ROLE", actor.identityId, "", "PASSWORD", false, requestId, {
+            role: callerRole
+          });
+          return createJsonResponse({
+            success: false,
+            message: "Akses ditolak: Hanya peran Administrator yang diizinkan mengubah kata sandi."
+          });
+        }
+
+        const adminId = actor.identityId;
+        const success = setUserPasswordHash(adminId, password);
         if (success) {
           writeAuthAuditLog("PASSWORD_SET_SUCCESS", adminId, "", "PASSWORD", true, requestId, {});
           return createJsonResponse({
@@ -10595,7 +10621,7 @@ function handleAuthApiAction(action, payload, e) {
         // Cek challenge pending berumur < 60 detik (cooldown check)
         const pending = findPendingOtpChallenge("EMAIL", idHash);
         if (pending && !pending.isExpired) {
-          const elapsed = (new Date().getTime() - new Date(pending.expiresAt.getTime() - 1800000).getTime()) / 1000;
+          const elapsed = (new Date().getTime() - new Date(pending.expiresAt.getTime() - 300000).getTime()) / 1000;
           if (elapsed < 60) {
             return createJsonResponse({
               success: true,
@@ -10614,7 +10640,7 @@ function handleAuthApiAction(action, payload, e) {
         const otpHash = hashOtpCode(otpCode);
         const challengeId = "CHL_" + Utilities.getUuid().replace(/-/g, "").substring(0, 16);
         const now = new Date();
-        const expiresAt = new Date(now.getTime() + 1800000).toISOString();
+        const expiresAt = new Date(now.getTime() + 300000).toISOString();
 
         const ss = getDatabaseSpreadsheet();
         const otpSheet = getAuthSheet(ss, SHEET_OTP_CHALLENGES);
@@ -10955,7 +10981,7 @@ function handleAuthApiAction(action, payload, e) {
 
         const pending = findPendingOtpChallenge("EMAIL", idHash);
         if (pending && !pending.isExpired) {
-          const elapsed = (new Date().getTime() - new Date(pending.expiresAt.getTime() - 1800000).getTime()) / 1000;
+          const elapsed = (new Date().getTime() - new Date(pending.expiresAt.getTime() - 300000).getTime()) / 1000;
           if (elapsed < 60) {
             return createJsonResponse({
               success: true,
@@ -10972,7 +10998,7 @@ function handleAuthApiAction(action, payload, e) {
         const otpHash = hashOtpCode(otpCode);
         const challengeId = "CHL_" + Utilities.getUuid().replace(/-/g, "").substring(0, 16);
         const now = new Date();
-        const expiresAt = new Date(now.getTime() + 1800000).toISOString();
+        const expiresAt = new Date(now.getTime() + 300000).toISOString();
 
         const ss = getDatabaseSpreadsheet();
         const otpSheet = getAuthSheet(ss, SHEET_OTP_CHALLENGES);
@@ -11309,7 +11335,7 @@ function handleAuthApiAction(action, payload, e) {
         const idHash = hashIdentifier(waliEmail);
         const pending = findPendingOtpChallenge("EMAIL_ACTIVATION", idHash);
         if (pending && !pending.isExpired) {
-          const elapsed = (new Date().getTime() - new Date(pending.expiresAt.getTime() - 1800000).getTime()) / 1000;
+          const elapsed = (new Date().getTime() - new Date(pending.expiresAt.getTime() - 300000).getTime()) / 1000;
           if (elapsed < 60) {
             return createJsonResponse({
               success: true,
@@ -11326,7 +11352,7 @@ function handleAuthApiAction(action, payload, e) {
         const otpHash = hashOtpCode(otpCode);
         const challengeId = "CHL_" + Utilities.getUuid().replace(/-/g, "").substring(0, 16);
         const now = new Date();
-        const expiresAt = new Date(now.getTime() + 1800000).toISOString();
+        const expiresAt = new Date(now.getTime() + 300000).toISOString();
 
         const ss = getDatabaseSpreadsheet();
         const otpSheet = getAuthSheet(ss, SHEET_OTP_CHALLENGES);
@@ -11358,7 +11384,7 @@ function handleAuthApiAction(action, payload, e) {
             MailApp.sendEmail({
               to: waliEmail,
               subject: "Kode OTP Aktivasi Akun Wali Santri",
-              body: `Assalamu'alaikum,\n\nKode OTP aktivasi akun Anda adalah: ${otpCode}\n\nBerlaku selama 30 menit.\n\nTim Pesantren`
+              body: `Assalamu'alaikum,\n\nKode OTP aktivasi akun Anda adalah: ${otpCode}\n\nBerlaku selama 5 menit.\n\nTim Pesantren`
             });
             emailSuccess = true;
           } catch (mErr2) {

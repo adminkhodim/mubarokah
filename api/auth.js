@@ -65,8 +65,23 @@ function requestGoogleAppsScript(targetUrl, method, payload) {
 }
 
 module.exports = async function handler(req, res) {
-    // CORS headers for maximum interoperability
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    // P1 SECURITY AUDIT FIX: Batasi CORS hanya untuk origin resmi & development tepercaya
+    const origin = req.headers.origin || '';
+    const allowedOrigins = [
+        'https://www.mubarokah.my.id',
+        'https://mubarokah.my.id',
+        'https://mubarokah-app.vercel.app',
+        'http://localhost:3000',
+        'http://localhost:5000',
+        'http://localhost:8080',
+        'http://127.0.0.1:5500',
+        'http://127.0.0.1:8080'
+    ];
+    if (allowedOrigins.includes(origin) || (origin && origin.endsWith('.vercel.app')) || !origin) {
+        res.setHeader('Access-Control-Allow-Origin', origin || 'https://www.mubarokah.my.id');
+    } else {
+        res.setHeader('Access-Control-Allow-Origin', 'https://www.mubarokah.my.id');
+    }
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization');
 
