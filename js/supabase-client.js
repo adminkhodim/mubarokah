@@ -107,8 +107,10 @@
                 id: b.id,
                 nama: b.title,
                 gambar: b.image_url,
-                tipeAksi: (b.link_url && (b.link_url.startsWith('http://') || b.link_url.startsWith('https://'))) ? 'url' : 'tab',
-                targetAksi: b.link_url ? b.link_url.replace(/^\//, '') : 'beranda',
+                tipeAksi: (b.link_url && (b.link_url.startsWith('http://') || b.link_url.startsWith('https://')))
+                    ? 'url'
+                    : (b.link_url ? 'tab' : 'none'),
+                targetAksi: b.link_url ? b.link_url.replace(/^\//, '') : '',
                 urutan: Number(b.display_order) || 0,
                 status: b.is_active ? 'Aktif' : 'Nonaktif',
                 badge: b.badge_text || ''
@@ -217,12 +219,665 @@
         }
     }
 
+    /**
+     * Mengambil galeri foto kegiatan pesantren aktif
+     */
+    async function fetchGalleries() {
+        try {
+            const rows = await request('/rest/v1/galleries?select=*&is_active=eq.true&order=created_at.desc');
+            if (!Array.isArray(rows)) return [];
+            return rows.map(g => ({
+                id: g.gallery_id || g.id,
+                judul: g.title,
+                kategori: g.category,
+                keterangan: g.description || '',
+                gambar: g.image_url,
+                status: g.is_active ? 'Aktif' : 'Nonaktif',
+                timestamp: g.created_at
+            }));
+        } catch (error) {
+            console.warn('[MubarokahSupabase] Gagal mengambil galeri:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Mengambil unit kegiatan santri aktif
+     */
+    async function fetchUnitActivities() {
+        try {
+            const rows = await request('/rest/v1/unit_activities?select=*&is_active=eq.true&order=display_order.asc');
+            if (!Array.isArray(rows)) return [];
+            return rows.map(u => ({
+                id: u.unit_id || u.id,
+                nama: u.name,
+                kategori: u.category,
+                jadwal: u.schedule || '',
+                deskripsi: u.description || '',
+                gambar: u.image_url || '',
+                urutan: Number(u.display_order) || 1,
+                status: u.is_active ? 'Aktif' : 'Nonaktif',
+                timestamp: u.created_at
+            }));
+        } catch (error) {
+            console.warn('[MubarokahSupabase] Gagal mengambil unit kegiatan:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Mengambil notifikasi pengumuman aktif
+     */
+    async function fetchNotifications() {
+        try {
+            const rows = await request('/rest/v1/notifications?select=*&is_active=eq.true&order=created_at.desc');
+            if (!Array.isArray(rows)) return [];
+            return rows.map(n => ({
+                id: n.notification_id || n.id,
+                judul: n.title,
+                kategori: n.category,
+                tanggal: n.date_display || '',
+                ringkasan: n.summary || '',
+                isi: n.content || '',
+                gambar: n.image_url || '',
+                is_popup: Boolean(n.is_popup),
+                status: n.is_active ? 'Aktif' : 'Nonaktif',
+                createdAt: n.created_at
+            }));
+        } catch (error) {
+            console.warn('[MubarokahSupabase] Gagal mengambil notifikasi:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Mengambil pengaturan profil lembaga
+     */
+    async function fetchTenantSettings() {
+        try {
+            const rows = await request('/rest/v1/tenant_settings?select=*&limit=1');
+            if (!Array.isArray(rows) || rows.length === 0) return null;
+            const s = rows[0];
+            const social = s.social_links || {};
+            return {
+                nama_pesantren: s.institution_name,
+                alamat_pesantren: s.address,
+                tahun_berdiri: s.founded_year,
+                tanggal_berdiri: s.founded_date,
+                visi_misi: s.vision_mission,
+                sejarah: s.history,
+                video_highlight: s.video_highlight,
+                link_facebook: social.facebook || '',
+                link_instagram: social.instagram || '',
+                link_youtube: social.youtube || ''
+            };
+        } catch (error) {
+            console.warn('[MubarokahSupabase] Gagal mengambil pengaturan:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Mengambil master tarif pesantren
+     */
+    async function fetchTariffs() {
+        try {
+            const rows = await request('/rest/v1/financial_tariffs?select=*&is_active=eq.true&order=created_at.asc');
+            if (!Array.isArray(rows)) return [];
+            return rows.map(t => ({
+                id: t.tariff_id || t.id,
+                namaPos: t.name,
+                kategori: t.category,
+                tipePeriode: t.period_type,
+                nominalDefault: Number(t.amount) || 0,
+                program: t.program || 'SEMUA',
+                isActive: Boolean(t.is_active)
+            }));
+        } catch (error) {
+            console.warn('[MubarokahSupabase] Gagal mengambil master tarif:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Mengambil dompet tabungan santri
+     */
+    async function fetchStudentWallets() {
+        try {
+            const rows = await request('/rest/v1/student_wallets?select=*,student:students(name,nis,program)&order=student_code.asc');
+            if (!Array.isArray(rows)) return [];
+            return rows.map(w => ({
+                id: w.id,
+                studentId: w.student_code,
+                studentName: w.student ? w.student.name : '',
+                nis: w.student ? w.student.nis : '',
+                program: w.student ? w.student.program : '',
+                saldoTabungan: Number(w.balance) || 0,
+                limitHarian: Number(w.daily_limit) || 25000,
+                totalJajanHariIni: Number(w.daily_spent) || 0,
+                isLocked: Boolean(w.is_locked),
+                updatedAt: w.updated_at
+            }));
+        } catch (error) {
+            console.warn('[MubarokahSupabase] Gagal mengambil dompet santri:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Mengambil jadwal kegiatan harian & mingguan santri
+     */
+    async function fetchActivitySchedules() {
+        try {
+            const rows = await request('/rest/v1/activity_schedules?select=*&status=eq.Aktif&order=order_index.asc');
+            if (!Array.isArray(rows)) return [];
+            return rows.map(j => ({
+                id: j.schedule_id || j.id,
+                nama: j.name,
+                tipe: j.type,
+                waktu: j.time_range,
+                tag: j.tag,
+                deskripsi: j.description || '',
+                urutan: j.order_index,
+                status: j.status
+            }));
+        } catch (error) {
+            console.warn('[MubarokahSupabase] Gagal mengambil jadwal kegiatan:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Mengambil pendaftaran PPDB
+     */
+    async function fetchPPDBRegistrations() {
+        try {
+            const rows = await request('/rest/v1/ppdb_registrations?select=*&order=created_at.desc');
+            if (!Array.isArray(rows)) return [];
+            return rows.map(p => ({
+                id: p.id,
+                registrationNo: p.registration_no,
+                nama: p.name,
+                nisn: p.nisn,
+                wali: p.guardian_name,
+                whatsapp: p.whatsapp,
+                program: p.program,
+                status: p.status,
+                tanggalDaftar: p.registration_date || p.created_at
+            }));
+        } catch (error) {
+            console.warn('[MubarokahSupabase] Gagal mengambil data PPDB:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Mengambil matriks peran dan izin RBAC
+     */
+    async function fetchRolePermissions() {
+        try {
+            const rows = await request('/rest/v1/roles_permissions?select=*&order=role_key.asc');
+            if (!Array.isArray(rows)) return [];
+            return rows.map(r => ({
+                roleKey: r.role_key,
+                roleName: r.role_name,
+                totalActive: r.total_active,
+                permissions: r.permissions || []
+            }));
+        } catch (error) {
+            console.warn('[MubarokahSupabase] Gagal mengambil role permissions:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Mengambil master kegiatan presensi santri
+     */
+    async function fetchPresenceActivities() {
+        try {
+            const rows = await request('/rest/v1/presence_activities?select=*&status=eq.Aktif&order=activity_code.asc');
+            if (!Array.isArray(rows)) return [];
+            return rows.map(a => ({
+                id: a.activity_code || a.id,
+                namaKegiatan: a.name,
+                kategori: a.category,
+                jadwalRutin: a.routine_schedule,
+                targetPeserta: a.target_audience,
+                penanggungJawab: a.person_in_charge,
+                status: a.status
+            }));
+        } catch (error) {
+            console.warn('[MubarokahSupabase] Gagal mengambil master kegiatan presensi:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Mengambil riwayat sesi presensi
+     */
+    async function fetchPresenceSessions() {
+        try {
+            const rows = await request('/rest/v1/presence_sessions?select=*&order=date.desc,created_at.desc');
+            if (!Array.isArray(rows)) return [];
+            return rows.map(s => ({
+                id: s.session_code || s.id,
+                kegiatanId: s.activity_code,
+                namaKegiatan: s.activity_name,
+                tanggal: s.date,
+                waktuBuka: s.open_time,
+                petugas: s.officer_name,
+                totalPeserta: s.total_students,
+                totalHadir: s.total_present,
+                totalIzin: s.total_permit,
+                totalSakit: s.total_sick,
+                totalAlpa: s.total_absent,
+                statusSesi: s.session_status,
+                catatan: s.notes
+            }));
+        } catch (error) {
+            console.warn('[MubarokahSupabase] Gagal mengambil sesi presensi:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Mengambil daftar kelas/halaqah belajar Yanbu'a (TPQ)
+     */
+    async function fetchTPQClasses() {
+        try {
+            const rows = await request('/rest/v1/tpq_classes?select=*&order=class_code.asc');
+            if (!Array.isArray(rows)) return [];
+            return rows.map(c => ({
+                id: c.class_code || c.id,
+                namaKelas: c.name,
+                ustadzPengampu: c.teacher_name,
+                deskripsi: c.description || '',
+                studentIds: c.student_ids || []
+            }));
+        } catch (error) {
+            console.warn('[MubarokahSupabase] Gagal mengambil kelas TPQ:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Mengambil jadwal sesi belajar Yanbu'a (TPQ)
+     */
+    async function fetchTPQSessions() {
+        try {
+            const rows = await request('/rest/v1/tpq_sessions?select=*&order=session_code.asc');
+            if (!Array.isArray(rows)) return [];
+            return rows.map(s => ({
+                id: s.session_code || s.id,
+                namaSesi: s.name,
+                jenisSesi: s.session_type,
+                status: s.status,
+                jamMulai: s.start_time,
+                jamSelesai: s.end_time,
+                hariList: s.days || []
+            }));
+        } catch (error) {
+            console.warn('[MubarokahSupabase] Gagal mengambil sesi TPQ:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Mengambil progress capaian santri Yanbu'a (TPQ)
+     */
+    async function fetchTPQCapaian() {
+        try {
+            const rows = await request('/rest/v1/tpq_capaian?select=*,student:students(nis,gender,program)&order=active_jilid.desc,active_page.desc');
+            if (!Array.isArray(rows)) return [];
+            return rows.map(cp => ({
+                id: cp.id,
+                studentId: cp.student_code,
+                studentName: cp.student_name,
+                nis: cp.student ? cp.student.nis : '',
+                gender: cp.student ? cp.student.gender : '',
+                jilidAktif: cp.active_jilid,
+                halamanAktif: cp.active_page,
+                statusTerakhir: cp.last_status,
+                kelasId: cp.class_code,
+                namaKelas: cp.class_name,
+                ustadzPengampu: cp.teacher_name,
+                targetJilid: cp.target_jilid,
+                targetHalamanSesi: cp.target_page_per_session,
+                targetHalamanPekan: cp.target_page_per_week,
+                updatedAt: cp.updated_at
+            }));
+        } catch (error) {
+            console.warn('[MubarokahSupabase] Gagal mengambil capaian TPQ:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Mengambil anggota santri rombel kelas Madin
+     */
+    async function fetchMadinClassMembers(classId) {
+        try {
+            let endpoint = '/rest/v1/madin_class_members?select=*&order=nis.asc';
+            if (classId) endpoint += `&class_id=eq.${encodeURIComponent(classId)}`;
+            const rows = await request(endpoint);
+            if (!Array.isArray(rows)) return [];
+            return rows.map(m => ({
+                id: m.id,
+                classId: m.class_id,
+                studentId: m.student_code,
+                nis: m.nis,
+                name: m.student_name,
+                gender: m.gender
+            }));
+        } catch (error) {
+            console.warn('[MubarokahSupabase] Gagal mengambil anggota kelas Madin:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Mengambil jurnal KBM harian Madin
+     */
+    async function fetchMadinJournals(classId) {
+        try {
+            let endpoint = '/rest/v1/madin_journals?select=*&order=date.desc,created_at.desc';
+            if (classId) endpoint += `&class_id=eq.${encodeURIComponent(classId)}`;
+            const rows = await request(endpoint);
+            if (!Array.isArray(rows)) return [];
+            return rows.map(j => ({
+                id: j.session_code || j.id,
+                tanggal: j.date,
+                classId: j.class_id,
+                namaKelas: j.class_name,
+                subjectId: j.subject_id,
+                namaKitab: j.subject_name,
+                asatidz: j.teacher_name,
+                materiBab: j.topic_material,
+                catatan: j.notes
+            }));
+        } catch (error) {
+            console.warn('[MubarokahSupabase] Gagal mengambil jurnal Madin:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Mengambil target progres sorogan santri
+     */
+    async function fetchSoroganTargets() {
+        try {
+            const rows = await request('/rest/v1/sorogan_targets?select=*,student:students(name,nis,gender)&order=student_code.asc');
+            if (!Array.isArray(rows)) return [];
+            return rows.map(t => ({
+                id: t.id,
+                studentId: t.student_code,
+                name: t.student ? t.student.name : '',
+                nis: t.student ? t.student.nis : '',
+                gender: t.student ? t.student.gender : '',
+                targetJuz: t.target_juz,
+                targetHalamanSesi: t.target_page_per_session,
+                targetHalamanPekan: t.target_page_per_week
+            }));
+        } catch (error) {
+            console.warn('[MubarokahSupabase] Gagal mengambil target sorogan:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Mengambil daftar halaqah tahfidz
+     */
+    async function fetchTahfidzHalaqah() {
+        try {
+            const rows = await request('/rest/v1/tahfidz_halaqah?select=*&order=halaqah_code.asc');
+            if (!Array.isArray(rows)) return [];
+            return rows.map(h => ({
+                id: h.halaqah_code || h.id,
+                namaHalaqah: h.name,
+                muhafiz: h.muhafiz_name,
+                targetKurikulum: h.curriculum_target,
+                studentIds: h.student_ids || [],
+                studentCount: h.student_count
+            }));
+        } catch (error) {
+            console.warn('[MubarokahSupabase] Gagal mengambil halaqah tahfidz:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Mengambil jadwal sesi tahfidz
+     */
+    async function fetchTahfidzSessions() {
+        try {
+            const rows = await request('/rest/v1/tahfidz_sessions?select=*&order=session_code.asc');
+            if (!Array.isArray(rows)) return [];
+            return rows.map(s => ({
+                id: s.session_code || s.id,
+                namaSesi: s.name,
+                jenisSesi: s.session_type,
+                status: s.status,
+                jamMulai: s.start_time,
+                jamSelesai: s.end_time,
+                hariList: s.days || []
+            }));
+        } catch (error) {
+            console.warn('[MubarokahSupabase] Gagal mengambil sesi tahfidz:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Mengambil data master dewan asatidz & pegawai pesantren
+     */
+    async function fetchEmployees() {
+        try {
+            const rows = await request('/rest/v1/employees?select=*&order=employee_code.asc');
+            if (!Array.isArray(rows)) return [];
+            return rows.map(e => ({
+                id: e.employee_code || e.id,
+                nama: e.name,
+                gender: e.gender,
+                jabatan: e.position,
+                spesialisasi: e.specialization,
+                status: e.status
+            }));
+        } catch (error) {
+            console.warn('[MubarokahSupabase] Gagal mengambil data pegawai:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * DUAL-WRITE MUTATION APIS:
+     * Menuliskan input data baru langsung ke database Supabase PostgreSQL
+     */
+    const DEFAULT_TENANT_UUID = 'baa9eb9b-2d87-4648-a674-059bb289cb63';
+
+    async function submitPPDB(payload) {
+        try {
+            const data = {
+                tenant_id: DEFAULT_TENANT_UUID,
+                name: String(payload.nama || '').trim(),
+                nisn: String(payload.nisn || '').trim(),
+                guardian_name: String(payload.wali || '').trim(),
+                whatsapp: String(payload.whatsapp || '').trim(),
+                program: String(payload.program || '').trim(),
+                status: 'Pending',
+                notes: String(payload.catatan || '').trim() || null
+            };
+            const inserted = await request('/rest/v1/ppdb_registrations', {
+                method: 'POST',
+                headers: { 'Prefer': 'return=representation' },
+                body: data
+            });
+            return { status: 'success', success: true, data: inserted };
+        } catch (error) {
+            console.error('[MubarokahSupabase] Gagal submit PPDB:', error);
+            return { status: 'error', success: false, message: error.message };
+        }
+    }
+
+    async function saveNews(payload) {
+        try {
+            const slug = (payload.slug || payload.judul || 'berita')
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/(^-|-$)+/g, '');
+
+            const data = {
+                tenant_id: DEFAULT_TENANT_UUID,
+                title: String(payload.judul || payload.title || '').trim(),
+                slug: slug,
+                category: String(payload.kategori || payload.category || 'Berita').trim(),
+                author: String(payload.penulis || payload.author || 'Tim Redaksi').trim(),
+                image_url: String(payload.gambar || payload.image_url || '').trim(),
+                summary: String(payload.ringkasan || payload.summary || '').trim(),
+                content: String(payload.isi || payload.content || '').trim(),
+                status: 'published',
+                published_at: new Date().toISOString()
+            };
+
+            const inserted = await request('/rest/v1/news_articles', {
+                method: 'POST',
+                headers: { 'Prefer': 'return=representation,resolution=merge-duplicates' },
+                body: data
+            });
+            return { status: 'success', success: true, data: inserted };
+        } catch (error) {
+            console.error('[MubarokahSupabase] Gagal menyimpan berita:', error);
+            return { status: 'error', success: false, message: error.message };
+        }
+    }
+
+    async function deleteNews(newsIdOrSlug) {
+        try {
+            const param = String(newsIdOrSlug).includes('-') ? `slug=eq.${encodeURIComponent(newsIdOrSlug)}` : `id=eq.${encodeURIComponent(newsIdOrSlug)}`;
+            await request(`/rest/v1/news_articles?${param}`, { method: 'DELETE' });
+            return { status: 'success', success: true };
+        } catch (error) {
+            console.error('[MubarokahSupabase] Gagal menghapus berita:', error);
+            return { status: 'error', success: false, message: error.message };
+        }
+    }
+
+    async function saveBanner(payload) {
+        try {
+            const data = {
+                tenant_id: DEFAULT_TENANT_UUID,
+                title: String(payload.nama || payload.title || '').trim(),
+                subtitle: String(payload.deskripsi || payload.subtitle || '').trim(),
+                image_url: String(payload.gambar || payload.image_url || '').trim(),
+                action_type: String(payload.tipeAksi || payload.action_type || 'none').toLowerCase(),
+                action_target: String(payload.targetAksi || payload.action_target || '').trim(),
+                order_index: Number(payload.urutan || payload.order_index) || 0,
+                is_active: payload.status === 'Aktif' || payload.is_active !== false
+            };
+
+            const inserted = await request('/rest/v1/banners', {
+                method: 'POST',
+                headers: { 'Prefer': 'return=representation' },
+                body: data
+            });
+            return { status: 'success', success: true, data: inserted };
+        } catch (error) {
+            console.error('[MubarokahSupabase] Gagal menyimpan banner:', error);
+            return { status: 'error', success: false, message: error.message };
+        }
+    }
+
+    async function deleteBanner(id) {
+        try {
+            await request(`/rest/v1/banners?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' });
+            return { status: 'success', success: true };
+        } catch (error) {
+            console.error('[MubarokahSupabase] Gagal menghapus banner:', error);
+            return { status: 'error', success: false, message: error.message };
+        }
+    }
+
+    async function saveGallery(payload) {
+        try {
+            const data = {
+                tenant_id: DEFAULT_TENANT_UUID,
+                title: String(payload.judul || payload.title || '').trim(),
+                category: String(payload.kategori || payload.category || 'Dokumentasi').trim(),
+                image_url: String(payload.gambar || payload.image_url || '').trim(),
+                description: String(payload.deskripsi || payload.description || '').trim(),
+                order_index: Number(payload.urutan) || 0,
+                is_active: true
+            };
+            const inserted = await request('/rest/v1/galleries', {
+                method: 'POST',
+                headers: { 'Prefer': 'return=representation' },
+                body: data
+            });
+            return { status: 'success', success: true, data: inserted };
+        } catch (error) {
+            console.error('[MubarokahSupabase] Gagal menyimpan galeri:', error);
+            return { status: 'error', success: false, message: error.message };
+        }
+    }
+
+    async function saveNotification(payload) {
+        try {
+            const data = {
+                tenant_id: DEFAULT_TENANT_UUID,
+                title: String(payload.judul || payload.title || '').trim(),
+                category: String(payload.kategori || payload.category || 'Pengumuman').trim(),
+                summary: String(payload.ringkasan || payload.summary || '').trim(),
+                content: String(payload.isi || payload.content || '').trim(),
+                image_url: String(payload.gambar || payload.image_url || '').trim(),
+                date_display: String(payload.tanggal || ''),
+                is_popup: Boolean(payload.is_popup),
+                is_active: true
+            };
+            const inserted = await request('/rest/v1/notifications', {
+                method: 'POST',
+                headers: { 'Prefer': 'return=representation' },
+                body: data
+            });
+            return { status: 'success', success: true, data: inserted };
+        } catch (error) {
+            console.error('[MubarokahSupabase] Gagal menyimpan notifikasi:', error);
+            return { status: 'error', success: false, message: error.message };
+        }
+    }
+
     return Object.freeze({
         isEnabled,
         fetchBanners,
         fetchNews,
         fetchAlumniTestimonials,
         submitAlumni,
+        fetchGalleries,
+        fetchUnitActivities,
+        fetchNotifications,
+        fetchTenantSettings,
+        fetchTariffs,
+        fetchStudentWallets,
+        fetchActivitySchedules,
+        fetchPPDBRegistrations,
+        fetchRolePermissions,
+        fetchPresenceActivities,
+        fetchPresenceSessions,
+        fetchTPQClasses,
+        fetchTPQSessions,
+        fetchTPQCapaian,
+        fetchMadinClassMembers,
+        fetchMadinJournals,
+        fetchSoroganTargets,
+        fetchTahfidzHalaqah,
+        fetchTahfidzSessions,
+        fetchEmployees,
+        // Dual-Write mutation APIs
+        submitPPDB,
+        saveNews,
+        deleteNews,
+        saveBanner,
+        deleteBanner,
+        saveGallery,
+        saveNotification,
         formatTanggalIndo,
         getConfig: () => Object.assign({}, sbConfig)
     });

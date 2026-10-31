@@ -9,6 +9,65 @@
             : "mubarokah";
 
         async function apiGet(action, params = {}) {
+            // ============================================================
+            // 1. SUPABASE-FIRST READ STRATEGY
+            // Jika Supabase aktif, prioritaskan fetch berkecepatan tinggi dari PostgreSQL
+            // ============================================================
+            const sb = (typeof MubarokahSupabase !== 'undefined' && typeof MubarokahSupabase.isEnabled === 'function' && MubarokahSupabase.isEnabled())
+                ? MubarokahSupabase
+                : null;
+
+            if (sb) {
+                try {
+                    if (action === "getBanner") {
+                        const banners = await sb.fetchBanners();
+                        if (Array.isArray(banners) && banners.length > 0) {
+                            return { status: "success", success: true, data: banners };
+                        }
+                    } else if (action === "getKabar" || action === "getBerita") {
+                        const news = await sb.fetchNews();
+                        if (Array.isArray(news) && news.length > 0) {
+                            return { status: "success", success: true, data: news };
+                        }
+                    } else if (action === "getGaleri") {
+                        const galeri = await sb.fetchGalleries();
+                        if (Array.isArray(galeri) && galeri.length > 0) {
+                            return { status: "success", success: true, data: galeri };
+                        }
+                    } else if (action === "getNotifikasi") {
+                        const notifs = await sb.fetchNotifications();
+                        if (Array.isArray(notifs) && notifs.length > 0) {
+                            return { status: "success", success: true, data: notifs };
+                        }
+                    } else if (action === "getUnitKegiatan") {
+                        const units = await sb.fetchUnitActivities();
+                        if (Array.isArray(units) && units.length > 0) {
+                            return { status: "success", success: true, data: units };
+                        }
+                    } else if (action === "getPengaturan") {
+                        const settings = await sb.fetchTenantSettings();
+                        if (settings) {
+                            return { status: "success", success: true, data: settings };
+                        }
+                    } else if (action === "getJadwalKegiatan") {
+                        const schedules = await sb.fetchActivitySchedules();
+                        if (Array.isArray(schedules) && schedules.length > 0) {
+                            return { status: "success", success: true, data: schedules };
+                        }
+                    } else if (action === "alumni.getTestimonials" || action === "alumni.list") {
+                        const testimonials = await sb.fetchAlumniTestimonials();
+                        if (Array.isArray(testimonials)) {
+                            return { status: "success", success: true, data: testimonials };
+                        }
+                    }
+                } catch (sbReadErr) {
+                    console.warn(`[apiGet] Supabase fast-read gagal untuk '${action}', fallback ke Spreadsheet:`, sbReadErr);
+                }
+            }
+
+            // ============================================================
+            // 2. FALLBACK KE GOOGLE APPS SCRIPT / SPREADSHEET
+            // ============================================================
             const baseUrl = WEB_APP_URL;
             if (!baseUrl) throw new Error("API URL belum dikonfigurasi.");
 
@@ -35,6 +94,42 @@
         }
 
         async function apiPost(action, payload = {}) {
+            // ============================================================
+            // 1. DUAL-WRITE KE SUPABASE DATABASE (Real-time Mirroring)
+            // Simpan data langsung ke Supabase PostgreSQL secara paralel
+            // ============================================================
+            const sb = (typeof MubarokahSupabase !== 'undefined' && typeof MubarokahSupabase.isEnabled === 'function' && MubarokahSupabase.isEnabled())
+                ? MubarokahSupabase
+                : null;
+
+            if (sb) {
+                try {
+                    const dataPayload = (payload && payload.data) ? payload.data : payload;
+                    if (action === "submitPPDB") {
+                        sb.submitPPDB(dataPayload).catch(e => console.warn('[DualWrite PPDB Warning]', e));
+                    } else if (action === "alumni.create") {
+                        sb.submitAlumni(dataPayload).catch(e => console.warn('[DualWrite Alumni Warning]', e));
+                    } else if (action === "saveBerita" || action === "updateBerita") {
+                        sb.saveNews(dataPayload).catch(e => console.warn('[DualWrite News Warning]', e));
+                    } else if (action === "deleteBerita") {
+                        sb.deleteNews(payload.news_id || payload.id || payload.slug || dataPayload.news_id).catch(e => console.warn('[DualWrite Delete News Warning]', e));
+                    } else if (action === "saveBanner") {
+                        sb.saveBanner(dataPayload).catch(e => console.warn('[DualWrite Banner Warning]', e));
+                    } else if (action === "deleteBanner") {
+                        sb.deleteBanner(payload.id || payload.bannerId || dataPayload.id).catch(e => console.warn('[DualWrite Delete Banner Warning]', e));
+                    } else if (action === "saveGaleri") {
+                        sb.saveGallery(dataPayload).catch(e => console.warn('[DualWrite Gallery Warning]', e));
+                    } else if (action === "saveNotifikasi") {
+                        sb.saveNotification(dataPayload).catch(e => console.warn('[DualWrite Notif Warning]', e));
+                    }
+                } catch (sbWriteErr) {
+                    console.warn(`[apiPost] Dual-write ke Supabase dilewati untuk '${action}':`, sbWriteErr);
+                }
+            }
+
+            // ============================================================
+            // 2. SIMPAN KE GOOGLE APPS SCRIPT / SPREADSHEET
+            // ============================================================
             const targetUrl = WEB_APP_URL;
             if (!targetUrl) throw new Error("WEB_APP_URL belum dikonfigurasi.");
 

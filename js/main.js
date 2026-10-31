@@ -1308,6 +1308,9 @@
             const imgContainer = document.getElementById('detail-news-img-container');
             if (news.gambar && news.gambar.trim() !== '') {
                 imgEl.src = news.gambar;
+                imgEl.onerror = function() {
+                    imgContainer.classList.add('hidden');
+                };
                 imgContainer.classList.remove('hidden');
             } else {
                 imgContainer.classList.add('hidden');
