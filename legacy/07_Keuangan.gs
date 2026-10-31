@@ -1073,7 +1073,6 @@ function generateBulkYearlyBills(payload, token) {
       const posIds = Array.isArray(payload.posIds) ? payload.posIds.map(String) : [];
       const programFilter = String(payload.programFilter || "SEMUA").trim();
       const targetFilter = String(payload.targetFilter || "SEMUA").trim();
-      const targetFilter = String(payload.targetFilter || "SEMUA").trim();
 
       const tSheet = ss.getSheetByName(SHEET_KEUANGAN_TARIF);
       const tagihanSheet = ss.getSheetByName(SHEET_KEUANGAN_TAGIHAN);
