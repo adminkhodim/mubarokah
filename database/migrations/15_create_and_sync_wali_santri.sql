@@ -1,9 +1,10 @@
 -- ====================================================================
--- MIGRATION 15: OTORISASI & SINKRONISASI DATA WALI SANTRI LENGKAP
--- Menyiapkan public.guardians & public.student_guardians untuk Modul Wali
+-- MIGRATION 15: OTORISASI & SINKRONISASI DATA WALI SANTRI & PHONE
+-- Menyiapkan public.guardians & public.student_guardians serta
+-- Sinkronisasi otomatis nomor phone wali ke data santri
 -- ====================================================================
 
--- 1. Buka RLS Policy agar Web App dapat membaca dan mengubah data Wali & Relasi
+-- 1. Buka RLS Policy agar Web App dapat membaca & mengubah data Wali & Relasi
 DROP POLICY IF EXISTS "Allow Read Guardians" ON public.guardians;
 DROP POLICY IF EXISTS "Allow All Guardians" ON public.guardians;
 
@@ -57,8 +58,20 @@ ON CONFLICT (tenant_id, identity_id) DO UPDATE SET
     status = EXCLUDED.status,
     updated_at = NOW();
 
--- 3. Pastikan Index Cepat untuk Pencarian Nama, Phone & Relasi
+-- 3. Tambahkan kolom phone di public.students jika belum ada
+ALTER TABLE public.students ADD COLUMN IF NOT EXISTS phone VARCHAR(30);
+
+-- 4. Sinkronisasikan Nomor Phone Wali ke Santri melalui relasi student_guardians
+UPDATE public.students s
+SET phone = g.phone
+FROM public.student_guardians sg
+JOIN public.guardians g ON g.id = sg.guardian_id
+WHERE sg.student_id = s.id 
+  AND g.phone IS NOT NULL 
+  AND g.phone != ''
+  AND (s.phone IS NULL OR s.phone = '');
+
+-- 5. Index Performa Cepat
 CREATE INDEX IF NOT EXISTS idx_guardians_name ON public.guardians(tenant_id, name);
 CREATE INDEX IF NOT EXISTS idx_guardians_email ON public.guardians(tenant_id, email);
 CREATE INDEX IF NOT EXISTS idx_student_guardians_composite ON public.student_guardians(tenant_id, guardian_id, student_id);
-

@@ -8685,3 +8685,95 @@ function unlinkStudentFromWaliData(payload, token) {
     return { status: 'error', success: false, message: err.message };
   }
 }
+
+/**
+ * Sinkronisasi Otomatis Nomor WhatsApp/Phone dari Wali_Identities ke Kolom L (phone) Sheet Students
+ */
+function syncWaliPhoneToStudentsSheet() {
+  const SPREADSHEET_ID = "1cZSRh2rtKpT6E8m3GFJonVbiQG51fh24eN8J5JWtOJY";
+  let ss = null;
+  try {
+    ss = SpreadsheetApp.getActiveSpreadsheet();
+  } catch (e) {}
+  if (!ss) {
+    ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  }
+
+  const waliSheet = ss.getSheetByName("Wali_Identities") || ss.getSheetByName("Users");
+  const mapSheet = ss.getSheetByName("Wali_Santri_Map");
+  const studSheet = ss.getSheetByName("Students");
+
+  if (!studSheet || !waliSheet) {
+    Logger.log("Sheet Students atau Wali_Identities tidak ditemukan.");
+    return { success: false, message: "Sheet tidak lengkap" };
+  }
+
+  // 1. Ambil Nomor Phone per Wali dari Wali_Identities (Kolom C)
+  const waliPhoneMap = {};
+  const wData = waliSheet.getDataRange().getValues();
+  if (wData.length > 1) {
+    const wHead = wData[0].map(h => String(h || "").trim().toLowerCase());
+    const idIdx = wHead.findIndex(h => h.includes("identity") || h.includes("id"));
+    const phoneIdx = wHead.findIndex(h => h.includes("phone") || h.includes("hp") || h.includes("wa"));
+
+    const targetIdIdx = idIdx !== -1 ? idIdx : 0;
+    const targetPhoneIdx = phoneIdx !== -1 ? phoneIdx : 2;
+
+    for (let i = 1; i < wData.length; i++) {
+      const wId = String(wData[i][targetIdIdx] || "").trim();
+      let phone = String(wData[i][targetPhoneIdx] || "").trim();
+      if (wId && phone) {
+        // Hilangkan format eksponensial jika ada
+        phone = phone.replace(/^'/, "");
+        waliPhoneMap[wId] = phone;
+      }
+    }
+  }
+
+  // 2. Ambil Mapping Wali -> Santri dari Wali_Santri_Map
+  const studentToPhoneMap = {};
+  if (mapSheet) {
+    const mData = mapSheet.getDataRange().getValues();
+    for (let m = 1; m < mData.length; m++) {
+      const wId = String(mData[m][1] || "").trim();
+      const sId = String(mData[m][2] || "").trim();
+      if (sId && wId && waliPhoneMap[wId]) {
+        studentToPhoneMap[sId] = waliPhoneMap[wId];
+      }
+    }
+  }
+
+  // 3. Update Kolom L (phone) pada Sheet Students
+  const sData = studSheet.getDataRange().getValues();
+  if (sData.length < 2) return { success: true, count: 0 };
+
+  const sHead = sData[0].map(h => String(h || "").trim().toLowerCase());
+  let idIdx = sHead.indexOf("student_id");
+  if (idIdx === -1) idIdx = 0;
+
+  let phoneIdx = sHead.indexOf("phone");
+  if (phoneIdx === -1) {
+    phoneIdx = sHead.findIndex(h => h.includes("phone") || h.includes("wa") || h.includes("hp"));
+  }
+
+  if (phoneIdx === -1) {
+    phoneIdx = sData[0].length;
+    studSheet.getRange(1, phoneIdx + 1).setValue("phone").setFontWeight("bold").setBackground("#dcfce7");
+  }
+
+  let updatedCount = 0;
+  for (let s = 1; s < sData.length; s++) {
+    const sId = String(sData[s][idIdx] || "").trim();
+    if (sId && studentToPhoneMap[sId]) {
+      const currentPhone = String(sData[s][phoneIdx] || "").trim();
+      const newPhone = studentToPhoneMap[sId];
+      if (currentPhone !== newPhone) {
+        studSheet.getRange(s + 1, phoneIdx + 1).setValue("'" + newPhone);
+        updatedCount++;
+      }
+    }
+  }
+
+  Logger.log("✅ Berhasil menyinkronkan " + updatedCount + " nomor telepon santri ke Sheet Students.");
+  return { success: true, count: updatedCount };
+}
