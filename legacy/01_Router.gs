@@ -920,6 +920,16 @@ function doPost(e) {
         return createJsonResponse({ status: "error", success: false, message: authErr.message });
       }
     }
+if (action === "generateBulkYearlyBills" || action === "keuangan.generateTahunan" || action === "generateBulkYearlyTagihan") {
+      const token = payload.token || (payload.data && payload.data.token) || "";
+      try {
+        const actor = authenticateSession(token);
+        authorizeRole(actor, ["SUPER_ADMIN", "ADMIN", "BENDAHARA"]);
+        return createJsonResponse(generateBulkYearlyBills(payload.data || payload, token, actor));
+      } catch (authErr) {
+        return createJsonResponse({ status: "error", success: false, message: authErr.message });
+      }
+    }
 
     if (action === "saveMasterTarif" || action === "keuangan.saveTarif") {
       const token = payload.token || (payload.data && payload.data.token) || "";

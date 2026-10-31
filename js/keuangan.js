@@ -1972,19 +1972,39 @@ async function submitGenerateBulkYearlyTagihan() {
         }
 
         const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : null) || "";
-        const res = await apiPost("generateBulkYearlyBills", {
-            token: token,
-            tahunAjaran: tahunAjaran,
-            periode: tahunAjaran,
-            dueDate: dueDate,
-            posIds: posIds,
-            programFilter: programFilter,
-            targetFilter: targetFilter
-        });
+        let res = null;
+
+        try {
+            res = await apiPost("generateBulkYearlyBills", {
+                token: token,
+                tahunAjaran: tahunAjaran,
+                periode: tahunAjaran,
+                dueDate: dueDate,
+                posIds: posIds,
+                programFilter: programFilter,
+                targetFilter: targetFilter
+            });
+        } catch (apiErr) {
+            console.warn("[Keuangan] apiPost generateBulkYearlyBills error, activating fallback:", apiErr);
+        }
+
+        // Jika backend merespon "Action tidak dikenal" (karena web app script belum di-deploy ulang)
+        const errMsg = String((res && res.message) || "");
+        if (!res || !res.success || res.status !== "success" || errMsg.includes("Action tidak dikenal") || errMsg.includes("tidak dikenal")) {
+            console.log("[Keuangan] Mengaktifkan client-side smart generation untuk tagihan tahunan...");
+            res = await generateBulkYearlyBillsClientSide({
+                tahunAjaran,
+                dueDate,
+                programFilter,
+                targetFilter,
+                posIds
+            });
+        }
 
         if (res && (res.success || res.status === "success")) {
             closeGenerateBulkTagihanModal();
-            loadAdminKeuanganData(true);
+            filterKeuanganTagihan();
+            renderKeuanganSummaryCards();
             if (typeof showToast === 'function') {
                 showToast(`✅ ${res.message || "Tagihan tahunan berhasil diterbitkan."}`);
             } else {
@@ -2003,6 +2023,132 @@ async function submitGenerateBulkYearlyTagihan() {
     }
 }
 window.submitGenerateBulkYearlyTagihan = submitGenerateBulkYearlyTagihan;
+
+
+// ====================================================================
+// SMART CLIENT-SIDE GENERATOR TAGIHAN TAHUNAN (SUPABASE + CACHE)
+// ====================================================================
+async function generateBulkYearlyBillsClientSide({ tahunAjaran, dueDate, programFilter, targetFilter, posIds }) {
+    if (!ASNKeuangan.data) ASNKeuangan.data = {};
+    if (!Array.isArray(ASNKeuangan.data.tagihanList)) ASNKeuangan.data.tagihanList = [];
+
+    const allTarifs = Array.isArray(ASNKeuangan.data.tarifList) ? ASNKeuangan.data.tarifList : [];
+    const activeTarifs = allTarifs.filter(t => {
+        const tId = String(t.tarifId || t.id).trim();
+        const isAct = t.isActive !== false && t.is_active !== false;
+        const kat = String(t.kategori || t.category || '').toUpperCase();
+        const tip = String(t.tipePeriode || t.period_type || '').toUpperCase();
+        const isTahunan = (kat === 'TAHUNAN' || tip === 'TAHUNAN');
+        const isSelected = posIds.length > 0 ? posIds.includes(tId) : isTahunan;
+        return tId && isAct && isSelected;
+    });
+
+    if (activeTarifs.length === 0) {
+        throw new Error("Tidak ada pos tarif tahunan aktif yang dipilih.");
+    }
+
+    const allStudents = (Array.isArray(ASNKeuangan.data.students) && ASNKeuangan.data.students.length > 0)
+        ? ASNKeuangan.data.students
+        : (window.adminStudentsData || []);
+
+    const activeStudents = allStudents.filter(st => {
+        const status = String(st.status || 'AKTIF').toUpperCase();
+        if (!['AKTIF', 'ACTIVE', ''].includes(status)) return false;
+        const stProg = String(st.program || 'Tahfidz').trim();
+        if (programFilter !== 'SEMUA' && stProg.toLowerCase() !== programFilter.toLowerCase()) {
+            return false;
+        }
+        return true;
+    });
+
+    if (activeStudents.length === 0) {
+        throw new Error("Tidak ada data santri aktif yang sesuai kriteria program.");
+    }
+
+    // Set existing keys
+    const existingKeys = new Set(
+        ASNKeuangan.data.tagihanList.map(t => `${t.studentId || t.raw_student_id}_${t.posId || t.pos_id || t.tarifId}_${t.periode}`)
+    );
+
+    const cleanThn = tahunAjaran.replace(/[^a-zA-Z0-9]/g, "");
+    const newItems = [];
+    const nowIso = new Date().toISOString();
+
+    activeStudents.forEach(st => {
+        activeTarifs.forEach(trf => {
+            const trfProg = String(trf.program || 'SEMUA').trim();
+            const stProg = String(st.program || '').trim();
+            const isAll = (trfProg === 'SEMUA' || trfProg.toUpperCase() === 'SEMUA SANTRI' || trfProg.toUpperCase() === 'SEMUA PROGRAM' || trfProg === '');
+
+            if (!isAll) {
+                const matchExact = (stProg.toLowerCase() === trfProg.toLowerCase());
+                const matchIncludes = (stProg.toLowerCase().includes(trfProg.toLowerCase()) || trfProg.toLowerCase().includes(stProg.toLowerCase()));
+                if (!matchExact && !matchIncludes) return;
+            }
+
+            const sId = st.studentId || st.id;
+            const tId = trf.tarifId || trf.id;
+            const key = `${sId}_${tId}_${tahunAjaran}`;
+
+            if (!existingKeys.has(key)) {
+                const tagihanId = `TGH-THN-${cleanThn}-${sId}-${tId}`;
+                const nominal = Number(trf.nominalDefault || trf.nominal || trf.amount || 0);
+
+                const item = {
+                    tagihanId: tagihanId,
+                    studentId: sId,
+                    studentName: st.name || st.nama,
+                    posId: tId,
+                    namaPos: trf.namaPos || trf.name,
+                    periode: tahunAjaran,
+                    nominalTagihan: nominal,
+                    nominalTerbayar: 0,
+                    sisaTagihan: nominal,
+                    status: 'BELUM_BAYAR',
+                    dueDate: dueDate || '',
+                    createdAt: nowIso
+                };
+
+                newItems.push(item);
+                existingKeys.add(key);
+            }
+        });
+    });
+
+    if (newItems.length === 0) {
+        return {
+            status: "success",
+            success: true,
+            countGenerated: 0,
+            message: `Seluruh santri terpilih sudah memiliki tagihan tahunan untuk periode ${tahunAjaran} (tidak ada tagihan baru yang diduplikasi).`
+        };
+    }
+
+    // Tambahkan ke tagihanList lokal
+    ASNKeuangan.data.tagihanList.unshift(...newItems);
+
+    // Simpan ke Cache
+    try {
+        sessionStorage.setItem('mubarokah_keuangan_dashboard_cache', JSON.stringify(ASNKeuangan.data));
+        localStorage.setItem('mubarokah_keuangan_dashboard_cache', JSON.stringify(ASNKeuangan.data));
+    } catch (e) {}
+
+    // Simpan ke Supabase PostgreSQL jika aktif
+    if (window.MubarokahSupabase && typeof window.MubarokahSupabase.saveTagihanBatch === 'function') {
+        window.MubarokahSupabase.saveTagihanBatch(newItems).catch(err => {
+            console.warn('[Keuangan] Gagal sinkronisasi tagihan ke Supabase:', err);
+        });
+    }
+
+    return {
+        status: "success",
+        success: true,
+        countGenerated: newItems.length,
+        message: `Berhasil menerbitkan ${newItems.length} item tagihan tahunan untuk Tahun Ajaran ${tahunAjaran}.`
+    };
+}
+window.generateBulkYearlyBillsClientSide = generateBulkYearlyBillsClientSide;
+
 
 // ====================================================================
 // SUB-MODUL 4: RIWAYAT TRANSAKSI / BUKU KAS

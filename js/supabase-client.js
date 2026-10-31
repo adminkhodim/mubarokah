@@ -844,6 +844,39 @@
         }
     }
 
+    
+    async function saveTagihanBatch(items) {
+        if (!isEnabled() || !Array.isArray(items) || items.length === 0) return { success: true, count: 0 };
+        try {
+            const rows = items.map(item => ({
+                tenant_id: DEFAULT_TENANT_UUID,
+                tagihan_id: String(item.tagihanId || '').trim(),
+                raw_student_id: String(item.studentId || item.raw_student_id || '').trim(),
+                student_name: String(item.studentName || item.name || '').trim(),
+                pos_id: String(item.posId || item.pos_id || item.tarifId || '').trim(),
+                nama_pos: String(item.namaPos || item.nama_pos || item.name || '').trim(),
+                periode: String(item.periode || '').trim(),
+                nominal_tagihan: Number(item.nominalTagihan || item.nominal_tagihan || item.nominal || 0),
+                nominal_terbayar: Number(item.nominalTerbayar || item.nominal_terbayar || 0),
+                sisa_tagihan: Number(item.sisaTagihan || item.sisa_tagihan || item.nominal || 0),
+                status: String(item.status || 'BELUM_BAYAR').toUpperCase().replace('BELUM_BAYAR', 'BELUM_LUNAS'),
+                due_date: item.dueDate || item.due_date || null
+            }));
+
+            await request('/rest/v1/keuangan_tagihan', {
+                method: 'POST',
+                headers: {
+                    'Prefer': 'resolution=merge-duplicates,return=minimal'
+                },
+                body: rows
+            });
+            return { status: 'success', success: true, count: rows.length };
+        } catch (error) {
+            console.error('[MubarokahSupabase] Gagal menyimpan batch tagihan:', error);
+            return { status: 'error', success: false, message: error.message };
+        }
+    }
+
     return Object.freeze({
         isEnabled,
         fetchBanners,
@@ -878,6 +911,7 @@
         deleteBanner,
         saveGallery,
         saveNotification,
+        saveTagihanBatch,
         formatTanggalIndo,
         getConfig: () => Object.assign({}, sbConfig)
     });
