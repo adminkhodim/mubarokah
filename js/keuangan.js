@@ -1533,13 +1533,56 @@ function normalizeYearMonthTagihan(val) {
     return s;
 }
 
+
+function getTagihanKategori(t) {
+    if (!t) return "BULANAN";
+    // 1. Cek properti langsung
+    const katDirect = String(t.kategori || t.category || t.tipePeriode || t.period_type || "").toUpperCase();
+    if (katDirect === "TAHUNAN" || katDirect === "YEARLY") return "TAHUNAN";
+    if (katDirect === "BULANAN" || katDirect === "MONTHLY") return "BULANAN";
+
+    // 2. Cek tagihanId prefix
+    const id = String(t.tagihanId || t.id || "").toUpperCase();
+    if (id.startsWith("TGH-THN-") || id.includes("-THN-") || id.includes("TAHUNAN")) return "TAHUNAN";
+
+    // 3. Cek format periode: jika "2026/2027" maka TAHUNAN, jika "2026-10" maka BULANAN
+    const per = String(t.periode || "").trim();
+    if (/^\d{4}\/\d{4}$/.test(per) || /^\d{4}-TAHUNAN$/i.test(per)) return "TAHUNAN";
+
+    // 4. Cek referensi Master Tarif jika ada
+    if (ASNKeuangan && ASNKeuangan.data && Array.isArray(ASNKeuangan.data.tarifList)) {
+        const pId = String(t.posId || t.pos_id || t.tarifId || "").trim();
+        const pName = String(t.namaPos || t.nama_pos || "").trim().toLowerCase();
+        const trf = ASNKeuangan.data.tarifList.find(x => 
+            (pId && (x.tarifId === pId || x.id === pId)) || 
+            (pName && (x.namaPos || x.name || "").toLowerCase() === pName)
+        );
+        if (trf) {
+            const trfKat = String(trf.kategori || trf.category || trf.tipePeriode || "").toUpperCase();
+            if (trfKat === "TAHUNAN") return "TAHUNAN";
+            if (trfKat === "BULANAN") return "BULANAN";
+        }
+    }
+
+    // 5. Cek nama pos
+    const name = String(t.namaPos || t.nama_pos || "").toLowerCase();
+    if (name.includes("tahunan") || name.includes("daftar ulang") || name.includes("1 tahun") || name.includes("gedung")) {
+        return "TAHUNAN";
+    }
+
+    return "BULANAN";
+}
+window.getTagihanKategori = getTagihanKategori;
+
 function filterKeuanganTagihan() {
     const searchInput = document.getElementById('keuangan-tagihan-search');
+    const filterKategori = document.getElementById('keuangan-tagihan-filter-kategori');
     const filterStatus = document.getElementById('keuangan-tagihan-filter-status');
     const filterProgram = document.getElementById('keuangan-tagihan-filter-program');
     const filterPeriode = document.getElementById('keuangan-tagihan-filter-periode');
 
     const q = searchInput ? searchInput.value.trim().toLowerCase() : "";
+    const stKategori = (filterKategori && filterKategori.value) ? filterKategori.value.trim().toUpperCase() : "ALL";
     const stStatus = (filterStatus && filterStatus.value) ? filterStatus.value.trim() : "ALL";
     const stProgram = (filterProgram && filterProgram.value) ? filterProgram.value.trim() : "ALL";
     const stPeriode = (filterPeriode && filterPeriode.value && filterPeriode.value.trim()) ? filterPeriode.value.trim() : "ALL";
@@ -1547,6 +1590,12 @@ function filterKeuanganTagihan() {
     const all = ASNKeuangan.data.tagihanList || [];
 
     ASNKeuangan.filteredTagihan = all.filter(t => {
+        // 0. Filter Kategori Tagihan (Bulanan vs Tahunan)
+        if (stKategori && stKategori !== "ALL") {
+            const curKat = getTagihanKategori(t);
+            if (curKat !== stKategori) return false;
+        }
+
         // 1. Pencarian Teks Bebas (Nama, Pos, Periode, Program)
         if (q) {
             const mName = (t.studentName || "").toLowerCase().includes(q);
@@ -1616,7 +1665,9 @@ function resetKeuanganTagihanFilter() {
     const filterProgram = document.getElementById('keuangan-tagihan-filter-program');
     const filterPeriode = document.getElementById('keuangan-tagihan-filter-periode');
 
+    const filterKategori = document.getElementById('keuangan-tagihan-filter-kategori');
     if (searchInput) searchInput.value = "";
+    if (filterKategori) filterKategori.value = "ALL";
     if (filterStatus) filterStatus.value = "ALL";
     if (filterProgram) filterProgram.value = "ALL";
     if (filterPeriode) filterPeriode.value = "";
@@ -1671,7 +1722,12 @@ function renderKeuanganTagihanTable() {
                     </div>
                 </td>
                 <td class="p-3">
-                    <div class="font-semibold text-slate-800 dark:text-slate-200">${escapeHtml(t.namaPos)}</div>
+                    <div class="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                        <span>${escapeHtml(t.namaPos)}</span>
+                        ${getTagihanKategori(t) === 'TAHUNAN' 
+                            ? '<span class="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40">TAHUNAN</span>' 
+                            : '<span class="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40">BULANAN</span>'}
+                    </div>
                     <div class="text-[10px] text-slate-400 font-medium">Periode: ${escapeHtml(t.periode)}</div>
                 </td>
                 <td class="p-3 font-semibold text-slate-800 dark:text-slate-200">${formatRupiah(t.nominalTagihan)}</td>
