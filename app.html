@@ -13036,7 +13036,8 @@
                                                 <span id="keuangan-tagihan-count"
                                                     class="text-xs font-bold text-slate-400">0 Tagihan</span>
                                                 <button type="button" onclick="openGenerateBulkTagihanModal()"
-                                                    class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95">
+                                                    class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95"
+                                                    title="Terbitkan Tagihan Massal Santri (Bulanan & Tahunan)">
                                                     <i class="fa-solid fa-bolt text-xs"></i>
                                                     <span>Terbitkan Tagihan Massal</span>
                                                 </button>
@@ -16208,59 +16209,157 @@
         </div>
     </div>
 
-    <!-- ==================== MODAL KEUANGAN: GENERATE TAGIHAN MASSAL ==================== -->
+    <!-- ==================== MODAL KEUANGAN: TERBITKAN TAGIHAN MASSAL (BULANAN & TAHUNAN) ==================== -->
     <div id="modal-keuangan-generate-tagihan"
         class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
         <div
-            class="bg-white dark:bg-[#15202d] rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-[#253447] space-y-4 p-5">
+            class="bg-white dark:bg-[#15202d] rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-[#253447] space-y-4 p-5 sm:p-6">
+            <!-- Modal Header -->
             <div class="flex items-center justify-between border-b border-slate-100 dark:border-[#253447] pb-3">
-                <div class="flex items-center space-x-2">
-                    <div
-                        class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center">
-                        <i class="fa-solid fa-bolt text-sm"></i>
+                <div class="flex items-center space-x-2.5">
+                    <div id="modal-gen-icon-wrapper"
+                        class="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-base shadow-sm transition-colors duration-300">
+                        <i id="modal-gen-icon" class="fa-solid fa-bolt"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">Terbitkan Tagihan Bulanan</h3>
-                        <p class="text-[10px] text-slate-400">Generate tagihan SPP & iuran santri serentak</p>
+                        <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">Terbitkan Tagihan Massal</h3>
+                        <p id="modal-gen-subtitle" class="text-[10px] text-slate-400">Generate tagihan SPP bulanan atau iuran tahunan santri serentak</p>
                     </div>
                 </div>
                 <button type="button" onclick="closeGenerateBulkTagihanModal()"
-                    class="text-slate-400 hover:text-slate-600">
-                    <i class="fa-solid fa-xmark"></i>
+                    class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 w-8 h-8 rounded-lg flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-base"></i>
                 </button>
             </div>
 
-            <div class="space-y-3 text-xs">
+            <!-- Tab Switcher: Bulanan vs Tahunan -->
+            <div class="flex items-center p-1 bg-slate-100 dark:bg-[#1c2836] rounded-2xl border border-slate-200/80 dark:border-[#2c3d52]">
+                <button type="button" id="tab-btn-gen-bulanan" onclick="switchGenerateTagihanType('bulanan')"
+                    class="flex-1 py-1.5 px-3 rounded-xl text-xs font-bold transition bg-emerald-600 text-white shadow-sm flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-bolt text-[11px]"></i>
+                    <span>Tagihan Bulanan (SPP)</span>
+                </button>
+                <button type="button" id="tab-btn-gen-tahunan" onclick="switchGenerateTagihanType('tahunan')"
+                    class="flex-1 py-1.5 px-3 rounded-xl text-xs font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-calendar-days text-[11px]"></i>
+                    <span>Tagihan Tahunan</span>
+                </button>
+            </div>
+
+            <!-- TAB 1: FORM TAGIHAN BULANAN -->
+            <div id="panel-gen-tagihan-bulanan" class="space-y-3.5 text-xs">
                 <div>
-                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Periode Bulan Tagihan <span
-                            class="text-rose-500">*</span></label>
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Periode Bulan Tagihan <span class="text-rose-500">*</span>
+                    </label>
                     <input type="month" id="generate-tagihan-periode"
-                        class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 outline-none">
+                        class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
                 </div>
                 <div>
-                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Batas Waktu Jatuh
-                        Tempo</label>
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Batas Waktu Jatuh Tempo
+                    </label>
                     <input type="date" id="generate-tagihan-due-date"
-                        class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 outline-none">
+                        class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
                 </div>
                 <div
-                    class="p-3 bg-amber-50/70 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-800/40 text-[11px] text-amber-800 dark:text-amber-300 space-y-1">
-                    <i class="fa-solid fa-circle-info mr-1"></i>
-                    Sistem akan membuat tagihan SPP bagi seluruh santri yang berstatus <strong>AKTIF</strong>. Jika
-                    tagihan bulan tersebut sudah ada, sistem tidak akan menduplikasi.
+                    class="p-3 bg-emerald-50/70 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-800/40 text-[11px] text-emerald-800 dark:text-emerald-300 space-y-1">
+                    <div class="flex items-start gap-1.5">
+                        <i class="fa-solid fa-circle-info mt-0.5 shrink-0 text-emerald-600"></i>
+                        <span>Sistem akan membuat tagihan SPP bagi seluruh santri yang berstatus <strong>AKTIF</strong> sesuai pos Syahriah masing-masing program. Tagihan yang sudah ada tidak akan diduplikasi.</span>
+                    </div>
+                </div>
+
+                <div class="pt-2 flex items-center justify-end space-x-2">
+                    <button type="button" onclick="closeGenerateBulkTagihanModal()"
+                        class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition">
+                        Batal
+                    </button>
+                    <button type="button" id="btn-submit-generate-tagihan" onclick="submitGenerateBulkTagihan()"
+                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm active:scale-95 flex items-center gap-1.5">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span>Terbitkan Tagihan Bulanan</span>
+                    </button>
                 </div>
             </div>
 
-            <div class="pt-2 flex items-center justify-end space-x-2">
-                <button type="button" onclick="closeGenerateBulkTagihanModal()"
-                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition">
-                    Batal
-                </button>
-                <button type="button" id="btn-submit-generate-tagihan" onclick="submitGenerateBulkTagihan()"
-                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm active:scale-95 flex items-center gap-1.5">
-                    <i class="fa-solid fa-bolt"></i>
-                    <span>Terbitkan Tagihan Massal</span>
-                </button>
+            <!-- TAB 2: FORM TAGIHAN TAHUNAN -->
+            <div id="panel-gen-tagihan-tahunan" class="space-y-3.5 text-xs hidden">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            Tahun Ajaran / Periode <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" id="generate-tagihan-tahunan-periode" placeholder="Contoh: 2026/2027"
+                            class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 font-semibold outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            Batas Jatuh Tempo
+                        </label>
+                        <input type="date" id="generate-tagihan-tahunan-due-date"
+                            class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            Filter Program Santri
+                        </label>
+                        <select id="generate-tagihan-tahunan-program"
+                            class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
+                            <option value="SEMUA">Semua Program Santri</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            Target Santri Penerima
+                        </label>
+                        <select id="generate-tagihan-tahunan-target"
+                            class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#2c3d52] bg-slate-50 dark:bg-[#1c2836] text-slate-800 dark:text-slate-100 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
+                            <option value="SEMUA">Semua Santri Aktif</option>
+                            <option value="LAMA">Hanya Santri Lama (Kenaikan Kelas)</option>
+                            <option value="BARU">Hanya Santri Baru</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="font-bold text-slate-700 dark:text-slate-300">
+                            Pilih Pos Tarif Tahunan <span class="text-rose-500">*</span>
+                        </label>
+                        <button type="button" onclick="toggleSelectAllYearlyTarifPos()"
+                            class="text-[10px] font-bold text-amber-600 hover:text-amber-700 dark:text-amber-400">
+                            Pilih / Lepas Semua
+                        </button>
+                    </div>
+                    <div id="generate-tagihan-tahunan-pos-list"
+                        class="space-y-1.5 max-h-40 overflow-y-auto p-2 bg-slate-50 dark:bg-[#182332] rounded-xl border border-slate-200 dark:border-[#253447]">
+                        <!-- Rendered by JS: list pos tarif TAHUNAN -->
+                    </div>
+                </div>
+
+                <div
+                    class="p-3 bg-amber-50/70 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-800/40 text-[11px] text-amber-800 dark:text-amber-300 space-y-1">
+                    <div class="flex items-start gap-1.5">
+                        <i class="fa-solid fa-circle-info mt-0.5 shrink-0 text-amber-600"></i>
+                        <span>Sistem otomatis menerbitkan tagihan pos tahunan bagi santri aktif terpilih. Santri yang sudah memiliki tagihan pos ini di tahun ajaran terkait tidak akan diduplikasi.</span>
+                    </div>
+                </div>
+
+                <div class="pt-2 flex items-center justify-end space-x-2">
+                    <button type="button" onclick="closeGenerateBulkTagihanModal()"
+                        class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition">
+                        Batal
+                    </button>
+                    <button type="button" id="btn-submit-generate-tagihan-tahunan" onclick="submitGenerateBulkYearlyTagihan()"
+                        class="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl text-xs font-bold transition shadow-sm active:scale-95 flex items-center gap-1.5">
+                        <i class="fa-solid fa-calendar-check"></i>
+                        <span>Terbitkan Tagihan Tahunan</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>

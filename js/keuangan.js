@@ -1516,7 +1516,11 @@ function normalizeYearMonthTagihan(val) {
         return `${y}-${m}`;
     }
     const s = String(val).trim();
-    const match = s.match(/^(\d{4})[-\/](\d{1,2})/);
+    // Dukung format Tahun Ajaran (contoh: "2026/2027" atau "2026-TAHUNAN")
+    if (/^\d{4}\/\d{4}$/.test(s) || /^\d{4}-TAHUNAN$/i.test(s)) {
+        return s;
+    }
+    const match = s.match(/^(\d{4})[-\/](\d{1,2})$/);
     if (match) {
         return `${match[1]}-${String(match[2]).padStart(2, '0')}`;
     }
@@ -1728,21 +1732,142 @@ function renderKeuanganTagihanTable() {
 }
 window.renderKeuanganTagihanTable = renderKeuanganTagihanTable;
 
-// Generate Tagihan Bulanan Massal Modal
-function openGenerateBulkTagihanModal() {
+// ====================================================================
+// FITUR: MODAL TERBITKAN TAGIHAN MASSAL TERPADU (BULANAN & TAHUNAN)
+// ====================================================================
+
+let currentGenerateTagihanType = 'bulanan';
+
+function switchGenerateTagihanType(type) {
+    currentGenerateTagihanType = type;
+    const btnBulanan = document.getElementById('tab-btn-gen-bulanan');
+    const btnTahunan = document.getElementById('tab-btn-gen-tahunan');
+    const panelBulanan = document.getElementById('panel-gen-tagihan-bulanan');
+    const panelTahunan = document.getElementById('panel-gen-tagihan-tahunan');
+    const iconWrapper = document.getElementById('modal-gen-icon-wrapper');
+    const icon = document.getElementById('modal-gen-icon');
+    const subtitle = document.getElementById('modal-gen-subtitle');
+
+    if (type === 'tahunan') {
+        if (btnTahunan) {
+            btnTahunan.className = "flex-1 py-1.5 px-3 rounded-xl text-xs font-bold transition bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-sm flex items-center justify-center gap-1.5";
+        }
+        if (btnBulanan) {
+            btnBulanan.className = "flex-1 py-1.5 px-3 rounded-xl text-xs font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center justify-center gap-1.5";
+        }
+        if (panelTahunan) panelTahunan.classList.remove('hidden');
+        if (panelBulanan) panelBulanan.classList.add('hidden');
+        if (iconWrapper) {
+            iconWrapper.className = "w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-base shadow-sm transition-colors duration-300";
+        }
+        if (icon) {
+            icon.className = "fa-solid fa-calendar-days";
+        }
+        if (subtitle) {
+            subtitle.textContent = "Generate daftar ulang, infaq gedung & uang kegiatan tahunan santri";
+        }
+        populateYearlyTarifList();
+    } else {
+        if (btnBulanan) {
+            btnBulanan.className = "flex-1 py-1.5 px-3 rounded-xl text-xs font-bold transition bg-emerald-600 text-white shadow-sm flex items-center justify-center gap-1.5";
+        }
+        if (btnTahunan) {
+            btnTahunan.className = "flex-1 py-1.5 px-3 rounded-xl text-xs font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center justify-center gap-1.5";
+        }
+        if (panelBulanan) panelBulanan.classList.remove('hidden');
+        if (panelTahunan) panelTahunan.classList.add('hidden');
+        if (iconWrapper) {
+            iconWrapper.className = "w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-base shadow-sm transition-colors duration-300";
+        }
+        if (icon) {
+            icon.className = "fa-solid fa-bolt";
+        }
+        if (subtitle) {
+            subtitle.textContent = "Generate tagihan SPP & syahriah bulanan santri serentak";
+        }
+    }
+}
+window.switchGenerateTagihanType = switchGenerateTagihanType;
+
+function populateYearlyTarifList() {
+    const selectProgram = document.getElementById('generate-tagihan-tahunan-program');
+    const posListContainer = document.getElementById('generate-tagihan-tahunan-pos-list');
+
+    // Populate Program Dropdown
+    if (selectProgram && selectProgram.options.length <= 1) {
+        selectProgram.innerHTML = '<option value="SEMUA">Semua Program Santri</option>';
+        const programs = (ASNKeuangan.data && Array.isArray(ASNKeuangan.data.programs)) 
+            ? ASNKeuangan.data.programs 
+            : ['Tahfidz Al-Qur\'an', 'TPQ Yanbu\'a', 'Madrasah Diniyah', 'Pesantren Reguler Putra Putri', 'Pesantren Tahfidz Dewasa', 'MA Tahfidz', 'Pesantren Tahfidz Anak'];
+        programs.forEach(p => {
+            const pName = typeof p === 'string' ? p : (p.name || p.nama || '');
+            if (pName) {
+                selectProgram.innerHTML += `<option value="${escapeHtml(pName)}">${escapeHtml(pName)}</option>`;
+            }
+        });
+    }
+
+    // Populate Pos Tarif Tahunan Checkboxes
+    if (posListContainer) {
+        const allTarifs = (ASNKeuangan.data && Array.isArray(ASNKeuangan.data.tarifList)) ? ASNKeuangan.data.tarifList : [];
+        const yearlyTarifs = allTarifs.filter(t => {
+            const kat = String(t.kategori || t.category || '').toUpperCase();
+            const tip = String(t.tipePeriode || t.period_type || '').toUpperCase();
+            const isActive = t.isActive !== false && t.is_active !== false;
+            return isActive && (kat === 'TAHUNAN' || tip === 'TAHUNAN');
+        });
+
+        if (yearlyTarifs.length === 0) {
+            posListContainer.innerHTML = `
+                <div class="p-3 text-center text-xs text-amber-700 dark:text-amber-300">
+                    <i class="fa-solid fa-triangle-exclamation mb-1 block text-base"></i>
+                    Belum ada pos tarif dengan kategori <strong>TAHUNAN</strong>.<br>
+                    <span class="text-[10px] text-slate-400">Silakan tambahkan pos tarif Tahunan (misal: Daftar Ulang, Uang Kegiatan) di Master Pos & Tarif.</span>
+                </div>
+            `;
+        } else {
+            posListContainer.innerHTML = yearlyTarifs.map((t) => `
+                <label class="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-[#1c2836] hover:bg-amber-50/50 dark:hover:bg-amber-950/20 border border-slate-100 dark:border-[#2c3d52] cursor-pointer transition">
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" name="yearly-tarif-pos" value="${escapeHtml(t.tarifId || t.id)}" checked
+                            class="w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500">
+                        <div>
+                            <span class="font-bold text-slate-700 dark:text-slate-200 text-xs">${escapeHtml(t.namaPos || t.name)}</span>
+                            <span class="text-[10px] text-slate-400 block">${escapeHtml(t.program || 'Semua Program')}</span>
+                        </div>
+                    </div>
+                    <span class="font-bold text-amber-600 dark:text-amber-400 text-xs">${formatRupiah(t.nominalDefault || t.amount || 0)}</span>
+                </label>
+            `).join('');
+        }
+    }
+}
+
+function openGenerateBulkTagihanModal(defaultType = 'bulanan') {
     const modal = document.getElementById('modal-keuangan-generate-tagihan');
     if (!modal) return;
 
-    // Default bulan berikutnya
     const now = new Date();
     const yr = now.getFullYear();
-    const mo = String(now.getMonth() + 1).padStart(2, "0");
+    const curMonth = now.getMonth() + 1;
+    const mo = String(curMonth).padStart(2, "0");
+
+    // Init form Bulanan
     const inputPeriode = document.getElementById('generate-tagihan-periode');
     const inputDueDate = document.getElementById('generate-tagihan-due-date');
-
     if (inputPeriode) inputPeriode.value = `${yr}-${mo}`;
     if (inputDueDate) inputDueDate.value = `${yr}-${mo}-10`;
 
+    // Init form Tahunan
+    const inputTahunanPeriode = document.getElementById('generate-tagihan-tahunan-periode');
+    const inputTahunanDueDate = document.getElementById('generate-tagihan-tahunan-due-date');
+    const defaultTA = curMonth >= 6 ? `${yr}/${yr + 1}` : `${yr - 1}/${yr}`;
+    if (inputTahunanPeriode) inputTahunanPeriode.value = defaultTA;
+    if (inputTahunanDueDate) {
+        inputTahunanDueDate.value = `${yr}-08-31`;
+    }
+
+    switchGenerateTagihanType(defaultType);
     modal.classList.remove('hidden');
 }
 window.openGenerateBulkTagihanModal = openGenerateBulkTagihanModal;
@@ -1753,6 +1878,20 @@ function closeGenerateBulkTagihanModal() {
 }
 window.closeGenerateBulkTagihanModal = closeGenerateBulkTagihanModal;
 
+// Alias untuk kompatibilitas
+window.openGenerateBulkYearlyTagihanModal = function() {
+    openGenerateBulkTagihanModal('tahunan');
+};
+window.closeGenerateBulkYearlyTagihanModal = closeGenerateBulkTagihanModal;
+
+function toggleSelectAllYearlyTarifPos() {
+    const checkboxes = document.querySelectorAll('input[name="yearly-tarif-pos"]');
+    if (!checkboxes || checkboxes.length === 0) return;
+    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+    checkboxes.forEach(cb => cb.checked = !allChecked);
+}
+window.toggleSelectAllYearlyTarifPos = toggleSelectAllYearlyTarifPos;
+
 async function submitGenerateBulkTagihan() {
     const inputPeriode = document.getElementById('generate-tagihan-periode');
     const inputDueDate = document.getElementById('generate-tagihan-due-date');
@@ -1762,7 +1901,7 @@ async function submitGenerateBulkTagihan() {
     const dueDate = inputDueDate ? inputDueDate.value.trim() : "";
 
     if (!periode) {
-        alert("Pilih periode tagihan (contoh: 2026-10).");
+        alert("Pilih periode tagihan bulanan (contoh: 2026-10).");
         return;
     }
 
@@ -1779,13 +1918,13 @@ async function submitGenerateBulkTagihan() {
             dueDate: dueDate
         });
 
-        if (res && res.success) {
+        if (res && (res.success || res.status === "success")) {
             closeGenerateBulkTagihanModal();
             loadAdminKeuanganData(true);
             if (typeof showToast === 'function') {
-                showToast(`✅ ${res.message || "Tagihan berhasil diterbitkan."}`);
+                showToast(`✅ ${res.message || "Tagihan bulanan berhasil diterbitkan."}`);
             } else {
-                alert(res.message);
+                alert(res.message || "Tagihan bulanan berhasil diterbitkan.");
             }
         } else {
             alert("Gagal menerbitkan tagihan: " + ((res && res.message) || "Terjadi kesalahan"));
@@ -1795,11 +1934,75 @@ async function submitGenerateBulkTagihan() {
     } finally {
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = `<i class="fa-solid fa-bolt mr-1.5"></i> Terbitkan Tagihan Massal`;
+            btn.innerHTML = `<i class="fa-solid fa-bolt mr-1.5"></i> Terbitkan Tagihan Bulanan`;
         }
     }
 }
 window.submitGenerateBulkTagihan = submitGenerateBulkTagihan;
+
+async function submitGenerateBulkYearlyTagihan() {
+    const inputPeriode = document.getElementById('generate-tagihan-tahunan-periode');
+    const inputDueDate = document.getElementById('generate-tagihan-tahunan-due-date');
+    const selectProgram = document.getElementById('generate-tagihan-tahunan-program');
+    const selectTarget = document.getElementById('generate-tagihan-tahunan-target');
+    const btn = document.getElementById('btn-submit-generate-tagihan-tahunan');
+
+    const tahunAjaran = inputPeriode ? inputPeriode.value.trim() : "";
+    const dueDate = inputDueDate ? inputDueDate.value.trim() : "";
+    const programFilter = selectProgram ? selectProgram.value.trim() : "SEMUA";
+    const targetFilter = selectTarget ? selectTarget.value.trim() : "SEMUA";
+
+    if (!tahunAjaran) {
+        alert("Tahun Ajaran / Periode Tahunan wajib diisi (contoh: 2026/2027).");
+        return;
+    }
+
+    const selectedPosCheckboxes = document.querySelectorAll('input[name="yearly-tarif-pos"]:checked');
+    const posIds = Array.from(selectedPosCheckboxes).map(cb => cb.value.trim());
+
+    if (posIds.length === 0) {
+        alert("Pilih minimal 1 pos tarif tahunan yang akan diterbitkan.");
+        return;
+    }
+
+    try {
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Menerbitkan Tagihan Tahunan...`;
+        }
+
+        const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : null) || "";
+        const res = await apiPost("generateBulkYearlyBills", {
+            token: token,
+            tahunAjaran: tahunAjaran,
+            periode: tahunAjaran,
+            dueDate: dueDate,
+            posIds: posIds,
+            programFilter: programFilter,
+            targetFilter: targetFilter
+        });
+
+        if (res && (res.success || res.status === "success")) {
+            closeGenerateBulkTagihanModal();
+            loadAdminKeuanganData(true);
+            if (typeof showToast === 'function') {
+                showToast(`✅ ${res.message || "Tagihan tahunan berhasil diterbitkan."}`);
+            } else {
+                alert(res.message || "Tagihan tahunan berhasil diterbitkan.");
+            }
+        } else {
+            alert("Gagal menerbitkan tagihan tahunan: " + ((res && res.message) || "Terjadi kesalahan"));
+        }
+    } catch (e) {
+        alert("Error: " + e.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-calendar-check mr-1.5"></i> Terbitkan Tagihan Tahunan`;
+        }
+    }
+}
+window.submitGenerateBulkYearlyTagihan = submitGenerateBulkYearlyTagihan;
 
 // ====================================================================
 // SUB-MODUL 4: RIWAYAT TRANSAKSI / BUKU KAS

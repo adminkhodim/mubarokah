@@ -22235,6 +22235,163 @@ function generateBulkMonthlyBills(payload, token) {
   });
 }
 
+
+function generateBulkYearlyBills(payload, token) {
+  return withScriptLock(() => {
+    try {
+      const ss = getDatabaseSpreadsheet();
+      if (!ss) throw new Error("Spreadsheet database tidak ditemukan.");
+
+      const tahunAjaran = String(payload.tahunAjaran || payload.periode || "").trim();
+      if (!tahunAjaran) {
+        throw new Error("Tahun Ajaran / Periode Tahunan wajib diisi (contoh: 2026/2027).");
+      }
+
+      const dueDate = String(payload.dueDate || "").trim();
+      const posIds = Array.isArray(payload.posIds) ? payload.posIds.map(String) : [];
+      const programFilter = String(payload.programFilter || "SEMUA").trim();
+
+      const tSheet = ss.getSheetByName(SHEET_KEUANGAN_TARIF);
+      const tagihanSheet = ss.getSheetByName(SHEET_KEUANGAN_TAGIHAN);
+      const studentsSheet = ss.getSheetByName(SHEET_STUDENTS);
+
+      if (!tSheet || !tagihanSheet || !studentsSheet) {
+        throw new Error("Sheet database belum lengkap.");
+      }
+
+      // 1. Ambil pos tarif tahunan aktif
+      const activeTarifs = [];
+      const tData = tSheet.getDataRange().getValues();
+      for (let i = 1; i < tData.length; i++) {
+        const tId = String(tData[i][0]).trim();
+        const isAct = String(tData[i][6]).toUpperCase() === "TRUE";
+        const kat = String(tData[i][2]).toUpperCase();
+        const tip = String(tData[i][3]).toUpperCase();
+
+        const isTahunan = (kat === "TAHUNAN" || tip === "TAHUNAN");
+        const isSelected = posIds.length > 0 ? posIds.includes(tId) : isTahunan;
+
+        if (tId && isAct && isSelected) {
+          activeTarifs.push({
+            tarifId: tId,
+            namaPos: String(tData[i][1] || "").trim(),
+            nominal: Number(tData[i][4]) || 0,
+            program: String(tData[i][5] || "SEMUA").trim()
+          });
+        }
+      }
+
+      if (activeTarifs.length === 0) {
+        throw new Error("Tidak ada pos tarif tahunan aktif yang dipilih atau ditemukan.");
+      }
+
+      // 2. Ambil data santri aktif
+      const activeStudents = [];
+      const sData = studentsSheet.getDataRange().getValues();
+      const sHead = sData[0].map(h => String(h || "").trim().toLowerCase());
+      const idIdx = sHead.indexOf("student_id");
+      const nameIdx = sHead.indexOf("name");
+      const progIdx = sHead.indexOf("program");
+      const statusIdx = sHead.indexOf("status");
+
+      for (let i = 1; i < sData.length; i++) {
+        const st = statusIdx !== -1 ? String(sData[i][statusIdx] || "").trim().toUpperCase() : "AKTIF";
+        if (["AKTIF", "ACTIVE", ""].includes(st)) {
+          const sId = String(sData[i][idIdx] || "").trim();
+          if (sId) {
+            const stProg = progIdx !== -1 ? String(sData[i][progIdx] || "").trim() : "Tahfidz";
+            if (programFilter === "SEMUA" || stProg.toLowerCase() === programFilter.toLowerCase()) {
+              activeStudents.push({
+                studentId: sId,
+                name: String(sData[i][nameIdx] || "").trim(),
+                program: stProg
+              });
+            }
+          }
+        }
+      }
+
+      if (activeStudents.length === 0) {
+        throw new Error("Tidak ada data santri aktif yang sesuai kriteria.");
+      }
+
+      // 3. Index tagihan yang sudah ada di periode tahunan ini untuk mencegah duplikasi
+      const existingTagihanKeys = new Set();
+      const curTagihanData = tagihanSheet.getDataRange().getValues();
+      for (let i = 1; i < curTagihanData.length; i++) {
+        const sId = String(curTagihanData[i][1] || "").trim();
+        const pId = String(curTagihanData[i][3] || "").trim();
+        const per = String(curTagihanData[i][5] || "").trim();
+        if (sId && pId && per) {
+          existingTagihanKeys.add(`${sId}_${pId}_${per}`);
+        }
+      }
+
+      // 4. Buat baris tagihan tahunan baru
+      const nowIso = new Date().toISOString();
+      const newRows = [];
+      const cleanThn = tahunAjaran.replace(/[^a-zA-Z0-9]/g, "");
+
+      activeStudents.forEach(st => {
+        activeTarifs.forEach(trf => {
+          const trfProg = String(trf.program || "SEMUA").trim();
+          const stProg = String(st.program || "").trim();
+
+          const isAll = (
+            trfProg === "SEMUA" ||
+            trfProg.toUpperCase() === "SEMUA SANTRI" ||
+            trfProg.toUpperCase() === "SEMUA PROGRAM" ||
+            trfProg === ""
+          );
+
+          if (!isAll) {
+            const matchExact = (stProg.toLowerCase() === trfProg.toLowerCase());
+            const matchIncludes = (stProg.toLowerCase().includes(trfProg.toLowerCase()) || trfProg.toLowerCase().includes(stProg.toLowerCase()));
+            if (!matchExact && !matchIncludes) {
+              return;
+            }
+          }
+
+          const key = `${st.studentId}_${trf.tarifId}_${tahunAjaran}`;
+          if (!existingTagihanKeys.has(key)) {
+            const tagihanId = `TGH-THN-${cleanThn}-${st.studentId}-${trf.tarifId}`;
+            newRows.push([
+              tagihanId,
+              st.studentId,
+              st.name,
+              trf.tarifId,
+              trf.namaPos,
+              tahunAjaran,
+              trf.nominal,
+              0,          // nominal_terbayar
+              trf.nominal,// sisa_tagihan
+              "BELUM_BAYAR",
+              dueDate || "",
+              nowIso
+            ]);
+            existingTagihanKeys.add(key);
+          }
+        });
+      });
+
+      if (newRows.length > 0) {
+        const startRow = tagihanSheet.getLastRow() + 1;
+        tagihanSheet.getRange(startRow, 1, newRows.length, newRows[0].length).setValues(newRows);
+      }
+
+      return {
+        status: "success",
+        success: true,
+        countGenerated: newRows.length,
+        message: `Berhasil menerbitkan ${newRows.length} item tagihan tahunan untuk Tahun Ajaran ${tahunAjaran}.`
+      };
+    } catch (err) {
+      console.error("[GENERATE BULK YEARLY BILLS ERROR]", err);
+      return { status: "error", success: false, message: "Gagal menerbitkan tagihan tahunan: " + err.message };
+    }
+  });
+}
+
 function saveMasterTarif(payload, token) {
   try {
     const ss = getDatabaseSpreadsheet();
