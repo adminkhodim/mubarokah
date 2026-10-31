@@ -61,3 +61,4 @@ ON CONFLICT (tenant_id, identity_id) DO UPDATE SET
 CREATE INDEX IF NOT EXISTS idx_guardians_name ON public.guardians(tenant_id, name);
 CREATE INDEX IF NOT EXISTS idx_guardians_email ON public.guardians(tenant_id, email);
 CREATE INDEX IF NOT EXISTS idx_student_guardians_composite ON public.student_guardians(tenant_id, guardian_id, student_id);
+

@@ -8433,4 +8433,255 @@ function getPresensiRekap(filter, token) {
     return { status: "error", success: false, ok: false, message: err.message };
   }
 }
-
+
+
+// ====================================================================
+// MODUL DATA WALI SANTRI & KELUARGA (MASTER DATA & RELASI)
+// ====================================================================
+
+function getWaliSantriList(token) {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error('Spreadsheet database tidak ditemukan.');
+
+    const waliSheet = getAuthSheet(ss, SHEET_WALI_IDENTITIES) || ss.getSheetByName('Users');
+    const mapSheet = getAuthSheet(ss, SHEET_WALI_SANTRI_MAP);
+    const studSheet = getAuthSheet(ss, SHEET_STUDENTS);
+
+    if (!waliSheet) return { success: true, data: [] };
+
+    const studentMap = {};
+    if (studSheet) {
+      const sData = studSheet.getDataRange().getValues();
+      if (sData.length > 1) {
+        const sHead = sData[0].map(h => String(h || '').trim().toLowerCase());
+        const idIdx = sHead.indexOf('student_id');
+        const nisIdx = sHead.indexOf('nis');
+        const nameIdx = sHead.indexOf('name');
+        const progIdx = sHead.indexOf('program');
+
+        for (let i = 1; i < sData.length; i++) {
+          const sId = String(sData[i][idIdx] || sData[i][0] || '').trim();
+          if (sId) {
+            studentMap[sId] = {
+              studentId: sId,
+              name: String(sData[i][nameIdx] || '').trim(),
+              nis: String(sData[i][nisIdx] || '').trim(),
+              program: String(sData[i][progIdx] || '').trim()
+            };
+          }
+        }
+      }
+    }
+
+    const waliToStudents = {};
+    if (mapSheet) {
+      const mData = mapSheet.getDataRange().getValues();
+      for (let m = 1; m < mData.length; m++) {
+        const mapId = String(mData[m][0] || '').trim();
+        const wId = String(mData[m][1] || '').trim();
+        const sId = String(mData[m][2] || '').trim();
+        const rel = String(mData[m][3] || 'GUARDIAN').trim();
+
+        if (wId && sId) {
+          if (!waliToStudents[wId]) waliToStudents[wId] = [];
+          const st = studentMap[sId] || { studentId: sId, name: 'Santri', nis: '', program: '' };
+          waliToStudents[wId].push({
+            relationId: mapId,
+            studentId: sId,
+            name: st.name,
+            nis: st.nis,
+            program: st.program,
+            relationship: rel
+          });
+        }
+      }
+    }
+
+    const wData = waliSheet.getDataRange().getValues();
+    const wHead = wData[0].map(h => String(h || '').trim().toLowerCase());
+    const idIdx = wHead.findIndex(h => h.includes('identity') || h.includes('id'));
+    const emailIdx = wHead.indexOf('email');
+    const phoneIdx = wHead.findIndex(h => h.includes('phone') || h.includes('hp') || h.includes('wa'));
+    const nameIdx = wHead.indexOf('name') !== -1 ? wHead.indexOf('name') : wHead.indexOf('nama');
+    const statusIdx = wHead.indexOf('status');
+    const roleIdx = wHead.indexOf('role');
+
+    const result = [];
+    for (let w = 1; w < wData.length; w++) {
+      const role = roleIdx !== -1 ? String(wData[w][roleIdx] || '').trim().toUpperCase() : 'WALI_SANTRI';
+      if (role && role !== 'WALI_SANTRI' && role !== 'WALI' && role !== 'ORANG_TUA') {
+        continue;
+      }
+
+      const wId = String(wData[w][idIdx] || '').trim();
+      if (!wId) continue;
+
+      result.push({
+        id: wId,
+        identityId: wId,
+        name: String(wData[w][nameIdx] || '').trim(),
+        email: emailIdx !== -1 ? String(wData[w][emailIdx] || '').trim() : '',
+        phone: phoneIdx !== -1 ? String(wData[w][phoneIdx] || '').trim() : '',
+        status: statusIdx !== -1 ? String(wData[w][statusIdx] || 'ACTIVE').trim().toUpperCase() : 'ACTIVE',
+        students: waliToStudents[wId] || []
+      });
+    }
+
+    return {
+      status: 'success',
+      success: true,
+      data: result,
+      total: result.length
+    };
+  } catch (err) {
+    console.error('[GET WALI SANTRI ERROR]', err);
+    return { status: 'error', success: false, message: err.message };
+  }
+}
+
+function saveWaliIdentityData(payload, token) {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error('Spreadsheet database tidak ditemukan.');
+
+    const sheet = getAuthSheet(ss, SHEET_WALI_IDENTITIES);
+    if (!sheet) throw new Error('Sheet Wali_Identities tidak ditemukan.');
+
+    const name = String(payload.name || payload.nama || '').trim();
+    if (!name) throw new Error('Nama wali santri wajib diisi.');
+
+    const email = String(payload.email || '').trim();
+    const phone = String(payload.phone || payload.whatsapp || payload.no_hp || '').trim();
+    const status = String(payload.status || 'ACTIVE').toUpperCase();
+    let identityId = String(payload.identity_id || payload.identityId || payload.id || '').trim();
+
+    const data = sheet.getDataRange().getValues();
+    const head = data[0].map(h => String(h || '').trim().toLowerCase());
+    const idIdx = head.findIndex(h => h.includes('identity') || h.includes('id'));
+    const emailIdx = head.indexOf('email');
+    const phoneIdx = head.findIndex(h => h.includes('phone') || h.includes('hp') || h.includes('wa'));
+    const nameIdx = head.indexOf('name') !== -1 ? head.indexOf('name') : head.indexOf('nama');
+    const statusIdx = head.indexOf('status');
+
+    let foundRow = -1;
+    if (identityId) {
+      for (let r = 1; r < data.length; r++) {
+        if (String(data[r][idIdx] || '').trim() === identityId) {
+          foundRow = r + 1;
+          break;
+        }
+      }
+    }
+
+    const nowIso = new Date().toISOString();
+
+    if (foundRow !== -1) {
+      if (nameIdx !== -1) sheet.getRange(foundRow, nameIdx + 1).setValue(name);
+      if (emailIdx !== -1 && email) sheet.getRange(foundRow, emailIdx + 1).setValue(email);
+      if (phoneIdx !== -1) sheet.getRange(foundRow, phoneIdx + 1).setValue(phone);
+      if (statusIdx !== -1) sheet.getRange(foundRow, statusIdx + 1).setValue(status);
+    } else {
+      if (!identityId) {
+        identityId = 'USR_WLI_' + Utilities.getUuid().replace(/-/g, '').substring(0, 10);
+      }
+      sheet.appendRow([
+        identityId,
+        email,
+        phone,
+        name,
+        'WALI_SANTRI',
+        status,
+        nowIso,
+        '',
+        ''
+      ]);
+    }
+
+    return {
+      status: 'success',
+      success: true,
+      message: 'Data wali santri berhasil disimpan ke Spreadsheet.',
+      identityId: identityId
+    };
+  } catch (err) {
+    console.error('[SAVE WALI ERROR]', err);
+    return { status: 'error', success: false, message: err.message };
+  }
+}
+
+function linkStudentToWaliData(payload, token) {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error('Spreadsheet database tidak ditemukan.');
+
+    const sheet = getAuthSheet(ss, SHEET_WALI_SANTRI_MAP);
+    if (!sheet) throw new Error('Sheet Wali_Santri_Map tidak ditemukan.');
+
+    const waliId = String(payload.guardianId || payload.waliId || payload.guardian_id || '').trim();
+    const studentId = String(payload.studentId || payload.student_id || '').trim();
+    const relationship = String(payload.relationship || 'GUARDIAN').toUpperCase();
+
+    if (!waliId || !studentId) throw new Error('Wali ID dan Student ID wajib disertakan.');
+
+    const data = sheet.getDataRange().getValues();
+    for (let r = 1; r < data.length; r++) {
+      if (String(data[r][1] || '').trim() === waliId && String(data[r][2] || '').trim() === studentId) {
+        return { success: true, message: 'Relasi santri dan wali sudah ada sebelumnya.' };
+      }
+    }
+
+    const mapId = 'MAP_' + Utilities.getUuid().replace(/-/g, '').substring(0, 8);
+    const nowIso = new Date().toISOString();
+
+    sheet.appendRow([
+      mapId,
+      waliId,
+      studentId,
+      relationship,
+      'ACTIVE',
+      nowIso
+    ]);
+
+    return {
+      status: 'success',
+      success: true,
+      message: 'Santri berhasil dihubungkan ke wali di Spreadsheet.',
+      mapId: mapId
+    };
+  } catch (err) {
+    console.error('[LINK STUDENT ERROR]', err);
+    return { status: 'error', success: false, message: err.message };
+  }
+}
+
+function unlinkStudentFromWaliData(payload, token) {
+  try {
+    const ss = getDatabaseSpreadsheet();
+    if (!ss) throw new Error('Spreadsheet database tidak ditemukan.');
+
+    const sheet = getAuthSheet(ss, SHEET_WALI_SANTRI_MAP);
+    if (!sheet) throw new Error('Sheet Wali_Santri_Map tidak ditemukan.');
+
+    const relationId = String(payload.relationId || payload.id || '').trim();
+    const studentId = String(payload.studentId || '').trim();
+    const waliId = String(payload.guardianId || payload.waliId || '').trim();
+
+    const data = sheet.getDataRange().getValues();
+    for (let r = data.length - 1; r >= 1; r--) {
+      const rowMapId = String(data[r][0] || '').trim();
+      const rowWId = String(data[r][1] || '').trim();
+      const rowSId = String(data[r][2] || '').trim();
+
+      if ((relationId && rowMapId === relationId) || (waliId && studentId && rowWId === waliId && rowSId === studentId)) {
+        sheet.deleteRow(r + 1);
+        return { status: 'success', success: true, message: 'Relasi berhasil dihapus dari Spreadsheet.' };
+      }
+    }
+
+    return { status: 'success', success: true, message: 'Relasi tidak ditemukan atau sudah terhapus.' };
+  } catch (err) {
+    console.error('[UNLINK STUDENT ERROR]', err);
+    return { status: 'error', success: false, message: err.message };
+  }
+}

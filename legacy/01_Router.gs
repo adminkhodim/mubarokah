@@ -171,6 +171,22 @@ function doPost(e) {
       );
     }
 
+    if (action === "getWaliSantriList" || action === "wali.list") {
+      return createJsonResponse(getWaliSantriList(payload.token || null));
+    }
+
+    if (action === "saveWaliIdentity" || action === "wali.save") {
+      return createJsonResponse(saveWaliIdentityData(payload.data || payload, payload.token || null));
+    }
+
+    if (action === "linkStudentToWali" || action === "wali.linkStudent") {
+      return createJsonResponse(linkStudentToWaliData(payload.data || payload, payload.token || null));
+    }
+
+    if (action === "unlinkStudentFromWali" || action === "wali.unlinkStudent") {
+      return createJsonResponse(unlinkStudentFromWaliData(payload.data || payload, payload.token || null));
+    }
+
     if (action === "saveStudent" || action === "student.save") {
       const token = payload.token || (payload.data && payload.data.token) || null;
       try {
