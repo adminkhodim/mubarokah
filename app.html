@@ -6173,43 +6173,148 @@
                             </ul>
                         </div>
 
-                        <!-- Grup 5: Keuangan & Akuntansi -->
+                        <!-- Grup 5: Keuangan (Front-Office & Transaksi Santri) -->
                         <div class="admin-menu-group pt-2 border-t border-white/10 dark:border-white/5">
                             <button type="button" onclick="toggleAdminMenuGroup(this)"
                                 class="w-full px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 hover:text-white dark:text-slate-400 dark:hover:text-slate-200 sidebar-text flex items-center justify-between transition-colors group/header focus:outline-none select-none"
-                                title="Sembunyikan / Tampilkan Keuangan & Akuntansi">
+                                title="Sembunyikan / Tampilkan Keuangan">
                                 <div class="flex items-center gap-1.5 truncate">
-                                    <i class="fa-solid fa-cash-register text-[9px] text-emerald-300/80"></i>
-                                    <span>Keuangan & Akuntansi</span>
+                                    <i class="fa-solid fa-wallet text-[9px] text-emerald-300/80"></i>
+                                    <span>Keuangan</span>
                                 </div>
                                 <i
                                     class="fa-solid fa-chevron-down text-[8px] text-emerald-200/60 group-hover/header:text-white transition-transform duration-200 menu-group-arrow"></i>
                             </button>
                             <ul class="space-y-1">
                                 <li>
-                                    <button onclick="showAdminView('keuangan')" data-view="keuangan"
-                                        class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative"
-                                        title="Kasir & Keuangan Santri">
+                                    <button onclick="showAdminView('keuangan', 'pos')" data-view="keuangan" data-tab="pos"
+                                        class="admin-nav-item flex items-center px-3.5 py-2 font-semibold transition group relative"
+                                        title="Kasir Cepat (POS)">
                                         <i class="fa-solid fa-cash-register w-5 text-center text-sm"></i>
                                         <span
-                                            class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Keuangan
-                                            Santri</span>
+                                            class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Kasir Cepat (POS)</span>
                                     </button>
                                 </li>
                                 <li>
-                                    <button onclick="showAdminView('akuntansi')" data-view="akuntansi"
-                                        class="admin-nav-item flex items-center px-3.5 py-2.5 font-semibold transition group relative"
-                                        title="Akuntansi & Buku Kas">
-                                        <i class="fa-solid fa-scale-balanced w-5 text-center text-sm"></i>
+                                    <button onclick="showAdminView('keuangan', 'tagihan')" data-view="keuangan" data-tab="tagihan"
+                                        class="admin-nav-item flex items-center px-3.5 py-2 font-semibold transition group relative"
+                                        title="Tagihan Santri">
+                                        <i class="fa-solid fa-file-invoice-dollar w-5 text-center text-sm"></i>
                                         <span
-                                            class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Akuntansi
-                                            & Buku Kas</span>
+                                            class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Tagihan Santri</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('keuangan', 'verifikasi')" data-view="keuangan" data-tab="verifikasi"
+                                        class="admin-nav-item flex items-center px-3.5 py-2 font-semibold transition group relative"
+                                        title="Verifikasi Transfer">
+                                        <i class="fa-solid fa-receipt w-5 text-center text-sm"></i>
+                                        <span
+                                            class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Verifikasi Transfer</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('keuangan', 'broadcast')" data-view="keuangan" data-tab="broadcast"
+                                        class="admin-nav-item flex items-center px-3.5 py-2 font-semibold transition group relative"
+                                        title="WhatsApp Billing">
+                                        <i class="fa-brands fa-whatsapp w-5 text-center text-sm"></i>
+                                        <span
+                                            class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">WhatsApp Billing</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('keuangan', 'tabungan')" data-view="keuangan" data-tab="tabungan"
+                                        class="admin-nav-item flex items-center px-3.5 py-2 font-semibold transition group relative"
+                                        title="Uang Saku & Tabungan">
+                                        <i class="fa-solid fa-wallet w-5 text-center text-sm"></i>
+                                        <span
+                                            class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Uang Saku & Tabungan</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('keuangan', 'kantin')" data-view="keuangan" data-tab="kantin"
+                                        class="admin-nav-item flex items-center px-3.5 py-2 font-semibold transition group relative"
+                                        title="Kantin Cashless">
+                                        <i class="fa-solid fa-utensils w-5 text-center text-sm"></i>
+                                        <span
+                                            class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Kantin Cashless</span>
                                     </button>
                                 </li>
                             </ul>
                         </div>
 
-                        <!-- Grup 6: Portal & Publikasi -->
+                        <!-- Grup 6: Akuntansi (Back-Office & Pembukuan Pesantren) -->
+                        <div class="admin-menu-group pt-2 border-t border-white/10 dark:border-white/5">
+                            <button type="button" onclick="toggleAdminMenuGroup(this)"
+                                class="w-full px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 hover:text-white dark:text-slate-400 dark:hover:text-slate-200 sidebar-text flex items-center justify-between transition-colors group/header focus:outline-none select-none"
+                                title="Sembunyikan / Tampilkan Akuntansi">
+                                <div class="flex items-center gap-1.5 truncate">
+                                    <i class="fa-solid fa-scale-balanced text-[9px] text-emerald-300/80"></i>
+                                    <span>Akuntansi</span>
+                                </div>
+                                <i
+                                    class="fa-solid fa-chevron-down text-[8px] text-emerald-200/60 group-hover/header:text-white transition-transform duration-200 menu-group-arrow"></i>
+                            </button>
+                            <ul class="space-y-1">
+                                <li>
+                                    <button onclick="showAdminView('akuntansi', 'transaksi')" data-view="akuntansi" data-tab="transaksi"
+                                        class="admin-nav-item flex items-center px-3.5 py-2 font-semibold transition group relative"
+                                        title="Buku Kas Masuk">
+                                        <i class="fa-solid fa-vault w-5 text-center text-sm"></i>
+                                        <span
+                                            class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Buku Kas Masuk</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('akuntansi', 'pengeluaran')" data-view="akuntansi" data-tab="pengeluaran"
+                                        class="admin-nav-item flex items-center px-3.5 py-2 font-semibold transition group relative"
+                                        title="Kas Keluar (Beban)">
+                                        <i class="fa-solid fa-arrow-trend-down w-5 text-center text-sm"></i>
+                                        <span
+                                            class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Kas Keluar (Beban)</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('akuntansi', 'tutup-kasir')" data-view="akuntansi" data-tab="tutup-kasir"
+                                        class="admin-nav-item flex items-center px-3.5 py-2 font-semibold transition group relative"
+                                        title="Tutup Kasir Harian">
+                                        <i class="fa-solid fa-calendar-check w-5 text-center text-sm"></i>
+                                        <span
+                                            class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Tutup Kasir Harian</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('akuntansi', 'laporan')" data-view="akuntansi" data-tab="laporan"
+                                        class="admin-nav-item flex items-center px-3.5 py-2 font-semibold transition group relative"
+                                        title="Laporan Arus Kas">
+                                        <i class="fa-solid fa-file-lines w-5 text-center text-sm"></i>
+                                        <span
+                                            class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Laporan Arus Kas</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('akuntansi', 'analytics')" data-view="akuntansi" data-tab="analytics"
+                                        class="admin-nav-item flex items-center px-3.5 py-2 font-semibold transition group relative"
+                                        title="Executive Analytics">
+                                        <i class="fa-solid fa-chart-pie w-5 text-center text-sm"></i>
+                                        <span
+                                            class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Executive Analytics</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button onclick="showAdminView('akuntansi', 'tarif')" data-view="akuntansi" data-tab="tarif"
+                                        class="admin-nav-item flex items-center px-3.5 py-2 font-semibold transition group relative"
+                                        title="Master Pos & Tarif">
+                                        <i class="fa-solid fa-tags w-5 text-center text-sm"></i>
+                                        <span
+                                            class="ml-3 text-xs sidebar-text whitespace-nowrap transition-opacity duration-300">Master Pos & Tarif</span>
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+
+
+                        <!-- Grup 7: Portal & Publikasi -->
                         <div class="admin-menu-group pt-2 border-t border-white/10 dark:border-white/5">
                             <button type="button" onclick="toggleAdminMenuGroup(this)"
                                 class="w-full px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 hover:text-white dark:text-slate-400 dark:hover:text-slate-200 sidebar-text flex items-center justify-between transition-colors group/header focus:outline-none select-none"
@@ -6275,7 +6380,7 @@
                             </ul>
                         </div>
 
-                        <!-- Grup 7: Sistem & Hak Akses -->
+                        <!-- Grup 8: Sistem & Hak Akses -->
                         <div class="admin-menu-group pt-2 border-t border-white/10 dark:border-white/5">
                             <button type="button" onclick="toggleAdminMenuGroup(this)"
                                 class="w-full px-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-100/75 hover:text-white dark:text-slate-400 dark:hover:text-slate-200 sidebar-text flex items-center justify-between transition-colors group/header focus:outline-none select-none"

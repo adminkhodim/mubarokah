@@ -145,8 +145,8 @@
             'notifikasi': { group: 'konten', category: 'Konten & Publikasi', title: 'Manajemen Notifikasi' },
             'profil-lembaga': { group: 'kelembagaan', category: 'Kelembagaan & Pengaturan', title: 'Profil & Kepengurusan' },
             'pengaturan': { group: 'kelembagaan', category: 'Kelembagaan & Pengaturan', title: 'Tautan & Sosmed' },
-            'keuangan': { group: 'keuangan', category: 'Keuangan & Kasir Santri', title: 'Kasir & Keuangan Santri' },
-            'akuntansi': { group: 'akuntansi', category: 'Akuntansi & Pembukuan', title: 'Akuntansi & Buku Kas' }
+            'keuangan': { group: 'keuangan', category: 'Keuangan', title: 'Keuangan Santri' },
+            'akuntansi': { group: 'akuntansi', category: 'Akuntansi', title: 'Akuntansi & Buku Kas' }
         };
 
         // ==================== ADMIN QUICK SEARCH FINDER & SHORTCUT (Alt+F / Ctrl+K) ====================
@@ -164,8 +164,20 @@
             { view: 'tpq', name: 'TPQ Yanbu\'a', category: 'Akademik', icon: 'fa-book-open-reader' },
             { view: 'sorogan', name: 'Sorogan Al-Qur\'an', category: 'Akademik', icon: 'fa-book-bookmark' },
             { view: 'madin', name: 'Madrasah Diniyah', category: 'Akademik', icon: 'fa-school' },
-            { view: 'keuangan', name: 'Kasir & Keuangan Santri', category: 'Keuangan & Akuntansi', icon: 'fa-cash-register' },
-            { view: 'akuntansi', name: 'Akuntansi & Buku Kas', category: 'Keuangan & Akuntansi', icon: 'fa-scale-balanced' },
+            // Kategori Keuangan (Front-Office & Transaksi Santri)
+            { view: 'keuangan', tab: 'pos', name: 'Kasir Cepat (POS)', category: 'Keuangan', icon: 'fa-cash-register' },
+            { view: 'keuangan', tab: 'tagihan', name: 'Tagihan Santri', category: 'Keuangan', icon: 'fa-file-invoice-dollar' },
+            { view: 'keuangan', tab: 'verifikasi', name: 'Verifikasi Transfer', category: 'Keuangan', icon: 'fa-receipt' },
+            { view: 'keuangan', tab: 'broadcast', name: 'WhatsApp Billing', category: 'Keuangan', icon: 'fa-whatsapp' },
+            { view: 'keuangan', tab: 'tabungan', name: 'Uang Saku & Tabungan', category: 'Keuangan', icon: 'fa-wallet' },
+            { view: 'keuangan', tab: 'kantin', name: 'Kantin Cashless', category: 'Keuangan', icon: 'fa-utensils' },
+            // Kategori Akuntansi (Back-Office & Tata Kelola Pembukuan)
+            { view: 'akuntansi', tab: 'transaksi', name: 'Buku Kas Masuk', category: 'Akuntansi', icon: 'fa-vault' },
+            { view: 'akuntansi', tab: 'pengeluaran', name: 'Kas Keluar (Beban)', category: 'Akuntansi', icon: 'fa-arrow-trend-down' },
+            { view: 'akuntansi', tab: 'tutup-kasir', name: 'Tutup Kasir Harian', category: 'Akuntansi', icon: 'fa-calendar-check' },
+            { view: 'akuntansi', tab: 'laporan', name: 'Laporan Arus Kas', category: 'Akuntansi', icon: 'fa-file-lines' },
+            { view: 'akuntansi', tab: 'analytics', name: 'Executive Analytics', category: 'Akuntansi', icon: 'fa-chart-pie' },
+            { view: 'akuntansi', tab: 'tarif', name: 'Master Pos & Tarif', category: 'Akuntansi', icon: 'fa-tags' },
             { view: 'berita', name: 'Manajemen Berita', category: 'Portal & Publikasi', icon: 'fa-newspaper' },
             { view: 'banner', name: 'Banner Slider', category: 'Portal & Publikasi', icon: 'fa-images' },
             { view: 'galeri', name: 'Manajemen Galeri', category: 'Portal & Publikasi', icon: 'fa-camera-retro' },
@@ -199,7 +211,7 @@
             }
 
             dropdown.innerHTML = filtered.map(item => `
-                <button type="button" onclick="selectAdminQuickSearchResult('${item.view}')" class="w-full flex items-center justify-between px-3.5 py-2.5 hover:bg-emerald-50/70 dark:hover:bg-slate-750 text-left transition group">
+                <button type="button" onclick="selectAdminQuickSearchResult('${item.view}', '${item.tab || ''}')" class="w-full flex items-center justify-between px-3.5 py-2.5 hover:bg-emerald-50/70 dark:hover:bg-slate-750 text-left transition group">
                     <div class="flex items-center gap-2.5">
                         <i class="fa-solid ${item.icon} text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 text-xs w-4 text-center"></i>
                         <span class="text-xs font-semibold text-slate-700 dark:text-slate-200 group-hover:text-emerald-700 dark:group-hover:text-emerald-300">${item.name}</span>
@@ -210,12 +222,12 @@
             dropdown.classList.remove('hidden');
         }
 
-        function selectAdminQuickSearchResult(viewName) {
+        function selectAdminQuickSearchResult(viewName, tabName) {
             const dropdown = document.getElementById('admin-quick-search-dropdown');
             const input = document.getElementById('admin-quick-search-input');
             if (dropdown) dropdown.classList.add('hidden');
             if (input) input.value = '';
-            showAdminView(viewName);
+            showAdminView(viewName, tabName);
         }
 
         // Event listener klik di luar untuk menutup dropdown search
@@ -609,7 +621,7 @@
         }
         window.toggleAdminMenuGroup = toggleAdminMenuGroup;
 
-        function showAdminView(viewName) {
+        function showAdminView(viewName, subTab) {
             // Pada layar ponsel (< 1024px), jika ingin membuka hub, langsung alihkan ke Pusat Kontrol Tab Pengaturan
             if (window.innerWidth < 1024 && (!viewName || viewName === 'hub')) {
                 if (typeof switchTab === 'function') {
@@ -640,10 +652,10 @@
                 let isActive = false;
                 if (btn.dataset.view === viewName) {
                     if (viewName === 'keuangan') {
-                        const targetTab = (typeof ASNKeuangan !== 'undefined' && ASNKeuangan.activeTab) || 'pos';
+                        const targetTab = subTab || (typeof ASNKeuangan !== 'undefined' && ASNKeuangan.activeTab) || 'pos';
                         isActive = (!btn.dataset.tab || btn.dataset.tab === targetTab);
                     } else if (viewName === 'akuntansi') {
-                        const targetAkunTab = (typeof ASNKeuangan !== 'undefined' && ASNKeuangan.activeAkuntansiTab) || 'transaksi';
+                        const targetAkunTab = subTab || (typeof ASNKeuangan !== 'undefined' && ASNKeuangan.activeAkuntansiTab) || 'transaksi';
                         isActive = (!btn.dataset.tab || btn.dataset.tab === targetAkunTab);
                     } else {
                         isActive = true;
@@ -851,7 +863,7 @@
                 if (typeof loadAdminKeuanganData === 'function') {
                     loadAdminKeuanganData();
                 }
-                const activeKTab = (window.ASNKeuangan && window.ASNKeuangan.activeTab) || 'pos';
+                const activeKTab = subTab || (window.ASNKeuangan && window.ASNKeuangan.activeTab) || 'pos';
                 if (typeof switchKeuanganTab === 'function') {
                     switchKeuanganTab(activeKTab);
                 }
@@ -866,7 +878,7 @@
                 if (typeof loadAdminKeuanganData === 'function') {
                     loadAdminKeuanganData();
                 }
-                const activeAkTab = (window.ASNKeuangan && window.ASNKeuangan.activeAkuntansiTab) || 'transaksi';
+                const activeAkTab = subTab || (window.ASNKeuangan && window.ASNKeuangan.activeAkuntansiTab) || 'transaksi';
                 if (typeof switchAkuntansiTab === 'function') {
                     switchAkuntansiTab(activeAkTab);
                 }

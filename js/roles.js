@@ -187,28 +187,33 @@
         },
         {
             key: 'keuangan',
-            label: 'KEUANGAN & ADMINISTRASI KASIR',
+            label: 'KEUANGAN SANTRI & KASIR (FRONT-OFFICE)',
             icon: 'fa-wallet',
             color: 'amber',
             items: [
-                { key: 'keuangan.view', label: 'Dashboard & Saldo Kas Pondok', desc: 'Akses memantau ringkasan saldo, mutasi kas, dan statistik pelunasan' },
-                { key: 'keuangan.spp', label: 'Loket Kasir & Pembayaran SPP', desc: 'Izin melayani pembayaran langsung di loket kasir & cetak kuitansi' },
-                { key: 'keuangan.tagihan', label: 'Kelola Tagihan & Pos Biaya', desc: 'Izin mengatur pos biaya, tarif SPP, dan generate tagihan massal' },
-                { key: 'keuangan.verify', label: 'Verifikasi Pembayaran Transfer', desc: 'Izin memvalidasi konfirmasi bukti transfer wali santri' },
-                { key: 'keuangan.billing', label: 'WhatsApp Billing & Broadcast', desc: 'Izin mengirim tagihan penagihan & bukti kuitansi via WhatsApp Gateway' },
+                { key: 'keuangan.view', label: 'Dashboard Keuangan Santri', desc: 'Akses ringkasan transaksi, perputaran kas santri, dan status pelunasan' },
+                { key: 'keuangan.pos', label: 'Kasir Cepat (POS)', desc: 'Izin melayani pembayaran langsung di loket kasir & cetak kuitansi' },
+                { key: 'keuangan.tagihan', label: 'Tagihan Santri & Generator', desc: 'Izin mengelola tagihan syahriah & generate tagihan bulanan santri' },
+                { key: 'keuangan.verify', label: 'Verifikasi Transfer', desc: 'Izin memvalidasi konfirmasi bukti transfer wali santri' },
+                { key: 'keuangan.billing', label: 'WhatsApp Billing', desc: 'Izin mengirim notifikasi tagihan & kuitansi via WhatsApp Gateway' },
+                { key: 'keuangan.tabungan', label: 'Uang Saku & Tabungan', desc: 'Izin mengelola dompet digital, setoran uang saku, dan limit harian' },
+                { key: 'keuangan.kantin', label: 'Kantin Cashless', desc: 'Izin transaksi kasir kantin/koperasi non-tunai via tap kartu/QR' },
                 { key: 'ppdb.manage', label: 'Pengelolaan Berkas PPDB', desc: 'Akses seleksi berkas calon santri & formulir pendaftaran' }
             ]
         },
         {
             key: 'akuntansi',
-            label: 'AKUNTANSI & PEMBUKUAN PESANTREN',
-            icon: 'fa-file-invoice-dollar',
+            label: 'AKUNTANSI & PEMBUKUAN PESANTREN (BACK-OFFICE)',
+            icon: 'fa-scale-balanced',
             color: 'teal',
             items: [
-                { key: 'akuntansi.view', label: 'Melihat Buku Kas & Pembukuan', desc: 'Akses melihat jurnal kas masuk, pengeluaran, dan buku kas pondok' },
-                { key: 'akuntansi.transaksi', label: 'Catat Kas Masuk & Kas Keluar', desc: 'Izin mencatat transaksi penerimaan dan pengeluaran operasional' },
-                { key: 'akuntansi.tutupkasir', label: 'Tutup Kasir & Rekonsiliasi', desc: 'Izin melakukan proses tutup shift kasir dan rekonsiliasi fisik uang' },
-                { key: 'akuntansi.laporan', label: 'Laporan Keuangan & Arus Kas', desc: 'Akses rekapitulasi surplus/defisit, cetak dan ekspor laporan keuangan' }
+                { key: 'akuntansi.view', label: 'Dashboard Akuntansi & Pembukuan', desc: 'Akses melihat jurnal kas masuk, pengeluaran, dan buku kas pondok' },
+                { key: 'akuntansi.transaksi', label: 'Buku Kas Masuk', desc: 'Izin mencatat dan memantau penerimaan kas operasional pesantren' },
+                { key: 'akuntansi.pengeluaran', label: 'Kas Keluar (Beban)', desc: 'Izin mencatat pengeluaran operasional, logistik & bisyarah asatidz' },
+                { key: 'akuntansi.tutupkasir', label: 'Tutup Kasir Harian', desc: 'Izin melakukan proses tutup shift kasir dan rekonsiliasi fisik kas' },
+                { key: 'akuntansi.laporan', label: 'Laporan Arus Kas & Neraca', desc: 'Akses rekapitulasi surplus/defisit, cetak dan ekspor laporan arus kas' },
+                { key: 'akuntansi.analytics', label: 'Executive Analytics', desc: 'Akses grafik analitik, rasio kepatuhan, dan proyeksi keuangan' },
+                { key: 'akuntansi.tarif', label: 'Master Pos & Tarif Biaya', desc: 'Izin mengatur master tarif biaya, SPP, dan pos anggaran akun' }
             ]
         },
         {
@@ -260,8 +265,8 @@
         'notifikasi': ['notifikasi.broadcast'],
         'profil-lembaga': ['profil.manage'],
         'pengaturan': ['system.config'],
-        'keuangan': ['keuangan.view', 'keuangan.spp', 'keuangan.tagihan', 'keuangan.verify', 'keuangan.billing'],
-        'akuntansi': ['akuntansi.view', 'akuntansi.transaksi', 'akuntansi.tutupkasir', 'akuntansi.laporan']
+        'keuangan': ['keuangan.view', 'keuangan.pos', 'keuangan.spp', 'keuangan.tagihan', 'keuangan.verify', 'keuangan.billing', 'keuangan.tabungan', 'keuangan.kantin'],
+        'akuntansi': ['akuntansi.view', 'akuntansi.transaksi', 'akuntansi.pengeluaran', 'akuntansi.tutupkasir', 'akuntansi.laporan', 'akuntansi.analytics', 'akuntansi.tarif']
     };
 
     // Default Baseline Permissions per Role
@@ -271,8 +276,8 @@
             'santri.view', 'santri.create', 'santri.edit', 'santri.export', 'unit.manage',
             'tahfidz.view', 'tahfidz.entry', 'tahfidz.target', 'tahfidz.presensi', 'tpq.view', 'tpq.entry', 'sorogan.view', 'sorogan.entry',
             'madin.view', 'madin.entry', 'madin.manage', 'presensi.view', 'presensi.entry',
-            'keuangan.view', 'keuangan.spp', 'keuangan.tagihan', 'keuangan.verify', 'keuangan.billing',
-            'akuntansi.view', 'akuntansi.transaksi', 'akuntansi.tutupkasir', 'akuntansi.laporan',
+            'keuangan.view', 'keuangan.pos', 'keuangan.spp', 'keuangan.tagihan', 'keuangan.verify', 'keuangan.billing', 'keuangan.tabungan', 'keuangan.kantin',
+            'akuntansi.view', 'akuntansi.transaksi', 'akuntansi.pengeluaran', 'akuntansi.tutupkasir', 'akuntansi.laporan', 'akuntansi.analytics', 'akuntansi.tarif',
             'ppdb.manage',
             'berita.manage', 'banner.manage', 'galeri.manage', 'notifikasi.broadcast',
             'profil.manage', 'pegawai.manage', 'users.manage', 'roles.manage', 'system.config'
@@ -285,8 +290,8 @@
         ],
         'BENDAHARA': [
             'santri.view', 'ppdb.manage',
-            'keuangan.view', 'keuangan.spp', 'keuangan.tagihan', 'keuangan.verify', 'keuangan.billing',
-            'akuntansi.view', 'akuntansi.transaksi', 'akuntansi.tutupkasir', 'akuntansi.laporan',
+            'keuangan.view', 'keuangan.pos', 'keuangan.spp', 'keuangan.tagihan', 'keuangan.verify', 'keuangan.billing', 'keuangan.tabungan', 'keuangan.kantin',
+            'akuntansi.view', 'akuntansi.transaksi', 'akuntansi.pengeluaran', 'akuntansi.tutupkasir', 'akuntansi.laporan', 'akuntansi.analytics', 'akuntansi.tarif',
             'notifikasi.broadcast', 'pegawai.manage', 'profil.manage'
         ],
         'PENGURUS': [
@@ -514,13 +519,13 @@
             }
         },
 
-        // 3. Keuangan & Akuntansi (2 Modul)
+        // 3. Keuangan (Front-Office)
         {
             key: 'keuangan',
-            category: 'Keuangan & Akuntansi',
-            module: 'Kasir & Iuran SPP',
+            category: 'Keuangan',
+            module: 'Keuangan Santri',
             icon: 'fa-wallet',
-            desc: 'Loket pembayaran SPP santri, syahriah & cetak kuitansi digital.',
+            desc: 'Kasir pembayaran SPP, tagihan, transfer, WA billing, uang saku & kantin cashless.',
             permissions: {
                 SUPER_ADMIN: 'full',
                 ADMIN: 'full',
@@ -531,12 +536,13 @@
                 WALI_SANTRI: 'read_own'
             }
         },
+        // 4. Akuntansi (Back-Office)
         {
             key: 'akuntansi',
-            category: 'Keuangan & Akuntansi',
+            category: 'Akuntansi',
             module: 'Akuntansi & Buku Kas',
-            icon: 'fa-file-invoice-dollar',
-            desc: 'Jurnal kas masuk/keluar, tutup kasir, dan laporan keuangan pondok.',
+            icon: 'fa-scale-balanced',
+            desc: 'Buku kas masuk/keluar, tutup kasir harian, laporan arus kas, analytics & master tarif.',
             permissions: {
                 SUPER_ADMIN: 'full',
                 ADMIN: 'full',

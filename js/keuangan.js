@@ -427,7 +427,7 @@ function syncKeuanganSidebarAndBreadcrumb(tabName) {
     const curEl = document.getElementById('admin-breadcrumb-current');
     if (sep1) sep1.classList.remove('hidden');
     if (catEl) {
-        catEl.textContent = 'Keuangan & Kasir Santri';
+        catEl.textContent = 'Keuangan';
         catEl.classList.remove('hidden');
     }
     if (sep2) sep2.classList.remove('hidden');
@@ -469,7 +469,7 @@ function syncAkuntansiSidebarAndBreadcrumb(tabName) {
     const curEl = document.getElementById('admin-breadcrumb-current');
     if (sep1) sep1.classList.remove('hidden');
     if (catEl) {
-        catEl.textContent = 'Akuntansi & Pembukuan';
+        catEl.textContent = 'Akuntansi';
         catEl.classList.remove('hidden');
     }
     if (sep2) sep2.classList.remove('hidden');
