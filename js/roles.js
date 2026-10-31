@@ -1745,14 +1745,14 @@
     // Mapping Modul yang Boleh Diakses per Peran
     const ROLE_ALLOWED_MODULES = {
         'SUPER_ADMIN': [
-            'santri', 'tahfidz', 'tpq', 'sorogan', 'madin', 'presensi', 'ppdb', 'program', 'unit-kegiatan', 'jadwal-kegiatan', 'alumni',
+            'santri', 'wali', 'tahfidz', 'tpq', 'sorogan', 'madin', 'presensi', 'ppdb', 'program', 'unit-kegiatan', 'jadwal-kegiatan', 'alumni',
             'keuangan', 'akuntansi',
             'users', 'roles', 'pegawai',
             'berita', 'banner', 'galeri', 'notifikasi',
             'profil-lembaga', 'pengaturan'
         ],
         'ADMIN': [
-            'santri', 'tahfidz', 'tpq', 'sorogan', 'madin', 'presensi', 'ppdb', 'program', 'unit-kegiatan', 'jadwal-kegiatan', 'alumni',
+            'santri', 'wali', 'tahfidz', 'tpq', 'sorogan', 'madin', 'presensi', 'ppdb', 'program', 'unit-kegiatan', 'jadwal-kegiatan', 'alumni',
             'keuangan', 'akuntansi',
             'users', 'roles', 'pegawai',
             'berita', 'banner', 'galeri', 'notifikasi',
@@ -1762,16 +1762,16 @@
             'tahfidz', 'tpq', 'sorogan', 'madin', 'presensi', 'santri', 'pegawai', 'profil-lembaga'
         ],
         'BENDAHARA': [
-            'keuangan', 'akuntansi', 'santri', 'ppdb', 'notifikasi', 'pegawai', 'profil-lembaga'
+            'keuangan', 'akuntansi', 'santri', 'wali', 'ppdb', 'notifikasi', 'pegawai', 'profil-lembaga'
         ],
         'PENGURUS': [
-            'presensi', 'unit-kegiatan', 'jadwal-kegiatan', 'alumni', 'ppdb', 'santri', 'berita', 'banner', 'galeri', 'notifikasi', 'profil-lembaga'
+            'presensi', 'unit-kegiatan', 'jadwal-kegiatan', 'alumni', 'ppdb', 'santri', 'wali', 'berita', 'banner', 'galeri', 'notifikasi', 'profil-lembaga'
         ],
         'PENGASUH': [
-            'santri', 'tahfidz', 'tpq', 'sorogan', 'madin', 'presensi', 'unit-kegiatan', 'jadwal-kegiatan', 'alumni', 'ppdb', 'keuangan', 'akuntansi', 'pegawai', 'berita', 'galeri', 'profil-lembaga'
+            'santri', 'wali', 'tahfidz', 'tpq', 'sorogan', 'madin', 'presensi', 'unit-kegiatan', 'jadwal-kegiatan', 'alumni', 'ppdb', 'keuangan', 'akuntansi', 'pegawai', 'berita', 'galeri', 'profil-lembaga'
         ],
         'WALI_SANTRI': [
-            'santri', 'tahfidz', 'tpq', 'sorogan', 'madin', 'presensi', 'berita', 'galeri', 'profil-lembaga'
+            'santri', 'wali', 'tahfidz', 'tpq', 'sorogan', 'madin', 'presensi', 'berita', 'galeri', 'profil-lembaga'
         ]
     };
 

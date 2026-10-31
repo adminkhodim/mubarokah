@@ -1276,6 +1276,18 @@ function getStudentPhoneNumber(studentId, nis) {
         }
     }
 
+    // 3. Dari Relasi Master Data Wali Santri (adminWaliData)
+    if (!phone && typeof window !== 'undefined' && Array.isArray(window.adminWaliData)) {
+        for (const w of window.adminWaliData) {
+            if (Array.isArray(w.students) && w.students.some(s => (studentId && (s.studentId === studentId || s.studentUuid === studentId)) || (nis && s.nis === nis))) {
+                if (w.phone) {
+                    phone = w.phone;
+                    break;
+                }
+            }
+        }
+    }
+
     return String(phone || "").trim();
 }
 window.getStudentPhoneNumber = getStudentPhoneNumber;
@@ -3508,6 +3520,9 @@ function generateLocalBroadcastList(filterPeriode, filterProgram) {
 
         if (!unpaidMap[sId]) {
             let phone = String(stInfo.phone || stInfo.no_hp || stInfo.telepon || stInfo.whatsapp || stInfo.no_wa || t.phone || "").trim();
+            if (!phone && typeof getStudentPhoneNumber === 'function') {
+                phone = getStudentPhoneNumber(sId, t.nis || t.studentNis);
+            }
             unpaidMap[sId] = {
                 studentId: sId,
                 studentName: stInfo.name || stInfo.nama || t.studentName,

@@ -126,6 +126,7 @@
         const ADMIN_VIEW_META = {
             'hub': { group: null, category: '', title: 'Dashboard Utama' },
             'santri': { group: 'kesiswaan', category: 'Kesantrian', title: 'Data Santri' },
+            'wali': { group: 'kesiswaan', category: 'Kesantrian', title: 'Data Wali Santri' },
             'presensi': { group: 'kesiswaan', category: 'Kesantrian', title: 'Presensi Kegiatan' },
             'ppdb': { group: 'kesiswaan', category: 'Kesantrian', title: 'Data Pendaftar PPDB' },
             'unit-kegiatan': { group: 'kesiswaan', category: 'Kesantrian', title: 'Unit Kegiatan Santri (UKS)' },
@@ -710,6 +711,7 @@
                     'madin': 'Madrasah Diniyah',
                     'presensi': 'Presensi Kegiatan',
                     'santri': 'Data Santri',
+                    'wali': 'Data Wali Santri & Keluarga',
                     'ppdb': 'Pendaftar PPDB',
                     'unit-kegiatan': 'Unit Kegiatan (UKS)',
                     'jadwal-kegiatan': 'Jadwal Kegiatan',
@@ -742,6 +744,7 @@
             const beritaView = document.getElementById('admin-view-berita');
             const bannerView = document.getElementById('admin-view-banner');
             const santriView = document.getElementById('admin-view-santri');
+            const waliView = document.getElementById('admin-view-wali');
             const tahfidzView = document.getElementById('admin-view-tahfidz');
             const tpqView = document.getElementById('admin-view-tpq');
             const soroganView = document.getElementById('admin-view-sorogan');
@@ -769,6 +772,7 @@
             beritaView.classList.add('hidden');
             bannerView.classList.add('hidden');
             if (santriView) santriView.classList.add('hidden');
+            if (waliView) waliView.classList.add('hidden');
             if (tahfidzView) tahfidzView.classList.add('hidden');
             if (tpqView) tpqView.classList.add('hidden');
             if (soroganView) soroganView.classList.add('hidden');
@@ -803,6 +807,9 @@
                 if (typeof loadAdminRolesData === 'function') {
                     loadAdminRolesData();
                 }
+            } else if (viewName === 'wali') {
+                if (waliView) waliView.classList.remove('hidden');
+                if (typeof loadAdminWaliData === 'function') loadAdminWaliData();
             } else if (viewName === 'santri') {
                 if (santriView) santriView.classList.remove('hidden');
                 if (Array.isArray(adminStudentsData) && adminStudentsData.length > 0) {

@@ -877,6 +877,93 @@
         }
     }
 
+    async function fetchGuardiansWithRelations() {
+        try {
+            const data = await request('/rest/v1/guardians?select=*,student_guardians(*,students(id,student_id,name,nis,program,gender,photo_url))&order=name.asc');
+            return Array.isArray(data) ? data : [];
+        } catch (error) {
+            console.error('[MubarokahSupabase] Gagal mengambil data wali & relasi:', error);
+            return [];
+        }
+    }
+
+    async function saveGuardian(payload) {
+        if (!isEnabled()) return { success: false, message: "Supabase disabled" };
+        try {
+            const row = {
+                tenant_id: DEFAULT_TENANT_UUID,
+                name: String(payload.name || payload.nama || '').trim(),
+                email: String(payload.email || '').trim() || null,
+                phone: String(payload.phone || payload.whatsapp || payload.no_hp || '').trim() || null,
+                photo_url: String(payload.photo_url || '').trim() || null,
+                status: String(payload.status || 'ACTIVE').toUpperCase(),
+                updated_at: new Date().toISOString()
+            };
+
+            let identityId = String(payload.identity_id || payload.identityId || '').trim();
+            if (!identityId) {
+                identityId = 'USR_WLI_' + Math.random().toString(36).substring(2, 10);
+            }
+            row.identity_id = identityId;
+
+            let result = null;
+            if (payload.id) {
+                result = await request(`/rest/v1/guardians?id=eq.${payload.id}`, {
+                    method: 'PATCH',
+                    headers: { 'Prefer': 'return=representation' },
+                    body: row
+                });
+            } else {
+                result = await request('/rest/v1/guardians', {
+                    method: 'POST',
+                    headers: { 'Prefer': 'return=representation' },
+                    body: row
+                });
+            }
+
+            return { status: 'success', success: true, data: result };
+        } catch (error) {
+            console.error('[MubarokahSupabase] Gagal menyimpan wali:', error);
+            return { status: 'error', success: false, message: error.message };
+        }
+    }
+
+    async function linkStudentGuardian(payload) {
+        if (!isEnabled()) return { success: false, message: "Supabase disabled" };
+        try {
+            const row = {
+                tenant_id: DEFAULT_TENANT_UUID,
+                guardian_id: payload.guardian_id || payload.guardianId,
+                student_id: payload.student_id || payload.studentId,
+                relationship: String(payload.relationship || 'GUARDIAN').toUpperCase(),
+                is_primary: Boolean(payload.is_primary !== undefined ? payload.is_primary : true)
+            };
+
+            const result = await request('/rest/v1/student_guardians', {
+                method: 'POST',
+                headers: { 'Prefer': 'return=representation' },
+                body: row
+            });
+            return { status: 'success', success: true, data: result };
+        } catch (error) {
+            console.error('[MubarokahSupabase] Gagal menghubungkan santri ke wali:', error);
+            return { status: 'error', success: false, message: error.message };
+        }
+    }
+
+    async function unlinkStudentGuardian(relationId) {
+        if (!isEnabled()) return { success: false, message: "Supabase disabled" };
+        try {
+            await request(`/rest/v1/student_guardians?id=eq.${relationId}`, {
+                method: 'DELETE'
+            });
+            return { status: 'success', success: true };
+        } catch (error) {
+            console.error('[MubarokahSupabase] Gagal melepas relasi santri-wali:', error);
+            return { status: 'error', success: false, message: error.message };
+        }
+    }
+
     return Object.freeze({
         isEnabled,
         fetchBanners,
@@ -903,6 +990,10 @@
         fetchTahfidzHalaqah,
         fetchTahfidzSessions,
         fetchEmployees,
+        fetchGuardiansWithRelations,
+        saveGuardian,
+        linkStudentGuardian,
+        unlinkStudentGuardian,
         // Dual-Write mutation APIs
         submitPPDB,
         saveNews,
