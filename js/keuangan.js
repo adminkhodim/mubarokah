@@ -1178,6 +1178,24 @@ async function submitKeuanganPOSPayment() {
             if (resTagihan && resTagihan.kuitansi) {
                 ASNKeuangan.lastKuitansi = resTagihan.kuitansi;
                 openKuitansiModal(resTagihan.kuitansi);
+
+                // Otomatis sinkronisasi status pembayaran tagihan ke Supabase
+                if (window.MubarokahSupabase && typeof window.MubarokahSupabase.updateTagihanPaymentBatch === 'function' && Array.isArray(resTagihan.kuitansi.rincianItems)) {
+                    const payUpdates = resTagihan.kuitansi.rincianItems.map(item => {
+                        const existing = (ASNKeuangan.data.tagihanList || []).find(t => String(t.tagihanId) === String(item.tagihanId));
+                        const curTerbayar = existing ? (Number(existing.nominalTerbayar) || 0) : 0;
+                        const nomBayar = Number(item.nominalBayar) || 0;
+                        return {
+                            tagihanId: item.tagihanId,
+                            nominalTerbayar: curTerbayar + nomBayar,
+                            sisaTagihan: Number(item.sisaTagihan) || 0,
+                            status: item.statusAkhir || (Number(item.sisaTagihan) <= 0 ? 'LUNAS' : 'SEBAGIAN')
+                        };
+                    });
+                    window.MubarokahSupabase.updateTagihanPaymentBatch(payUpdates).catch(err => {
+                        console.warn('[Keuangan] Supabase payment sync warning:', err);
+                    });
+                }
             }
 
             resetKeuanganPOS();
@@ -1987,6 +2005,15 @@ async function submitGenerateBulkTagihan() {
         });
 
         if (res && (res.success || res.status === "success")) {
+            // Otomatis sinkronisasi tagihan bulanan baru ke Supabase
+            if (window.MubarokahSupabase && typeof window.MubarokahSupabase.saveTagihanBatch === 'function') {
+                const itemsToSync = Array.isArray(res.generatedItems) && res.generatedItems.length > 0 ? res.generatedItems : [];
+                if (itemsToSync.length > 0) {
+                    window.MubarokahSupabase.saveTagihanBatch(itemsToSync).catch(err => {
+                        console.warn('[Keuangan] Supabase sync warning:', err);
+                    });
+                }
+            }
             closeGenerateBulkTagihanModal();
             loadAdminKeuanganData(true);
             if (typeof showToast === 'function') {
@@ -2070,6 +2097,15 @@ async function submitGenerateBulkYearlyTagihan() {
         }
 
         if (res && (res.success || res.status === "success")) {
+            // Otomatis sinkronisasi tagihan tahunan baru ke Supabase
+            if (window.MubarokahSupabase && typeof window.MubarokahSupabase.saveTagihanBatch === 'function') {
+                const itemsToSync = Array.isArray(res.generatedItems) && res.generatedItems.length > 0 ? res.generatedItems : [];
+                if (itemsToSync.length > 0) {
+                    window.MubarokahSupabase.saveTagihanBatch(itemsToSync).catch(err => {
+                        console.warn('[Keuangan] Supabase sync warning:', err);
+                    });
+                }
+            }
             closeGenerateBulkTagihanModal();
             filterKeuanganTagihan();
             renderKeuanganSummaryCards();
@@ -2169,6 +2205,7 @@ async function generateBulkYearlyBillsClientSide({ tahunAjaran, dueDate, program
                     posId: tId,
                     namaPos: trf.namaPos || trf.name,
                     periode: tahunAjaran,
+                    kategori: 'TAHUNAN',
                     nominalTagihan: nominal,
                     nominalTerbayar: 0,
                     sisaTagihan: nominal,

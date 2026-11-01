@@ -68,7 +68,7 @@ function initKeuanganSheets(token) {
     }
 
     // 2. Sheet Tagihan Santri
-    const headersTagihan = ["tagihan_id", "student_id", "student_name", "pos_id", "nama_pos", "periode", "nominal_tagihan", "nominal_terbayar", "sisa_tagihan", "status", "due_date", "updated_at"];
+    const headersTagihan = ["tagihan_id", "student_id", "student_name", "pos_id", "nama_pos", "periode", "nominal_tagihan", "nominal_terbayar", "sisa_tagihan", "status", "due_date", "updated_at", "kategori"];
     getOrCreateKeuanganSheet(ss, SHEET_KEUANGAN_TAGIHAN, headersTagihan, "#b45309");
 
     // 3. Sheet Transaksi / Kas Masuk
@@ -135,7 +135,7 @@ function getKeuanganDashboard(token) {
       initKeuanganSheets(token);
     }
 
-    const headersTagihan = ["tagihan_id", "student_id", "student_name", "pos_id", "nama_pos", "periode", "nominal_tagihan", "nominal_terbayar", "sisa_tagihan", "status", "due_date", "updated_at"];
+    const headersTagihan = ["tagihan_id", "student_id", "student_name", "pos_id", "nama_pos", "periode", "nominal_tagihan", "nominal_terbayar", "sisa_tagihan", "status", "due_date", "updated_at", "kategori"];
     const tagihanSheet = getOrCreateKeuanganSheet(ss, SHEET_KEUANGAN_TAGIHAN, headersTagihan, "#b45309");
 
     const headersTransaksi = ["transaksi_id", "no_kuitansi", "tanggal_bayar", "student_id", "student_name", "tagihan_ids_json", "nominal_total", "metode_bayar", "nama_kasir", "catatan", "created_at"];
@@ -305,6 +305,15 @@ function getKeuanganDashboard(token) {
           const sId = String(r[1] || "").trim();
           const stObj = studentMap[sId];
 
+          var rowKategori = (function() {
+            var kat = String(r[12] || "").trim().toUpperCase();
+            if (kat === "BULANAN" || kat === "TAHUNAN") return kat;
+            var per = String(r[5] || "");
+            var tId = String(r[0] || "");
+            if (per.indexOf("/") !== -1 || tId.indexOf("THN") !== -1) return "TAHUNAN";
+            return "BULANAN";
+          })();
+
           tagihanList.push({
             tagihanId: String(r[0]).trim(),
             studentId: sId,
@@ -328,6 +337,7 @@ function getKeuanganDashboard(token) {
               }
               return s;
             })(r[5]),
+            kategori: rowKategori,
             nominalTagihan: nomTagihan,
             nominalTerbayar: nomTerbayar,
             sisaTagihan: sisa,
@@ -1032,7 +1042,8 @@ function generateBulkMonthlyBills(payload, token) {
               trf.nominal,// sisa_tagihan
               "BELUM_BAYAR",
               dueDate,
-              nowIso
+              nowIso,
+              "BULANAN"   // kategori (Kolom M / 13)
             ]);
             existingTagihanKeys.add(key);
           }
@@ -1044,11 +1055,28 @@ function generateBulkMonthlyBills(payload, token) {
         tagihanSheet.getRange(startRow, 1, newRows.length, newRows[0].length).setValues(newRows);
       }
 
+      const generatedItems = newRows.map(nr => ({
+        tagihanId: nr[0],
+        studentId: nr[1],
+        studentName: nr[2],
+        posId: nr[3],
+        namaPos: nr[4],
+        periode: nr[5],
+        nominalTagihan: nr[6],
+        nominalTerbayar: nr[7],
+        sisaTagihan: nr[8],
+        status: nr[9],
+        dueDate: nr[10],
+        updatedAt: nr[11],
+        kategori: nr[12]
+      }));
+
       return {
         status: "success",
         success: true,
         countGenerated: newRows.length,
-        message: `Berhasil menerbitkan ${newRows.length} item tagihan baru untuk periode ${periode}.`
+        message: `Berhasil menerbitkan ${newRows.length} item tagihan baru untuk periode ${periode}.`,
+        generatedItems: generatedItems
       };
     } catch (err) {
       console.error("[GENERATE BULK BILLS ERROR]", err);

@@ -856,6 +856,7 @@
                 pos_id: String(item.posId || item.pos_id || item.tarifId || '').trim(),
                 nama_pos: String(item.namaPos || item.nama_pos || item.name || '').trim(),
                 periode: String(item.periode || '').trim(),
+                kategori: String(item.kategori || (String(item.periode || '').includes('/') || String(item.tagihanId || '').includes('THN') || String(item.posId || '').includes('DU') ? 'TAHUNAN' : 'BULANAN')).toUpperCase(),
                 nominal_tagihan: Number(item.nominalTagihan || item.nominal_tagihan || item.nominal || 0),
                 nominal_terbayar: Number(item.nominalTerbayar || item.nominal_terbayar || 0),
                 sisa_tagihan: Number(item.sisaTagihan || item.sisa_tagihan || item.nominal || 0),
@@ -873,6 +874,44 @@
             return { status: 'success', success: true, count: rows.length };
         } catch (error) {
             console.error('[MubarokahSupabase] Gagal menyimpan batch tagihan:', error);
+            return { status: 'error', success: false, message: error.message };
+        }
+    }
+
+    
+    async function fetchTagihan() {
+        if (!isEnabled()) return [];
+        try {
+            const data = await request('/rest/v1/keuangan_tagihan?select=*&order=tagihan_id.asc');
+            return Array.isArray(data) ? data : [];
+        } catch (error) {
+            console.warn('[MubarokahSupabase] Gagal mengambil data tagihan:', error);
+            return [];
+        }
+    }
+
+    async function updateTagihanPaymentBatch(paidItems) {
+        if (!isEnabled() || !Array.isArray(paidItems) || paidItems.length === 0) return { success: true };
+        try {
+            for (const p of paidItems) {
+                const tId = String(p.tagihanId || '').trim();
+                if (!tId) continue;
+                const updatePayload = {
+                    updated_at: new Date().toISOString()
+                };
+                if (p.nominalTerbayar !== undefined) updatePayload.nominal_terbayar = Number(p.nominalTerbayar);
+                if (p.sisaTagihan !== undefined) updatePayload.sisa_tagihan = Number(p.sisaTagihan);
+                if (p.status) {
+                    updatePayload.status = String(p.status).toUpperCase().replace('BELUM_BAYAR', 'BELUM_LUNAS');
+                }
+                await request(`/rest/v1/keuangan_tagihan?tagihan_id=eq.${encodeURIComponent(tId)}`, {
+                    method: 'PATCH',
+                    body: updatePayload
+                });
+            }
+            return { status: 'success', success: true };
+        } catch (error) {
+            console.error('[MubarokahSupabase] Gagal update status bayar tagihan:', error);
             return { status: 'error', success: false, message: error.message };
         }
     }
@@ -1002,7 +1041,9 @@
         deleteBanner,
         saveGallery,
         saveNotification,
+        fetchTagihan,
         saveTagihanBatch,
+        updateTagihanPaymentBatch,
         formatTanggalIndo,
         getConfig: () => Object.assign({}, sbConfig)
     });
