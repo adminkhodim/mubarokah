@@ -125,64 +125,81 @@
         const banner = document.getElementById('pwa-smart-install-banner');
         const bottomNav = document.getElementById('mobile-bottom-nav');
         const floatingWa = document.getElementById('floating-whatsapp-container');
+        const desktopHeader = document.getElementById('main-desktop-header');
+        const mobileHeader = document.getElementById('main-mobile-header');
 
-        if (isDesktop) {
-            // MODE 1: DESKTOP (>= 768px) -> Tampilkan Portal Institusional Lengkap
-            document.body.classList.remove('is-pwa-standalone');
-            if (portalContent) {
-                portalContent.classList.remove('hidden');
-                portalContent.classList.add('block');
-            }
-            if (mobileApp) {
-                mobileApp.classList.add('hidden');
-                mobileApp.classList.remove('block');
-            }
-            if (banner) banner.classList.add('hidden');
-            if (bottomNav) bottomNav.style.setProperty('display', 'none', 'important');
-            if (floatingWa) floatingWa.style.removeProperty('display');
-            updateNavInstallButtons(false);
-            return;
-        }
-
-        // LAYAR MOBILE (< 768px):
         const isAppRoute = window.location.pathname === '/app' || 
                            window.location.pathname.startsWith('/app/') || 
                            window.location.pathname.endsWith('app.html');
 
+        // ====================================================================
+        // KASUS 1: RUTE /app ATAU PWA STANDALONE (KONSISTEN 100% MODE MOBILE APP)
+        // Di SEMUA perangkat (HP maupun Laptop/Desktop), sembunyikan landing page
+        // web publik dan tampilkan antarmuka Mobile App PWA!
+        // ====================================================================
         if (standalone || isAppRoute) {
-            // MODE 3: (Mobile Setelah Diinstal / PWA Standalone / Rute /app)
             document.body.classList.add('is-pwa-standalone');
+            document.body.classList.add('is-app-mode');
+
             if (portalContent) {
                 portalContent.classList.add('hidden');
                 portalContent.classList.remove('block');
+                portalContent.style.setProperty('display', 'none', 'important');
             }
             if (mobileApp) {
                 mobileApp.classList.remove('hidden');
                 mobileApp.classList.add('block');
+                mobileApp.style.setProperty('display', 'block', 'important');
             }
             if (banner) banner.classList.add('hidden');
-            // Tombol WA Mengambang disembunyikan di PWA Terinstal / Rute /app agar tidak menutupi UI/navbar
             if (floatingWa) floatingWa.style.setProperty('display', 'none', 'important');
-            // Bottom navbar aktif di mode standalone / rute /app
             if (bottomNav) {
                 bottomNav.style.setProperty('display', 'flex', 'important');
             }
+            if (desktopHeader) {
+                desktopHeader.style.setProperty('display', 'none', 'important');
+            }
+            if (mobileHeader) {
+                mobileHeader.style.setProperty('display', 'flex', 'important');
+            }
+            updateNavInstallButtons(false);
+            return;
+        }
+
+        // ====================================================================
+        // KASUS 2: RUTE / (WEB PUBLIK / LANDING PAGE PROFIL PESANTREN)
+        // ====================================================================
+        document.body.classList.remove('is-app-mode');
+        document.body.classList.remove('is-pwa-standalone');
+
+        if (portalContent) {
+            portalContent.classList.remove('hidden');
+            portalContent.classList.add('block');
+            portalContent.style.removeProperty('display');
+        }
+        if (mobileApp) {
+            mobileApp.classList.add('hidden');
+            mobileApp.classList.remove('block');
+            mobileApp.style.removeProperty('display');
+        }
+        if (desktopHeader) {
+            desktopHeader.style.removeProperty('display');
+        }
+        if (mobileHeader) {
+            mobileHeader.style.removeProperty('display');
+        }
+        if (bottomNav) {
+            bottomNav.style.setProperty('display', 'none', 'important');
+        }
+
+        if (isDesktop) {
+            // Desktop: Tampilkan portal institusional lengkap tanpa banner instalasi
+            if (banner) banner.classList.add('hidden');
+            if (floatingWa) floatingWa.style.removeProperty('display');
             updateNavInstallButtons(false);
         } else {
-            // MODE 2: (Mobile Web Sebelum Diinstal / Browser Ponsel di Landing Page /)
-            document.body.classList.remove('is-pwa-standalone');
+            // Mobile Web Browser sebelum install di rute /
             if (floatingWa) floatingWa.style.removeProperty('display');
-            if (portalContent) {
-                portalContent.classList.remove('hidden');
-                portalContent.classList.add('block');
-            }
-            if (mobileApp) {
-                mobileApp.classList.add('hidden');
-                mobileApp.classList.remove('block');
-            }
-            if (bottomNav) {
-                bottomNav.style.setProperty('display', 'none', 'important');
-            }
             updateNavInstallButtons(true);
             if (!isBannerDismissed()) {
                 showFloatingInstallBanner();

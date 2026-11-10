@@ -100,42 +100,94 @@
             #floating-whatsapp-container { display: none !important; }
             main { margin-bottom: 4.5rem !important; }
         }
-        body.is-pwa-standalone #beranda-portal-content {
+/* Mode App (PWA Standalone & Rute /app) di SEMUA PERANGKAT:
+           - Sembunyikan Landing Page Web Publik (#beranda-portal-content) 100%
+           - Tampilkan Antarmuka Mobile App (#beranda-mobile-app)
+           - Tampilkan Bottom Navigation Bar (#mobile-bottom-nav) */
+        body.is-pwa-standalone #beranda-portal-content,
+        body.is-app-mode #beranda-portal-content {
             display: none !important;
         }
-        body.is-pwa-standalone #beranda-mobile-app {
+        body.is-pwa-standalone #beranda-mobile-app,
+        body.is-app-mode #beranda-mobile-app {
             display: block !important;
         }
-        body.is-pwa-standalone #mobile-bottom-nav {
+        body.is-pwa-standalone #mobile-bottom-nav,
+        body.is-app-mode #mobile-bottom-nav {
             display: flex !important;
         }
-        body.is-pwa-standalone #pwa-smart-install-banner {
+        body.is-pwa-standalone #pwa-smart-install-banner,
+        body.is-app-mode #pwa-smart-install-banner {
             display: none !important;
         }
-        body.is-pwa-standalone #floating-whatsapp-container {
+        body.is-pwa-standalone #floating-whatsapp-container,
+        body.is-app-mode #floating-whatsapp-container {
             display: none !important;
         }
-        body.is-pwa-standalone main {
+        body.is-pwa-standalone main,
+        body.is-app-mode main {
             margin-bottom: 4.5rem !important;
         }
 
-        /* Layar Desktop / Tablet Lebar (>= 768px):
-           Selalu tampilkan konten portal institusional dan sembunyikan mobile app */
+        /* Khusus Desktop / Layar Lebar (>= 768px) pada Rute /app:
+           Tampilkan antarmuka Mobile App di tengah layar (Centered Smartphone Viewport) */
         @media (min-width: 768px) {
-            #beranda-portal-content,
-            body.is-pwa-standalone #beranda-portal-content {
+            body.is-pwa-standalone #main-desktop-header,
+            body.is-app-mode #main-desktop-header {
+                display: none !important;
+            }
+            body.is-pwa-standalone #main-mobile-header,
+            body.is-app-mode #main-mobile-header {
+                display: flex !important;
+                max-width: 448px !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+            }
+            body.is-pwa-standalone #beranda-mobile-app,
+            body.is-app-mode #beranda-mobile-app {
+                display: block !important;
+                max-width: 448px !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+                min-height: 100vh !important;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45) !important;
+                border-left: 1px solid rgba(226, 232, 240, 0.8) !important;
+                border-right: 1px solid rgba(226, 232, 240, 0.8) !important;
+                background-color: #ffffff !important;
+            }
+            html.dark body.is-pwa-standalone #beranda-mobile-app,
+            html.dark body.is-app-mode #beranda-mobile-app {
+                background-color: #0b131e !important;
+                border-left-color: rgba(255, 255, 255, 0.08) !important;
+                border-right-color: rgba(255, 255, 255, 0.08) !important;
+            }
+            body.is-pwa-standalone #mobile-bottom-nav,
+            body.is-app-mode #mobile-bottom-nav {
+                display: flex !important;
+                max-width: 448px !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
+                border-left: 1px solid rgba(226, 232, 240, 0.8) !important;
+                border-right: 1px solid rgba(226, 232, 240, 0.8) !important;
+            }
+            html.dark body.is-pwa-standalone #mobile-bottom-nav,
+            html.dark body.is-app-mode #mobile-bottom-nav {
+                border-left-color: rgba(255, 255, 255, 0.08) !important;
+                border-right-color: rgba(255, 255, 255, 0.08) !important;
+            }
+
+            /* Untuk rute / (Web Publik) di Desktop:
+               Tetap tampilkan konten portal institusional lengkap */
+            body:not(.is-pwa-standalone):not(.is-app-mode) #beranda-portal-content {
                 display: block !important;
             }
-            #beranda-mobile-app,
-            body.is-pwa-standalone #beranda-mobile-app {
+            body:not(.is-pwa-standalone):not(.is-app-mode) #beranda-mobile-app {
                 display: none !important;
             }
-            #mobile-bottom-nav,
-            body.is-pwa-standalone #mobile-bottom-nav {
+            body:not(.is-pwa-standalone):not(.is-app-mode) #mobile-bottom-nav {
                 display: none !important;
             }
-            main,
-            body.is-pwa-standalone main {
+            body:not(.is-pwa-standalone):not(.is-app-mode) main {
                 margin-bottom: 0 !important;
             }
         }
