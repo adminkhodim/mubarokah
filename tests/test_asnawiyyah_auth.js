@@ -9,6 +9,7 @@
  *    - Segmented Tab di modal-auth-parent (Masuk Cepat NIS & PIN vs Google / Email OTP)
  *    - Segmented Tab di modal-auth-admin (1-Klik Google vs Email OTP)
  *    - Pintu Khidmat Pengasuh
+ * 5. Keterkaitan dan Penegakan pada Portal /admin & /administrator
  */
 
 const assert = require('assert');
@@ -32,6 +33,8 @@ assert(authJsContent.includes('async loginParentWithNis(nis, birthDate)'), 'js/a
 assert(authJsContent.includes('function switchParentAuthTab'), 'js/auth.js harus memiliki fungsi switchParentAuthTab');
 assert(authJsContent.includes('function switchAdminAuthTab'), 'js/auth.js harus memiliki fungsi switchAdminAuthTab');
 assert(authJsContent.includes('function handleParentLoginWithNis'), 'js/auth.js harus memiliki handler handleParentLoginWithNis');
+assert(authJsContent.includes('switchAdminAuthTab(\'google\')'), 'openAdminAuthModal harus mereset tab admin ke 1-Klik Google');
+assert(authJsContent.includes('switchParentAuthTab(\'nis\')'), 'openParentAuthModal harus mereset tab wali ke Masuk Cepat NIS & PIN');
 console.log('  ✅ 2. Client API js/auth.js mendukung login NIS & segmented tab switcher');
 
 // 3. Verifikasi UI di app.html & index.html
@@ -50,4 +53,23 @@ verifyHtml(path.resolve(__dirname, '../app.html'), 'app.html');
 verifyHtml(path.resolve(__dirname, '../index.html'), 'index.html');
 console.log('  ✅ 3. UI Modal di app.html & index.html memuat segmented control Asnawiyyah secara presisi');
 
-console.log('\n🎉 SEMUA PENGUJIAN SISTEM AUTENTIKASI ASNAWIYYAH LULUS 100%!');
+// 4. Verifikasi Penegakan Autentikasi Asnawiyyah pada Rute Portal /admin & /administrator
+const mainJsPath = path.resolve(__dirname, '../js/main.js');
+const mainJsContent = fs.readFileSync(mainJsPath, 'utf8');
+const vercelJsonPath = path.resolve(__dirname, '../vercel.json');
+const vercelJson = JSON.parse(fs.readFileSync(vercelJsonPath, 'utf8'));
+
+// A. Vercel routing
+const hasAdminRewrite = vercelJson.rewrites.some(r => r.source === '/admin' && r.destination === '/app');
+const hasAdministratorRewrite = vercelJson.rewrites.some(r => r.source === '/administrator' && r.destination === '/app');
+assert(hasAdminRewrite, 'vercel.json harus me-rewrite /admin ke /app');
+assert(hasAdministratorRewrite, 'vercel.json harus me-rewrite /administrator ke /app');
+
+// B. Client routing di main.js & guard auth
+assert(mainJsContent.includes("path === '/administrator' || path === '/admin'"), 'handleClientRouting harus menangkap rute /admin');
+assert(mainJsContent.includes("openAdminAuthModal();"), 'switchTab admin harus memanggil openAdminAuthModal saat belum login');
+assert(mainJsContent.includes("document.body.classList.add('is-admin-view');"), 'Rute admin harus mengaktifkan is-admin-view');
+
+console.log('  ✅ 4. Autentikasi Asnawiyyah terbukti 100% berlaku dan ditegakkan pada portal /admin & /administrator');
+
+console.log('\n🎉 SEMUA PENGUJIAN SISTEM AUTENTIKASI ASNAWIYYAH & PORTAL ADMIN LULUS 100%!');

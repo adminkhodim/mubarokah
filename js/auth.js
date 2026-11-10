@@ -931,6 +931,12 @@ const ASNIdentity = {
         if (typeof isAdminLoggedIn !== 'undefined') isAdminLoggedIn = false;
 
         this.renderAccountCenterUI();
+        if (window.location.pathname.replace(/\/+$/, '') === '/admin' || window.location.pathname.replace(/\/+$/, '') === '/administrator') {
+            document.body.classList.remove('is-admin-view');
+            setTimeout(() => {
+                if (typeof openAdminAuthModal === 'function') openAdminAuthModal();
+            }, 300);
+        }
         if (typeof showToast === 'function') {
             showToast('Anda telah keluar dari akun.');
         }
@@ -1745,6 +1751,7 @@ function openAdminAuthModal() {
     if (!modal || !content) return;
 
     resetAdminAuthStep();
+    if (typeof switchAdminAuthTab === 'function') switchAdminAuthTab('google');
     modal.classList.remove('hidden');
     setTimeout(() => {
         content.classList.remove('scale-95', 'opacity-0');
@@ -2024,11 +2031,12 @@ function openParentAuthModal() {
     if (!modal || !content) return;
 
     resetParentAuthStep();
+    if (typeof switchParentAuthTab === 'function') switchParentAuthTab('nis');
     modal.classList.remove('hidden');
     setTimeout(() => {
         content.classList.remove('scale-95', 'opacity-0');
-        const identInput = document.getElementById('parent-auth-email');
-        if (identInput) identInput.focus();
+        const nisInput = document.getElementById('parent-login-nis');
+        if (nisInput) nisInput.focus();
         if (typeof initGoogleAuth === 'function') initGoogleAuth();
     }, 50);
 }
