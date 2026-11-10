@@ -2711,7 +2711,10 @@ function initGoogleAuth() {
     try {
         google.accounts.id.initialize({
             client_id: GOOGLE_CLIENT_ID,
-            callback: handleCredentialResponse
+            callback: handleCredentialResponse,
+            auto_select: false,
+            cancel_on_tap_outside: true,
+            itp_support: true
         });
     } catch (e) {
         console.warn('[GoogleAuth] initialize error:', e);
@@ -3069,7 +3072,11 @@ function promptGoogleAccountChooser(roleHint = 'ADMIN') {
     }
     if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
         try {
-            google.accounts.id.prompt();
+            google.accounts.id.prompt((notification) => {
+                if (notification && typeof notification.isNotDisplayed === 'function' && notification.isNotDisplayed()) {
+                    console.log('[Google One-Tap] Not displayed reason:', notification.getNotDisplayedReason());
+                }
+            });
             return;
         } catch (e) {
             console.warn('[GoogleAuth] prompt error:', e);
