@@ -7,31 +7,31 @@
     },
     {
       "source": "/app",
-      "destination": "/app"
+      "destination": "/app.html"
     },
     {
       "source": "/app/(.*)",
-      "destination": "/app"
+      "destination": "/app.html"
     },
     {
       "source": "/admin",
-      "destination": "/app"
+      "destination": "/app.html"
     },
     {
       "source": "/admin/(.*)",
-      "destination": "/app"
+      "destination": "/app.html"
     },
     {
       "source": "/administrator",
-      "destination": "/app"
+      "destination": "/app.html"
     },
     {
       "source": "/administrator/(.*)",
-      "destination": "/app"
+      "destination": "/app.html"
     },
     {
-      "source": "/(.*)",
-      "destination": "/index"
+      "source": "/((?!assets/|css/|js/|api/|manifest\\.json|favicon\\.ico|sw\\.js|.*\\.[a-zA-Z0-9]+$).*)",
+      "destination": "/index.html"
     }
   ]
 }
