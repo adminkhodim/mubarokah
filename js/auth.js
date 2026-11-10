@@ -2541,7 +2541,7 @@ const AUTH_API_URL = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.authentica
     : ""; // __MUBAROKAH_CONFIG_PENDING__
 const GOOGLE_CLIENT_ID = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.authentication && APP_CONFIG.authentication.googleClientId && APP_CONFIG.authentication.googleClientId !== '__MUBAROKAH_CONFIG_PENDING__')
     ? APP_CONFIG.authentication.googleClientId
-    : "967127815898-6padn433letamnjfuacb5eg8pnv728p4.apps.googleusercontent.com"; 
+    : "947826927449-j6vuesabou9joog8vjldgsgnbb5rhjcl.apps.googleusercontent.com"; 
 
 document.addEventListener('DOMContentLoaded', () => {
     // Inisialisasi Identity Architecture baru
