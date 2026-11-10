@@ -5336,6 +5336,11 @@
 
             try {
                 const token = (typeof getAdminSessionToken === 'function' ? getAdminSessionToken() : sessionStorage.getItem(ADMIN_TOKEN_KEY)) || "";
+                if (!token) {
+                    if (loader) loader.classList.add('hidden');
+                    if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+                    return;
+                }
                 let response = null;
 
                 if (typeof apiPost === 'function') {
@@ -5377,8 +5382,9 @@
                     }
                 } else {
                     const msg = (response && response.message) || "Gagal memuat data santri.";
+                    const isAuthErr = msg.toLowerCase().includes('token') || msg.toLowerCase().includes('authentication') || msg.toLowerCase().includes('unauthorized');
                     if (!hasCache) {
-                        if (typeof showToast === 'function') showToast("⚠️ " + msg);
+                        if (!isAuthErr && typeof showToast === 'function') showToast("⚠️ " + msg);
                         if (emptyState) emptyState.classList.remove('hidden');
                     }
                 }

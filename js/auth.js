@@ -963,7 +963,11 @@ const ASNIdentity = {
                 }
             }
         } else if (['SUPER_ADMIN', 'ADMIN', 'BENDAHARA', 'PENGURUS', 'ASATIDZ', 'PEGAWAI', 'EDITOR'].includes(this.currentRole)) {
-            if (window.innerWidth >= 1024) {
+            const isAppContext = window.location.pathname.startsWith('/app') || 
+                                 window.location.pathname.endsWith('app.html') ||
+                                 document.body.classList.contains('is-app-mode') ||
+                                 document.body.classList.contains('is-pwa-standalone');
+            if (window.innerWidth >= 1024 && !isAppContext) {
                 const pagePengaturan = document.getElementById('page-pengaturan');
                 if (pagePengaturan && !pagePengaturan.classList.contains('hidden')) {
                     setTimeout(() => {

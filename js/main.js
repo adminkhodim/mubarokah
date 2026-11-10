@@ -493,17 +493,20 @@
                 return;
             }
 
-            if (tabId === 'pengaturan' && window.innerWidth >= 1024) {
+            const isAppContext = window.location.pathname.startsWith('/app') || 
+                                 window.location.pathname.endsWith('app.html') ||
+                                 (typeof isStandalone === 'function' && isStandalone()) ||
+                                 document.body.classList.contains('is-app-mode') ||
+                                 document.body.classList.contains('is-pwa-standalone') ||
+                                 (document.getElementById('page-admin') && !document.getElementById('hero-carousel'));
+
+            // Jangan pernah alihkan ke tab admin jika sedang di rute /app atau mode PWA!
+            if (tabId === 'pengaturan' && window.innerWidth >= 1024 && !isAppContext) {
                 if (isUserAdmin) {
                     switchTab('admin', updateUrl);
                     return;
                 }
             }
-
-            const isAppContext = window.location.pathname.startsWith('/app') || 
-                                 window.location.pathname.endsWith('app.html') ||
-                                 (typeof isStandalone === 'function' && isStandalone()) ||
-                                 (document.getElementById('page-admin') && !document.getElementById('hero-carousel'));
 
             // Pada web portal mobile biasa non-app, jangan ubah URL saat membuka pengaturan
             if (!isAppContext && tabId === 'pengaturan' && window.innerWidth < 1024) {
