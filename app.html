@@ -4774,99 +4774,127 @@
                 </div>
             </section>
 
-            <!-- FITUR UTAMA IBADAH (4 KOLOM HORIZONTAL SEIMBANG) -->
+                        <!-- FITUR UTAMA IBADAH (TATANAN 1 BARIS 4 MENU SEIMBANG) -->
             <section
-                class="bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447]">
-                <div class="grid grid-cols-4 gap-2 md:gap-3">
+                class="bg-white dark:bg-[#15202d] p-3 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447]">
+                <div class="grid grid-cols-4 gap-y-3.5 gap-x-1.5 sm:gap-x-3">
 
+                    <!-- BARIS 1: AMALIAH UTAMA SANTRI -->
                     <!-- 1. Al-Qur'an Digital -->
                     <button type="button" onclick="switchTab('quran-index')"
                         class="flex flex-col items-center group transition focus:outline-none">
                         <div
-                            class="w-12 h-12 md:w-14 md:h-14 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center text-xl shadow-sm group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
+                            class="w-12 h-12 md:w-14 md:h-14 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center text-lg sm:text-xl shadow-sm group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
                             <i class="fa-solid fa-book-quran"></i>
                         </div>
                         <span
-                            class="text-[10px] md:text-xs mt-2 font-semibold text-slate-700 dark:text-slate-300 text-center leading-tight group-hover:text-emerald-600">Al-Qur'an</span>
+                            class="text-[10px] md:text-xs mt-1.5 sm:mt-2 font-semibold text-slate-700 dark:text-slate-300 text-center leading-tight group-hover:text-emerald-600">Al-Qur'an</span>
                     </button>
 
                     <!-- 2. Kitab Maulid -->
                     <button type="button" onclick="switchTab('maulid-hub')"
                         class="flex flex-col items-center group transition focus:outline-none">
                         <div
-                            class="w-12 h-12 md:w-14 md:h-14 bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 rounded-2xl flex items-center justify-center text-xl shadow-sm group-hover:bg-purple-600 group-hover:text-white transition-all duration-300">
+                            class="w-12 h-12 md:w-14 md:h-14 bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 rounded-2xl flex items-center justify-center text-lg sm:text-xl shadow-sm group-hover:bg-purple-600 group-hover:text-white transition-all duration-300">
                             <i class="fa-solid fa-kaaba"></i>
                         </div>
                         <span
-                            class="text-[10px] md:text-xs mt-2 font-semibold text-slate-700 dark:text-slate-300 text-center leading-tight group-hover:text-purple-600">Maulid</span>
+                            class="text-[10px] md:text-xs mt-1.5 sm:mt-2 font-semibold text-slate-700 dark:text-slate-300 text-center leading-tight group-hover:text-purple-600">Maulid</span>
                     </button>
 
                     <!-- 3. Tahlil & Yasin -->
                     <button type="button" onclick="openTahlilYasinPage()"
                         class="flex flex-col items-center group transition focus:outline-none">
                         <div
-                            class="w-12 h-12 md:w-14 md:h-14 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center text-xl shadow-sm group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                            class="w-12 h-12 md:w-14 md:h-14 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center text-lg sm:text-xl shadow-sm group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
                             <i class="fa-solid fa-hands-holding"></i>
                         </div>
                         <span
-                            class="text-[10px] md:text-xs mt-2 font-semibold text-slate-700 dark:text-slate-300 text-center leading-tight group-hover:text-blue-600">Tahlil
+                            class="text-[10px] md:text-xs mt-1.5 sm:mt-2 font-semibold text-slate-700 dark:text-slate-300 text-center leading-tight group-hover:text-blue-600">Tahlil
                             & Yasin</span>
                     </button>
 
-                    <!-- 4. Jadwal Sholat & Imsakiyah (BARU) -->
+                    <!-- 4. Wirid & Dzikir (Menu Wirid Ala NU Online) -->
+                    <button type="button" onclick="openWiridPage()"
+                        class="flex flex-col items-center group transition focus:outline-none">
+                        <div
+                            class="w-12 h-12 md:w-14 md:h-14 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center text-lg sm:text-xl shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+                            <i class="fa-solid fa-hands-praying"></i>
+                        </div>
+                        <span
+                            class="text-[10px] md:text-xs mt-1.5 sm:mt-2 font-semibold text-slate-700 dark:text-slate-300 text-center leading-tight group-hover:text-indigo-600">Wirid</span>
+                    </button>
+
+                    <!-- BARIS 2: PANDUAN WAKTU & KELENGKAPAN IBADAH -->
+                    <!-- 5. Jadwal Sholat & Imsakiyah -->
                     <button type="button" onclick="openJadwalSholatPage()"
                         class="flex flex-col items-center group transition focus:outline-none">
                         <div
-                            class="w-12 h-12 md:w-14 md:h-14 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center text-xl shadow-sm group-hover:bg-amber-500 group-hover:text-white transition-all duration-300">
+                            class="w-12 h-12 md:w-14 md:h-14 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center text-lg sm:text-xl shadow-sm group-hover:bg-amber-500 group-hover:text-white transition-all duration-300">
                             <i class="fa-solid fa-clock"></i>
                         </div>
                         <span
-                            class="text-[10px] md:text-xs mt-2 font-semibold text-slate-700 dark:text-slate-300 text-center leading-tight group-hover:text-amber-600">Jadwal
+                            class="text-[10px] md:text-xs mt-1.5 sm:mt-2 font-semibold text-slate-700 dark:text-slate-300 text-center leading-tight group-hover:text-amber-600">Jadwal
                             Sholat</span>
+                    </button>
+
+                    <!-- 6. Kompas Arah Kiblat (Falakiyah Presisi) -->
+                    <button type="button" onclick="openKompasKiblatPage()"
+                        class="flex flex-col items-center group transition focus:outline-none">
+                        <div
+                            class="w-12 h-12 md:w-14 md:h-14 bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 rounded-2xl flex items-center justify-center text-lg sm:text-xl shadow-sm group-hover:bg-teal-600 group-hover:text-white transition-all duration-300">
+                            <i class="fa-solid fa-compass"></i>
+                        </div>
+                        <span
+                            class="text-[10px] md:text-xs mt-1.5 sm:mt-2 font-semibold text-slate-700 dark:text-slate-300 text-center leading-tight group-hover:text-teal-600">Arah
+                            Kiblat</span>
+                    </button>
+
+                    <!-- 7. Kumpulan Doa (Referensi NU Online Doa) -->
+                    <button type="button" onclick="openDoaPage()"
+                        class="flex flex-col items-center group transition focus:outline-none">
+                        <div
+                            class="w-12 h-12 md:w-14 md:h-14 bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 rounded-2xl flex items-center justify-center text-lg sm:text-xl shadow-sm group-hover:bg-orange-500 group-hover:text-white transition-all duration-300">
+                            <i class="fa-solid fa-person-praying"></i>
+                        </div>
+                        <span
+                            class="text-[10px] md:text-xs mt-1.5 sm:mt-2 font-semibold text-slate-700 dark:text-slate-300 text-center leading-tight group-hover:text-orange-600">Doa</span>
+                    </button>
+
+                    <!-- 8. Tutorial & Panduan Ibadah Santri -->
+                    <button type="button" onclick="openTutorialIbadahPage()"
+                        class="flex flex-col items-center group transition focus:outline-none">
+                        <div
+                            class="w-12 h-12 md:w-14 md:h-14 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center text-lg sm:text-xl shadow-sm group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
+                            <i class="fa-solid fa-book-open-reader"></i>
+                        </div>
+                        <span
+                            class="text-[10px] md:text-xs mt-1.5 sm:mt-2 font-semibold text-slate-700 dark:text-slate-300 text-center leading-tight group-hover:text-emerald-600">Tutorial
+                            Ibadah</span>
                     </button>
 
                 </div>
             </section>
 
-            <!-- CONTAINER TEKS/KONTEN TERPILIH & RINGKASAN IBADAH -->
+            <!-- CONTAINER TEKS/KONTEN TERPILIH -->
             <div id="ibadah-content-box"
                 class="bg-white dark:bg-[#15202d] p-4 md:p-5 rounded-2xl border border-slate-100 dark:border-[#253447] shadow-sm space-y-3">
                 <div class="flex justify-between items-center border-b border-slate-100 dark:border-[#253447] pb-2.5">
                     <h3 id="ibadah-title"
                         class="text-xs md:text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center">
-                        <i class="fa-solid fa-book-open text-brand-700 dark:text-emerald-400 mr-2"></i> Mutiara
-                        Al-Qur'an & Doa Harian
+                        <i class="fa-solid fa-book-open text-brand-700 mr-2"></i> Pilih Fitur Ibadah
                     </h3>
                     <span id="ibadah-tag"
-                        class="text-[9px] font-extrabold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded-full uppercase">Tadabbur</span>
+                        class="text-[9px] font-extrabold bg-brand-100 text-brand-800 px-2 py-0.5 rounded-full uppercase">Amaliah</span>
                 </div>
                 <div id="ibadah-body"
-                    class="text-xs md:text-sm text-slate-600 dark:text-slate-300 space-y-3 leading-relaxed">
-                    <div
-                        class="p-3 bg-emerald-50/60 dark:bg-emerald-950/20 rounded-xl border border-emerald-100 dark:border-emerald-800/40 text-center space-y-1.5">
-                        <p class="font-serif text-base sm:text-lg text-emerald-900 dark:text-emerald-200" dir="rtl">
-                            خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ
-                        </p>
-                        <p class="text-[11px] text-slate-600 dark:text-slate-400 italic">
-                            "Sebaik-baik kalian adalah orang yang belajar Al-Qur'an dan mengajarkannya." (HR. Bukhari)
-                        </p>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 pt-1">
-                        <button type="button" onclick="switchTab('quran-index')"
-                            class="p-2.5 bg-slate-50 dark:bg-[#1c2836] hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-xl border border-slate-200/70 dark:border-[#253447] flex items-center space-x-2 transition">
-                            <i class="fa-solid fa-book-open text-emerald-600 dark:text-emerald-400 text-sm"></i>
-                            <span class="text-xs font-semibold text-slate-700 dark:text-slate-200">Buka Al-Qur'an 30
-                                Juz</span>
-                        </button>
-                        <button type="button" onclick="openJadwalSholatPage()"
-                            class="p-2.5 bg-slate-50 dark:bg-[#1c2836] hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-xl border border-slate-200/70 dark:border-[#253447] flex items-center space-x-2 transition">
-                            <i class="fa-solid fa-clock text-amber-500 text-sm"></i>
-                            <span class="text-xs font-semibold text-slate-700 dark:text-slate-200">Jadwal Sholat &
-                                Adzan</span>
-                        </button>
-                    </div>
+                    class="text-xs md:text-sm text-slate-600 dark:text-slate-300 space-y-3 leading-relaxed min-h-[100px]">
+                    <p class="text-slate-400 italic text-center py-6">
+                        Klik salah satu menu ikon di atas untuk memilih amaliah dan jadwal.
+                    </p>
                 </div>
             </div>
+
 
         </div>
 
@@ -5096,6 +5124,2095 @@
             </section>
 
         </div>
+
+                <!-- ==================== TAB: KOMPAS ARAH KIBLAT (FALAKIYAH PRESISI ALA NU ONLINE) ==================== -->
+        <div id="page-kompas-kiblat"
+            class="tab-content hidden w-full bg-[#053e36] sm:bg-transparent p-0 sm:py-4 sm:px-4 min-h-[calc(100dvh-7.75rem)]"
+            style="min-height: calc(100dvh - 7.75rem); min-height: calc(100vh - 7.75rem);">
+
+            <!-- KARTU UTAMA KOMPAS KIBLAT ZAMRUD (FULL SCREEN EDGE-TO-EDGE DI MOBILE TANPA CELAH PUTIH) -->
+            <div class="bg-gradient-to-b from-[#0c7062] via-[#095c50] to-[#053e36] text-white rounded-none sm:rounded-3xl shadow-none sm:shadow-xl border-0 sm:border border-emerald-700/60 p-4 sm:p-6 w-full max-w-xl mx-auto flex flex-col justify-between min-h-[calc(100dvh-7.75rem)] sm:min-h-[580px] relative overflow-hidden select-none"
+                style="min-height: calc(100dvh - 7.75rem); min-height: calc(100vh - 7.75rem);">
+
+                <!-- Siluet Halus Menara Makkah di Latar Belakang Kartu -->
+                <div
+                    class="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-white via-transparent to-transparent">
+                </div>
+
+                <!-- SUB-HEADER BAR (KEMBALI KE PORTAL IBADAH & REFRESH GPS) -->
+                <div class="relative z-10 flex items-center justify-between pb-2 border-b border-white/10">
+                    <button type="button" onclick="switchTab('ibadah')" aria-label="Kembali ke Portal Ibadah"
+                        class="flex items-center space-x-2 text-white/90 hover:text-white transition active:scale-95 group">
+                        <div
+                            class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition">
+                            <i
+                                class="fa-solid fa-arrow-left text-sm group-hover:-translate-x-0.5 transition-transform"></i>
+                        </div>
+                        <span class="text-sm sm:text-base font-bold tracking-wide">Arah kiblat</span>
+                    </button>
+
+                    <!-- Aksi Kanan: Perbarui GPS & Opsi Kota Cadangan -->
+                    <div class="flex items-center space-x-1.5">
+                        <button type="button" onclick="ASNKiblat.requestDeviceLocation(true)"
+                            title="Perbarui GPS Presisi"
+                            class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/90 transition active:scale-95 text-xs">
+                            <i class="fa-solid fa-location-crosshairs"></i>
+                        </button>
+                        <!-- Menu Opsi Kota Cadangan -->
+                        <div class="relative inline-block">
+                            <select id="qibla-city-select" onchange="ASNKiblat.changeCity(this.value)"
+                                aria-label="Pilihan Kota Manual"
+                                class="bg-white/10 text-white text-[11px] py-1 px-2 rounded-xl border border-white/20 outline-none cursor-pointer">
+                                <option value="" class="text-slate-800">Kota Lain...</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- INFORMASI KIBLAT UTAMA (PRESISI DERAJAT SUDUT KIBLAT DARI UTARA) -->
+                <div class="relative z-10 text-center space-y-0.5 pt-1">
+                    <!-- Nama Lokasi Desa & Kecamatan dari GPS -->
+                    <div
+                        class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/10 backdrop-blur-md text-xs font-semibold text-rose-200 border border-white/15 shadow-sm">
+                        <i class="fa-solid fa-location-dot text-rose-400"></i>
+                        <span id="qibla-current-location">Mendeteksi Lokasi GPS...</span>
+                    </div>
+
+                    <!-- Teks Judul Khas Falak NU -->
+                    <p class="text-[11px] sm:text-xs text-emerald-100 font-medium tracking-wide pt-1">
+                        Derajat Sudut Kiblat dari Utara
+                    </p>
+
+                    <!-- Angka Derajat Kiblat Raksasa (2 Desimal Akurat) -->
+                    <h1 id="qibla-target-deg"
+                        class="text-4xl sm:text-5xl font-black tracking-tight text-white font-sans drop-shadow-md">
+                        294.48°
+                    </h1>
+
+                    <!-- Status Panduan Arah Hadap -->
+                    <div class="pt-1">
+                        <div id="qibla-status-badge"
+                            class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold bg-white/20 backdrop-blur-md text-white border border-white/20 transition-all duration-300">
+                            <i class="fa-solid fa-compass text-amber-300"></i> Membaca Sensor Kompas...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PIRINGAN KOMPAS PUTIH SOLID ALA NU ONLINE (FLOATING WHITE DIAL) -->
+                <div class="relative z-10 my-auto py-2 sm:py-3">
+                    <div
+                        class="relative w-64 h-64 sm:w-72 sm:h-72 mx-auto flex items-center justify-center select-none">
+
+                        <!-- Glow Halo Hijau saat Tepat Menghadap Ka'bah -->
+                        <div id="qibla-glow-halo"
+                            class="absolute inset-0 rounded-full bg-emerald-400/40 blur-2xl opacity-0 transition-opacity duration-500 pointer-events-none">
+                        </div>
+
+                        <!-- Tanda Panah Penunjuk Hadap Atas Smartphone (Target Jam 12) -->
+                        <div
+                            class="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-b-[12px] border-b-white z-40 drop-shadow">
+                        </div>
+
+                        <!-- PIRINGAN KOMPAS YANG BERPUTAR (ROTATING DIAL) -->
+                        <div id="qibla-compass-dial"
+                            class="absolute inset-0 rounded-full bg-white shadow-[0_12px_30px_rgba(0,0,0,0.35)] border-4 border-white transition-transform duration-75 ease-out flex items-center justify-center overflow-hidden">
+
+                            <!-- Ornamen Geometri Mandala Islami (Watermark Arabesque Khas NU Online) -->
+                            <div
+                                class="absolute inset-5 rounded-full flex items-center justify-center opacity-20 pointer-events-none">
+                                <svg viewBox="0 0 100 100" class="w-full h-full text-emerald-950 fill-current">
+                                    <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" stroke-width="1"
+                                        stroke-dasharray="2,2" />
+                                    <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" stroke-width="1" />
+                                    <g transform="translate(50,50)">
+                                        <path d="M 0,-38 L 8,-20 L 0,-15 L -8,-20 Z" />
+                                        <path d="M 0,-38 L 8,-20 L 0,-15 L -8,-20 Z" transform="rotate(45)" />
+                                        <path d="M 0,-38 L 8,-20 L 0,-15 L -8,-20 Z" transform="rotate(90)" />
+                                        <path d="M 0,-38 L 8,-20 L 0,-15 L -8,-20 Z" transform="rotate(135)" />
+                                        <path d="M 0,-38 L 8,-20 L 0,-15 L -8,-20 Z" transform="rotate(180)" />
+                                        <path d="M 0,-38 L 8,-20 L 0,-15 L -8,-20 Z" transform="rotate(225)" />
+                                        <path d="M 0,-38 L 8,-20 L 0,-15 L -8,-20 Z" transform="rotate(270)" />
+                                        <path d="M 0,-38 L 8,-20 L 0,-15 L -8,-20 Z" transform="rotate(315)" />
+                                    </g>
+                                    <circle cx="50" cy="50" r="14" fill="none" stroke="currentColor"
+                                        stroke-width="1.5" />
+                                </svg>
+                            </div>
+
+                            <!-- Garis Derajat Keliling (Tick Marks) -->
+                            <div class="absolute inset-2 rounded-full pointer-events-none">
+                                <div
+                                    class="absolute top-1 left-1/2 -translate-x-1/2 w-0.5 h-3 bg-slate-900 rounded-full">
+                                </div>
+                                <div
+                                    class="absolute bottom-1 left-1/2 -translate-x-1/2 w-0.5 h-3 bg-slate-900 rounded-full">
+                                </div>
+                                <div
+                                    class="absolute left-1 top-1/2 -translate-y-1/2 w-3 h-0.5 bg-slate-900 rounded-full">
+                                </div>
+                                <div
+                                    class="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-0.5 bg-slate-900 rounded-full">
+                                </div>
+
+                                <div class="absolute inset-0 flex items-center justify-center transform rotate-30">
+                                    <div class="w-full flex justify-between px-1"><span
+                                            class="w-2.5 h-0.5 bg-slate-400"></span><span
+                                            class="w-2.5 h-0.5 bg-slate-400"></span></div>
+                                </div>
+                                <div class="absolute inset-0 flex items-center justify-center transform rotate-60">
+                                    <div class="w-full flex justify-between px-1"><span
+                                            class="w-2.5 h-0.5 bg-slate-400"></span><span
+                                            class="w-2.5 h-0.5 bg-slate-400"></span></div>
+                                </div>
+                                <div class="absolute inset-0 flex items-center justify-center transform rotate-120">
+                                    <div class="w-full flex justify-between px-1"><span
+                                            class="w-2.5 h-0.5 bg-slate-400"></span><span
+                                            class="w-2.5 h-0.5 bg-slate-400"></span></div>
+                                </div>
+                                <div class="absolute inset-0 flex items-center justify-center transform rotate-150">
+                                    <div class="w-full flex justify-between px-1"><span
+                                            class="w-2.5 h-0.5 bg-slate-400"></span><span
+                                            class="w-2.5 h-0.5 bg-slate-400"></span></div>
+                                </div>
+                            </div>
+
+                            <!-- 4 TITIK MATA ANGIN (U - T - S - B) DALAM WARNA HIJAU TOSKA NU ONLINE -->
+                            <!-- UTARA (U / 0°) -->
+                            <div class="absolute top-2.5 left-1/2 -translate-x-1/2 text-center pointer-events-none">
+                                <span class="text-sm sm:text-base font-black text-[#0b6b5e]">U</span>
+                            </div>
+                            <!-- TIMUR (T / 90°) -->
+                            <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                <span class="text-sm sm:text-base font-black text-[#0b6b5e]">T</span>
+                            </div>
+                            <!-- SELATAN (S / 180°) -->
+                            <div class="absolute bottom-2.5 left-1/2 -translate-x-1/2 text-center pointer-events-none">
+                                <span class="text-sm sm:text-base font-black text-[#0b6b5e]">S</span>
+                            </div>
+                            <!-- BARAT (B / 270°) -->
+                            <div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                <span class="text-sm sm:text-base font-black text-[#0b6b5e]">B</span>
+                            </div>
+
+                        </div>
+
+                        <!-- JARUM KIBLAT MERAH DENGAN KA'BAH DI UJUNGNYA (ALA NU ONLINE) -->
+                        <div id="qibla-compass-needle"
+                            class="absolute inset-0 flex items-center justify-center transition-transform duration-75 pointer-events-none z-30"
+                            style="transform: rotate(0deg);">
+
+                            <div class="relative w-full h-full flex flex-col items-center justify-center">
+
+                                <!-- UJUNG ATAS: Ka'bah Kubus & Jarum Merah Lancip -->
+                                <div class="absolute top-2 flex flex-col items-center">
+                                    <div
+                                        class="w-8 h-8 rounded-full bg-white shadow-md border-2 border-slate-200 flex items-center justify-center text-slate-900 text-xs mb-0.5">
+                                        <i class="fa-solid fa-kaaba text-amber-500"></i>
+                                    </div>
+                                    <div
+                                        class="w-0 h-0 border-x-[5px] border-x-transparent border-b-[62px] sm:border-b-[72px] border-b-rose-600 drop-shadow">
+                                    </div>
+                                </div>
+
+                                <!-- UJUNG BAWAH: Jarum Runcing Perak/Putih -->
+                                <div class="absolute bottom-4 flex flex-col items-center">
+                                    <div
+                                        class="w-0 h-0 border-x-[5px] border-x-transparent border-t-[62px] sm:border-t-[72px] border-t-slate-200 drop-shadow">
+                                    </div>
+                                </div>
+
+                                <!-- PIVOT TITIK TENGAH (CENTER CAP) -->
+                                <div
+                                    class="relative z-40 w-4 h-4 rounded-full bg-white border-3 border-rose-600 shadow-md">
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- FOOTER DALAM KARTU: JARAK KE MAKKAH & TOMBOL SINKRONISASI -->
+                <div class="relative z-10 space-y-2.5 pt-2 pb-2">
+                    <div
+                        class="text-center text-xs text-emerald-100 font-medium flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-kaaba text-amber-300"></i>
+                        <span>Jarak lurus ke Masjidil Haram: <strong id="qibla-target-distance-val"
+                                class="text-white font-mono">8.333 km</strong></span>
+                    </div>
+
+                    <!-- Tombol Khusus Izin Sensor iOS (Muncul otomatis di iPhone/iPad) -->
+                    <button id="btn-qibla-request-sensor" type="button" onclick="ASNKiblat.requestIosSensorPermission()"
+                        class="hidden w-full max-w-sm mx-auto py-3 px-5 bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold text-xs sm:text-sm rounded-2xl shadow-xl transition active:scale-98 flex items-center justify-center gap-2 border border-amber-200 animate-pulse">
+                        <i class="fa-solid fa-compass text-slate-900 text-base"></i>
+                        <span>Izinkan Akses Sensor Kompas iPhone</span>
+                    </button>
+
+                    <!-- Tombol Sinkronisasi GPS / Kalibrasi Putih Elegan -->
+                    <button type="button" onclick="ASNKiblat.syncAllSensorAndLocation(true)"
+                        class="w-full max-w-sm mx-auto py-3 px-5 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs sm:text-sm rounded-2xl shadow-lg transition active:scale-98 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-arrows-rotate text-emerald-600"></i>
+                        <span>Sinkronkan Lokasi & Sensor Kompas</span>
+                    </button>
+
+                    <!-- Notice jika perangkat tidak ada sensor magnetik / Laptop -->
+                    <div id="qibla-sensor-notice"
+                        class="hidden p-2.5 bg-amber-950/60 border border-amber-500/40 rounded-xl text-left text-xs text-amber-200 space-y-0.5">
+                        <span class="font-bold flex items-center gap-1.5"><i
+                                class="fa-solid fa-triangle-exclamation"></i> Perangkat Tanpa Magnetometer</span>
+                        <p class="text-[11px] text-amber-300">Sensor kompas magnetik tidak aktif. Pada laptop/PC,
+                            gunakan patokan derajat arah di atas secara manual.</p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- ==================== TAB: WIRID HUB (ALA NU ONLINE) ==================== -->
+        <div id="page-wirid-hub"
+            class="tab-content hidden space-y-4 px-3 sm:px-4 md:px-8 py-3 md:py-6 max-w-7xl mx-auto">
+            <!-- BARIS KEMBALI & HEADER UTAMA WIRID -->
+            <div
+                class="flex items-center justify-between bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447]">
+                <button type="button" onclick="switchTab('ibadah')"
+                    class="flex items-center space-x-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition active:scale-95">
+                    <div
+                        class="w-8 h-8 bg-slate-100 dark:bg-[#1c2836] hover:bg-slate-200 dark:hover:bg-[#253447] text-slate-700 dark:text-slate-300 rounded-lg flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-arrow-left text-xs"></i>
+                    </div>
+                    <span>Kembali ke Ibadah</span>
+                </button>
+                <div class="text-right">
+                    <span
+                        class="text-[9px] font-extrabold bg-indigo-100 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 px-2.5 py-0.5 rounded-full uppercase tracking-wide">Amaliah
+                        Nahdliyin</span>
+                    <h2 class="text-sm md:text-base font-bold text-slate-800 dark:text-slate-100 mt-0.5">Kumpulan Wirid
+                        & Dzikir</h2>
+                </div>
+            </div>
+
+            <!-- HERO BANNER WIRID DENGAN AKSEN ISLAMI -->
+            <section
+                class="relative bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-900 text-white p-5 md:p-6 rounded-2xl overflow-hidden shadow-sm border border-indigo-900/40">
+                <div class="absolute -right-6 -bottom-8 text-white/5 text-9xl pointer-events-none select-none">
+                    <i class="fa-solid fa-hands-praying"></i>
+                </div>
+                <div class="relative z-10 space-y-2 max-w-2xl">
+                    <div class="flex items-center space-x-2">
+                        <span
+                            class="bg-indigo-500/30 border border-indigo-400/40 text-indigo-200 text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase inline-flex items-center gap-1.5">
+                            <i class="fa-solid fa-book-open text-[8px]"></i> Referensi NU Online
+                        </span>
+                        <span
+                            class="bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[9px] font-semibold px-2 py-0.5 rounded-full">
+                            8 Kategori Utama
+                        </span>
+                    </div>
+                    <h1 class="text-lg md:text-2xl font-bold tracking-tight text-white">
+                        Kumpulan Bacaan Wirid, Shalawat & Dzikir
+                    </h1>
+                    <p class="text-xs md:text-sm text-indigo-200/90 leading-relaxed font-arabic" dir="rtl">
+                        أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ
+                    </p>
+                    <p class="text-[11px] md:text-xs text-indigo-200/80 leading-relaxed italic">
+                        "Ingatlah, hanya dengan mengingat Allah hati menjadi tenteram." (QS. Ar-Ra'd: 28)
+                    </p>
+                </div>
+            </section>
+
+            <!-- SEARCH & FILTER CHIPS ALA NU ONLINE -->
+            <div
+                class="space-y-2.5 bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447]">
+                <!-- Input Pencarian -->
+                <div class="relative">
+                    <i
+                        class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" id="wirid-search-input" oninput="filterWiridGrid(this.value)"
+                        placeholder="Cari wirid, shalawat, ratib, hizib, istighotsah..."
+                        class="w-full pl-9 pr-9 py-2.5 text-xs bg-slate-50 dark:bg-[#1c2836] border border-slate-200 dark:border-[#253447] rounded-xl text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition">
+                    <button type="button" id="wirid-search-clear" onclick="clearWiridSearch()"
+                        class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- Filter Chips Horizontal -->
+                <div class="flex items-center space-x-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs">
+                    <button type="button" onclick="filterWiridByTag('semua', this)"
+                        class="wirid-chip active px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-indigo-600 text-white shadow-sm transition">
+                        Semua Kategori
+                    </button>
+                    <button type="button" onclick="filterWiridByTag('harian', this)"
+                        class="wirid-chip px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 transition">
+                        Wirid Harian
+                    </button>
+                    <button type="button" onclick="filterWiridByTag('shalawat', this)"
+                        class="wirid-chip px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 transition">
+                        Shalawat
+                    </button>
+                    <button type="button" onclick="filterWiridByTag('ratib', this)"
+                        class="wirid-chip px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 transition">
+                        Ratib
+                    </button>
+                    <button type="button" onclick="filterWiridByTag('hizib', this)"
+                        class="wirid-chip px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 transition">
+                        Hizib
+                    </button>
+                    <button type="button" onclick="filterWiridByTag('istighotsah', this)"
+                        class="wirid-chip px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 transition">
+                        Istighotsah
+                    </button>
+                    <button type="button" onclick="filterWiridByTag('asmaul-husna', this)"
+                        class="wirid-chip px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 transition">
+                        Asmaul Husna
+                    </button>
+                    <button type="button" onclick="filterWiridByTag('manaqib', this)"
+                        class="wirid-chip px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 transition">
+                        Manaqib
+                    </button>
+                    <button type="button" onclick="filterWiridByTag('dalail', this)"
+                        class="wirid-chip px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 transition">
+                        Dala'ilul Khairat
+                    </button>
+                </div>
+            </div>
+
+            <!-- GRID 8 KATEGORI KERANGKA DAFTAR ISI WIRID (2 KOLOM RESPONSIVE) -->
+            <div id="wirid-categories-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+
+                <!-- 1. WIRID HARIAN -->
+                <div onclick="openWiridCategoryModal('wirid-harian')" data-tags="harian semua"
+                    class="wirid-card group p-4 sm:p-5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm hover:shadow-lg hover:border-indigo-500/50 dark:hover:border-indigo-500/50 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-11 h-11 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-hands-praying"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">
+                                        Wirid Harian
+                                    </h3>
+                                    <span class="text-[11px] font-arabic text-slate-400">الأوراد اليومية</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-extrabold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-full uppercase border border-indigo-100 dark:border-indigo-900/50">
+                                6 Bacaan
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            Wirid ba'da shalat maktubah (fardhu), dzikir pagi & petang, dzikir sebelum tidur, serta
+                            sayyidul istighfar.
+                        </p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                        <span class="text-[11px] flex items-center gap-1.5"><i class="fa-regular fa-folder-open"></i>
+                            Buka Daftar Isi</span>
+                        <i
+                            class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- 2. SHALAWAT -->
+                <div onclick="openWiridCategoryModal('shalawat')" data-tags="shalawat semua"
+                    class="wirid-card group p-4 sm:p-5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm hover:shadow-lg hover:border-emerald-500/50 dark:hover:border-emerald-500/50 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-11 h-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-heart"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition">
+                                        Shalawat
+                                    </h3>
+                                    <span class="text-[11px] font-arabic text-slate-400">الصلوات المأثورة</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-extrabold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-full uppercase border border-emerald-100 dark:border-emerald-900/50">
+                                35 Bacaan
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            Kumpulan shalawat para auliya': Nariyah, Thibbil Qulub, Munjiyat, Al-Fatih, Asyghil,
+                            Ibrahimiyyah, Jibril, dll.
+                        </p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                        <span class="text-[11px] flex items-center gap-1.5"><i class="fa-regular fa-folder-open"></i>
+                            Buka Daftar Isi</span>
+                        <i
+                            class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- 3. ASMAUL HUSNA / MUNAJAT -->
+                <div onclick="openWiridCategoryModal('asmaul-husna')" data-tags="asmaul-husna semua"
+                    class="wirid-card group p-4 sm:p-5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm hover:shadow-lg hover:border-amber-500/50 dark:hover:border-amber-500/50 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-11 h-11 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 group-hover:bg-amber-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-gem"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
+                                        Asmaul Husna
+                                    </h3>
+                                    <span class="text-[11px] font-arabic text-slate-400">الأسماء الحسنى</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-extrabold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-full uppercase border border-amber-100 dark:border-amber-900/50">
+                                3 Bacaan
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            99 nama keagungan Allah SWT (Arab, Latin, Terjemah), doa munajat khusus, dan qasidah nadhom
+                            amaliah santri.
+                        </p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-amber-600 dark:text-amber-400">
+                        <span class="text-[11px] flex items-center gap-1.5"><i class="fa-regular fa-folder-open"></i>
+                            Buka Daftar Isi</span>
+                        <i
+                            class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- 4. ISTIGHOTSAH & MUJAHADAH -->
+                <div onclick="openWiridCategoryModal('istighotsah')" data-tags="istighotsah semua"
+                    class="wirid-card group p-4 sm:p-5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm hover:shadow-lg hover:border-purple-500/50 dark:hover:border-purple-500/50 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-11 h-11 rounded-2xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 group-hover:bg-purple-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition">
+                                        Istighotsah & Mujahadah
+                                    </h3>
+                                    <span class="text-[11px] font-arabic text-slate-400">الاستغاثة والمجاهدة</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-extrabold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 px-2.5 py-1 rounded-full uppercase border border-purple-100 dark:border-purple-900/50">
+                                7 Bacaan
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            Susunan Istighotsah NU Hadratussyaikh KH. M. Hasyim Asy'ari, Mujahadah Kubro, doa Nishfu
+                            Sya'ban, dan tolak bala.
+                        </p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-purple-600 dark:text-purple-400">
+                        <span class="text-[11px] flex items-center gap-1.5"><i class="fa-regular fa-folder-open"></i>
+                            Buka Daftar Isi</span>
+                        <i
+                            class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- 5. RATIB -->
+                <div onclick="openWiridCategoryModal('ratib')" data-tags="ratib semua"
+                    class="wirid-card group p-4 sm:p-5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm hover:shadow-lg hover:border-teal-500/50 dark:hover:border-teal-500/50 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-11 h-11 rounded-2xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 group-hover:bg-teal-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-scroll"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition">
+                                        Ratib
+                                    </h3>
+                                    <span class="text-[11px] font-arabic text-slate-400">الرواتب المشهورة</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-extrabold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 px-2.5 py-1 rounded-full uppercase border border-teal-100 dark:border-teal-900/50">
+                                6 Bacaan
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            Rangkaian wirid benteng spiritual: Ratib Al-Haddad, Ratib Al-Aththas, Ratib Al-Idrus, Ratib
+                            Al-Muhdhar, dll.
+                        </p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-teal-600 dark:text-teal-400">
+                        <span class="text-[11px] flex items-center gap-1.5"><i class="fa-regular fa-folder-open"></i>
+                            Buka Daftar Isi</span>
+                        <i
+                            class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- 6. HIZIB -->
+                <div onclick="openWiridCategoryModal('hizib')" data-tags="hizib semua"
+                    class="wirid-card group p-4 sm:p-5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm hover:shadow-lg hover:border-blue-500/50 dark:hover:border-blue-500/50 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-11 h-11 rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-feather-pointed"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
+                                        Hizib
+                                    </h3>
+                                    <span class="text-[11px] font-arabic text-slate-400">الأحزاب المباركة</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-extrabold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-full uppercase border border-blue-100 dark:border-blue-900/50">
+                                9 Bacaan
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            Kumpulan hizib thariqah muktabarah: Hizib Nashr, Hizib Bahr, Hizib Nawawi, Hizib Autad,
+                            Hizib Wiqayah, Hizib Barqi, dll.
+                        </p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-blue-600 dark:text-blue-400">
+                        <span class="text-[11px] flex items-center gap-1.5"><i class="fa-regular fa-folder-open"></i>
+                            Buka Daftar Isi</span>
+                        <i
+                            class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- 7. MANAQIB SYEKH ABDUL QADIR -->
+                <div onclick="openManaqibPage()" data-tags="manaqib semua"
+                    class="wirid-card group p-4 sm:p-5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm hover:shadow-lg hover:border-rose-500/50 dark:hover:border-rose-500/50 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-11 h-11 rounded-2xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 group-hover:bg-rose-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-book-bookmark"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition">
+                                        Manaqib Syekh Abdul Qadir
+                                    </h3>
+                                    <span class="text-[11px] font-arabic text-slate-400">مناقب الشيخ عبد القادر</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-extrabold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 px-2.5 py-1 rounded-full uppercase border border-rose-100 dark:border-rose-900/50">
+                                9 Bab Lengkap
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            Kitab Al-Lujain Ad-Dani fi Manaqib Syekh Abdul Qadir Al-Jailani: teks Arab murni 9 bab
+                            bersumber resmi dari NU Online.
+                        </p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-rose-600 dark:text-rose-400">
+                        <span class="text-[11px] flex items-center gap-1.5"><i class="fa-solid fa-book-open"></i> Buka
+                            Halaman Bacaan</span>
+                        <i
+                            class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- 8. DALA'ILUL KHAIRAT -->
+                <div onclick="openWiridCategoryModal('dalail')" data-tags="dalail semua"
+                    class="wirid-card group p-4 sm:p-5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm hover:shadow-lg hover:border-cyan-500/50 dark:hover:border-cyan-500/50 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-11 h-11 rounded-2xl bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 group-hover:bg-cyan-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-book"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition">
+                                        Dala'ilul Khairat
+                                    </h3>
+                                    <span class="text-[11px] font-arabic text-slate-400">دلائل الخيرات</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-extrabold bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 px-2.5 py-1 rounded-full uppercase border border-cyan-100 dark:border-cyan-900/50">
+                                13 Bacaan
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            Kitab wirid shalawat harian Al-Imam Al-Jazuli: Muqaddimah, Asma'un Nabi, Hizib Senin s.d.
+                            Ahad, dan doa penutup.
+                        </p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-cyan-600 dark:text-cyan-400">
+                        <span class="text-[11px] flex items-center gap-1.5"><i class="fa-regular fa-folder-open"></i>
+                            Buka Daftar Isi</span>
+                        <i
+                            class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- EMPTY SEARCH STATE -->
+            <div id="wirid-search-empty"
+                class="hidden py-12 text-center space-y-2 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447]">
+                <div
+                    class="w-12 h-12 mx-auto rounded-full bg-slate-100 dark:bg-[#1c2836] text-slate-400 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </div>
+                <h4 class="text-sm font-bold text-slate-700 dark:text-slate-200">Wirid Tidak Ditemukan</h4>
+                <p class="text-xs text-slate-400 max-w-xs mx-auto">
+                    Kategori atau bacaan yang Anda cari belum ditemukan. Coba gunakan kata kunci lain seperti
+                    "shalawat", "ratib", atau "hizib".
+                </p>
+                <button type="button" onclick="clearWiridSearch()"
+                    class="mt-2 px-3.5 py-1.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-xl text-xs font-semibold hover:bg-indigo-100 transition">
+                    Tampilkan Semua Kategori
+                </button>
+            </div>
+
+            <!-- NOTICE KONSEP KERANGKA BERTAHAP -->
+            <div
+                class="p-4 bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-900/40 rounded-2xl flex items-start space-x-3 text-xs text-indigo-900 dark:text-indigo-200">
+                <i class="fa-solid fa-circle-info text-indigo-600 dark:text-indigo-400 mt-0.5 text-sm shrink-0"></i>
+                <div class="space-y-1">
+                    <p class="font-bold">Konsep Kerangka Daftar Isi Wirid Aktif</p>
+                    <p class="text-[11px] text-indigo-800/80 dark:text-indigo-300/80 leading-relaxed">
+                        Kerangka daftar isi wirid mengadopsi struktur resmi NU Online (8 kategori utama). Klik pada
+                        setiap kategori untuk melihat rincian susunan daftar bacaan. Teks bacaan Arab, Latin, dan
+                        terjemahan akan dilengkapi secara bertahap sesuai instruksi Anda.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ==================== TAB: MANAQIB SYEKH ABDUL QADIR AL-JAILANI (HALAMAN PENUH) ==================== -->
+        <div id="page-manaqib" class="tab-content hidden space-y-4 px-3 sm:px-4 md:px-8 py-3 md:py-6 max-w-5xl mx-auto">
+            <!-- Header Navigasi -->
+            <div
+                class="flex items-center justify-between bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447]">
+                <button type="button" onclick="switchTab('wirid-hub')"
+                    class="flex items-center space-x-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-rose-600 dark:hover:text-rose-400 transition active:scale-95">
+                    <div
+                        class="w-8 h-8 bg-slate-100 dark:bg-[#1c2836] hover:bg-slate-200 dark:hover:bg-[#253447] text-slate-700 dark:text-slate-300 rounded-lg flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-arrow-left text-xs"></i>
+                    </div>
+                    <span>Kembali ke Wirid</span>
+                </button>
+                <div class="text-right">
+                    <div class="flex items-center justify-end gap-1.5">
+                        <span
+                            class="text-[9px] font-extrabold bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 px-2 py-0.5 rounded-full uppercase tracking-wide">
+                            Amaliah Nahdliyin
+                        </span>
+                        <span
+                            class="text-[9px] font-extrabold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded-full uppercase tracking-wide">
+                            Teks Arab Lengkap
+                        </span>
+                    </div>
+                    <h2 class="text-sm md:text-base font-bold text-slate-800 dark:text-slate-100 mt-1">
+                        Manaqib Syekh Abdul Qadir
+                    </h2>
+                </div>
+            </div>
+
+            <!-- Hero Banner Bernuansa Islami Premium -->
+            <section
+                class="relative bg-gradient-to-r from-rose-950 via-slate-900 to-rose-900 text-white p-5 md:p-6 rounded-2xl overflow-hidden shadow-sm border border-rose-900/40">
+                <div class="absolute -right-6 -bottom-8 text-white/5 text-9xl pointer-events-none select-none">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                </div>
+                <div class="relative z-10 space-y-2 max-w-2xl">
+                    <div class="flex items-center flex-wrap gap-2">
+                        <span
+                            class="bg-rose-500/30 border border-rose-400/40 text-rose-200 text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase inline-flex items-center gap-1.5">
+                            <i class="fa-solid fa-book-open text-[8px]"></i> Referensi: NU Online
+                        </span>
+                        <span
+                            class="bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[9px] font-semibold px-2 py-0.5 rounded-full">
+                            Kitab Al-Lujain Ad-Dani
+                        </span>
+                        <span
+                            class="bg-amber-500/20 border border-amber-400/30 text-amber-300 text-[9px] font-semibold px-2 py-0.5 rounded-full">
+                            9 Bab / Fashl
+                        </span>
+                    </div>
+                    <h1 class="text-lg md:text-2xl font-bold tracking-tight text-white">
+                        Kitab Manaqib Jawahirul Ma'ani
+                    </h1>
+                    <p class="text-xs sm:text-sm text-rose-100/90 font-arabic leading-relaxed" dir="rtl">
+                        مَنَاقِبُ سُلْطَانِ الْأَوْلِيَاءِ سَيِّدِنَا الشَّيْخِ عَبْدِ الْقَادِرِ الْجَيْلَانِيِّ رَضِيَ
+                        اللهُ عَنْهُ
+                    </p>
+                    <p class="text-[11px] md:text-xs text-rose-200/80 leading-relaxed">
+                        Riwayat hidup, ketinggian nasab, akhlak mulia, karamah, doa manaqib, dan qasidah tawassul.
+                        Ditampilkan khusus teks Arab murni berharakat lengkap untuk kelancaran pembacaan majelis.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Sticky / Handy Reading Toolbar (Pilih Bab & Zoom Font Arab) -->
+            <div id="manaqib-reading-area"
+                class="sticky top-2 z-30 space-y-2.5 bg-white/95 dark:bg-[#15202d]/95 backdrop-blur-md p-3 sm:p-4 rounded-2xl shadow-md border border-slate-200/80 dark:border-[#253447]">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                    <!-- Dropdown Pemilih Bab -->
+                    <div class="flex-1 min-w-[200px]">
+                        <label for="manaqib-bab-select"
+                            class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                            Pilih Bab / Fashl Manaqib:
+                        </label>
+                        <div class="relative">
+                            <select id="manaqib-bab-select" onchange="filterManaqibBab(this.value)"
+                                class="w-full appearance-none pl-3 pr-8 py-2 text-xs font-semibold bg-slate-50 dark:bg-[#1c2836] border border-slate-200 dark:border-[#253447] rounded-xl text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500/50 transition">
+                                <option value="all">📖 Semua Bab (Tampilkan Lengkap 1 - 9)</option>
+                                <option value="1">Bab 1: Khutbah Kitab & Silsilah Nasab Syarif</option>
+                                <option value="2">Bab 2: Kelahiran di Jilan & Menuntut Ilmu di Baghdad</option>
+                                <option value="3">Bab 3: Riyadhah & Berjumpa Nabi Khidir AS</option>
+                                <option value="4">Bab 4: Pakaian, Majelis & Nasihat Beliau</option>
+                                <option value="5">Bab 5: Ketinggian Akhlak & Kasih Sayang Kaum Lemah</option>
+                                <option value="6">Bab 6: Karamah-Karamah Sulthanul Auliya'</option>
+                                <option value="7">Bab 7: Derajat Kewalian & Qadamiy Hadzihi</option>
+                                <option value="8">Bab 8: Doa Penutup Manaqib Syekh Abdul Qadir</option>
+                                <option value="9">Bab 9: Qasidah Tawassul 'Ibadallah Rijalallah</option>
+                            </select>
+                            <i
+                                class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] pointer-events-none"></i>
+                        </div>
+                    </div>
+
+                    <!-- Toolbar Ukuran Font Arab -->
+                    <div class="flex items-center justify-between sm:justify-end gap-2 shrink-0 pt-1 sm:pt-0">
+                        <span
+                            class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden sm:inline">
+                            Ukuran Font Arab:
+                        </span>
+                        <div
+                            class="flex items-center bg-slate-100 dark:bg-[#1c2836] p-1 rounded-xl border border-slate-200/80 dark:border-[#253447]">
+                            <button type="button" onclick="adjustManaqibFontSize(-2)" title="Perkecil Font"
+                                class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-extrabold text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-[#15202d] hover:text-rose-600 transition active:scale-95 shadow-none hover:shadow-sm">
+                                A-
+                            </button>
+                            <span id="manaqib-font-size-indicator" onclick="resetManaqibFontSize()"
+                                title="Klik untuk Reset (24px)"
+                                class="px-2.5 text-[11px] font-mono font-bold text-slate-600 dark:text-slate-300 cursor-pointer hover:text-rose-600 transition select-none">
+                                24px
+                            </span>
+                            <button type="button" onclick="adjustManaqibFontSize(2)" title="Perbesar Font"
+                                class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-extrabold text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-[#15202d] hover:text-rose-600 transition active:scale-95 shadow-none hover:shadow-sm">
+                                A+
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chips Navigasi Cepat Bab Manaqib (Scrollable Horizontal) -->
+                <div class="flex items-center space-x-1.5 overflow-x-auto no-scrollbar pt-1 pb-0.5 text-xs">
+                    <button type="button" data-bab="all" onclick="filterManaqibBab('all')"
+                        class="manaqib-pill-btn active px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap bg-rose-600 text-white shadow-sm transition active:scale-95">
+                        Semua
+                    </button>
+                    <button type="button" data-bab="1" onclick="filterManaqibBab('1')"
+                        class="manaqib-pill-btn px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 transition active:scale-95">
+                        Bab 1
+                    </button>
+                    <button type="button" data-bab="2" onclick="filterManaqibBab('2')"
+                        class="manaqib-pill-btn px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 transition active:scale-95">
+                        Bab 2
+                    </button>
+                    <button type="button" data-bab="3" onclick="filterManaqibBab('3')"
+                        class="manaqib-pill-btn px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 transition active:scale-95">
+                        Bab 3
+                    </button>
+                    <button type="button" data-bab="4" onclick="filterManaqibBab('4')"
+                        class="manaqib-pill-btn px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 transition active:scale-95">
+                        Bab 4
+                    </button>
+                    <button type="button" data-bab="5" onclick="filterManaqibBab('5')"
+                        class="manaqib-pill-btn px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 transition active:scale-95">
+                        Bab 5
+                    </button>
+                    <button type="button" data-bab="6" onclick="filterManaqibBab('6')"
+                        class="manaqib-pill-btn px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 transition active:scale-95">
+                        Bab 6
+                    </button>
+                    <button type="button" data-bab="7" onclick="filterManaqibBab('7')"
+                        class="manaqib-pill-btn px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 transition active:scale-95">
+                        Bab 7
+                    </button>
+                    <button type="button" data-bab="8" onclick="filterManaqibBab('8')"
+                        class="manaqib-pill-btn px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 transition active:scale-95">
+                        Doa Manaqib
+                    </button>
+                    <button type="button" data-bab="9" onclick="filterManaqibBab('9')"
+                        class="manaqib-pill-btn px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 transition active:scale-95">
+                        Qasidah
+                    </button>
+                </div>
+            </div>
+
+            <!-- Kontainer Konten Teks Arab Manaqib Dinamis -->
+            <div id="manaqib-content-container" class="space-y-6 pt-2">
+                <!-- Teks Arab dimuat dinamis dari data-manaqib.js -->
+            </div>
+
+            <!-- Tombol Kembali ke Atas & Navigasi Bawah -->
+            <div
+                class="pt-6 pb-12 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-200/80 dark:border-[#253447]">
+                <button type="button" onclick="switchTab('wirid-hub')"
+                    class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-[#1c2836] hover:bg-slate-200 dark:hover:bg-[#253447] text-slate-700 dark:text-slate-200 text-xs font-bold transition active:scale-95 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-arrow-left text-xs"></i>
+                    <span>Kembali ke Kumpulan Wirid</span>
+                </button>
+                <button type="button" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
+                    class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 text-xs font-bold transition active:scale-95 flex items-center justify-center gap-2 border border-rose-200/60 dark:border-rose-900/40">
+                    <i class="fa-solid fa-arrow-up text-xs"></i>
+                    <span>Kembali ke Atas</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ==================== MODAL DAFTAR ISI WIRID DETAIL ==================== -->
+        <div id="modal-wirid-detail"
+            class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity">
+            <div
+                class="w-full max-w-2xl bg-white dark:bg-[#15202d] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-100 dark:border-[#253447] max-h-[90vh] flex flex-col overflow-hidden animate-fade-in">
+                <!-- Modal Header -->
+                <div
+                    class="p-4 sm:p-5 border-b border-slate-100 dark:border-[#253447] flex items-center justify-between bg-slate-50/70 dark:bg-[#1c2836]/60">
+                    <div class="flex items-center space-x-3">
+                        <div id="modal-wirid-icon"
+                            class="w-10 h-10 rounded-2xl flex items-center justify-center text-lg shrink-0">
+                            <i class="fa-solid fa-hands-praying"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 id="modal-wirid-title"
+                                    class="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100">
+                                    Daftar Bacaan Wirid
+                                </h3>
+                                <span id="modal-wirid-badge"
+                                    class="text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase">
+                                    6 Bacaan
+                                </span>
+                            </div>
+                            <span id="modal-wirid-arabic"
+                                class="text-xs font-arabic text-slate-400 block mt-0.5"></span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="closeWiridCategoryModal()" aria-label="Tutup"
+                        class="w-8 h-8 rounded-full bg-slate-200/70 dark:bg-[#253447] hover:bg-slate-300 dark:hover:bg-[#2e4057] text-slate-600 dark:text-slate-300 flex items-center justify-center transition">
+                        <i class="fa-solid fa-xmark text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body (Scrollable Daftar Isi) -->
+                <div class="p-4 sm:p-6 overflow-y-auto space-y-4">
+                    <!-- Deskripsi Kategori -->
+                    <p id="modal-wirid-desc"
+                        class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-[#1c2836] p-3 rounded-xl border border-slate-100 dark:border-[#253447]">
+                    </p>
+
+                    <!-- Header List -->
+                    <div class="flex items-center justify-between">
+                        <h4
+                            class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-list-ol text-indigo-600"></i> Rincian Susunan Bacaan
+                        </h4>
+                        <span class="text-[10px] text-slate-400">Kerangka Siap Dilengkapi</span>
+                    </div>
+
+                    <!-- Items Container -->
+                    <div id="modal-wirid-items" class="space-y-2">
+                        <!-- Diisi via JavaScript -->
+                    </div>
+
+                    <!-- Kotak Status Pelengkapan Bertahap -->
+                    <div
+                        class="p-3.5 bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 rounded-xl text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
+                        <i class="fa-solid fa-clock-rotate-left text-amber-600 dark:text-amber-400 mt-0.5 shrink-0"></i>
+                        <div class="space-y-0.5">
+                            <p class="font-bold">Status: Konsep Kerangka Daftar Isi</p>
+                            <p class="text-[11px] text-amber-800/80 dark:text-amber-300/80">
+                                Susunan daftar isi di atas siap diisi teks bacaan Arab, transliterasi Latin, fadhilah,
+                                dan terjemahan secara bertahap sesuai instruksi Anda berikutnya.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div
+                    class="p-3 sm:p-4 border-t border-slate-100 dark:border-[#253447] bg-slate-50/70 dark:bg-[#1c2836]/60 flex items-center justify-between">
+                    <span class="text-[11px] text-slate-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-check text-emerald-500"></i> Siap Tahap Berikutnya
+                    </span>
+                    <button type="button" onclick="closeWiridCategoryModal()"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm transition active:scale-95">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB: KUMPULAN DOA (REFERENSI NU ONLINE DOA) ==================== -->
+        <div id="page-doa-hub" class="tab-content hidden space-y-4 px-3 sm:px-4 md:px-8 py-3 md:py-6 max-w-7xl mx-auto">
+            <!-- BARIS KEMBALI & HEADER UTAMA DOA -->
+            <div
+                class="flex items-center justify-between bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447]">
+                <button type="button" onclick="switchTab('ibadah')"
+                    class="flex items-center space-x-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-orange-600 dark:hover:text-orange-400 transition active:scale-95">
+                    <div
+                        class="w-8 h-8 bg-slate-100 dark:bg-[#1c2836] hover:bg-slate-200 dark:hover:bg-[#253447] text-slate-700 dark:text-slate-300 rounded-lg flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-arrow-left text-xs"></i>
+                    </div>
+                    <span>Kembali ke Ibadah</span>
+                </button>
+                <div class="text-right">
+                    <span
+                        class="text-[9px] font-extrabold bg-orange-100 dark:bg-orange-950/60 text-orange-800 dark:text-orange-300 px-2.5 py-0.5 rounded-full uppercase tracking-wide">Amaliah
+                        Nahdliyin</span>
+                    <h2 class="text-sm md:text-base font-bold text-slate-800 dark:text-slate-100 mt-0.5">Kumpulan Doa
+                        Harian & Pilihan</h2>
+                </div>
+            </div>
+
+            <!-- HERO BANNER DOA DENGAN AKSEN ISLAMI -->
+            <section
+                class="relative bg-gradient-to-r from-amber-950 via-slate-900 to-orange-950 text-white p-5 md:p-6 rounded-2xl overflow-hidden shadow-sm border border-orange-900/40">
+                <div class="absolute -right-6 -bottom-8 text-white/5 text-9xl pointer-events-none select-none">
+                    <i class="fa-solid fa-hands-praying"></i>
+                </div>
+                <div class="relative z-10 space-y-2 max-w-2xl">
+                    <div class="flex items-center space-x-2">
+                        <span
+                            class="bg-orange-500/30 border border-orange-400/40 text-orange-200 text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase inline-flex items-center gap-1.5">
+                            <i class="fa-solid fa-book-open text-[8px]"></i> Referensi NU Online Doa
+                        </span>
+                        <span
+                            class="bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[9px] font-semibold px-2 py-0.5 rounded-full">
+                            10 Kategori Utama
+                        </span>
+                    </div>
+                    <h1 class="text-lg md:text-2xl font-bold tracking-tight text-white">
+                        Himpunan Doa Ma'tsur & Doa Keseharian Santri
+                    </h1>
+                    <p class="text-xs md:text-sm text-orange-200/90 leading-relaxed font-arabic" dir="rtl">
+                        وَقَالَ رَبُّكُمُ ادْعُونِي أَسْتَجِبْ لَكُمْ
+                    </p>
+                    <p class="text-[11px] md:text-xs text-orange-200/80 leading-relaxed italic">
+                        "Dan Tuhanmu berfirman: 'Berdoalah kepada-Ku, niscaya akan Kuperkenankan bagimu'." (QS. Ghafir:
+                        60)
+                    </p>
+                </div>
+            </section>
+
+            <!-- SEARCH & FILTER CHIPS ALA NU ONLINE -->
+            <div
+                class="space-y-2.5 bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447]">
+                <!-- Input Pencarian -->
+                <div class="relative">
+                    <i
+                        class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" id="doa-search-input" oninput="filterDoaGrid(this.value)"
+                        placeholder="Cari doa keseharian, rezeki, kesehatan, tolak bala, selamat..."
+                        class="w-full pl-9 pr-9 py-2.5 text-xs bg-slate-50 dark:bg-[#1c2836] border border-slate-200 dark:border-[#253447] rounded-xl text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition">
+                    <button type="button" id="doa-search-clear" onclick="clearDoaSearch()"
+                        class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- Filter Chips Horizontal -->
+                <div class="flex items-center space-x-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs">
+                    <button type="button" onclick="filterDoaByTag('semua', this)"
+                        class="doa-chip active px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-orange-600 text-white shadow-sm transition">
+                        Semua Kategori
+                    </button>
+                    <button type="button" onclick="filterDoaByTag('keseharian', this)"
+                        class="doa-chip px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-orange-50 dark:hover:bg-orange-950/40 hover:text-orange-600 transition">
+                        Keseharian
+                    </button>
+                    <button type="button" onclick="filterDoaByTag('rezeki', this)"
+                        class="doa-chip px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-orange-50 dark:hover:bg-orange-950/40 hover:text-orange-600 transition">
+                        Rezeki & Usaha
+                    </button>
+                    <button type="button" onclick="filterDoaByTag('tolak-bala', this)"
+                        class="doa-chip px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-orange-50 dark:hover:bg-orange-950/40 hover:text-orange-600 transition">
+                        Tolak Bala
+                    </button>
+                    <button type="button" onclick="filterDoaByTag('kesehatan', this)"
+                        class="doa-chip px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-orange-50 dark:hover:bg-orange-950/40 hover:text-orange-600 transition">
+                        Kesehatan
+                    </button>
+                    <button type="button" onclick="filterDoaByTag('shalat', this)"
+                        class="doa-chip px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-orange-50 dark:hover:bg-orange-950/40 hover:text-orange-600 transition">
+                        Shalat & Wudhu
+                    </button>
+                    <button type="button" onclick="filterDoaByTag('safar', this)"
+                        class="doa-chip px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-orange-50 dark:hover:bg-orange-950/40 hover:text-orange-600 transition">
+                        Safar (Perjalanan)
+                    </button>
+                    <button type="button" onclick="filterDoaByTag('ilmu', this)"
+                        class="doa-chip px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-orange-50 dark:hover:bg-orange-950/40 hover:text-orange-600 transition">
+                        Penuntut Ilmu
+                    </button>
+                    <button type="button" onclick="filterDoaByTag('nabi', this)"
+                        class="doa-chip px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-orange-50 dark:hover:bg-orange-950/40 hover:text-orange-600 transition">
+                        Doa Para Nabi
+                    </button>
+                    <button type="button" onclick="filterDoaByTag('keluarga', this)"
+                        class="doa-chip px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-orange-50 dark:hover:bg-orange-950/40 hover:text-orange-600 transition">
+                        Pernikahan & Keluarga
+                    </button>
+                </div>
+            </div>
+
+            <!-- GRID 10 KATEGORI KERANGKA DAFTAR ISI DOA (2 KOLOM RESPONSIVE) -->
+            <div id="doa-categories-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+
+                <!-- 1. DOA KESEHARIAN -->
+                <div onclick="openDoaCategoryModal('doa-keseharian')" data-tags="keseharian semua"
+                    class="doa-card group p-4 sm:p-5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm hover:shadow-lg hover:border-orange-500/50 dark:hover:border-orange-500/50 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-11 h-11 rounded-2xl bg-orange-50 dark:bg-orange-950/50 text-orange-600 dark:text-orange-400 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 group-hover:bg-orange-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-sun"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition">
+                                        Doa Keseharian
+                                    </h3>
+                                    <span class="text-[11px] font-arabic text-slate-400">الأدعية اليومية</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-extrabold bg-orange-50 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 px-2.5 py-1 rounded-full uppercase border border-orange-100 dark:border-orange-900/50">
+                                8 Doa
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            Doa bangun & sebelum tidur, masuk/keluar kamar mandi, berpakaian, bercermin, masuk/keluar
+                            rumah, dan hendak makan.
+                        </p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-orange-600 dark:text-orange-400">
+                        <span class="text-[11px] flex items-center gap-1.5"><i class="fa-regular fa-folder-open"></i>
+                            Buka Daftar Isi</span>
+                        <i
+                            class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- 2. DOA REZEKI & USAHA -->
+                <div onclick="openDoaCategoryModal('doa-rezeki')" data-tags="rezeki semua"
+                    class="doa-card group p-4 sm:p-5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm hover:shadow-lg hover:border-emerald-500/50 dark:hover:border-emerald-500/50 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-11 h-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-coins"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition">
+                                        Doa Rezeki & Usaha
+                                    </h3>
+                                    <span class="text-[11px] font-arabic text-slate-400">أدعية الرزق والعمل</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-extrabold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-full uppercase border border-emerald-100 dark:border-emerald-900/50">
+                                6 Doa
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            Doa pembuka pintu rezeki halal, kemudahan urusan ikhtiar, pelunas hutang, dan permohonan
+                            keberkahan usaha.
+                        </p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                        <span class="text-[11px] flex items-center gap-1.5"><i class="fa-regular fa-folder-open"></i>
+                            Buka Daftar Isi</span>
+                        <i
+                            class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- 3. DOA TOLAK BALA & PERLINDUNGAN -->
+                <div onclick="openDoaCategoryModal('doa-tolak-bala')" data-tags="tolak-bala semua"
+                    class="doa-card group p-4 sm:p-5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm hover:shadow-lg hover:border-rose-500/50 dark:hover:border-rose-500/50 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-11 h-11 rounded-2xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 group-hover:bg-rose-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition">
+                                        Doa Tolak Bala
+                                    </h3>
+                                    <span class="text-[11px] font-arabic text-slate-400">أدعية دفع البلاء</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-extrabold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 px-2.5 py-1 rounded-full uppercase border border-rose-100 dark:border-rose-900/50">
+                                6 Doa
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            Doa selamat dari marabahaya, perlindungan godaan setan & jin, doa saat angin kencang/petir,
+                            dan ketetapan iman.
+                        </p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-rose-600 dark:text-rose-400">
+                        <span class="text-[11px] flex items-center gap-1.5"><i class="fa-regular fa-folder-open"></i>
+                            Buka Daftar Isi</span>
+                        <i
+                            class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- 4. DOA KESEHATAN & KESEMBUHAN -->
+                <div onclick="openDoaCategoryModal('doa-kesehatan')" data-tags="kesehatan semua"
+                    class="doa-card group p-4 sm:p-5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm hover:shadow-lg hover:border-teal-500/50 dark:hover:border-teal-500/50 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-11 h-11 rounded-2xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 group-hover:bg-teal-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-heart-pulse"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition">
+                                        Doa Kesehatan & Kesembuhan
+                                    </h3>
+                                    <span class="text-[11px] font-arabic text-slate-400">أدعية الشفاء والعافية</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-extrabold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 px-2.5 py-1 rounded-full uppercase border border-teal-100 dark:border-teal-900/50">
+                                5 Doa
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            Doa menjenguk orang sakit (la ba'sa thahurun), doa menghilangkan sakit di anggota badan, dan
+                            afiat lahir batin.
+                        </p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-teal-600 dark:text-teal-400">
+                        <span class="text-[11px] flex items-center gap-1.5"><i class="fa-regular fa-folder-open"></i>
+                            Buka Daftar Isi</span>
+                        <i
+                            class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- 5. DOA SHALAT & WUDHU -->
+                <div onclick="openDoaCategoryModal('doa-shalat')" data-tags="shalat semua"
+                    class="doa-card group p-4 sm:p-5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm hover:shadow-lg hover:border-indigo-500/50 dark:hover:border-indigo-500/50 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-11 h-11 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-mosque"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">
+                                        Doa Shalat & Wudhu
+                                    </h3>
+                                    <span class="text-[11px] font-arabic text-slate-400">أدعية الصلاة والوضوء</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-extrabold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-full uppercase border border-indigo-100 dark:border-indigo-900/50">
+                                7 Doa
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            Doa sebelum & sesudah wudhu, doa mendengar adzan, doa iftitah, doa qunut subuh, sujud
+                            tilawah, dan doa ba'da shalat.
+                        </p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                        <span class="text-[11px] flex items-center gap-1.5"><i class="fa-regular fa-folder-open"></i>
+                            Buka Daftar Isi</span>
+                        <i
+                            class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- 6. DOA PERJALANAN / SAFAR -->
+                <div onclick="openDoaCategoryModal('doa-safar')" data-tags="safar semua"
+                    class="doa-card group p-4 sm:p-5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm hover:shadow-lg hover:border-cyan-500/50 dark:hover:border-cyan-500/50 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-11 h-11 rounded-2xl bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 group-hover:bg-cyan-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-plane-departure"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition">
+                                        Doa Safar (Perjalanan)
+                                    </h3>
+                                    <span class="text-[11px] font-arabic text-slate-400">أدعية السفر</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-extrabold bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 px-2.5 py-1 rounded-full uppercase border border-cyan-100 dark:border-cyan-900/50">
+                                5 Doa
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            Doa naik kendaraan darat/laut/udara, doa keluar rumah safar, doa singgah di tempat asing,
+                            dan doa pulang kembali.
+                        </p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-cyan-600 dark:text-cyan-400">
+                        <span class="text-[11px] flex items-center gap-1.5"><i class="fa-regular fa-folder-open"></i>
+                            Buka Daftar Isi</span>
+                        <i
+                            class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- 7. DOA PENUNTUT ILMU (SANTRI) -->
+                <div onclick="openDoaCategoryModal('doa-ilmu')" data-tags="ilmu semua"
+                    class="doa-card group p-4 sm:p-5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm hover:shadow-lg hover:border-purple-500/50 dark:hover:border-purple-500/50 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-11 h-11 rounded-2xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 group-hover:bg-purple-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-graduation-cap"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition">
+                                        Doa Penuntut Ilmu
+                                    </h3>
+                                    <span class="text-[11px] font-arabic text-slate-400">أدعية طلب العلم</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-extrabold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 px-2.5 py-1 rounded-full uppercase border border-purple-100 dark:border-purple-900/50">
+                                6 Doa
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            Doa sebelum & sesudah belajar, doa penerang hati dan ketajaman hafalan Al-Qur'an, serta adab
+                            barakah ilmu guru.
+                        </p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-purple-600 dark:text-purple-400">
+                        <span class="text-[11px] flex items-center gap-1.5"><i class="fa-regular fa-folder-open"></i>
+                            Buka Daftar Isi</span>
+                        <i
+                            class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- 8. DOA PARA NABI & RASUL -->
+                <div onclick="openDoaCategoryModal('doa-nabi')" data-tags="nabi semua"
+                    class="doa-card group p-4 sm:p-5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm hover:shadow-lg hover:border-blue-500/50 dark:hover:border-blue-500/50 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-11 h-11 rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-star-and-crescent"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
+                                        Doa Para Nabi & Rasul
+                                    </h3>
+                                    <span class="text-[11px] font-arabic text-slate-400">أدعية الأنبياء</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-extrabold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-full uppercase border border-blue-100 dark:border-blue-900/50">
+                                7 Doa
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            Doa Nabi Adam (taubat), Nabi Yunus (dalam perut ikan paus), Nabi Musa (kelapangan dada), dan
+                            Nabi Ibrahim (keturunan shalih).
+                        </p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-blue-600 dark:text-blue-400">
+                        <span class="text-[11px] flex items-center gap-1.5"><i class="fa-regular fa-folder-open"></i>
+                            Buka Daftar Isi</span>
+                        <i
+                            class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- 9. DOA PERNIKAHAN & KELUARGA -->
+                <div onclick="openDoaCategoryModal('doa-keluarga')" data-tags="keluarga semua"
+                    class="doa-card group p-4 sm:p-5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm hover:shadow-lg hover:border-pink-500/50 dark:hover:border-pink-500/50 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-11 h-11 rounded-2xl bg-pink-50 dark:bg-pink-950/50 text-pink-600 dark:text-pink-400 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 group-hover:bg-pink-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-people-roof"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-pink-600 dark:group-hover:text-pink-400 transition">
+                                        Pernikahan & Keluarga
+                                    </h3>
+                                    <span class="text-[11px] font-arabic text-slate-400">أدعية النكاح والأسرة</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-extrabold bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 px-2.5 py-1 rounded-full uppercase border border-pink-100 dark:border-pink-900/50">
+                                5 Doa
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            Doa barakallahu laka untuk pengantin, doa memohon anak shalih (rabbana hablana), dan
+                            keharmonisan sakinah mawaddah.
+                        </p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-pink-600 dark:text-pink-400">
+                        <span class="text-[11px] flex items-center gap-1.5"><i class="fa-regular fa-folder-open"></i>
+                            Buka Daftar Isi</span>
+                        <i
+                            class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- 10. DOA ACARA & MAJELIS -->
+                <div onclick="openDoaCategoryModal('doa-acara')" data-tags="acara semua"
+                    class="doa-card group p-4 sm:p-5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm hover:shadow-lg hover:border-amber-500/50 dark:hover:border-amber-500/50 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-11 h-11 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 group-hover:bg-amber-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-champagne-glasses"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
+                                        Doa Acara & Khotmil Qur'an
+                                    </h3>
+                                    <span class="text-[11px] font-arabic text-slate-400">أدعية المناسبات</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-extrabold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-full uppercase border border-amber-100 dark:border-amber-900/50">
+                                5 Doa
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            Doa penutup majelis (kafaratul majelis), doa khatam Al-Qur'an (Allahummarhamna bil Qur'an),
+                            dan doa tasyakuran.
+                        </p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-amber-600 dark:text-amber-400">
+                        <span class="text-[11px] flex items-center gap-1.5"><i class="fa-regular fa-folder-open"></i>
+                            Buka Daftar Isi</span>
+                        <i
+                            class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- EMPTY SEARCH STATE DOA -->
+            <div id="doa-search-empty"
+                class="hidden py-12 text-center space-y-2 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447]">
+                <div
+                    class="w-12 h-12 mx-auto rounded-full bg-slate-100 dark:bg-[#1c2836] text-slate-400 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </div>
+                <h4 class="text-sm font-bold text-slate-700 dark:text-slate-200">Doa Tidak Ditemukan</h4>
+                <p class="text-xs text-slate-400 max-w-xs mx-auto">
+                    Kategori atau doa yang Anda cari belum ditemukan. Coba gunakan kata kunci seperti "tidur", "makan",
+                    "rezeki", atau "sehat".
+                </p>
+                <button type="button" onclick="clearDoaSearch()"
+                    class="mt-2 px-3.5 py-1.5 bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 rounded-xl text-xs font-semibold hover:bg-orange-100 transition">
+                    Tampilkan Semua Kategori
+                </button>
+            </div>
+
+            <!-- NOTICE KONSEP KERANGKA BERTAHAP DOA -->
+            <div
+                class="p-4 bg-orange-50/70 dark:bg-orange-950/30 border border-orange-200/80 dark:border-orange-900/40 rounded-2xl flex items-start space-x-3 text-xs text-orange-900 dark:text-orange-200">
+                <i class="fa-solid fa-circle-info text-orange-600 dark:text-orange-400 mt-0.5 text-sm shrink-0"></i>
+                <div class="space-y-1">
+                    <p class="font-bold">Konsep Kerangka Daftar Isi Doa Aktif</p>
+                    <p class="text-[11px] text-orange-800/80 dark:text-orange-300/80 leading-relaxed">
+                        Kerangka daftar doa merujuk pada direktori resmi NU Online Doa (10 kategori utama). Klik pada
+                        tiap kategori untuk melihat rincian susunan doa. Teks doa Arab, Latin, arti, dan fadhilah akan
+                        dilengkapi secara bertahap.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ==================== MODAL DAFTAR ISI DOA DETAIL ==================== -->
+        <div id="modal-doa-detail"
+            class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity">
+            <div
+                class="w-full max-w-2xl bg-white dark:bg-[#15202d] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-100 dark:border-[#253447] max-h-[90vh] flex flex-col overflow-hidden animate-fade-in">
+                <!-- Modal Header -->
+                <div
+                    class="p-4 sm:p-5 border-b border-slate-100 dark:border-[#253447] flex items-center justify-between bg-slate-50/70 dark:bg-[#1c2836]/60">
+                    <div class="flex items-center space-x-3">
+                        <div id="modal-doa-icon"
+                            class="w-10 h-10 rounded-2xl flex items-center justify-center text-lg shrink-0">
+                            <i class="fa-solid fa-person-praying"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 id="modal-doa-title"
+                                    class="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100">
+                                    Daftar Doa
+                                </h3>
+                                <span id="modal-doa-badge"
+                                    class="text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase">
+                                    8 Doa
+                                </span>
+                            </div>
+                            <span id="modal-doa-arabic" class="text-xs font-arabic text-slate-400 block mt-0.5"></span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="closeDoaCategoryModal()" aria-label="Tutup"
+                        class="w-8 h-8 rounded-full bg-slate-200/70 dark:bg-[#253447] hover:bg-slate-300 dark:hover:bg-[#2e4057] text-slate-600 dark:text-slate-300 flex items-center justify-center transition">
+                        <i class="fa-solid fa-xmark text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body (Scrollable Daftar Isi) -->
+                <div class="p-4 sm:p-6 overflow-y-auto space-y-4">
+                    <!-- Deskripsi Kategori -->
+                    <p id="modal-doa-desc"
+                        class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-[#1c2836] p-3 rounded-xl border border-slate-100 dark:border-[#253447]">
+                    </p>
+
+                    <!-- Header List -->
+                    <div class="flex items-center justify-between">
+                        <h4
+                            class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-list-ol text-orange-600"></i> Rincian Doa Pilihan
+                        </h4>
+                        <span class="text-[10px] text-slate-400">Kerangka Siap Dilengkapi</span>
+                    </div>
+
+                    <!-- Items Container -->
+                    <div id="modal-doa-items" class="space-y-2">
+                        <!-- Diisi via JavaScript -->
+                    </div>
+
+                    <!-- Kotak Status Pelengkapan Bertahap -->
+                    <div
+                        class="p-3.5 bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 rounded-xl text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
+                        <i class="fa-solid fa-clock-rotate-left text-amber-600 dark:text-amber-400 mt-0.5 shrink-0"></i>
+                        <div class="space-y-0.5">
+                            <p class="font-bold">Status: Konsep Kerangka Daftar Doa</p>
+                            <p class="text-[11px] text-amber-800/80 dark:text-amber-300/80">
+                                Susunan rincian doa di atas siap diisi lafazh Arab, transliterasi Latin, dan terjemahan
+                                bahasa Indonesia secara bertahap.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div
+                    class="p-3 sm:p-4 border-t border-slate-100 dark:border-[#253447] bg-slate-50/70 dark:bg-[#1c2836]/60 flex items-center justify-between">
+                    <span class="text-[11px] text-slate-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-check text-emerald-500"></i> Siap Tahap Berikutnya
+                    </span>
+                    <button type="button" onclick="closeDoaCategoryModal()"
+                        class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-semibold shadow-sm transition active:scale-95">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB: TUTORIAL IBADAH SANTRI (FIKIH PRAKTIS) ==================== -->
+        <div id="page-tutorial-ibadah-hub"
+            class="tab-content hidden space-y-4 px-3 sm:px-4 md:px-8 py-3 md:py-6 max-w-7xl mx-auto">
+            <!-- BARIS KEMBALI & HEADER UTAMA TUTORIAL IBADAH -->
+            <div
+                class="flex items-center justify-between bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447]">
+                <button type="button" onclick="switchTab('ibadah')"
+                    class="flex items-center space-x-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 transition active:scale-95">
+                    <div
+                        class="w-8 h-8 bg-slate-100 dark:bg-[#1c2836] hover:bg-slate-200 dark:hover:bg-[#253447] text-slate-700 dark:text-slate-300 rounded-lg flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-arrow-left text-xs"></i>
+                    </div>
+                    <span>Kembali ke Ibadah</span>
+                </button>
+                <div class="text-right">
+                    <span
+                        class="text-[9px] font-extrabold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 px-2.5 py-0.5 rounded-full uppercase tracking-wide">Fikih
+                        Syafi'iyyah</span>
+                    <h2 class="text-sm md:text-base font-bold text-slate-800 dark:text-slate-100 mt-0.5">Tutorial &
+                        Panduan Ibadah Santri</h2>
+                </div>
+            </div>
+
+            <!-- HERO BANNER TUTORIAL IBADAH DENGAN AKSEN ISLAMI -->
+            <section
+                class="relative bg-gradient-to-r from-emerald-950 via-slate-900 to-teal-950 text-white p-5 md:p-6 rounded-2xl overflow-hidden shadow-sm border border-emerald-900/40">
+                <div class="absolute -right-6 -bottom-8 text-white/5 text-9xl pointer-events-none select-none">
+                    <i class="fa-solid fa-book-open-reader"></i>
+                </div>
+                <div class="relative z-10 space-y-2 max-w-2xl">
+                    <div class="flex items-center space-x-2">
+                        <span
+                            class="bg-emerald-500/30 border border-emerald-400/40 text-emerald-200 text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase inline-flex items-center gap-1.5">
+                            <i class="fa-solid fa-book-quran text-[8px]"></i> Fikih Ibadah Santri
+                        </span>
+                        <span
+                            class="bg-teal-500/20 border border-teal-400/30 text-teal-300 text-[9px] font-semibold px-2 py-0.5 rounded-full">
+                            8 Bab Panduan Praktis
+                        </span>
+                    </div>
+                    <h1 class="text-lg md:text-2xl font-bold tracking-tight text-white">
+                        Panduan Praktis Tata Cara & Rukun Ibadah
+                    </h1>
+                    <p class="text-xs md:text-sm text-emerald-200/90 leading-relaxed font-arabic" dir="rtl">
+                        صَلُّوا كَمَا رَأَيْتُمُونِي أُصَلِّي
+                    </p>
+                    <p class="text-[11px] md:text-xs text-emerald-200/80 leading-relaxed italic">
+                        "Shalatlah kalian sebagaimana kalian melihat aku shalat." (HR. Bukhari no. 631)
+                    </p>
+                </div>
+            </section>
+
+            <!-- SEARCH & FILTER CHIPS TUTORIAL IBADAH -->
+            <div
+                class="space-y-2.5 bg-white dark:bg-[#15202d] p-3.5 md:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-[#253447]">
+                <!-- Input Pencarian -->
+                <div class="relative">
+                    <i
+                        class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" id="tutorial-search-input" oninput="filterTutorialGrid(this.value)"
+                        placeholder="Cari panduan wudhu, shalat fardhu, shalat sunnah, sujud sahwi, safar, jenazah..."
+                        class="w-full pl-9 pr-9 py-2.5 text-xs bg-slate-50 dark:bg-[#1c2836] border border-slate-200 dark:border-[#253447] rounded-xl text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition">
+                    <button type="button" id="tutorial-search-clear" onclick="clearTutorialSearch()"
+                        class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- Filter Chips Horizontal -->
+                <div class="flex items-center space-x-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs">
+                    <button type="button" onclick="filterTutorialByTag('semua', this)"
+                        class="tutorial-chip active px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-emerald-600 text-white shadow-sm transition">
+                        Semua Bab
+                    </button>
+                    <button type="button" onclick="filterTutorialByTag('thaharah', this)"
+                        class="tutorial-chip px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 transition">
+                        Thaharah (Bersuci)
+                    </button>
+                    <button type="button" onclick="filterTutorialByTag('fardhu', this)"
+                        class="tutorial-chip px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 transition">
+                        Shalat Fardhu
+                    </button>
+                    <button type="button" onclick="filterTutorialByTag('sunnah', this)"
+                        class="tutorial-chip px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 transition">
+                        Shalat Sunnah
+                    </button>
+                    <button type="button" onclick="filterTutorialByTag('sujud', this)"
+                        class="tutorial-chip px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 transition">
+                        Sujud Khusus
+                    </button>
+                    <button type="button" onclick="filterTutorialByTag('berjamaah', this)"
+                        class="tutorial-chip px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 transition">
+                        Berjamaah & Masbuq
+                    </button>
+                    <button type="button" onclick="filterTutorialByTag('safar', this)"
+                        class="tutorial-chip px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 transition">
+                        Shalat Safar (Jamak/Qashar)
+                    </button>
+                    <button type="button" onclick="filterTutorialByTag('jenazah', this)"
+                        class="tutorial-chip px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 transition">
+                        Perawatan Jenazah
+                    </button>
+                    <button type="button" onclick="filterTutorialByTag('puasa', this)"
+                        class="tutorial-chip px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-slate-100 dark:bg-[#1c2836] text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 transition">
+                        Puasa
+                    </button>
+                </div>
+            </div>
+
+            <!-- GRID 8 BAB KERANGKA DAFTAR ISI TUTORIAL (2 KOLOM RESPONSIVE) -->
+            <div id="tutorial-categories-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+
+                <!-- 1. THAHARAH (BERSUCI) -->
+                <div onclick="openTutorialCategoryModal('tutorial-thaharah')" data-tags="thaharah semua"
+                    class="tutorial-card group p-4 sm:p-5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm hover:shadow-lg hover:border-teal-500/50 dark:hover:border-teal-500/50 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-11 h-11 rounded-2xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 group-hover:bg-teal-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-droplet"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition">
+                                        Bab Thaharah (Bersuci)
+                                    </h3>
+                                    <span class="text-[11px] font-arabic text-slate-400">كتاب الطهارة</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-extrabold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 px-2.5 py-1 rounded-full uppercase border border-teal-100 dark:border-teal-900/50">
+                                6 Materi
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            Tata cara wudhu sempurna sesuai sunnah, rukun & sunnah mandi wajib (janabat), tayamum, dan
+                            cara menyucikan najis.
+                        </p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-teal-600 dark:text-teal-400">
+                        <span class="text-[11px] flex items-center gap-1.5"><i class="fa-regular fa-folder-open"></i>
+                            Buka Panduan</span>
+                        <i
+                            class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- 2. SHALAT FARDHU -->
+                <div onclick="openTutorialCategoryModal('tutorial-shalat-fardhu')" data-tags="fardhu semua"
+                    class="tutorial-card group p-4 sm:p-5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm hover:shadow-lg hover:border-emerald-500/50 dark:hover:border-emerald-500/50 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-11 h-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-person-praying"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition">
+                                        Tata Cara Shalat Fardhu
+                                    </h3>
+                                    <span class="text-[11px] font-arabic text-slate-400">صفة صلاة الفريضة</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-extrabold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-full uppercase border border-emerald-100 dark:border-emerald-900/50">
+                                7 Materi
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            Rukun 13 shalat, gerakan takbiratul ihram hingga salam, bacaan ruku'/itidal/sujud, tasyahud
+                            awal/akhir, dan qunut subuh.
+                        </p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                        <span class="text-[11px] flex items-center gap-1.5"><i class="fa-regular fa-folder-open"></i>
+                            Buka Panduan</span>
+                        <i
+                            class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- 3. SHALAT SUNNAH RAWATIB & NAWAFIL -->
+                <div onclick="openTutorialCategoryModal('tutorial-shalat-sunnah')" data-tags="sunnah semua"
+                    class="tutorial-card group p-4 sm:p-5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm hover:shadow-lg hover:border-indigo-500/50 dark:hover:border-indigo-500/50 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-11 h-11 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-moon"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">
+                                        Shalat Sunnah & Nawafil
+                                    </h3>
+                                    <span class="text-[11px] font-arabic text-slate-400">السنن الرواتب والنوافل</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-extrabold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-full uppercase border border-indigo-100 dark:border-indigo-900/50">
+                                8 Materi
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            Panduan shalat dhuha, tahajjud, witir, rawatib qabliyah-ba'diyah, istikharah, tasbih, hajat,
+                            dan shalat taubat.
+                        </p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                        <span class="text-[11px] flex items-center gap-1.5"><i class="fa-regular fa-folder-open"></i>
+                            Buka Panduan</span>
+                        <i
+                            class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- 4. PANDUAN SUJUD KHUSUS -->
+                <div onclick="openTutorialCategoryModal('tutorial-sujud')" data-tags="sujud semua"
+                    class="tutorial-card group p-4 sm:p-5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm hover:shadow-lg hover:border-purple-500/50 dark:hover:border-purple-500/50 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-11 h-11 rounded-2xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 group-hover:bg-purple-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-hands"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition">
+                                        Panduan Sujud Khusus
+                                    </h3>
+                                    <span class="text-[11px] font-arabic text-slate-400">سجود السهو والتلاوة
+                                        والشكر</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-extrabold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 px-2.5 py-1 rounded-full uppercase border border-purple-100 dark:border-purple-900/50">
+                                4 Materi
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            Tata cara sujud sahwi (sebab lupa/ragu rakaat), sujud tilawah saat mendengar ayat sajdah,
+                            dan sujud syukur nikmat.
+                        </p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-purple-600 dark:text-purple-400">
+                        <span class="text-[11px] flex items-center gap-1.5"><i class="fa-regular fa-folder-open"></i>
+                            Buka Panduan</span>
+                        <i
+                            class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- 5. SHALAT BERJAMAAH & MASBUQ -->
+                <div onclick="openTutorialCategoryModal('tutorial-berjamaah')" data-tags="berjamaah semua"
+                    class="tutorial-card group p-4 sm:p-5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm hover:shadow-lg hover:border-blue-500/50 dark:hover:border-blue-500/50 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-11 h-11 rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-users"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
+                                        Shalat Berjamaah & Masbuq
+                                    </h3>
+                                    <span class="text-[11px] font-arabic text-slate-400">صلاة الجماعة والمسبوق</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-extrabold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-full uppercase border border-blue-100 dark:border-blue-900/50">
+                                5 Materi
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            Syarat sah imam & makmum, adab meluruskan saf, dan tata cara makmum masbuq menyusul rakaat
+                            imam yang tertinggal.
+                        </p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-blue-600 dark:text-blue-400">
+                        <span class="text-[11px] flex items-center gap-1.5"><i class="fa-regular fa-folder-open"></i>
+                            Buka Panduan</span>
+                        <i
+                            class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- 6. SHALAT SAFAR (JAMAK & QASHAR) -->
+                <div onclick="openTutorialCategoryModal('tutorial-safar')" data-tags="safar semua"
+                    class="tutorial-card group p-4 sm:p-5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm hover:shadow-lg hover:border-cyan-500/50 dark:hover:border-cyan-500/50 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-11 h-11 rounded-2xl bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 group-hover:bg-cyan-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-route"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition">
+                                        Shalat Safar (Jamak & Qashar)
+                                    </h3>
+                                    <span class="text-[11px] font-arabic text-slate-400">صلاة المسافر والجمع
+                                        والقصر</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-extrabold bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 px-2.5 py-1 rounded-full uppercase border border-cyan-100 dark:border-cyan-900/50">
+                                5 Materi
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            Ketentuan jarak safar, tata cara jamak taqdim, jamak takhir, shalat qashar 2 rakaat, serta
+                            shalat di atas kendaraan.
+                        </p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-cyan-600 dark:text-cyan-400">
+                        <span class="text-[11px] flex items-center gap-1.5"><i class="fa-regular fa-folder-open"></i>
+                            Buka Panduan</span>
+                        <i
+                            class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- 7. PERAWATAN JENAZAH -->
+                <div onclick="openTutorialCategoryModal('tutorial-jenazah')" data-tags="jenazah semua"
+                    class="tutorial-card group p-4 sm:p-5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm hover:shadow-lg hover:border-amber-500/50 dark:hover:border-amber-500/50 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-11 h-11 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 group-hover:bg-amber-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-hand-holding-heart"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
+                                        Perawatan & Shalat Jenazah
+                                    </h3>
+                                    <span class="text-[11px] font-arabic text-slate-400">تجهيز الجنائز</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-extrabold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-full uppercase border border-amber-100 dark:border-amber-900/50">
+                                5 Materi
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            Kewajiban fardhu kifayah: memandikan jenazah, mengafani, rukun 4 takbir shalat jenazah, doa
+                            jenazah & pemakaman.
+                        </p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-amber-600 dark:text-amber-400">
+                        <span class="text-[11px] flex items-center gap-1.5"><i class="fa-regular fa-folder-open"></i>
+                            Buka Panduan</span>
+                        <i
+                            class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- 8. PUASA FARDHU & SUNNAH -->
+                <div onclick="openTutorialCategoryModal('tutorial-puasa')" data-tags="puasa semua"
+                    class="tutorial-card group p-4 sm:p-5 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-200/80 dark:border-[#253447] shadow-sm hover:shadow-lg hover:border-rose-500/50 dark:hover:border-rose-500/50 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-11 h-11 rounded-2xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 group-hover:bg-rose-600 group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-cloud-moon"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition">
+                                        Panduan Puasa Fardhu & Sunnah
+                                    </h3>
+                                    <span class="text-[11px] font-arabic text-slate-400">أحكام الصيام</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-extrabold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 px-2.5 py-1 rounded-full uppercase border border-rose-100 dark:border-rose-900/50">
+                                6 Materi
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            Rukun & pembatal puasa, niat puasa Ramadhan, fidyah & qadha, serta macam-macam puasa sunnah
+                            (Senin-Kamis, Daud, dll).
+                        </p>
+                    </div>
+                    <div
+                        class="mt-4 pt-3 border-t border-slate-100 dark:border-[#253447] flex items-center justify-between text-xs font-semibold text-rose-600 dark:text-rose-400">
+                        <span class="text-[11px] flex items-center gap-1.5"><i class="fa-regular fa-folder-open"></i>
+                            Buka Panduan</span>
+                        <i
+                            class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- EMPTY SEARCH STATE TUTORIAL -->
+            <div id="tutorial-search-empty"
+                class="hidden py-12 text-center space-y-2 bg-white dark:bg-[#15202d] rounded-2xl border border-slate-100 dark:border-[#253447]">
+                <div
+                    class="w-12 h-12 mx-auto rounded-full bg-slate-100 dark:bg-[#1c2836] text-slate-400 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </div>
+                <h4 class="text-sm font-bold text-slate-700 dark:text-slate-200">Panduan Tidak Ditemukan</h4>
+                <p class="text-xs text-slate-400 max-w-xs mx-auto">
+                    Materi tutorial ibadah yang Anda cari belum ditemukan. Coba gunakan kata kunci seperti "wudhu",
+                    "shalat", "sujud", atau "safar".
+                </p>
+                <button type="button" onclick="clearTutorialSearch()"
+                    class="mt-2 px-3.5 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-xl text-xs font-semibold hover:bg-emerald-100 transition">
+                    Tampilkan Semua Bab
+                </button>
+            </div>
+
+            <!-- NOTICE KONSEP KERANGKA BERTAHAP TUTORIAL -->
+            <div
+                class="p-4 bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/40 rounded-2xl flex items-start space-x-3 text-xs text-emerald-900 dark:text-emerald-200">
+                <i class="fa-solid fa-circle-info text-emerald-600 dark:text-emerald-400 mt-0.5 text-sm shrink-0"></i>
+                <div class="space-y-1">
+                    <p class="font-bold">Konsep Kerangka Panduan Ibadah Santri Aktif</p>
+                    <p class="text-[11px] text-emerald-800/80 dark:text-emerald-300/80 leading-relaxed">
+                        Kerangka panduan tutorial ibadah disusun sistematis berdasarkan fikih Mazhab Syafi'i (8 bab
+                        utama). Klik pada tiap bab untuk melihat rincian langkah dan materi. Panduan teks lengkap,
+                        dalil, dan diagram akan dilengkapi bertahap.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ==================== MODAL DAFTAR ISI TUTORIAL DETAIL ==================== -->
+        <div id="modal-tutorial-detail"
+            class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity">
+            <div
+                class="w-full max-w-2xl bg-white dark:bg-[#15202d] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-100 dark:border-[#253447] max-h-[90vh] flex flex-col overflow-hidden animate-fade-in">
+                <!-- Modal Header -->
+                <div
+                    class="p-4 sm:p-5 border-b border-slate-100 dark:border-[#253447] flex items-center justify-between bg-slate-50/70 dark:bg-[#1c2836]/60">
+                    <div class="flex items-center space-x-3">
+                        <div id="modal-tutorial-icon"
+                            class="w-10 h-10 rounded-2xl flex items-center justify-center text-lg shrink-0">
+                            <i class="fa-solid fa-book-open-reader"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 id="modal-tutorial-title"
+                                    class="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100">
+                                    Panduan Tutorial Ibadah
+                                </h3>
+                                <span id="modal-tutorial-badge"
+                                    class="text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase">
+                                    6 Materi
+                                </span>
+                            </div>
+                            <span id="modal-tutorial-arabic"
+                                class="text-xs font-arabic text-slate-400 block mt-0.5"></span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="closeTutorialCategoryModal()" aria-label="Tutup"
+                        class="w-8 h-8 rounded-full bg-slate-200/70 dark:bg-[#253447] hover:bg-slate-300 dark:hover:bg-[#2e4057] text-slate-600 dark:text-slate-300 flex items-center justify-center transition">
+                        <i class="fa-solid fa-xmark text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body (Scrollable Daftar Isi) -->
+                <div class="p-4 sm:p-6 overflow-y-auto space-y-4">
+                    <!-- Deskripsi Kategori -->
+                    <p id="modal-tutorial-desc"
+                        class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-[#1c2836] p-3 rounded-xl border border-slate-100 dark:border-[#253447]">
+                    </p>
+
+                    <!-- Header List -->
+                    <div class="flex items-center justify-between">
+                        <h4
+                            class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-list-ol text-emerald-600"></i> Rincian Materi Panduan
+                        </h4>
+                        <span class="text-[10px] text-slate-400">Kerangka Siap Dilengkapi</span>
+                    </div>
+
+                    <!-- Items Container -->
+                    <div id="modal-tutorial-items" class="space-y-2">
+                        <!-- Diisi via JavaScript -->
+                    </div>
+
+                    <!-- Kotak Status Pelengkapan Bertahap -->
+                    <div
+                        class="p-3.5 bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 rounded-xl text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
+                        <i class="fa-solid fa-clock-rotate-left text-amber-600 dark:text-amber-400 mt-0.5 shrink-0"></i>
+                        <div class="space-y-0.5">
+                            <p class="font-bold">Status: Konsep Kerangka Panduan Ibadah</p>
+                            <p class="text-[11px] text-amber-800/80 dark:text-amber-300/80">
+                                Rincian materi di atas siap diisi tata cara langkah demi langkah, rukun, syarat, bacaan
+                                Arab-Latin, serta dalil fikih secara bertahap.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div
+                    class="p-3 sm:p-4 border-t border-slate-100 dark:border-[#253447] bg-slate-50/70 dark:bg-[#1c2836]/60 flex items-center justify-between">
+                    <span class="text-[11px] text-slate-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-check text-emerald-500"></i> Siap Tahap Berikutnya
+                    </span>
+                    <button type="button" onclick="closeTutorialCategoryModal()"
+                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-sm transition active:scale-95">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+
 
         <!-- ==================== MAULID HUB ==================== -->
         <div id="page-maulid-hub" class="tab-content hidden space-y-4 px-4 md:px-8 py-4 md:py-6 max-w-7xl mx-auto">
@@ -26176,6 +28293,8 @@
     <script src="js/programs.js?v=32"></script>
     <script src="js/ppdb.js"></script>
     <script src="js/ibadah.js"></script>
+    <script src="js/kiblat.js"></script>
+    <script src="js/manaqib.js"></script>
     <script src="js/jadwal-sholat.js"></script>
     <script src="js/admin.js?v=36"></script>
     <script src="js/wali.js?v=1"></script>

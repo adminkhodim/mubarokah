@@ -1,4 +1,4 @@
-        // ==================== PORTAL IBADAH MODAL ====================
+// ==================== PORTAL IBADAH MODAL ====================
         function openIbadahModal(type) {
             const titleEl = document.getElementById('ibadah-title');
             const tagEl = document.getElementById('ibadah-tag');
@@ -1765,3 +1765,903 @@
         } catch (e) {
             // ignore if not supported
         }
+
+        // ==================== WIRID HUB (REFERENSI NU ONLINE) ====================
+        const ASNWiridData = {
+            'wirid-harian': {
+                title: "Wirid Harian",
+                arabic: "الأوراد اليومية",
+                count: "6 Bacaan",
+                badgeClass: "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60",
+                icon: "fa-solid fa-hands-praying",
+                iconClass: "bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400",
+                desc: "Kumpulan wirid harian yang biasa diamalkan sehari-hari, meliputi wirid seusai shalat fardhu (maktubah), dzikir pagi, dzikir petang, dzikir sebelum tidur, serta doa pembuka pintu rezeki.",
+                items: [
+                    { no: 1, title: "Wirid Ba'da Shalat Maktubah", sub: "Istighfar, tahlil, tasbih, tahmid, takbir, ayat kursi, dan doa ba'da shalat fardhu.", note: "Amaliah wajib harian santri" },
+                    { no: 2, title: "Dzikir & Doa Pagi Hari", sub: "Bacaan perlindungan pagi hari untuk keberkahan aktivitas dan keselamatan.", note: "Dibaca setelah Subuh hingga terbit matahari" },
+                    { no: 3, title: "Dzikir & Doa Petang Hari", sub: "Bacaan dzikir sore penenang jiwa dan perlindungan malam.", note: "Dibaca setelah Ashar menjelang Maghrib" },
+                    { no: 4, title: "Dzikir Sebelum Tidur", sub: "Ayat kursi, 3 Qul (Al-Ikhlas, Al-Falaq, An-Nas), tasbih fatimah & doa tidur.", note: "Sunnah Rasulullah SAW sebelum beristirahat" },
+                    { no: 5, title: "Sayyidul Istighfar", sub: "Rajanya istighfar untuk memohon ampunan agung kepada Allah SWT.", note: "Keutamaan jaminan surga bagi yang membacanya" },
+                    { no: 6, title: "Dzikir Pembuka Pintu Rezeki", sub: "Untaian dzikir shalawat, istighfar & asmaul husna untuk kelapangan rezeki.", note: "Amaliah ikhtiar batiniah santri" }
+                ]
+            },
+            'shalawat': {
+                title: "Shalawat Nabi",
+                arabic: "الصلوات المأثورة",
+                count: "35 Bacaan",
+                badgeClass: "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60",
+                icon: "fa-solid fa-heart",
+                iconClass: "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400",
+                desc: "Kumpulan shalawat muktabarah para auliya' dan shalawat ma'tsurah yang sangat dianjurkan untuk dibaca guna mendatangkan syafaat dan kecintaan kepada Baginda Nabi Muhammad SAW.",
+                items: [
+                    { no: 1, title: "Shalawat Nariyah (Tafrijiyyah)", sub: "Shalawat pelepas kesusahan dan pengabul hajat agung.", note: "Masyhur dibaca 11x / 41x / 4444x" },
+                    { no: 2, title: "Shalawat Thibbil Qulub (Syifa')", sub: "Shalawat obat hati, kesehatan jasmani, dan ketenangan jiwa.", note: "Penawar penyakit hati dan badan" },
+                    { no: 3, title: "Shalawat Munjiyat", sub: "Shalawat penyelamat dari segala marabahaya dan malapetaka.", note: "Dibaca saat munajat dan istighotsah" },
+                    { no: 4, title: "Shalawat Al-Fatih", sub: "Shalawat pembuka pintu kebaikan dan rahasia ilmu para arifin.", note: "Karya Syaikh Ahmad Al-Badawi / Al-Bakri" },
+                    { no: 5, title: "Shalawat Asyghil", sub: "Shalawat permohonan keselamatan kaum muslimin dari kezaliman.", note: "Populer di kalangan Nahdliyin & pesantren" },
+                    { no: 6, title: "Shalawat Ibrahimiyyah", sub: "Shalawat paling afdhal yang dibaca dalam tasyahud shalat.", note: "Muttafaq 'Alaih" },
+                    { no: 7, title: "Shalawat Jibril", sub: "Shalawat pendek penarik rezeki batin dan penyejuk hati.", note: "Shallallahu 'ala Muhammad" },
+                    { no: 8, title: "Shalawat Tarhim", sub: "Shalawat syahdu menjelang adzan Subuh berkumandang.", note: "Karya Syaikh Mahmud Khalil Al-Hushari" }
+                ]
+            },
+            'asmaul-husna': {
+                title: "Asmaul Husna",
+                arabic: "الأسماء الحسنى",
+                count: "3 Bacaan",
+                badgeClass: "bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60",
+                icon: "fa-solid fa-gem",
+                iconClass: "bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400",
+                desc: "99 Nama-Nama Agung Allah SWT beserta khasiat, arti, doa munajat Asmaul Husna, serta nadhom qasidah amaliah santri sebelum memulai pengajian.",
+                items: [
+                    { no: 1, title: "Teks 99 Asmaul Husna Lengkap", sub: "Lafazh Arab, transliterasi Latin, makna bahasa Indonesia & makrifat.", note: "Barang siapa menghafalnya masuk surga" },
+                    { no: 2, title: "Doa Munajat Khusus Asmaul Husna", sub: "Doa tawasul dengan asma-asma Allah setelah membaca 99 nama.", note: "Doa mustajab pembuka kemudahan" },
+                    { no: 3, title: "Nadhom Qasidah Asmaul Husna", sub: "Bismillahi bada'na wal hamdu lirabbina... lantunan amaliah pesantren.", note: "Amalan pembuka majelis & wirid santri" }
+                ]
+            },
+            'istighotsah': {
+                title: "Istighotsah & Mujahadah",
+                arabic: "الاستغاثة والمجاهدة",
+                count: "7 Bacaan",
+                badgeClass: "bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/60",
+                icon: "fa-solid fa-shield-halved",
+                iconClass: "bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400",
+                desc: "Doa permohonan pertolongan mendesak kepada Allah SWT, susunan Hadratussyaikh KH. M. Hasyim Asy'ari dan para masyayikh pendiri Nahdlatul Ulama.",
+                items: [
+                    { no: 1, title: "Istighotsah Nahdlatul Ulama", sub: "Susunan Hadratussyaikh KH. M. Hasyim Asy'ari (Arab, Latin & Terjemah).", note: "Amaliah resmi warga NU se-Indonesia" },
+                    { no: 2, title: "Doa Istighotsah Kubro", sub: "Doa agung penutup istighotsah memohon keselamatan bangsa dan umat.", note: "Dibaca berjamaah pada majelis akbar" },
+                    { no: 3, title: "Mujahadah Asmaul Husna", sub: "Rangkaian dzikir taqarrub ilallah melalui nama-nama Allah.", note: "Pembersih hati dari noda maksiat" },
+                    { no: 4, title: "Doa Malam Nishfu Sya'ban", sub: "Doa berkah umur, rezeki, dan ketetapan iman di malam Nishfu Sya'ban.", note: "Dibaca setelah Yasin 3 putaran" },
+                    { no: 5, title: "Doa Tolak Bala (Li Khamsatun)", sub: "Bait tawasul Ahlul Bait perlindungan wabah dan bala bencana.", note: "Amalan masyhur para sesepuh pesantren" },
+                    { no: 6, title: "Iftitah Istighotsah & Tawasul Fatihah", sub: "Hadhrah tawasul kepada Rasulullah SAW, sahabat, auliya' & ulama nusantara.", note: "Kunci pembuka ijabah doa" },
+                    { no: 7, title: "Doa Penutup Majelis Mujahadah", sub: "Doa istighfar bersama, permohonan istiqamah, dan husnul khatimah.", note: "Penutup khidmat munajat" }
+                ]
+            },
+            'ratib': {
+                title: "Ratib",
+                arabic: "الرواتب المشهورة",
+                count: "6 Bacaan",
+                badgeClass: "bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200/60",
+                icon: "fa-solid fa-scroll",
+                iconClass: "bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400",
+                desc: "Rangkaian susunan wirid dan ayat Al-Qur'an pilihan karya auliya' Hadhramaut yang menjadi benteng perlindungan rumah, keluarga, dan ketenangan batin.",
+                items: [
+                    { no: 1, title: "Ratib Al-Haddad", sub: "Karya Al-Imam Al-Quthb Abdullah bin Alawi Al-Haddad.", note: "Benteng keselamatan kota dan tempat tinggal" },
+                    { no: 2, title: "Ratib Al-Aththas", sub: "Karya Al-Imam Al-Habib Umar bin Abdurrahman Al-Aththas.", note: "Pembersih kotoran hati & perlindungan gaib" },
+                    { no: 3, title: "Ratib Al-Idrus (Syamsis Syumus)", sub: "Karya Al-Habib Abdullah bin Abu Bakar Al-Idrus Al-Akbar.", note: "Matahari dari segala rahasia dzikir" },
+                    { no: 4, title: "Ratib Al-Muhdhar", sub: "Susunan Al-Habib Umar Al-Muhdhar bin Abdurrahman Assegaf.", note: "Wirid pembuka futuh makrifat" },
+                    { no: 5, title: "Ratib Al-Bar", sub: "Karya Al-Habib Ali bin Abu Bakar Al-Bar.", note: "Wirid mustajab amaliah harian" },
+                    { no: 6, title: "Doa Fatihah & Penutup Ratib", sub: "Hadhrah fatihah penutup serta doa istiadzah dari segala godaan.", note: "Penutup pembacaan ratib" }
+                ]
+            },
+            'hizib': {
+                title: "Hizib",
+                arabic: "الأحزاب المباركة",
+                count: "9 Bacaan",
+                badgeClass: "bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/60",
+                icon: "fa-solid fa-feather-pointed",
+                iconClass: "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
+                desc: "Kumpulan wirid tingkat lanjut yang dirangkai para imam sufi besar, mengandung rahasia ayat, asma ilahi, dan perisai spiritual berkekuatan tinggi.",
+                items: [
+                    { no: 1, title: "Hizib Nashr", sub: "Karya Al-Imam Abul Hasan Asy-Syadzili.", note: "Pertolongan dahsyat mengalahkan musuh & kezaliman" },
+                    { no: 2, title: "Hizib Bahr", sub: "Karya Al-Imam Abul Hasan Asy-Syadzili (Hizib Lautan).", note: "Keselamatan safar, perisai ombak kehidupan" },
+                    { no: 3, title: "Hizib Nawawi", sub: "Karya Al-Imam Yahya bin Syaraf An-Nawawi (Pengarang Kitab Riyadhus Shalihin).", note: "Perisai dari godaan setan, jin, dan manusia jahat" },
+                    { no: 4, title: "Hizib Autad", sub: "Karya Sulthanul Auliya' Syaikh Abdul Qadir Al-Jailani.", note: "Empat tiang penyangga spiritual para wali" },
+                    { no: 5, title: "Hizib Wiqayah", sub: "Karya Asy-Syaikh Al-Akbar Muhyiddin Ibnu Arabi.", note: "Perlindungan rahasia huruf-huruf Al-Qur'an" },
+                    { no: 6, title: "Hizib Barqi (Halilintar)", sub: "Wirid benteng perlindungan diri yang masyhur di kalangan santri.", note: "Kewibawaan dan keteguhan iman" },
+                    { no: 7, title: "Hizib Sakran", sub: "Karya Al-Habib Ali bin Abu Bakar As-Sakran.", note: "Perlindungan dari orang zalim dan mara bahaya" },
+                    { no: 8, title: "Hizib Ikhfa'", sub: "Karya Al-Imam Abul Hasan Asy-Syadzili.", note: "Penyamaran dari pandangan orang-orang yang berniat buruk" },
+                    { no: 9, title: "Hizib Maghrobi", sub: "Wirid perlindungan thariqah masyhur dari tanah Maghrib (Maroko).", note: "Diamalkan dengan sanad keilmuan yang jelas" }
+                ]
+            },
+            'manaqib': {
+                title: "Manaqib Syekh Abdul Qadir",
+                arabic: "مناقب الشيخ عبد القادر",
+                count: "9 Bacaan",
+                badgeClass: "bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200/60",
+                icon: "fa-solid fa-book-bookmark",
+                iconClass: "bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400",
+                desc: "Kitab Manaqib Jawahirul Ma'ani yang mengisahkan riwayat hidup, akhlak mulia, dan karomah Sulthanul Auliya' Syekh Abdul Qadir Al-Jailani.",
+                items: [
+                    { no: 1, title: "Muqaddimah & Tawasul Fatihah Manaqib", sub: "Hadhrah fatihah pembuka majelis manaqiban kepada Rasulullah dan Syaikh Abdul Qadir.", note: "Adab pembuka pembacaan manaqib" },
+                    { no: 2, title: "Fashl 1: Kelahiran & Nasab Syarif", sub: "Silsilah nasab mulia dari jalur Sayyidina Hasan dan Sayyidina Husein.", note: "Tanda-tanda kewalian sejak masa bayi" },
+                    { no: 3, title: "Fashl 2: Menuntut Ilmu & Akhlak Kejujuran", sub: "Kisah pengorbanan mencari ilmu di Baghdad dan wejangan ibu tentang kejujuran.", note: "Teladan akhlak santri penuntut ilmu" },
+                    { no: 4, title: "Fashl 3: Karomah & Pertolongan Kaum Lemah", sub: "Kisah kasih sayang beliau kepada kaum dhuafa dan mustadh'afin.", note: "Kemurahan hati tiada tara" },
+                    { no: 5, title: "Fashl 4: Wejangan & Khutbah Ruhani", sub: "Intisari nasihat beliau yang menggetarkan hati di majelis Baghdad.", note: "Pembersih hati dan peneguh tauhid" },
+                    { no: 6, title: "Fashl 5: Karamah Ijabah Doa", sub: "Karamah doa beliau yang mustajab dalam menyelamatkan para muridnya.", note: "Kekuasaan Allah yang diperlihatkan lewat kekasih-Nya" },
+                    { no: 7, title: "Fashl 6: Derajat Sulthanul Auliya'", sub: "Penegasan kedudukan beliau sebagai pimpinan para wali di zamannya.", note: "Qadamiy hadzihi 'ala raqabati kulli waliyyillah" },
+                    { no: 8, title: "Fashl 7: Wafat & Wasiat Terakhir", sub: "Detik-detik kepulangan beliau ke hadirat Allah SWT serta wasiat emasnya.", note: "Warisan ajaran istiqamah" },
+                    { no: 9, title: "Doa Penutup Manaqib Jawahirul Ma'ani", sub: "Doa munajat penutup memohon barakah dan terkabulnya segala hajat.", note: "Dibaca khusyuk di akhir manaqiban" }
+                ]
+            },
+            'dalail': {
+                title: "Dala'ilul Khairat",
+                arabic: "دلائل الخيرات",
+                count: "13 Bacaan",
+                badgeClass: "bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200/60",
+                icon: "fa-solid fa-book",
+                iconClass: "bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400",
+                desc: "Kitab himpunan shalawat legendaris karya Al-Imam Abu Abdillah Muhammad bin Sulaiman Al-Jazuli yang diamalkan para santri dan ahli thariqah di seluruh dunia.",
+                items: [
+                    { no: 1, title: "Muqaddimah Kitab Dala'ilul Khairat", sub: "Fadhilah shalawat dan latar belakang penyusunan kitab oleh Imam Al-Jazuli.", note: "Kisah sumur dan karomah anak kecil" },
+                    { no: 2, title: "Asmaul Husna Dala'il", sub: "Untaian nama-nama agung Allah SWT pembuka wirid Dala'ilul Khairat.", note: "Taqarrub sebelum melantunkan shalawat" },
+                    { no: 3, title: "Asma'un Nabi SAW (201 Nama Mulia)", sub: "Daftar 201 nama mulia dan gelar Baginda Nabi Muhammad SAW.", note: "Membawa keberkahan dan mahabbah" },
+                    { no: 4, title: "Hizib Wirid Hari Senin (Hizbul Itsnain)", sub: "Bacaan bagian pertama wirid shalawat permulaan pekan.", note: "Hari kelahiran Baginda Rasulullah SAW" },
+                    { no: 5, title: "Hizib Wirid Hari Selasa (Hizbut Tsalasa')", sub: "Bacaan bagian kedua rangkaian shalawat harian Dala'il.", note: "Istiqamah mengalirkan shalawat" },
+                    { no: 6, title: "Hizib Wirid Hari Rabu (Hizbul Arbi'a')", sub: "Bacaan bagian ketiga rangkaian shalawat harian Dala'il.", note: "Kesejukan jiwa di pertengahan pekan" },
+                    { no: 7, title: "Hizib Wirid Hari Kamis (Hizbul Khamis)", sub: "Bacaan bagian keempat rangkaian shalawat harian Dala'il.", note: "Menyongsong malam Sayyidul Ayyam" },
+                    { no: 8, title: "Hizib Wirid Hari Jum'at (Hizbul Jumu'ah)", sub: "Bacaan bagian kelima pada hari paling mulia (Sayyidul Ayyam).", note: "Pahala shalawat berlipat ganda" },
+                    { no: 9, title: "Hizib Wirid Hari Sabtu (Hizbus Sabti)", sub: "Bacaan bagian keenam rangkaian shalawat harian Dala'il.", note: "Peneduh batin di akhir pekan" },
+                    { no: 10, title: "Hizib Wirid Hari Ahad (Hizbul Ahad)", sub: "Bacaan bagian ketujuh rangkaian shalawat harian Dala'il.", note: "Penutup putaran mingguan" },
+                    { no: 11, title: "Hizib Hari Senin Kedua", sub: "Bacaan penyempurna putaran khataman Dala'ilul Khairat.", note: "Menyempurnakan hizib mingguan" },
+                    { no: 12, title: "Doa Selesai Khatam Dala'ilul Khairat", sub: "Doa permohonan syafaat, husnul khatimah, dan kedekatan dengan Rasulullah SAW.", note: "Doa mustajab penutup khatam" },
+                    { no: 13, title: "Qasidah Istighfar Al-Jazuli", sub: "Untaian bait penyesalan dan permohonan maghfirah karya Imam Al-Jazuli.", note: "Munajat tawadhu' hamba" }
+                ]
+            }
+        };
+
+        function openWiridPage(updateUrl = true) {
+            if (typeof switchTab === 'function') {
+                switchTab('wirid-hub', updateUrl);
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function openWiridCategoryModal(catKey) {
+            if (catKey === 'manaqib') {
+                if (typeof openManaqibPage === 'function') {
+                    openManaqibPage();
+                    return;
+                }
+            }
+            const cat = ASNWiridData[catKey];
+            if (!cat) return;
+
+            const modal = document.getElementById('modal-wirid-detail');
+            const titleEl = document.getElementById('modal-wirid-title');
+            const arabicEl = document.getElementById('modal-wirid-arabic');
+            const badgeEl = document.getElementById('modal-wirid-badge');
+            const iconContainer = document.getElementById('modal-wirid-icon');
+            const descEl = document.getElementById('modal-wirid-desc');
+            const itemsContainer = document.getElementById('modal-wirid-items');
+
+            if (titleEl) titleEl.innerText = cat.title;
+            if (arabicEl) arabicEl.innerText = cat.arabic;
+            if (badgeEl) {
+                badgeEl.className = "text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase " + (cat.badgeClass || '');
+                badgeEl.innerText = cat.count;
+            }
+            if (iconContainer) {
+                iconContainer.className = "w-10 h-10 rounded-2xl flex items-center justify-center text-lg shrink-0 " + (cat.iconClass || '');
+                iconContainer.innerHTML = `<i class="${cat.icon}"></i>`;
+            }
+            if (descEl) descEl.innerText = cat.desc;
+
+            if (itemsContainer) {
+                itemsContainer.innerHTML = cat.items.map(item => `
+                    <div class="p-3 bg-white dark:bg-[#1c2836] rounded-xl border border-slate-100 dark:border-[#253447] shadow-sm flex items-start justify-between gap-3 hover:border-indigo-400 dark:hover:border-indigo-500 transition">
+                        <div class="flex items-start space-x-3">
+                            <span class="w-6 h-6 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                                ${item.no}
+                            </span>
+                            <div>
+                                <h5 class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 leading-snug">
+                                    ${item.title}
+                                </h5>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                                    ${item.sub}
+                                </p>
+                                ${item.note ? `<span class="inline-block mt-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md"><i class="fa-solid fa-circle-check text-[9px] mr-1"></i>${item.note}</span>` : ''}
+                            </div>
+                        </div>
+                        <span class="shrink-0 text-[10px] font-semibold text-slate-400 bg-slate-50 dark:bg-[#15202d] border border-slate-200/60 dark:border-[#253447] px-2 py-1 rounded-lg">
+                            Kerangka
+                        </span>
+                    </div>
+                `).join('');
+            }
+
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            }
+        }
+
+        function closeWiridCategoryModal() {
+            const modal = document.getElementById('modal-wirid-detail');
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }
+        }
+
+        function filterWiridGrid(searchVal) {
+            const q = (searchVal || '').toLowerCase().trim();
+            const cards = document.querySelectorAll('.wirid-card');
+            const clearBtn = document.getElementById('wirid-search-clear');
+            const emptyState = document.getElementById('wirid-search-empty');
+            let visibleCount = 0;
+
+            if (clearBtn) {
+                if (q.length > 0) clearBtn.classList.remove('hidden');
+                else clearBtn.classList.add('hidden');
+            }
+
+            cards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                if (!q || text.includes(q)) {
+                    card.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+
+            if (emptyState) {
+                if (visibleCount === 0) emptyState.classList.remove('hidden');
+                else emptyState.classList.add('hidden');
+            }
+        }
+
+        function clearWiridSearch() {
+            const input = document.getElementById('wirid-search-input');
+            if (input) input.value = '';
+            filterWiridGrid('');
+        }
+
+        function filterWiridByTag(tag, btn) {
+            const chips = document.querySelectorAll('.wirid-chip');
+            chips.forEach(c => {
+                c.classList.remove('active', 'bg-indigo-600', 'text-white', 'shadow-sm');
+                c.classList.add('bg-slate-100', 'dark:bg-[#1c2836]', 'text-slate-600', 'dark:text-slate-300');
+            });
+
+            if (btn) {
+                btn.classList.add('active', 'bg-indigo-600', 'text-white', 'shadow-sm');
+                btn.classList.remove('bg-slate-100', 'dark:bg-[#1c2836]', 'text-slate-600', 'dark:text-slate-300');
+            }
+
+            const cards = document.querySelectorAll('.wirid-card');
+            let visibleCount = 0;
+            const targetTag = (tag || 'semua').toLowerCase();
+
+            cards.forEach(card => {
+                const cardTags = (card.getAttribute('data-tags') || '').toLowerCase();
+                if (targetTag === 'semua' || cardTags.includes(targetTag)) {
+                    card.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+
+            const emptyState = document.getElementById('wirid-search-empty');
+            if (emptyState) {
+                if (visibleCount === 0) emptyState.classList.remove('hidden');
+                else emptyState.classList.add('hidden');
+            }
+        }
+
+        window.openWiridPage = openWiridPage;
+        window.openWiridCategoryModal = openWiridCategoryModal;
+        window.closeWiridCategoryModal = closeWiridCategoryModal;
+        window.filterWiridGrid = filterWiridGrid;
+        window.clearWiridSearch = clearWiridSearch;
+        window.filterWiridByTag = filterWiridByTag;
+
+        // ==================== KUMPULAN DOA (REFERENSI NU ONLINE DOA) ====================
+        const ASNDoaData = {
+            'doa-keseharian': {
+                title: "Doa Keseharian",
+                arabic: "الأدعية اليومية",
+                count: "8 Doa",
+                badgeClass: "bg-orange-50 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 border border-orange-200/60",
+                icon: "fa-solid fa-sun",
+                iconClass: "bg-orange-50 dark:bg-orange-950/50 text-orange-600 dark:text-orange-400",
+                desc: "Kumpulan doa harian yang diamalkan santri dari bangun tidur hingga beristirahat kembali, menjaga adab dan menghadirkan dzikrullah dalam setiap aktivitas keseharian.",
+                items: [
+                    { no: 1, title: "Doa Bangun Tidur", sub: "Alhamdulillāhil ladzī ahyānā ba'da mā amātanā wa ilaihin nusyūr.", note: "Dibaca segera saat membuka mata" },
+                    { no: 2, title: "Doa Hendak Tidur", sub: "Bismikallāhumma ahyā wa bismika amūt.", note: "Sunnah berbaring menghadap kiblat" },
+                    { no: 3, title: "Doa Masuk Kamar Mandi (WC)", sub: "Allāhumma innī a'ūdzu bika minal khubutsi wal khabā'its.", note: "Mendahulukan kaki kiri" },
+                    { no: 4, title: "Doa Keluar Kamar Mandi", sub: "Ghufrānaka, alhamdulillāhil ladzī adzhaba 'annil adzā wa 'āfānī.", note: "Mendahulukan kaki kanan" },
+                    { no: 5, title: "Doa Memakai Pakaian", sub: "Alhamdulillāhil ladzī kasānī hādzā wa razaqanīhi min ghairi haulin minnī wa lā quwwatin.", note: "Memohon keberkahan pakaian penutup aurat" },
+                    { no: 6, title: "Doa Bercermin", sub: "Allāhumma kamā hassanta khalqī fahassin khuluqī.", note: "Keseimbangan keelokan rupa dan akhlak" },
+                    { no: 7, title: "Doa Keluar Rumah (Tawakkal)", sub: "Bismillāhi tawakkaltu 'alallāh, lā haula wa lā quwwata illā billāh.", note: "Perlindungan malaikat di sepanjang perjalanan" },
+                    { no: 8, title: "Doa Masuk Rumah", sub: "Bismillāhi walajnā wa bismillāhi kharajnā wa 'alallāhi rabbinā tawakkalnā.", note: "Menebarkan salam dan kedamaian keluarga" }
+                ]
+            },
+            'doa-rezeki': {
+                title: "Doa Rezeki & Usaha",
+                arabic: "أدعية الرزق والعمل",
+                count: "6 Doa",
+                badgeClass: "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60",
+                icon: "fa-solid fa-coins",
+                iconClass: "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400",
+                desc: "Doa-doa ma'tsur pembuka kelapangan rezeki halal, kemudahan ikhtiar berniaga dan bekerja, pelunas tanggungan hutang, serta permohonan hidup berkah dan qana'ah.",
+                items: [
+                    { no: 1, title: "Doa Pembuka Pintu Rezeki Halal", sub: "Allāhumma innī as'aluka 'ilman nāfi'an, wa rizqan thayyiban, wa 'amalan mutaqabbalan.", note: "Dibaca ba'da shalat Subuh" },
+                    { no: 2, title: "Doa Kemudahan Urusan & Usaha", sub: "Allāhumma lā sahla illā mā ja'altahū sahlā, wa anta taj'alul hazna idzā syi'ta sahlā.", note: "Penguat tekad saat menghadapi kesulitan" },
+                    { no: 3, title: "Doa Pelunas Hutang & Beban Hidup", sub: "Allāhummakfinī bihalālika 'an harāmika wa aghninī bifadhlika 'amman siwāka.", note: "Amalan mustajab Rasulullah SAW kepada Ali RA" },
+                    { no: 4, title: "Doa Perlindungan dari Kesempitan & Kemalasan", sub: "Allāhumma innī a'ūdzu bika minal hammi wal hazan, wal 'ajzi wal kasal...", note: "Perisai batin dari keputusasaan ekonomi" },
+                    { no: 5, title: "Doa Berkah Perniagaan & Pekerjaan", sub: "Yā Hayyu Yā Qayyūmu birahmatika astaghīts, ashlih lī sya'nī kullah...", note: "Penyempurna ikhtiar lahiriah santri" },
+                    { no: 6, title: "Doa Memohon Cukup & Qana'ah", sub: "Allāhumma qanni'nī bimā razaqtanī wa bārik lī fīhi wakhluf 'alā kulli ghā'ibatin lī bikhoir.", note: "Ketenangan hati mensyukuri rezeki" }
+                ]
+            },
+            'doa-tolak-bala': {
+                title: "Doa Tolak Bala & Perlindungan",
+                arabic: "أدعية دفع البلاء",
+                count: "6 Doa",
+                badgeClass: "bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200/60",
+                icon: "fa-solid fa-shield-halved",
+                iconClass: "bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400",
+                desc: "Benteng doa perlindungan dari marabahaya, wabah penyakit menular, godaan setan, kejahatan manusia, bencana alam, serta permohonan keselamatan di dunia dan akhirat.",
+                items: [
+                    { no: 1, title: "Doa Tolak Bala (Li Khamsatun)", sub: "Lī khamsatun uthfī bihā harral wabā'il hathimah: Al-Musthafā wal Murtadhā wabnāhumā wa Fāthimah.", note: "Tawasul masyhur ahlul bait di pesantren" },
+                    { no: 2, title: "Doa Bismillahilladzi La Yadhurru", sub: "Bismillāhil ladzī lā yadhurru ma'asmihī syai'un fil ardhi wa lā fis samā'i wa huwas samī'ul 'alīm.", note: "Perisai pagi & petang 3x" },
+                    { no: 3, title: "Doa Terhindar dari Penyakit Berbahaya", sub: "Allāhumma innī a'ūdzu bika minal barashi wal junūni wal judzāmi wa min sayyi'il asqām.", note: "Benteng kesehatan keluarga" },
+                    { no: 4, title: "Doa Angin Kencang & Gemuruh Petir", sub: "Subhānal ladzī yusabbihur ra'du bihamdihī wal malā'ikatu min khīfatih.", note: "Doa tasbih saat mendengar guntur" },
+                    { no: 5, title: "Doa Menghadapi Orang Zalim / Penguasa Jahat", sub: "Allāhumma innā naj'aluka fī nuhūrihim wa na'ūdzu bika min syurūrihim.", note: "Doa keteguhan dan perlindungan diri" },
+                    { no: 6, title: "Doa Saat Tertimpa Musibah (Istirja')", sub: "Innā lillāhi wa innā ilaihi rāji'ūn, allāhumma'-jurnī fī mushībatī wakhluf lī khairan minhā.", note: "Janji ganti kebaikan yang lebih mulia" }
+                ]
+            },
+            'doa-kesehatan': {
+                title: "Doa Kesehatan & Kesembuhan",
+                arabic: "أدعية الشفاء والعافية",
+                count: "5 Doa",
+                badgeClass: "bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200/60",
+                icon: "fa-solid fa-heart-pulse",
+                iconClass: "bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400",
+                desc: "Doa kesembuhan dari Rasulullah SAW saat menjenguk sanak keluarga atau sahabat yang sakit, doa ruqyah mandiri, serta doa permohonan afiat jasmani dan rohani.",
+                items: [
+                    { no: 1, title: "Doa Menjenguk Orang Sakit", sub: "Lā ba'sa thahūrun insyā'allāh. Allāhummasyfi anta asy-syāfī lā syifā'a illā syifā'uk.", note: "Doa penyejuk hati orang sakit" },
+                    { no: 2, title: "Doa Menghilangkan Rasa Sakit di Badan", sub: "Meletakkan tangan di bagian sakit: Bismillah 3x, A'ūdzu bi'izzatillāhi wa qudratihī min syarri mā ajidu wa uhādziru 7x.", note: "Hadits shahih riwayat Imam Muslim" },
+                    { no: 3, title: "Doa Afiat Lahir Batin Setiap Pagi", sub: "Allāhumma 'āfinī fī badanī, allāhumma 'āfinī fī sam'ī, allāhumma 'āfinī fī basharī.", note: "Dibaca 3x pagi dan petang" },
+                    { no: 4, title: "Doa Ruqyah Syar'iyyah Penawar Penyakit", sub: "Membaca Al-Fatihah, Ayat Kursi, dan Mu'awwidzatain (Al-Falaq & An-Nas).", note: "Pembersih gangguan fisik dan non-fisik" },
+                    { no: 5, title: "Doa Syukur Atas Kesembuhan", sub: "Alhamdulillāhil ladzī 'āfānī mimmābtalāka bihī wa fadhdhalanī 'alā katsīrin mimman khalaqa tafdhīlā.", note: "Peredam takabur dan wujud rasa syukur" }
+                ]
+            },
+            'doa-shalat': {
+                title: "Doa Shalat & Wudhu",
+                arabic: "أدعية الصلاة والوضوء",
+                count: "7 Doa",
+                badgeClass: "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60",
+                icon: "fa-solid fa-mosque",
+                iconClass: "bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400",
+                desc: "Rangkaian doa dari basuhan pertama bersuci (wudhu), doa menyambut panggilan adzan, doa iftitah, bacaan qunut subuh, hingga doa mustajab ba'da shalat fardhu.",
+                items: [
+                    { no: 1, title: "Doa Sebelum Membasuh Wudhu", sub: "Nawaitul wudhū'a lirof'il hadatsil ashghori fardhol lillāhi ta'ālā.", note: "Diniatkan saat membasuh wajah" },
+                    { no: 2, title: "Doa Selesai Wudhu Sempurna", sub: "Asyhadu allā ilāha illallāh... Allāhummaj'alnī minat tawwābīna waj'alnī minal mutathahhirīn.", note: "Dibukakan 8 pintu surga" },
+                    { no: 3, title: "Doa Sesudah Mendengar Adzan", sub: "Allāhumma rabba hādzihid da'watit tāmma wash shalātil qā'imah, āti sayyidanā Muhammadanil washīlah...", note: "Memperoleh syafaat Rasulullah SAW" },
+                    { no: 4, title: "Doa Iftitah Shalat Fardhu", sub: "Allāhu akbaru kabīrā, wal hamdulillāhi katsīrā, wa subhānallāhi bukrotaw wa ashīlā...", note: "Sunnah dibaca sebelum membaca Al-Fatihah" },
+                    { no: 5, title: "Doa Qunut Shalat Subuh", sub: "Allāhummah-dinī fīman hadait, wa 'āfinī fīman 'āfait, wa tawallanī fīman tawallait...", note: "Sunnah ab'adh dalam Mazhab Syafi'i" },
+                    { no: 6, title: "Doa Sujud Tilawah & Sajdah", sub: "Sajada wajhiya lilladzī khalaqahū wa shawwarahū wa syaqqa sam'ahū wa basharahū...", note: "Dibaca saat sujud mendengar ayat sajdah" },
+                    { no: 7, title: "Doa Penutup Ba'da Shalat Maktubah", sub: "Allāhumma a'innī 'alā dzikrika wa syukrika wa husni 'ibādatik.", note: "Wasiat Rasulullah SAW kepada Mu'adz bin Jabal" }
+                ]
+            },
+            'doa-safar': {
+                title: "Doa Safar (Perjalanan)",
+                arabic: "أدعية السفر",
+                count: "5 Doa",
+                badgeClass: "bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200/60",
+                icon: "fa-solid fa-plane-departure",
+                iconClass: "bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400",
+                desc: "Doa keselamatan bagi musafir ketika hendak bepergian, menaiki kendaraan darat, laut, maupun udara, singgah di perantauan, hingga kembali ke kampung halaman.",
+                items: [
+                    { no: 1, title: "Doa Naik Kendaraan Darat", sub: "Subhānal ladzī sakhkhara lanā hādzā wa mā kunnā lahū muqrinīn, wa innā ilā rabbinā lamunqalibūn.", note: "Dibaca saat kendaraan mulai melaju" },
+                    { no: 2, title: "Doa Naik Kapal Laut / Pesawat Udara", sub: "Bismillāhi majrēhā wa mursāhā, inna rabbī laghafūrur rahīm.", note: "Doa Nabi Nuh AS saat mengarungi bahtera" },
+                    { no: 3, title: "Doa Singgah di Suatu Tempat Baru", sub: "A'ūdzu bikalimātillāhit tāmmāti min syarri mā khalaq.", note: "Terlindungi dari gangguan makhluk halus & hewan" },
+                    { no: 4, title: "Doa Mohon Keselamatan Keluarga yang Ditinggal", sub: "Astaudi'ullāha dīnakum wa amānatakum wa khawātīma a'mālikum.", note: "Pesan salam perpisahan musafir" },
+                    { no: 5, title: "Doa Kembali dari Safar Menuju Rumah", sub: "Āyibūna tā'ibūna 'ābidūna lirabbinā hāmidūn.", note: "Ungkapan rasa syukur selamat sampai tujuan" }
+                ]
+            },
+            'doa-ilmu': {
+                title: "Doa Penuntut Ilmu",
+                arabic: "أدعية طلب العلم",
+                count: "6 Doa",
+                badgeClass: "bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/60",
+                icon: "fa-solid fa-graduation-cap",
+                iconClass: "bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400",
+                desc: "Untaian doa penuntut ilmu pesantren untuk memohon kemudahan memahami kitab, ketajaman hafalan Al-Qur'an dan nadhom, kelancaran lisan, serta keberkahan para guru.",
+                items: [
+                    { no: 1, title: "Doa Sebelum Memulai Belajar / Ngaji", sub: "Rabbi zidnī 'ilmā, warzuqnī fahmā, waj'alnī minash shālihīn.", note: "Adab pembuka halaqah ta'lim santri" },
+                    { no: 2, title: "Doa Penerang Hati & Ketajaman Akal", sub: "Allāhummakhrijnā min zhulumātil wahmi wa akrimnā binūril fahmi waftah 'alainā bima'rifatika...", note: "Doa futuh keilmuan para ulama" },
+                    { no: 3, title: "Doa Kelancaran Berbicara & Menjelaskan", sub: "Rabbisy-rah lī shadrī, wa yassir lī amrī, wahlul 'uqdatam mil lisānī, yafqahū qaulī.", note: "Doa Nabi Musa AS saat berdakwah" },
+                    { no: 4, title: "Doa Mengikat Hafalan Al-Qur'an", sub: "Allāhummarhamnī bitarkil ma'āshī abadan mā abqaitanī... wa nawwir bil kitābi basharī.", note: "Menjaga Al-Qur'an dari kelupaan" },
+                    { no: 5, title: "Doa Sesudah Belajar / Mengkaji Kitab", sub: "Allāhumma innī astaudi'uka mā 'allamtanīhi fardud-hu ilayya 'inda hājatī ilaih...", note: "Ilmu tidak hilang saat dibutuhkan" },
+                    { no: 6, title: "Doa Berbakti & Memuliakan Guru / Kyai", sub: "Allāhummastur 'aiba syaikhī 'annī wa lā tadzhab bibarakati 'ilmihī minnī.", note: "Kunci utama keberkahan ilmu santri" }
+                ]
+            },
+            'doa-nabi': {
+                title: "Doa Para Nabi & Rasul",
+                arabic: "أدعية الأنبياء",
+                count: "7 Doa",
+                badgeClass: "bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/60",
+                icon: "fa-solid fa-star-and-crescent",
+                iconClass: "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
+                desc: "Doa-doa agung para nabi dan rasul yang diabadikan di dalam Al-Qur'an, menjadi teladan munajat permohonan ampunan, keturunan, ketabahan, dan kebaikan hidup.",
+                items: [
+                    { no: 1, title: "Doa Taubat Nabi Adam AS", sub: "Rabbanā zhalamnā anfusanā wa illam taghfir lanā wa tarhamnā lanakūnanna minal khāsirīn.", note: "QS. Al-A'raf: 23" },
+                    { no: 2, title: "Doa Nabi Yunus AS (Dzun Nun)", sub: "Lā ilāha illā anta subhānaka innī kuntu minazh zhālimīn.", note: "Pelepas himpitan kesusahan teramat berat" },
+                    { no: 3, title: "Doa Nabi Musa AS Saat Membutuhkan Kebaikan", sub: "Rabbi innī limā anzalta ilayya min khairin faqīr.", note: "QS. Al-Qashash: 24" },
+                    { no: 4, title: "Doa Nabi Ibrahim AS Memohon Negeri Aman", sub: "Rabbij'al hādzā baladan āminaw warzuq ahlahū minats tsamarāt.", note: "Doa keberkahan tanah air dan keturunan" },
+                    { no: 5, title: "Doa Nabi Zakaria AS Memohon Anak Shalih", sub: "Rabbi lā tadzarnī fardan wa anta khairul wāritsīn.", note: "QS. Al-Anbiya: 89" },
+                    { no: 6, title: "Doa Nabi Ayyub AS Saat Ditimpa Ujian Sakit", sub: "Annī massaniyad durru wa anta arhamur rāhimīn.", note: "Keteladanan kesabaran puncak" },
+                    { no: 7, title: "Doa Sapu Jagat Nabi Muhammad SAW", sub: "Rabbanā ātinā fid dunyā hasanah, wa fil ākhirati hasanah, wa qinā 'adzāban nār.", note: "Doa paling sering dibaca Rasulullah SAW" }
+                ]
+            },
+            'doa-keluarga': {
+                title: "Pernikahan & Keluarga",
+                arabic: "أدعية النكاح والأسرة",
+                count: "5 Doa",
+                badgeClass: "bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200/60",
+                icon: "fa-solid fa-people-roof",
+                iconClass: "bg-pink-50 dark:bg-pink-950/50 text-pink-600 dark:text-pink-400",
+                desc: "Doa keberkahan pernikahan pengantin baru, doa mewujudkan keluarga sakinah mawaddah wa rahmah, doa memohon anak shalih shalihah, dan bakti kepada orang tua.",
+                items: [
+                    { no: 1, title: "Doa Keberkahan Pengantin Baru", sub: "Bārakallāhu laka wa bāraka 'alaika wa jama'a bainakumā fī khair.", note: "Sunnah dibacakan saat menghadiri pernikahan" },
+                    { no: 2, title: "Doa Memohon Pasangan & Keturunan Penyejuk Hati", sub: "Rabbanā hab lanā min azwājinā wa dzurriyyātinā qurrata a'yun, waj'alnā lil muttaqīna imāmā.", note: "QS. Al-Furqan: 74" },
+                    { no: 3, title: "Doa Keselamatan Ibu Hamil & Janin", sub: "Allāhummakhluq fī bathnī waladan shālihan... wa tsabbit fī qalbihil īmāna bika wa birasūlik.", note: "Amalan memohon persalinan mudah dan berkah" },
+                    { no: 4, title: "Doa Berbakti Kepada Kedua Orang Tua", sub: "Rabbigh-firlī wa liwālidayya warhamhumā kamā rabbayānī shaghīrā.", note: "Kewajiban harian setiap anak muslim" },
+                    { no: 5, title: "Doa Keharmonisan Rumah Tangga", sub: "Allāhumma allif baina qulūbinā wa ashlih dzāta baininā wahdinā subulas salām.", note: "Mencegah perpecahan dan salah paham" }
+                ]
+            },
+            'doa-acara': {
+                title: "Doa Acara & Khotmil Qur'an",
+                arabic: "أدعية المناسبات",
+                count: "5 Doa",
+                badgeClass: "bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60",
+                icon: "fa-solid fa-champagne-glasses",
+                iconClass: "bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400",
+                desc: "Kumpulan doa penutup majelis pengajian santri, doa khotmil Qur'an, doa tasyakuran menempati rumah baru, serta doa keberkahan majelis pertemuan.",
+                items: [
+                    { no: 1, title: "Doa Penutup Majelis (Kafaratul Majelis)", sub: "Subhānakallāhumma wa bihamdika, asyhadu allā ilāha illā anta, astaghfiruka wa atūbu ilaik.", note: "Penebus kekhilafan selama majelis berlangsung" },
+                    { no: 2, title: "Doa Khotmil Qur'an Santri", sub: "Allāhummarhamnā bil Qur'ān, waj'alhu lanā imāmaw wa nūraw wa hudaw wa rahmah...", note: "Dibaca khusyuk saat khataman Al-Qur'an" },
+                    { no: 3, title: "Doa Tasyakuran Rumah Baru / Tempat Usaha", sub: "Allāhumma bārik lanā fī dārinā hādzihī, waj'alhā ma'wan lil khairi wal barakah.", note: "Menghalau mara bahaya dan membawa sakinah" },
+                    { no: 4, title: "Doa Tirakatan & Malam Keakraban Santri", sub: "Permohonan istiqamah memegang teguh ajaran Ahlussunnah wal Jama'ah an-Nahdliyyah.", note: "Penutup acara santri dan ikatan alumni" },
+                    { no: 5, title: "Doa Pelepasan Calon Jamaah Haji & Umrah", sub: "Zawwadakallāhut taqwā, wa ghafara dzanbaka, wa yassara lakal khaira haitsumā kunta.", note: "Mengantar keberangkatan ke Tanah Suci" }
+                ]
+            }
+        };
+
+        function openDoaPage(updateUrl = true) {
+            if (typeof switchTab === 'function') {
+                switchTab('doa-hub', updateUrl);
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function openDoaCategoryModal(catKey) {
+            const cat = ASNDoaData[catKey];
+            if (!cat) return;
+
+            const modal = document.getElementById('modal-doa-detail');
+            const titleEl = document.getElementById('modal-doa-title');
+            const arabicEl = document.getElementById('modal-doa-arabic');
+            const badgeEl = document.getElementById('modal-doa-badge');
+            const iconContainer = document.getElementById('modal-doa-icon');
+            const descEl = document.getElementById('modal-doa-desc');
+            const itemsContainer = document.getElementById('modal-doa-items');
+
+            if (titleEl) titleEl.innerText = cat.title;
+            if (arabicEl) arabicEl.innerText = cat.arabic;
+            if (badgeEl) {
+                badgeEl.className = "text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase " + (cat.badgeClass || '');
+                badgeEl.innerText = cat.count;
+            }
+            if (iconContainer) {
+                iconContainer.className = "w-10 h-10 rounded-2xl flex items-center justify-center text-lg shrink-0 " + (cat.iconClass || '');
+                iconContainer.innerHTML = `<i class="${cat.icon}"></i>`;
+            }
+            if (descEl) descEl.innerText = cat.desc;
+
+            if (itemsContainer) {
+                itemsContainer.innerHTML = cat.items.map(item => `
+                    <div class="p-3 bg-white dark:bg-[#1c2836] rounded-xl border border-slate-100 dark:border-[#253447] shadow-sm flex items-start justify-between gap-3 hover:border-orange-400 dark:hover:border-orange-500 transition">
+                        <div class="flex items-start space-x-3">
+                            <span class="w-6 h-6 rounded-lg bg-orange-50 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                                ${item.no}
+                            </span>
+                            <div>
+                                <h5 class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 leading-snug">
+                                    ${item.title}
+                                </h5>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                                    ${item.sub}
+                                </p>
+                                ${item.note ? `<span class="inline-block mt-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md"><i class="fa-solid fa-circle-check text-[9px] mr-1"></i>${item.note}</span>` : ''}
+                            </div>
+                        </div>
+                        <span class="shrink-0 text-[10px] font-semibold text-slate-400 bg-slate-50 dark:bg-[#15202d] border border-slate-200/60 dark:border-[#253447] px-2 py-1 rounded-lg">
+                            Kerangka
+                        </span>
+                    </div>
+                `).join('');
+            }
+
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            }
+        }
+
+        function closeDoaCategoryModal() {
+            const modal = document.getElementById('modal-doa-detail');
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }
+        }
+
+        function filterDoaGrid(searchVal) {
+            const q = (searchVal || '').toLowerCase().trim();
+            const cards = document.querySelectorAll('.doa-card');
+            const clearBtn = document.getElementById('doa-search-clear');
+            const emptyState = document.getElementById('doa-search-empty');
+            let visibleCount = 0;
+
+            if (clearBtn) {
+                if (q.length > 0) clearBtn.classList.remove('hidden');
+                else clearBtn.classList.add('hidden');
+            }
+
+            cards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                if (!q || text.includes(q)) {
+                    card.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+
+            if (emptyState) {
+                if (visibleCount === 0) emptyState.classList.remove('hidden');
+                else emptyState.classList.add('hidden');
+            }
+        }
+
+        function clearDoaSearch() {
+            const input = document.getElementById('doa-search-input');
+            if (input) input.value = '';
+            filterDoaGrid('');
+        }
+
+        function filterDoaByTag(tag, btn) {
+            const chips = document.querySelectorAll('.doa-chip');
+            chips.forEach(c => {
+                c.classList.remove('active', 'bg-orange-600', 'text-white', 'shadow-sm');
+                c.classList.add('bg-slate-100', 'dark:bg-[#1c2836]', 'text-slate-600', 'dark:text-slate-300');
+            });
+
+            if (btn) {
+                btn.classList.add('active', 'bg-orange-600', 'text-white', 'shadow-sm');
+                btn.classList.remove('bg-slate-100', 'dark:bg-[#1c2836]', 'text-slate-600', 'dark:text-slate-300');
+            }
+
+            const cards = document.querySelectorAll('.doa-card');
+            let visibleCount = 0;
+            const targetTag = (tag || 'semua').toLowerCase();
+
+            cards.forEach(card => {
+                const cardTags = (card.getAttribute('data-tags') || '').toLowerCase();
+                if (targetTag === 'semua' || cardTags.includes(targetTag)) {
+                    card.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+
+            const emptyState = document.getElementById('doa-search-empty');
+            if (emptyState) {
+                if (visibleCount === 0) emptyState.classList.remove('hidden');
+                else emptyState.classList.add('hidden');
+            }
+        }
+
+        // ==================== TUTORIAL IBADAH SANTRI (FIKIH PRAKTIS) ====================
+        const ASNTutorialIbadahData = {
+            'tutorial-thaharah': {
+                title: "Bab Thaharah (Bersuci)",
+                arabic: "كتاب الطهارة",
+                count: "6 Materi",
+                badgeClass: "bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200/60",
+                icon: "fa-solid fa-droplet",
+                iconClass: "bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400",
+                desc: "Panduan pokok bersuci dari hadats kecil dan besar Mazhab Syafi'i: tata cara wudhu sempurna, rukun mandi janabat, tayamum, serta pembagian jenis najis dan cara menyucikannya.",
+                items: [
+                    { no: 1, title: "Tata Cara Wudhu Sesuai Sunnah Nabi", sub: "Praktik rukun wudhu (niat, membasuh wajah, tangan, sebagian kepala, kaki) dan sunnah-sunnahnya.", note: "Syarat sah ibadah shalat" },
+                    { no: 2, title: "Hal-Hal yang Membatalkan Wudhu", sub: "Keluar sesuatu dari dua jalan, hilang akal/tidur, bersentuhan kulit bukan mahram, menyentuh kemaluan.", note: "Fikih praktis Mazhab Syafi'i" },
+                    { no: 3, title: "Panduan Mandi Wajib (Janabat) Lengkap", sub: "Niat mandi besar, meratakan air ke seluruh badan dan rambut tanpa terlewat, serta sunnah mandi.", note: "Penyuci hadats besar" },
+                    { no: 4, title: "Tata Cara Tayamum Menggunakan Debu", sub: "Syarat tayamum ketiadaan air/sakit, memukulkan tangan ke debu suci, menyapu wajah dan kedua tangan.", note: "Rukhsah keringanan bersuci" },
+                    { no: 5, title: "Klasifikasi Najis & Cara Mensucikannya", sub: "Najis mukhaffafah (ringan), mutawassithah (sedang), dan mughallazhah (berat anjing/babi sertu 7x).", note: "Menjaga kebersihan tempat & pakaian" },
+                    { no: 6, title: "Adab Istinja' & Bersuci dari Hajat", sub: "Tata cara bersuci dengan air atau batu/tisu, doa masuk dan keluar kamar mandi.", note: "Adab islami santri" }
+                ]
+            },
+            'tutorial-shalat-fardhu': {
+                title: "Tata Cara Shalat Fardhu",
+                arabic: "صفة صلاة الفريضة",
+                count: "7 Materi",
+                badgeClass: "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60",
+                icon: "fa-solid fa-person-praying",
+                iconClass: "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400",
+                desc: "Panduan shalat fardhu lima waktu: 13 rukun shalat, syarat sah & wajib, gerakan takbiratul ihram hingga salam, tasyahud, qunut subuh, serta pembatal shalat.",
+                items: [
+                    { no: 1, title: "13 Rukun Shalat Mazhab Syafi'i", sub: "Niat, takbiratul ihram, berdiri bagi yang mampu, fatihah, ruku', i'tidal, 2 sujud, duduk antara 2 sujud, tasyahud akhir, shalawat, salam, dan tertib.", note: "Pondasi utama sahnya shalat" },
+                    { no: 2, title: "Syarat Sah & Syarat Wajib Shalat", sub: "Menutup aurat, suci dari hadats & najis, menghadap kiblat, masuk waktu shalat, dan mengetahui fardhunya.", note: "Persiapan sebelum takbir" },
+                    { no: 3, title: "Praktik Gerakan Takbir & Sedekap Tangan", sub: "Mengangkat tangan sejajar daun telinga/bahu, meletakkan tangan kanan di atas pergelangan kiri di bawah dada.", note: "Khusyuk dalam qiyam" },
+                    { no: 4, title: "Tata Cara Ruku', I'tidal, dan Thuma'ninah", sub: "Punggung lurus saat ruku', bacaan tasbih ruku', bangkit i'tidal dengan thuma'ninah (berhenti sejenak).", note: "Syarat mutlak ketenangan shalat" },
+                    { no: 5, title: "Tata Cara Sujud Sempurna (7 Anggota Badan)", sub: "Dahi terbuka, dua telapak tangan, dua lutut, dan ujung jari jemari kedua kaki menempel ke bumi.", note: "Titik terdekat hamba dengan Allah" },
+                    { no: 6, title: "Tata Cara Duduk Tasyahud Awal & Akhir", sub: "Duduk iftirasy pada tasyahud awal dan duduk tawarruk pada tasyahud akhir, isyarat jari telunjuk.", note: "Penyempurna rakaat shalat" },
+                    { no: 7, title: "Panduan Doa Qunut Shalat Subuh", sub: "Sunnah ab'adh qunut subuh saat i'tidal rakaat kedua, mengangkat kedua telapak tangan.", note: "Amaliah resmi Ahlussunnah" }
+                ]
+            },
+            'tutorial-shalat-sunnah': {
+                title: "Shalat Sunnah & Nawafil",
+                arabic: "السنن الرواتب والنوافل",
+                count: "8 Materi",
+                badgeClass: "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60",
+                icon: "fa-solid fa-moon",
+                iconClass: "bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400",
+                desc: "Panduan shalat-shalat sunnah nawafil untuk melengkapi amaliah wajib santri: shalat sunnah rawatib, dhuha, tahajjud malam, witir, tarawih, istikharah, tasbih, dan taubat.",
+                items: [
+                    { no: 1, title: "Shalat Sunnah Rawatib (Qabliyah & Ba'diyah)", sub: "10-12 rakaat mu'akkad yang mengiringi shalat lima waktu serta fadhilah istana di surga.", note: "Penyempurna kekurangan shalat fardhu" },
+                    { no: 2, title: "Panduan Shalat Dhuha (2 s.d. 8 Rakaat)", sub: "Niat, waktu pengerjaan sejak matahari meninggi hingga menjelang dhuhur, dan doa dhuha.", note: "Sedekah persendian dan penarik rezeki" },
+                    { no: 3, title: "Panduan Shalat Tahajjud di Sepertiga Malam", sub: "Syarat didahului tidur, jumlah rakaat, keheningan munajat saat mustajabnya doa.", note: "Kedudukan Maqaman Mahmuda" },
+                    { no: 4, title: "Panduan Shalat Witir Penutup Malam", sub: "Bilangan rakaat ganjil (1, 3, hingga 11 rakaat), qunut witir di separuh akhir Ramadhan.", note: "Penutup shalat malam" },
+                    { no: 5, title: "Panduan Shalat Tarawih 20 Rakaat Pesantren", sub: "Susunan shalat tarawih berjamaah 2 rakaat salam 10 kali putaran di bulan Ramadhan.", note: "Tradisi muktabar para ulama" },
+                    { no: 6, title: "Panduan Shalat Sunnah Istikharah", sub: "Memohon ketetapan pilihan terbaik dari dua hal yang mubah, bacaan doa istikharah.", note: "Penuntun keraguan hati santri" },
+                    { no: 7, title: "Panduan Shalat Sunnah Tasbih (300 Tasbih)", sub: "Tata cara 4 rakaat dengan membaca 75 tasbih di setiap rakaat (ruku, sujud, duduk).", note: "Pelebur dosa masa lalu" },
+                    { no: 8, title: "Panduan Shalat Sunnah Hajat & Taubat", sub: "Ikhtiar batiniah memohon kelulusan ujian / terkabulnya cita-cita dan penyesalan maksiat.", note: "Taqarrub penenang jiwa" }
+                ]
+            },
+            'tutorial-sujud': {
+                title: "Panduan Sujud Khusus",
+                arabic: "سجود السهو والتلاوة والشكر",
+                count: "4 Materi",
+                badgeClass: "bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/60",
+                icon: "fa-solid fa-hands",
+                iconClass: "bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400",
+                desc: "Tata cara pelaksanaan tiga macam sujud khusus di luar sujud rukun shalat: sujud sahwi karena lupa atau ragu, sujud tilawah ayat sajdah, dan sujud syukur.",
+                items: [
+                    { no: 1, title: "Sujud Sahwi: Sebab & Tata Caranya", sub: "Dua sujud sebelum salam karena meninggalkan sunnah ab'adh (tasyahud awal/qunut) atau ragu rakaat.", note: "Penambal kelupaan dalam shalat" },
+                    { no: 2, title: "Bacaan Lafazh Sujud Sahwi", sub: "Subhāna man lā yanāmu wa lā yashū (Maha Suci Dzat yang tidak pernah tidur dan tidak pernah lupa).", note: "Dibaca 3x dalam sujud sahwi" },
+                    { no: 3, title: "Tata Cara Sujud Tilawah Saat Mendengar Ayat Sajdah", sub: "Satu kali sujud baik di dalam shalat maupun di luar shalat saat membaca/mendengar ayat sajdah.", note: "Tunduk mengagungkan kalamullah" },
+                    { no: 4, title: "Tata Cara Sujud Syukur Atas Nikmat & Selamat Musibah", sub: "Sujud satu kali spontan di luar shalat dengan menghadap kiblat atas kabar gembira.", note: "Wujud syukur hamba kepada Sang Pencipta" }
+                ]
+            },
+            'tutorial-berjamaah': {
+                title: "Shalat Berjamaah & Masbuq",
+                arabic: "صلاة الجماعة والمسبوق",
+                count: "5 Materi",
+                badgeClass: "bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/60",
+                icon: "fa-solid fa-users",
+                iconClass: "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
+                desc: "Fikih shalat berjamaah: keutamaan 27 derajat, syarat imam, adab meluruskan saf, ketentuan shalat jahr/sirr, dan langkah praktis makmum masbuq menyusul rakaat imam.",
+                items: [
+                    { no: 1, title: "Keutamaan Berjamaah & Syarat Sah Imam", sub: "Fadhilah 27 derajat, syarat imam fasih bacaan fatihah dan tidak berhadats.", note: "Amaliah syiar Islam" },
+                    { no: 2, title: "Adab Meluruskan & Merapatkan Saf Shalat", sub: "Merapatkan bahu ke bahu dan tumit kaki sejajar lurus, saf laki-laki di depan.", note: "Kesempurnaan shalat berjamaah" },
+                    { no: 3, title: "Tata Cara Makmum Masbuq Menyusul Rakaat", sub: "Kapan makmum dihitung mendapat 1 rakaat (ikut ruku' thuma'ninah bersama imam).", note: "Pedoman penting santri terlambat" },
+                    { no: 4, title: "Langkah Menyelesaikan Rakaat Masbuq", sub: "Bangkit setelah imam salam kedua tanpa salam, menyempurnakan rakaat yang tertinggal.", note: "Tata cara berdiri menyempurnakan shalat" },
+                    { no: 5, title: "Ketentuan Suara Jahr (Keras) & Sirr (Pelan)", sub: "Waktu imam membaca keras (Maghrib, Isya, Subuh, Jum'at) dan pelan (Dhuhur, Ashar).", note: "Fikih bacaan shalat jamaah" }
+                ]
+            },
+            'tutorial-safar': {
+                title: "Shalat Safar (Jamak & Qashar)",
+                arabic: "صلاة المسافر والجمع والقصر",
+                count: "5 Materi",
+                badgeClass: "bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200/60",
+                icon: "fa-solid fa-route",
+                iconClass: "bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400",
+                desc: "Keringanan (rukhsah) shalat bagi musafir: jarak tempuh minimal, syarat jamak taqdim, jamak takhir, memendekkan rakaat (qashar), serta shalat di atas moda transportasi.",
+                items: [
+                    { no: 1, title: "Ketentuan Jarak Safar Boleh Jamak & Qashar", sub: "Jarak minimal 2 marhalah (sekitar 81-84 km) untuk perjalanan yang mubah/ketaatan.", note: "Syarat rukhsah musafir" },
+                    { no: 2, title: "Tata Cara Shalat Jamak Taqdim", sub: "Menggabungkan 2 shalat di waktu pertama (Dhuhur-Ashar di waktu Dhuhur), niat jamak di awal.", note: "Dikerjakan berurutan tanpa jeda lama" },
+                    { no: 3, title: "Tata Cara Shalat Jamak Takhir", sub: "Menggabungkan 2 shalat di waktu kedua (Maghrib-Isya di waktu Isya), niat jamak di waktu pertama.", note: "Fleksibilitas perjalanan musafir" },
+                    { no: 4, title: "Panduan Meringkas Shalat (Qashar 4 Jadi 2 Rakaat)", sub: "Shalat 4 rakaat (Dhuhur, Ashar, Isya) diringkas menjadi 2 rakaat, Subuh & Maghrib tidak diqashar.", note: "Hadiah kemudahan dari Allah SWT" },
+                    { no: 5, title: "Tata Cara Shalat di Atas Kendaraan (Kereta/Pesawat/Bus)", sub: "Shalat li hurmatil waqti (menghormati waktu) ketika tidak dapat wudhu sempurna atau kiblat.", note: "Kewajiban menjaga waktu shalat" }
+                ]
+            },
+            'tutorial-jenazah': {
+                title: "Perawatan & Shalat Jenazah",
+                arabic: "تجهيز الجنائز",
+                count: "5 Materi",
+                badgeClass: "bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60",
+                icon: "fa-solid fa-hand-holding-heart",
+                iconClass: "bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400",
+                desc: "Fardhu kifayah perawatan jenazah muslim: tata cara memandikan jenazah, mengafani jenazah laki-laki dan perempuan, praktik shalat 4 takbir tanpa ruku' sujud, dan pemakaman.",
+                items: [
+                    { no: 1, title: "Empat Kewajiban Fardhu Kifayah Terhadap Jenazah", sub: "Memandikan, mengafani, menyalatkan, dan menguburkan jenazah orang beriman.", note: "Gugur dosanya bila sebagian melaksanakannya" },
+                    { no: 2, title: "Tata Cara Memandikan Jenazah Muslim", sub: "Membersihkan najis/kotoran, mewudhukan, membasuh dengan air sabun & air kapur barus.", note: "Menjaga aurat dan kehormatan mayit" },
+                    { no: 3, title: "Tata Cara Mengafani Jenazah Laki-Laki & Perempuan", sub: "3 lapis kain kafan putih bagi laki-laki dan 5 lapis pakaian bagi jenazah perempuan.", note: "Sunnah kain putih bersih berwewangian" },
+                    { no: 4, title: "Praktik 4 Takbir Shalat Jenazah Lengkap", sub: "Takbir 1 (Fatihah), Takbir 2 (Shalawat Nabi), Takbir 3 (Doa mayit), Takbir 4 (Doa penutup) lalu salam.", note: "Dikerjakan berdiri tanpa ruku' dan sujud" },
+                    { no: 5, title: "Adab Menghantarkan & Menguburkan Jenazah", sub: "Meletakkan jenazah miring menghadap kiblat di liang lahat, melepas tali kafan dan talqin.", note: "Pengingat kematian bagi yang hidup" }
+                ]
+            },
+            'tutorial-puasa': {
+                title: "Panduan Puasa Fardhu & Sunnah",
+                arabic: "أحكام الصيام",
+                count: "6 Materi",
+                badgeClass: "bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200/60",
+                icon: "fa-solid fa-cloud-moon",
+                iconClass: "bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400",
+                desc: "Fikih ibadah puasa: rukun dan syarat puasa, niat puasa fardhu Ramadhan, pembatal puasa, fidyah dan qadha, serta jenis-jenis puasa sunnah muktabar.",
+                items: [
+                    { no: 1, title: "Rukun & Syarat Sah Puasa", sub: "Niat di malam hari (tabyītun niyyah) dan menahan diri dari segala pembatal sejak fajar hingga maghrib.", note: "Rukun Islam ketiga" },
+                    { no: 2, title: "Lafazh Niat Puasa Ramadhan & Doa Berbuka", sub: "Nawaitu shauma ghadin 'an adā'i fardhi syahri Ramadhāna... dan Allāhumma laka shumtu.", note: "Amalan harian di bulan suci" },
+                    { no: 3, title: "Pembatal-Pembatal Puasa yang Harus Dijauhi", sub: "Memasukkan benda ke rongga terbuka secara sengaja, muntah disengaja, jima', haid & nifas.", note: "Menjaga keabsahan ibadah puasa" },
+                    { no: 4, title: "Ketentuan Qadha Puasa & Pembayaran Fidyah", sub: "Siapa yang wajib qadha (orang sakit/safar) dan siapa yang cukup bayar fidyah (lansia/sakit kronis).", note: "Timbangan syariat yang adil" },
+                    { no: 5, title: "Puasa Sunnah: Senin-Kamis & Ayyamul Bidh", sub: "Puasa sunnah mingguan dan puasa tanggal 13, 14, 15 tiap bulan hijriah penyehat raga.", note: "Mengikuti kebiasaan Rasulullah SAW" },
+                    { no: 6, title: "Puasa Sunnah: Daud, Syawwal, Asyura & Arafah", sub: "Keutamaan puasa selang-seling Daud, 6 hari Syawwal laksana setahun, Asyura pelebur dosa.", note: "Pahala agung berlipat ganda" }
+                ]
+            }
+        };
+
+        function openTutorialIbadahPage(updateUrl = true) {
+            if (typeof switchTab === 'function') {
+                switchTab('tutorial-ibadah-hub', updateUrl);
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function openTutorialCategoryModal(catKey) {
+            const cat = ASNTutorialIbadahData[catKey];
+            if (!cat) return;
+
+            const modal = document.getElementById('modal-tutorial-detail');
+            const titleEl = document.getElementById('modal-tutorial-title');
+            const arabicEl = document.getElementById('modal-tutorial-arabic');
+            const badgeEl = document.getElementById('modal-tutorial-badge');
+            const iconContainer = document.getElementById('modal-tutorial-icon');
+            const descEl = document.getElementById('modal-tutorial-desc');
+            const itemsContainer = document.getElementById('modal-tutorial-items');
+
+            if (titleEl) titleEl.innerText = cat.title;
+            if (arabicEl) arabicEl.innerText = cat.arabic;
+            if (badgeEl) {
+                badgeEl.className = "text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase " + (cat.badgeClass || '');
+                badgeEl.innerText = cat.count;
+            }
+            if (iconContainer) {
+                iconContainer.className = "w-10 h-10 rounded-2xl flex items-center justify-center text-lg shrink-0 " + (cat.iconClass || '');
+                iconContainer.innerHTML = `<i class="${cat.icon}"></i>`;
+            }
+            if (descEl) descEl.innerText = cat.desc;
+
+            if (itemsContainer) {
+                itemsContainer.innerHTML = cat.items.map(item => `
+                    <div class="p-3 bg-white dark:bg-[#1c2836] rounded-xl border border-slate-100 dark:border-[#253447] shadow-sm flex items-start justify-between gap-3 hover:border-emerald-400 dark:hover:border-emerald-500 transition">
+                        <div class="flex items-start space-x-3">
+                            <span class="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                                ${item.no}
+                            </span>
+                            <div>
+                                <h5 class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 leading-snug">
+                                    ${item.title}
+                                </h5>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                                    ${item.sub}
+                                </p>
+                                ${item.note ? `<span class="inline-block mt-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md"><i class="fa-solid fa-circle-check text-[9px] mr-1"></i>${item.note}</span>` : ''}
+                            </div>
+                        </div>
+                        <span class="shrink-0 text-[10px] font-semibold text-slate-400 bg-slate-50 dark:bg-[#15202d] border border-slate-200/60 dark:border-[#253447] px-2 py-1 rounded-lg">
+                            Panduan
+                        </span>
+                    </div>
+                `).join('');
+            }
+
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            }
+        }
+
+        function closeTutorialCategoryModal() {
+            const modal = document.getElementById('modal-tutorial-detail');
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }
+        }
+
+        function filterTutorialGrid(searchVal) {
+            const q = (searchVal || '').toLowerCase().trim();
+            const cards = document.querySelectorAll('.tutorial-card');
+            const clearBtn = document.getElementById('tutorial-search-clear');
+            const emptyState = document.getElementById('tutorial-search-empty');
+            let visibleCount = 0;
+
+            if (clearBtn) {
+                if (q.length > 0) clearBtn.classList.remove('hidden');
+                else clearBtn.classList.add('hidden');
+            }
+
+            cards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                if (!q || text.includes(q)) {
+                    card.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+
+            if (emptyState) {
+                if (visibleCount === 0) emptyState.classList.remove('hidden');
+                else emptyState.classList.add('hidden');
+            }
+        }
+
+        function clearTutorialSearch() {
+            const input = document.getElementById('tutorial-search-input');
+            if (input) input.value = '';
+            filterTutorialGrid('');
+        }
+
+        function filterTutorialByTag(tag, btn) {
+            const chips = document.querySelectorAll('.tutorial-chip');
+            chips.forEach(c => {
+                c.classList.remove('active', 'bg-emerald-600', 'text-white', 'shadow-sm');
+                c.classList.add('bg-slate-100', 'dark:bg-[#1c2836]', 'text-slate-600', 'dark:text-slate-300');
+            });
+
+            if (btn) {
+                btn.classList.add('active', 'bg-emerald-600', 'text-white', 'shadow-sm');
+                btn.classList.remove('bg-slate-100', 'dark:bg-[#1c2836]', 'text-slate-600', 'dark:text-slate-300');
+            }
+
+            const cards = document.querySelectorAll('.tutorial-card');
+            let visibleCount = 0;
+            const targetTag = (tag || 'semua').toLowerCase();
+
+            cards.forEach(card => {
+                const cardTags = (card.getAttribute('data-tags') || '').toLowerCase();
+                if (targetTag === 'semua' || cardTags.includes(targetTag)) {
+                    card.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+
+            const emptyState = document.getElementById('tutorial-search-empty');
+            if (emptyState) {
+                if (visibleCount === 0) emptyState.classList.remove('hidden');
+                else emptyState.classList.add('hidden');
+            }
+        }
+
+        window.openDoaPage = openDoaPage;
+        window.openDoaCategoryModal = openDoaCategoryModal;
+        window.closeDoaCategoryModal = closeDoaCategoryModal;
+        window.filterDoaGrid = filterDoaGrid;
+        window.clearDoaSearch = clearDoaSearch;
+        window.filterDoaByTag = filterDoaByTag;
+
+        window.openTutorialIbadahPage = openTutorialIbadahPage;
+        window.openTutorialCategoryModal = openTutorialCategoryModal;
+        window.closeTutorialCategoryModal = closeTutorialCategoryModal;
+        window.filterTutorialGrid = filterTutorialGrid;
+        window.clearTutorialSearch = clearTutorialSearch;
+        window.filterTutorialByTag = filterTutorialByTag;

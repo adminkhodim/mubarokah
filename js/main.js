@@ -224,6 +224,21 @@
                         else if (path === '/app/ibadah/jadwal-sholat') {
                             if (typeof openJadwalSholatPage === 'function') openJadwalSholatPage();
                             else switchTab('jadwal-sholat', false);
+                        } else if (path === '/app/ibadah/kiblat' || path === '/app/ibadah/arah-kiblat') {
+                            if (typeof openKompasKiblatPage === 'function') openKompasKiblatPage();
+                            else switchTab('kompas-kiblat', false);
+                        } else if (path === '/app/ibadah/wirid' || path === '/app/ibadah/wirid-hub') {
+                            if (typeof openWiridPage === 'function') openWiridPage(false);
+                            else switchTab('wirid-hub', false);
+                        } else if (path === '/app/ibadah/wirid/manaqib' || path === '/app/ibadah/manaqib') {
+                            if (typeof openManaqibPage === 'function') openManaqibPage(false);
+                            else switchTab('manaqib', false);
+                        } else if (path === '/app/ibadah/doa' || path === '/app/ibadah/doa-hub') {
+                            if (typeof openDoaPage === 'function') openDoaPage(false);
+                            else switchTab('doa-hub', false);
+                        } else if (path === '/app/ibadah/tutorial' || path === '/app/ibadah/tutorial-ibadah') {
+                            if (typeof openTutorialIbadahPage === 'function') openTutorialIbadahPage(false);
+                            else switchTab('tutorial-ibadah-hub', false);
                         } else switchTab('ibadah', false);
                     } else if (path === '/app/berita' || path.startsWith('/app/berita/') || path === '/app/kabar') {
                         const slug = path.split('/app/berita/')[1];
@@ -398,6 +413,21 @@
                         else if (path === '/app/ibadah/jadwal-sholat') {
                             if (typeof openJadwalSholatPage === 'function') openJadwalSholatPage();
                             else switchTab('jadwal-sholat', false);
+                        } else if (path === '/app/ibadah/kiblat' || path === '/app/ibadah/arah-kiblat') {
+                            if (typeof openKompasKiblatPage === 'function') openKompasKiblatPage();
+                            else switchTab('kompas-kiblat', false);
+                        } else if (path === '/app/ibadah/wirid' || path === '/app/ibadah/wirid-hub') {
+                            if (typeof openWiridPage === 'function') openWiridPage(false);
+                            else switchTab('wirid-hub', false);
+                        } else if (path === '/app/ibadah/wirid/manaqib' || path === '/app/ibadah/manaqib') {
+                            if (typeof openManaqibPage === 'function') openManaqibPage(false);
+                            else switchTab('manaqib', false);
+                        } else if (path === '/app/ibadah/doa' || path === '/app/ibadah/doa-hub') {
+                            if (typeof openDoaPage === 'function') openDoaPage(false);
+                            else switchTab('doa-hub', false);
+                        } else if (path === '/app/ibadah/tutorial' || path === '/app/ibadah/tutorial-ibadah') {
+                            if (typeof openTutorialIbadahPage === 'function') openTutorialIbadahPage(false);
+                            else switchTab('tutorial-ibadah-hub', false);
                         } else switchTab('ibadah', false);
                     } else if (path === '/app/berita' || path.startsWith('/app/berita/') || path === '/app/kabar') {
                         const slug = path.split('/app/berita/')[1];
@@ -532,6 +562,11 @@
                     else if (tabId === 'maulid-detail') targetUrl = '/app/ibadah/maulid/ad-dibai/baca';
                     else if (tabId === 'burdah-index') targetUrl = '/app/ibadah/burdah';
                     else if (tabId === 'tahlil-yasin') targetUrl = '/app/ibadah/tahlil-dan-yasin';
+                    else if (tabId === 'kompas-kiblat') targetUrl = '/app/ibadah/kiblat';
+                    else if (tabId === 'wirid-hub') targetUrl = '/app/ibadah/wirid';
+                    else if (tabId === 'manaqib') targetUrl = '/app/ibadah/wirid/manaqib';
+                    else if (tabId === 'doa-hub') targetUrl = '/app/ibadah/doa';
+                    else if (tabId === 'tutorial-ibadah-hub') targetUrl = '/app/ibadah/tutorial';
                     else if (tabId === 'kabar') targetUrl = '/app/berita';
                     else if (tabId === 'kalender') targetUrl = '/app/kalender';
                     else if (tabId === 'pengaturan') targetUrl = '/app/pengaturan';
@@ -578,6 +613,11 @@
                     else if (tabId === 'maulid-detail') targetUrl = '/layanan/portal-ibadah/maulid/ad-dibai/baca/';
                     else if (tabId === 'burdah-index') targetUrl = '/layanan/portal-ibadah/burdah/';
                     else if (tabId === 'tahlil-yasin') targetUrl = '/layanan/portal-ibadah/tahlil-dan-yasin/';
+                    else if (tabId === 'kompas-kiblat') targetUrl = '/layanan/portal-ibadah/kiblat/';
+                    else if (tabId === 'wirid-hub') targetUrl = '/layanan/portal-ibadah/wirid/';
+                    else if (tabId === 'manaqib') targetUrl = '/layanan/portal-ibadah/wirid/manaqib/';
+                    else if (tabId === 'doa-hub') targetUrl = '/layanan/portal-ibadah/doa/';
+                    else if (tabId === 'tutorial-ibadah-hub') targetUrl = '/layanan/portal-ibadah/tutorial/';
                     else if (tabId === 'quran-page') targetUrl = '/layanan/portal-ibadah/quran/halaman/';
                     else if (tabId === 'beranda') targetUrl = '/';
                 }
@@ -593,6 +633,7 @@
                     tabId === 'quran-index' || tabId === 'quran-detail' || tabId === 'quran-page' ||
                     tabId === 'maulid-hub' || tabId === 'maulid-index' || tabId === 'maulid-detail' ||
                     tabId === 'burdah-index' || tabId === 'tahlil-yasin' ||
+                    tabId === 'kompas-kiblat' || tabId === 'wirid-hub' || tabId === 'manaqib' || tabId === 'doa-hub' || tabId === 'tutorial-ibadah-hub' ||
                     tabId === 'beranda')) {
                     history.pushState({ tab: tabId }, '', targetUrl);
                 }
@@ -717,6 +758,16 @@
                 if (typeof ASNJadwalSholat !== 'undefined') {
                     ASNJadwalSholat.init();
                 }
+            } else if (tabId === 'kompas-kiblat') {
+                if (typeof MubarokahKiblat !== 'undefined') {
+                    MubarokahKiblat.init();
+                } else if (typeof ASNKiblat !== 'undefined') {
+                    ASNKiblat.init();
+                }
+            } else if (tabId === 'manaqib') {
+                if (typeof renderManaqibContent === 'function') {
+                    renderManaqibContent();
+                }
             } else if (tabId === 'kalender') {
                 if (typeof renderCalendar === 'function') {
                     renderCalendar();
@@ -742,6 +793,12 @@
                 'burdah-index': 'mobile-nav-ibadah',
                 'burdah-detail': 'mobile-nav-ibadah',
                 'tahlil-yasin': 'mobile-nav-ibadah',
+                'jadwal-sholat': 'mobile-nav-ibadah',
+                'kompas-kiblat': 'mobile-nav-ibadah',
+                'wirid-hub': 'mobile-nav-ibadah',
+                'manaqib': 'mobile-nav-ibadah',
+                'doa-hub': 'mobile-nav-ibadah',
+                'tutorial-ibadah-hub': 'mobile-nav-ibadah',
                 'kalender': 'mobile-nav-kalender',
                 'pengaturan': 'mobile-nav-pengaturan',
                 'admin': 'mobile-nav-pengaturan'
