@@ -8,31 +8,31 @@
     },
     {
       "source": "/app",
-      "destination": "/app.html"
+      "destination": "/app"
     },
     {
       "source": "/app/(.*)",
-      "destination": "/app.html"
+      "destination": "/app"
     },
     {
       "source": "/admin",
-      "destination": "/app.html"
+      "destination": "/app"
     },
     {
       "source": "/admin/(.*)",
-      "destination": "/app.html"
+      "destination": "/app"
     },
     {
       "source": "/administrator",
-      "destination": "/app.html"
+      "destination": "/app"
     },
     {
       "source": "/administrator/(.*)",
-      "destination": "/app.html"
+      "destination": "/app"
     },
     {
       "source": "/((?!assets/|css/|js/|api/|manifest\\.json|favicon\\.ico|sw\\.js|.*\\.[a-zA-Z0-9]+$).*)",
-      "destination": "/index.html"
+      "destination": "/index"
     }
   ]
 }
