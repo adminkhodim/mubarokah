@@ -43,6 +43,7 @@ const ASN_STATES = Object.freeze({
  */
 const ASN_AUTH_ACTIONS = Object.freeze({
     ADMIN_LOGIN_PASSWORD: 'auth.admin.loginWithPassword',
+    PARENT_LOGIN_NIS: 'auth.parent.loginWithNis',
     ADMIN_SET_PASSWORD: 'auth.admin.setPassword',
     PARENT_LOGIN_PASSWORD: 'auth.parent.loginWithPassword',
     PARENT_SET_PASSWORD: 'auth.parent.setPassword',
@@ -194,6 +195,42 @@ const ASNAuthAPI = {
             return response;
         } catch (err) {
             return { success: false, message: 'Gagal menyimpan password admin.' };
+        }
+    },
+
+    async loginParentWithNis(nis, birthDate) {
+        if (!nis || !birthDate) {
+            return { success: false, message: 'NIS Santri dan PIN Tanggal Lahir (dd/mm/yyyy) wajib diisi.' };
+        }
+        try {
+            const response = await authApiPost(ASN_AUTH_ACTIONS.PARENT_LOGIN_NIS, {
+                nis: String(nis).trim(),
+                birthDate: String(birthDate).trim()
+            });
+            if (response && response.success && response.token) {
+                const parentObj = response.identity || (response.data && response.data.identity) || {
+                    name: 'Wali Santri',
+                    role: ASN_ROLES.WALI_SANTRI
+                };
+                const students = response.students || (response.data && response.data.students) || (response.student ? [response.student] : []);
+                return {
+                    success: true,
+                    token: response.token,
+                    identity: parentObj,
+                    students: students
+                };
+            }
+            return {
+                success: false,
+                message: (response && response.message) || 'Kombinasi NIS dan PIN Tanggal Lahir tidak cocok.'
+            };
+        } catch (err) {
+            console.warn('[ASNAuthAPI] loginParentWithNis error:', err);
+            return {
+                success: false,
+                unavailable: true,
+                message: 'Gagal menghubungi server autentikasi.'
+            };
         }
     },
 
@@ -2941,3 +2978,144 @@ if (typeof window !== 'undefined') {
         }
     }, 1500);
 }
+// ====================================================================
+// ASNAWIYYAH AUTHENTICATION SYSTEM ADOPTION: UI & TAB CONTROLLERS
+// ====================================================================
+
+function switchParentAuthTab(tabName) {
+    const paneNis = document.getElementById('parent-auth-pane-nis');
+    const paneOtp = document.getElementById('parent-auth-pane-otp');
+    const btnNis = document.getElementById('tab-btn-parent-nis');
+    const btnOtp = document.getElementById('tab-btn-parent-otp');
+    const alertBox = document.getElementById('parent-auth-alert');
+    if (alertBox) alertBox.classList.add('hidden');
+
+    if (tabName === 'nis') {
+        if (paneNis) paneNis.classList.remove('hidden');
+        if (paneOtp) paneOtp.classList.add('hidden');
+        if (btnNis) {
+            btnNis.className = "py-2 rounded-xl transition shadow-xs bg-white dark:bg-[#15202d] text-emerald-700 dark:text-emerald-400 flex items-center justify-center gap-1.5";
+        }
+        if (btnOtp) {
+            btnOtp.className = "py-2 rounded-xl transition text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center gap-1.5";
+        }
+    } else {
+        if (paneNis) paneNis.classList.add('hidden');
+        if (paneOtp) paneOtp.classList.remove('hidden');
+        if (btnOtp) {
+            btnOtp.className = "py-2 rounded-xl transition shadow-xs bg-white dark:bg-[#15202d] text-emerald-700 dark:text-emerald-400 flex items-center justify-center gap-1.5";
+        }
+        if (btnNis) {
+            btnNis.className = "py-2 rounded-xl transition text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center gap-1.5";
+        }
+        if (typeof initGoogleAuth === 'function') initGoogleAuth();
+    }
+}
+window.switchParentAuthTab = switchParentAuthTab;
+
+function switchAdminAuthTab(tabName) {
+    const paneGoogle = document.getElementById('admin-auth-pane-google');
+    const paneOtp = document.getElementById('admin-auth-pane-otp');
+    const btnGoogle = document.getElementById('tab-btn-admin-google');
+    const btnOtp = document.getElementById('tab-btn-admin-otp');
+    const alertBox = document.getElementById('admin-auth-alert');
+    if (alertBox) alertBox.classList.add('hidden');
+
+    if (tabName === 'google') {
+        if (paneGoogle) paneGoogle.classList.remove('hidden');
+        if (paneOtp) paneOtp.classList.add('hidden');
+        if (btnGoogle) {
+            btnGoogle.className = "py-2 rounded-xl transition shadow-xs bg-white dark:bg-[#15202d] text-emerald-700 dark:text-emerald-400 flex items-center justify-center gap-1.5";
+        }
+        if (btnOtp) {
+            btnOtp.className = "py-2 rounded-xl transition text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center gap-1.5";
+        }
+        if (typeof initGoogleAuth === 'function') initGoogleAuth();
+    } else {
+        if (paneGoogle) paneGoogle.classList.add('hidden');
+        if (paneOtp) paneOtp.classList.remove('hidden');
+        if (btnOtp) {
+            btnOtp.className = "py-2 rounded-xl transition shadow-xs bg-white dark:bg-[#15202d] text-emerald-700 dark:text-emerald-400 flex items-center justify-center gap-1.5";
+        }
+        if (btnGoogle) {
+            btnGoogle.className = "py-2 rounded-xl transition text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center gap-1.5";
+        }
+    }
+}
+window.switchAdminAuthTab = switchAdminAuthTab;
+
+function promptGoogleAccountChooser(roleHint = 'ADMIN') {
+    if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+        try {
+            google.accounts.id.prompt();
+            return;
+        } catch (e) {
+            console.warn('[GoogleAuth] prompt error:', e);
+        }
+    }
+    if (typeof showToast === 'function') {
+        showToast('Pilih akun Google Anda pada tombol yang tersedia.');
+    }
+}
+window.promptGoogleAccountChooser = promptGoogleAccountChooser;
+
+async function handleParentLoginWithNis(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const nisInput = document.getElementById('parent-login-nis');
+    const dobInput = document.getElementById('parent-login-dob');
+    const btn = document.getElementById('btn-parent-login-nis');
+    const alertBox = document.getElementById('parent-auth-alert');
+    const alertText = document.getElementById('parent-auth-alert-text');
+
+    const nis = nisInput ? nisInput.value.trim() : '';
+    const birthDate = dobInput ? dobInput.value.trim() : '';
+
+    if (!nis || !birthDate) {
+        if (alertBox && alertText) {
+            alertText.innerText = 'NIS Santri dan PIN Tanggal Lahir wajib diisi.';
+            alertBox.classList.remove('hidden');
+        }
+        return;
+    }
+
+    if (alertBox) alertBox.classList.add('hidden');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-xs"></i> <span>Memverifikasi...</span>`;
+    }
+
+    try {
+        const res = await ASNAuthAPI.loginParentWithNis(nis, birthDate);
+        if (res && res.success && res.token) {
+            ASNIdentity.setParentSession(res.token, res.identity, res.students);
+            closeParentAuthModal();
+            const studentName = (res.students && res.students[0] && res.students[0].name) || (res.identity && res.identity.name) || 'Santri';
+            if (typeof showToast === 'function') {
+                showToast(`✅ Selamat datang, Wali dari ${studentName}!`);
+            }
+            if (typeof refreshWaliView === 'function') {
+                refreshWaliView();
+            }
+            if (typeof switchTab === 'function') {
+                const isAppContext = window.location.pathname.startsWith('/app') || window.location.pathname.endsWith('app.html');
+                switchTab(isAppContext ? 'pengaturan' : 'beranda', true);
+            }
+        } else {
+            if (alertBox && alertText) {
+                alertText.innerText = res.message || 'Kombinasi NIS dan PIN Tanggal Lahir tidak cocok.';
+                alertBox.classList.remove('hidden');
+            }
+        }
+    } catch (err) {
+        if (alertBox && alertText) {
+            alertText.innerText = err.message || 'Gagal memproses autentikasi.';
+            alertBox.classList.remove('hidden');
+        }
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<span>Masuk ke Dashboard Wali Santri</span> <i class="fa-solid fa-arrow-right text-xs"></i>`;
+        }
+    }
+}
+window.handleParentLoginWithNis = handleParentLoginWithNis;

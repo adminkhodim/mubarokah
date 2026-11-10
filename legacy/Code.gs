@@ -10892,6 +10892,104 @@ function handleAuthApiAction(action, payload, e) {
     }
 
     // ----------------------------------------------------
+    // 2A-NIS. WALI SANTRI LOGIN DENGAN NIS & PIN TANGGAL LAHIR (MASUK CEPAT TANPA OTP)
+    // ----------------------------------------------------
+    if (action === "auth.parent.loginWithNis" || action === "auth.wali.loginWithNis") {
+      return withAuthScriptLock(() => {
+        const nis = String(payload.nis || payload.nisn || payload.identifier || "").trim();
+        const birthDate = String(payload.birthDate || payload.dob || payload.tanggal_lahir || payload.password || "").trim();
+
+        if (!nis || !birthDate) {
+          return createJsonResponse({
+            success: false,
+            message: "NIS Santri dan PIN Tanggal Lahir (dd/mm/yyyy) wajib diisi."
+          });
+        }
+
+        const student = getStudentByNisAndBirthDate(nis, birthDate);
+        if (!student) {
+          writeAuthAuditLog("NIS_LOGIN_REJECTED", "ANONYMOUS", "", "NIS_PIN", false, requestId, { nis: nis });
+          return createJsonResponse({
+            success: false,
+            message: "Kombinasi NIS dan Tanggal Lahir santri tidak cocok atau tidak ditemukan. Mohon periksa kembali data putra/putri Anda."
+          });
+        }
+
+        if (student.status && !["AKTIF", "ACTIVE"].includes(student.status.toUpperCase())) {
+          return createJsonResponse({
+            success: false,
+            message: "Status santri tidak aktif pada sistem akademik madrasah."
+          });
+        }
+
+        let wali = null;
+        let waliId = null;
+        try {
+          const ss = getDatabaseSpreadsheet();
+          const studentWaliSheet = getAuthSheet(ss, SHEET_STUDENT_WALI_MAP);
+          if (studentWaliSheet) {
+            const mapData = studentWaliSheet.getDataRange().getValues();
+            if (mapData && mapData.length > 1) {
+              const h = mapData[0].map(x => String(x || "").toLowerCase());
+              const sIdx = h.indexOf("student_id");
+              const wIdx = h.indexOf("wali_id");
+              for (let i = 1; i < mapData.length; i++) {
+                if (String(mapData[i][sIdx] || "").trim() === student.studentId) {
+                  waliId = String(mapData[i][wIdx] || "").trim();
+                  break;
+                }
+              }
+            }
+          }
+          if (waliId) {
+            wali = getWaliIdentityById(waliId);
+          }
+        } catch (e) {
+          console.warn("[AUTH] Error mencari relasi wali terdaftar:", e);
+        }
+
+        if (!waliId) {
+          waliId = "WLI_AUTO_" + student.studentId;
+        }
+
+        const waliEmail = (wali && wali.email) ? wali.email : (student.nis + "@santri.mubarokah.my.id");
+        const waliName = (wali && wali.name) ? wali.name : ("Wali dari " + student.name);
+
+        const ttlHours = getSessionTtlHoursForRole("WALI_SANTRI");
+        const session = createAuthSessionRecord(waliId, "WALI_SANTRI", ttlHours);
+        const tokenData = generateSessionToken(waliEmail, "WALI_SANTRI", ttlHours, session.sessionId, waliId);
+
+        let linkedStudents = [];
+        if (typeof getLinkedStudentsForWali === "function" && wali) {
+          linkedStudents = getLinkedStudentsForWali(waliId);
+        }
+        if (!linkedStudents || linkedStudents.length === 0) {
+          linkedStudents = [student];
+        }
+
+        writeAuthAuditLog("NIS_LOGIN_SUCCESS", waliId, session.sessionId, "NIS_PIN", true, requestId, { role: "WALI_SANTRI", studentId: student.studentId });
+
+        return createJsonResponse({
+          success: true,
+          token: tokenData.token,
+          data: {
+            token: tokenData.token,
+            role: "WALI_SANTRI",
+            identity: {
+              identityId: waliId,
+              email: waliEmail,
+              name: waliName,
+              role: "WALI_SANTRI",
+              loginMethod: "NIS_PIN"
+            },
+            student: student,
+            students: linkedStudents
+          }
+        });
+      });
+    }
+
+    // ----------------------------------------------------
     // 2B. WALI SANTRI LOGIN WITH PASSWORD / PIN
     // ----------------------------------------------------
     if (action === "auth.parent.loginWithPassword" || action === "auth.wali.loginWithPassword") {
