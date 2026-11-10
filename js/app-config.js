@@ -98,7 +98,7 @@
             authApiUrl: (typeof window !== 'undefined' && (window.location.protocol === 'http:' || window.location.protocol === 'https:'))
                 ? "/api/auth"
                 : "https://script.google.com/macros/s/AKfycbz4To49WTzqN2r3M8M3H4_YyAbeMjfTWRgxLrz6-YXuf7oFAVZZ6okh14LTIkZdMj9qGg/exec",
-            googleClientId: PENDING
+            googleClientId: "967127815898-6padn433letamnjfuacb5eg8pnv728p4.apps.googleusercontent.com"
         }),
 
         // G. Centralized Storage Keys Namespace

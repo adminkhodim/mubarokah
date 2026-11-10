@@ -2539,9 +2539,9 @@ const AUTH_API_URL = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.authentica
     : (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.infrastructure && (APP_CONFIG.infrastructure.apiBaseUrl || APP_CONFIG.infrastructure.appsScriptWebAppUrl) && (APP_CONFIG.infrastructure.apiBaseUrl || APP_CONFIG.infrastructure.appsScriptWebAppUrl) !== '__MUBAROKAH_CONFIG_PENDING__')
     ? (APP_CONFIG.infrastructure.apiBaseUrl || APP_CONFIG.infrastructure.appsScriptWebAppUrl)
     : ""; // __MUBAROKAH_CONFIG_PENDING__
-const GOOGLE_CLIENT_ID = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.authentication && APP_CONFIG.authentication.googleClientId !== '__MUBAROKAH_CONFIG_PENDING__')
+const GOOGLE_CLIENT_ID = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.authentication && APP_CONFIG.authentication.googleClientId && APP_CONFIG.authentication.googleClientId !== '__MUBAROKAH_CONFIG_PENDING__')
     ? APP_CONFIG.authentication.googleClientId
-    : ""; // __MUBAROKAH_CONFIG_PENDING__ 
+    : "967127815898-6padn433letamnjfuacb5eg8pnv728p4.apps.googleusercontent.com"; 
 
 document.addEventListener('DOMContentLoaded', () => {
     // Inisialisasi Identity Architecture baru
@@ -2698,17 +2698,25 @@ async function submitOtp(e) {
 }
 
 function initGoogleAuth() {
-    if (typeof google === 'undefined' || !google.accounts) {
+    if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
         setTimeout(initGoogleAuth, 500);
         return;
     }
     
-    if (GOOGLE_CLIENT_ID.includes('GANTI_DENGAN')) return;
+    if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID.includes('PENDING') || GOOGLE_CLIENT_ID.includes('GANTI_DENGAN')) {
+        console.warn('[GoogleAuth] Google Client ID belum dikonfigurasi.');
+        return;
+    }
 
-    google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleCredentialResponse
-    });
+    try {
+        google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: handleCredentialResponse
+        });
+    } catch (e) {
+        console.warn('[GoogleAuth] initialize error:', e);
+        return;
+    }
 
     const pengasuhBtn = document.getElementById("google-signin-pengasuh");
     if (pengasuhBtn) {
@@ -3053,6 +3061,12 @@ function switchAdminAuthTab(tabName) {
 window.switchAdminAuthTab = switchAdminAuthTab;
 
 function promptGoogleAccountChooser(roleHint = 'ADMIN') {
+    if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID.includes('PENDING') || GOOGLE_CLIENT_ID.includes('GANTI_DENGAN')) {
+        if (typeof showToast === 'function') {
+            showToast('Google Sign-In belum dikonfigurasi. Silakan masuk menggunakan tab Email OTP atau NIS & PIN.', 'warning');
+        }
+        return;
+    }
     if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
         try {
             google.accounts.id.prompt();
