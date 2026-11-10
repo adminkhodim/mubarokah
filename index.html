@@ -124,6 +124,12 @@
         body.is-app-mode #floating-whatsapp-container {
             display: none !important;
         }
+        /* Cegah kebocoran/flicker tab admin saat mengakses rute /app atau PWA */
+        body.is-pwa-standalone:not(.is-admin-view) #page-admin,
+        body.is-app-mode:not(.is-admin-view) #page-admin {
+            display: none !important;
+        }
+
         body.is-pwa-standalone main,
         body.is-app-mode main {
             margin-bottom: 4.5rem !important;

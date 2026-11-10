@@ -89,6 +89,12 @@
         body.is-app-mode #floating-whatsapp-container {
             display: none !important;
         }
+        /* Cegah kebocoran/flicker tab admin saat mengakses rute /app atau PWA */
+        body.is-pwa-standalone:not(.is-admin-view) #page-admin,
+        body.is-app-mode:not(.is-admin-view) #page-admin {
+            display: none !important;
+        }
+
         body.is-pwa-standalone main,
         body.is-app-mode main {
             margin-bottom: 4.5rem !important;
@@ -674,12 +680,12 @@
     <main class="flex-grow w-full mx-auto pb-28 md:pb-8">
 
         <!-- ==================== TABS 1: BERANDA (ENTERPRISE 10-FOLD INSTITUTIONAL LAYOUT) ==================== -->
-        <div id="page-beranda" class="tab-content hidden">
+        <div id="page-beranda" class="tab-content block">
 
             <!-- =================================================================== -->
             <!-- 1. GAMBAR 3: KHUSUS TAMPILAN MOBILE SETELAH DIINSTAL (PWA STANDALONE) -->
             <!-- =================================================================== -->
-            <div id="beranda-mobile-app" class="hidden max-w-xl mx-auto px-3.5 pt-2 pb-28 space-y-3">
+            <div id="beranda-mobile-app" class="block max-w-xl mx-auto px-3.5 pt-2 pb-28 space-y-3">
 
                 <!-- Widget Lokasi & Jadwal Shalat (Mobile - Aesthetic & Compact) -->
                 <section onclick="openJadwalSholatPage()" title="Buka Portal Ibadah Jadwal Sholat"
@@ -836,7 +842,7 @@
             </div>
 
             <!-- =================================================================== -->
-            <div id="beranda-portal-content" class="w-full">
+            <div id="beranda-portal-content" class="w-full hidden">
 
             <!-- FOLD 0: ISLAMIC PRAYER & CALENDAR UTILITY STRIP -->
             <section onclick="openJadwalSholatPage()" title="Buka Portal Ibadah & Jadwal Sholat Lengkap"
@@ -6029,7 +6035,7 @@
         </div>
 
         <!-- ==================== TABS KHUSUS: DASHBOARD ADMIN ==================== -->
-        <div id="page-admin" class="tab-content block h-screen w-full">
+        <div id="page-admin" class="tab-content hidden h-screen w-full">
 
             <!-- Admin Dashboard Layout Wrapper -->
             <div class="flex h-screen w-full bg-slate-50 overflow-hidden text-slate-800 font-sans">
@@ -26118,6 +26124,7 @@
                 if (typeof switchTab === 'function') {
                     const path = window.location.pathname.replace(/\/+$/, '') || '/';
                     if (path === '/admin' || path.startsWith('/admin/') || path === '/administrator' || path.startsWith('/administrator/')) {
+                        document.body.classList.add('is-admin-view');
                         switchTab('admin', false);
                     } else if (path === '/app/ibadah' || path.startsWith('/app/ibadah/')) {
                         if (path === '/app/ibadah/quran') switchTab('quran-index', false);

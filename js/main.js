@@ -210,6 +210,7 @@
             } else if (path === '/kehidupan-santri/poskestren') {
                 switchTab('poskestren', false);
             } else if (path === '/app' || path.startsWith('/app/') || path.endsWith('app.html')) {
+                document.body.classList.remove('is-admin-view');
                 if (document.getElementById('page-admin')) {
                     if (path === '/app/ibadah' || path.startsWith('/app/ibadah/')) {
                         if (path === '/app/ibadah/quran') switchTab('quran-index', false);
@@ -258,6 +259,7 @@
                     window.location.href = window.location.protocol === 'file:' ? 'app.html' : path;
                 }
             } else if (path === '/administrator' || path === '/admin') {
+                document.body.classList.add('is-admin-view');
                 if (!document.getElementById('page-admin')) {
                     window.location.href = window.location.protocol === 'file:' ? 'app.html' : '/admin';
                     return;
@@ -630,6 +632,7 @@
             const mainFooter = document.querySelector('footer');
 
             if (tabId === 'admin') {
+                document.body.classList.add('is-admin-view');
                 if (mainDesktopHeader) mainDesktopHeader.style.display = 'none';
                 if (mainMobileHeader) mainMobileHeader.style.display = 'none';
                 if (deskNavMenu) deskNavMenu.style.display = 'none';
@@ -669,6 +672,7 @@
                     }
                 }
             } else {
+                document.body.classList.remove('is-admin-view');
                 if (mainDesktopHeader) mainDesktopHeader.style.removeProperty('display');
                 if (mainMobileHeader) mainMobileHeader.style.removeProperty('display');
                 if (deskNavMenu) deskNavMenu.style.removeProperty('display');
@@ -679,11 +683,9 @@
                                        window.location.pathname.endsWith('app.html');
                     const isStandalone = document.body.classList.contains('is-pwa-standalone') || 
                                          (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
-                    if ((isAppRoute || isStandalone) && window.innerWidth < 768) {
+                    if (isAppRoute || isStandalone) {
                         mobileBottomNav.style.setProperty('display', 'flex', 'important');
-                    } else if (window.innerWidth >= 768) {
-                        mobileBottomNav.style.setProperty('display', 'none', 'important');
-                    } else if (!isAppRoute && !isStandalone) {
+                    } else {
                         mobileBottomNav.style.setProperty('display', 'none', 'important');
                     }
                 }
